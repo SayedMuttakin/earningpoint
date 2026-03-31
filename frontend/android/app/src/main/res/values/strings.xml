@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">EarningPoint</string>
+    <string name="title_activity_main">EarningPoint</string>
+    <string name="package_name">app.earningpoint</string>
+    <string name="custom_url_scheme">app.earningpoint</string>
+</resources>

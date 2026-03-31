@@ -1,0 +1,9 @@
+{
+  "appId": "app.earningpoint",
+  "appName": "EarningPoint",
+  "webDir": "dist",
+  "server": {
+    "cleartext": true,
+    "allowNavigation": ["192.168.31.163"]
+  }
+}
