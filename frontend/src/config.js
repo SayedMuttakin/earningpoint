@@ -1,3 +1,3 @@
-// Production: empty string for same-domain deployment (Nginx reverse proxy)
+// Production URL (works for both web and Android app)
 // Local dev: "http://192.168.31.163:5001"
-export const API_BASE = ""; 
+export const API_BASE = "https://satrong-sajghor.top"; 
