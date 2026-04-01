@@ -5,5 +5,10 @@
   "server": {
     "cleartext": true,
     "allowNavigation": ["192.168.31.163"]
+  },
+  "plugins": {
+    "AdMob": {
+      "initializeOnAppStart": true
+    }
   }
 }
