@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { AdMobService } from '../utils/admob';
 import { 
   Medal, Globe, Film, Gamepad2, 
@@ -62,7 +62,8 @@ const EarningPage = ({ onReferralsClick, setActiveTab, onSuccess }) => {
 
   // Video Ads States
   const [showVideoView, setShowVideoView] = React.useState(false);
-  const [videoStatus, setVideoStatus] = React.useState({ lastVideoAd: null, count: 0 });
+  const [videoStatus, setVideoStatus] = React.useState({ lastVideoDate: null, count: 0 });
+  const [viewAdsStatus, setViewAdsStatus] = React.useState({ lastAdDate: null, count: 0 });
   const [videoType, setVideoType] = React.useState('video'); // 'video' or 'view_ads'
 
   // Fortune Wheel States
@@ -181,13 +182,19 @@ const EarningPage = ({ onReferralsClick, setActiveTab, onSuccess }) => {
     try {
       const token = localStorage.getItem('token');
       if (!token) return;
-      const response = await fetch(`${API_BASE}/api/earning/video-status`, {
+      // Fetch Video Status
+      const videoResp = await fetch(`${API_BASE}/api/earning/video-status?type=video`, {
         headers: { Authorization: `Bearer ${token}` },
       });
-      if (response.ok) {
-        const data = await response.json();
-        setVideoStatus(data);
-      }
+      const videoData = await videoResp.json();
+      if (videoResp.ok) setVideoStatus({ lastVideoDate: videoData.lastAd, count: videoData.count });
+
+      // Fetch View Ads Status
+      const viewAdsResp = await fetch(`${API_BASE}/api/earning/video-status?type=view_ads`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const viewAdsData = await viewAdsResp.json();
+      if (viewAdsResp.ok) setViewAdsStatus({ lastAdDate: viewAdsData.lastAd, count: viewAdsData.count });
     } catch (err) {
       console.error('Failed to fetch video status:', err);
     }
@@ -294,20 +301,16 @@ const EarningPage = ({ onReferralsClick, setActiveTab, onSuccess }) => {
         setBalance(data.balance);
         if (data.coins !== undefined) setCoins(data.coins);
         if (data.lifetimeCoins !== undefined) setLifetimeCoins(data.lifetimeCoins);
-
-        if (activeType === 'daily') {
+        
+        if (activeType === 'view_ads') {
+          setViewAdsStatus({ lastAdDate: data.lastAd, count: data.count });
+        } else if (activeType === 'video') {
+          setVideoStatus({ lastVideoDate: data.lastAd, count: data.count });
+        } else if (activeType === 'daily') {
           setCheckinStatus({ lastCheckin: data.lastCheckin, count: data.count });
           if (data.count === 2) {
             alert(data.message + "\nCheckin complete! Come back in 2 hours.");
             setShowCheckinView(false);
-          } else {
-            alert(data.message);
-          }
-        } else {
-          setVideoStatus({ lastVideoAd: data.lastVideoAd, count: data.count });
-          if (data.count === 5) {
-            alert(data.message + "\nAwesome! You have watched all 5 video ads for today.");
-            setShowVideoView(false);
           } else {
             alert(data.message);
           }
@@ -330,7 +333,7 @@ const EarningPage = ({ onReferralsClick, setActiveTab, onSuccess }) => {
     },
     {
       title: "📱 স্মার্ট মুরগির আপগ্রেড ভার্সন",
-      content: "গফুর মিয়া এবার নতুন ঘোষণা দিল—\n—“Version 2.0 আসতেছে!”\nসবাই অবাক!\n—“এইটা আবার কী?”\nগফুর মিয়া বলল,\n—“এবার মুরগি শুধু অ্যালার্ম দিবে না, ‘ভয়েস কমান্ড’ও বুঝবে!”\nগ্রামের লোকজন চোখ বড় বড় করে তাকিয়ে রইল।\nএকজন জিজ্ঞেস করল,\n—“মানে?”\nগফুর মিয়া গম্ভীর হয়ে বলল,\n—“আপনি বলবেন—‘ডিম দাও’, মুরগি ডিম দিবে!”\nসবাই আবার হেসে উঠল। কিন্তু আগের ঘটনার পর কেউ আর পুরোপুরি সন্দেহও করতে পারছে না!"
+      content: "গফুর মিয়া এবার নতুন ঘোষণা দিল—\n—“Version 2.0 আসতেছে!”\nসবাই অবাক!\n—“এইটা আবার কী?”\nগফুর মিয়া বলল,\n—“এবার মুরগি শুধু অ্যালার্ম দিবে না, ‘ভয়েস কমান্ড’ও বুঝবে!”\n গ্রামের লোকজন চোখ বড় বড় করে তাকিয়ে রইল।\nএকজন জিজ্ঞেস করল,\n—“মানে?”\nগফুর মিয়া গম্ভীর হয়ে বলল,\n—“আপনি বলবেন—‘ডিম দাও’, মুরগি ডিম দিবে!”\nসবাই আবার হেসে উঠল। কিন্তু আগের ঘটনার পর কেউ আর পুরোপুরি সন্দেহও করতে পারছে না!"
     },
     {
       title: "🐔 পরীক্ষার দিন",
@@ -693,7 +696,7 @@ const EarningPage = ({ onReferralsClick, setActiveTab, onSuccess }) => {
   // ==========================================
 
   // OptionCard sub-component — shows intro screen first
-  const OptionCard = ({ item, isLarge, skipIntro }) => {
+  const OptionCard = ({ item, isLarge, skipIntro, count, maxCount }) => {
     // Determine if this item should skip the intro screen
     const itemsToSkipIntro = ['Premium IP', 'Refer & Earn', 'Wallet', 'History', 'Tutorial', 'Invite Friends', 'Daily Quiz', 'Math Quiz', 'Binary Quiz', 'Word Quiz', 'Gen. Knowledge'];
     const shouldSkip = skipIntro || itemsToSkipIntro.includes(item?.name);
@@ -710,7 +713,7 @@ const EarningPage = ({ onReferralsClick, setActiveTab, onSuccess }) => {
           setIntroItem(item);
           setShowIntroScreen(true);
         }}
-        className="flex flex-col items-center gap-2 group focus:outline-none"
+        className="flex flex-col items-center gap-2 group focus:outline-none relative"
     >
       <div className={`w-14 h-14 md:w-${isLarge ? '20' : '16'} md:h-${isLarge ? '20' : '16'} rounded-2xl bg-gradient-to-br ${item.color || 'from-blue-500 to-indigo-600'} flex items-center justify-center shadow-lg group-hover:shadow-xl group-hover:scale-110 transition-all duration-300`}>
         {typeof item.logo === 'string' && item.logo.startsWith('http') ? (
@@ -721,6 +724,18 @@ const EarningPage = ({ onReferralsClick, setActiveTab, onSuccess }) => {
       </div>
       <span className="text-[10px] md:text-xs font-bold text-slate-700 dark:text-slate-300 text-center leading-tight w-full">{item.name}</span>
       {item.coins != null && <span className="text-[9px] md:text-[11px] text-amber-600 dark:text-amber-400 font-black">+{item.coins} Coins</span>}
+      
+      {/* Progress Dots */}
+      {maxCount > 0 && (
+        <div className="flex gap-0.5 mt-1">
+          {[...Array(maxCount)].map((_, i) => (
+            <div 
+              key={i} 
+              className={`w-1.5 h-1.5 rounded-full ${i < count ? 'bg-green-500' : 'bg-slate-300 dark:bg-slate-700'}`}
+            ></div>
+          ))}
+        </div>
+      )}
     </motion.button>
   );
 };
@@ -1746,7 +1761,6 @@ const EarningPage = ({ onReferralsClick, setActiveTab, onSuccess }) => {
                                 division, district, thana, village, postalCode,
                                 paymentMethod,
                                 transactionId,
-                                amount: packagePrices[selectedPackage],
                               }),
                             });
                             if (res.ok) {
@@ -1909,22 +1923,30 @@ const EarningPage = ({ onReferralsClick, setActiveTab, onSuccess }) => {
                           : 'Watch 5 video ads daily to earn 50 Coins!'}
                      </p>
                      <div className="flex items-center justify-center gap-2">
-                        {[0, 1, 2, 3, 4].map(i => (
-                          <div key={i} className={`w-3 h-3 rounded-full ${videoStatus.count > i ? 'bg-purple-500' : 'bg-slate-300 dark:bg-slate-700'}`}></div>
-                        ))}
+                        {[0, 1, 2, 3, 4].map(i => {
+                          const currentStatus = videoType === 'video' ? videoStatus : viewAdsStatus;
+                          return <div key={i} className={`w-3 h-3 rounded-full ${currentStatus.count > i ? (videoType === 'video' ? 'bg-purple-500' : 'bg-sky-500') : 'bg-slate-300 dark:bg-slate-700'}`}></div>
+                        })}
                      </div>
                   </div>
 
                   <div className="space-y-4">
-                     {[
-                       { id: 1, type: 'Admob Video Ads', pts: videoType === 'video' ? 25 : 10, logo: 'https://img.icons8.com/color/96/google-ads.png' },
-                       { id: 2, type: 'Startapp Video Ads', pts: videoType === 'video' ? 25 : 10, logo: 'https://img.icons8.com/fluency/96/play-button-circled.png' },
-                       { id: 3, type: 'Unity Video Ads', pts: videoType === 'video' ? 25 : 10, logo: 'https://img.icons8.com/ios-filled/100/unity.png' },
-                       { id: 4, type: 'Facebook Video Ads', pts: videoType === 'video' ? 25 : 10, logo: 'https://img.icons8.com/fluency/96/facebook-new.png' },
-                       { id: 5, type: 'Admob Interstitial', pts: videoType === 'video' ? 25 : 10, logo: 'https://img.icons8.com/color/96/google-ads.png' }
-                     ].map((adInfo) => {
-                        const isCompleted = videoStatus.count >= adInfo.id;
-                        const isLocked = !isCompleted && videoStatus.count + 1 !== adInfo.id;
+                     {(videoType === 'video' ? [
+                       { id: 1, type: 'Admob Video Ads', pts: 25, logo: 'https://img.icons8.com/color/96/google-ads.png' },
+                       { id: 2, type: 'Startapp Video Ads', pts: 25, logo: 'https://img.icons8.com/fluency/96/play-button-circled.png' },
+                       { id: 3, type: 'Unity Video Ads', pts: 25, logo: 'https://img.icons8.com/ios-filled/100/unity.png' },
+                       { id: 4, type: 'Facebook Video Ads', pts: 25, logo: 'https://img.icons8.com/fluency/96/facebook-new.png' },
+                       { id: 5, type: 'Admob Interstitial', pts: 25, logo: 'https://img.icons8.com/color/96/google-ads.png' }
+                     ] : [
+                       { id: 1, type: 'Sponsored Ad 1', pts: 10, logo: 'https://img.icons8.com/fluency/96/ad-blocker.png' },
+                       { id: 2, type: 'Sponsored Ad 2', pts: 10, logo: 'https://img.icons8.com/color/96/marketing.png' },
+                       { id: 3, type: 'Partner Ad 1', pts: 10, logo: 'https://img.icons8.com/color/96/popular-topic.png' },
+                       { id: 4, type: 'Partner Ad 2', pts: 10, logo: 'https://img.icons8.com/fluency/96/campaign.png' },
+                       { id: 5, type: 'Premium Ad', pts: 10, logo: 'https://img.icons8.com/color/96/best-seller.png' }
+                     ]).map((adInfo) => {
+                        const currentStatus = videoType === 'video' ? videoStatus : viewAdsStatus;
+                        const isCompleted = currentStatus.count >= adInfo.id;
+                        const isLocked = !isCompleted && currentStatus.count + 1 !== adInfo.id;
 
                         return (
                           <motion.button
@@ -2965,11 +2987,11 @@ const EarningPage = ({ onReferralsClick, setActiveTab, onSuccess }) => {
               <div className="grid grid-cols-3 sm:grid-cols-5 gap-4 md:gap-6 justify-items-center">
                 {[
                   { id: 'l1-article', name: 'Articles', icon: <Newspaper className="w-7 h-7" />, coins: 15, color: 'from-blue-400 to-indigo-500', action: () => setShowArticleView(true) },
-                  { id: 'l1-videos', name: 'Videos', icon: <Video className="w-7 h-7" />, coins: 25, color: 'from-purple-400 to-pink-500', action: () => { setVideoType('video'); setShowVideoView(true); } },
+                  { id: 'l1-videos', name: 'Videos', icon: <Video className="w-7 h-7" />, coins: 25, color: 'from-purple-400 to-pink-500', action: () => { setVideoType('video'); setShowVideoView(true); }, count: videoStatus.count, maxCount: 5 },
                   { id: 'l1-games', name: 'Games', icon: <Gamepad2 className="w-7 h-7" />, coins: 50, color: 'from-emerald-400 to-teal-500', action: () => setShowGamesView(true) },
                   { id: 'l1-wheel', name: 'Fortune Wheel', icon: <Aperture className="w-7 h-7" />, coins: null, color: 'from-amber-400 to-orange-500', action: () => setShowWheelView(true) },
-                  { id: 'l1-ads', name: 'View Ads', icon: <MonitorPlay className="w-7 h-7" />, coins: 10, color: 'from-sky-400 to-cyan-500', action: () => { setVideoType('view_ads'); setShowVideoView(true); } },
-                ].map(item => <OptionCard key={item.id} item={item} />)}
+                  { id: 'l1-ads', name: 'View Ads', icon: <MonitorPlay className="w-7 h-7" />, coins: 10, color: 'from-sky-400 to-cyan-500', action: () => { setVideoType('view_ads'); setShowVideoView(true); }, count: viewAdsStatus.count, maxCount: 5 },
+                ].map(item => <OptionCard key={item.id} item={item} count={item.count} maxCount={item.maxCount} />)}
               </div>
             </div>
           </div>

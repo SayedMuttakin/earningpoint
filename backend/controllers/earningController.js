@@ -73,22 +73,28 @@ exports.claimDailyCheckin = async (req, res) => {
 
 exports.getVideoAdStatus = async (req, res) => {
   try {
-    const user = await User.findById(req.user._id).select('lastVideoAd videoAdCount');
+    const { type } = req.query;
+    const isViewAds = type === 'view_ads';
     
+    const selectFields = isViewAds ? 'lastViewAdsAd viewAdsCount' : 'lastVideoAd videoAdCount';
+    const user = await User.findById(req.user._id).select(selectFields);
+    
+    const lastAdField = isViewAds ? 'lastViewAdsAd' : 'lastVideoAd';
+    const countField = isViewAds ? 'viewAdsCount' : 'videoAdCount';
+
     // Check if it's a new day to reset the count
     const now = new Date();
-    let count = user.videoAdCount || 0;
+    let count = user[countField] || 0;
     
-    if (user.lastVideoAd) {
-      const lastAdDate = new Date(user.lastVideoAd);
-      // Reset if the last ad was watched on a different day (local time approx by comparing date strings)
+    if (user[lastAdField]) {
+      const lastAdDate = new Date(user[lastAdField]);
       if (lastAdDate.toDateString() !== now.toDateString()) {
         count = 0;
       }
     }
     
     res.json({
-      lastVideoAd: user.lastVideoAd,
+      lastAd: user[lastAdField],
       count: count
     });
   } catch (error) {
@@ -99,30 +105,34 @@ exports.getVideoAdStatus = async (req, res) => {
 exports.claimVideoAd = async (req, res) => {
   try {
     const { type } = req.body;
+    const isViewAds = type === 'view_ads';
     const user = await User.findById(req.user._id);
     const now = new Date();
     
+    const countField = isViewAds ? 'viewAdsCount' : 'videoAdCount';
+    const lastAdField = isViewAds ? 'lastViewAdsAd' : 'lastVideoAd';
+
     // Check if it's a new day
-    let currentCount = user.videoAdCount || 0;
-    if (user.lastVideoAd) {
-      const lastAdDate = new Date(user.lastVideoAd);
+    let currentCount = user[countField] || 0;
+    if (user[lastAdField]) {
+      const lastAdDate = new Date(user[lastAdField]);
       if (lastAdDate.toDateString() !== now.toDateString()) {
         currentCount = 0;
       }
     }
 
     if (currentCount >= 5) {
-      return res.status(400).json({ message: `You have reached the daily limit of 5 video ads. Please come back tomorrow.` });
+      return res.status(400).json({ message: `You have reached the daily limit of 5 ${isViewAds ? 'View Ads' : 'Videos'}. Please come back tomorrow.` });
     }
 
     // Determine reward amount: video = 25, view_ads = 10
-    const rewardedAmount = type === 'video' ? 25 : 10;
-    const typeLabel = type === 'video' ? 'Videos' : 'View Ads';
+    const rewardedAmount = isViewAds ? 10 : 25;
+    const typeLabel = isViewAds ? 'View Ads' : 'Videos';
 
     // Process the claim
     const converted = processPoints(user, rewardedAmount);
-    user.videoAdCount = currentCount + 1;
-    user.lastVideoAd = now;
+    user[countField] = currentCount + 1;
+    user[lastAdField] = now;
 
     await user.save();
 
@@ -130,20 +140,20 @@ exports.claimVideoAd = async (req, res) => {
       userId: user._id,
       type: 'earning',
       amount: rewardedAmount,
-      description: `${typeLabel} Reward (${user.videoAdCount}/5)`,
+      description: `${typeLabel} Reward (${user[countField]}/5)`,
       status: 'completed'
     });
 
     // Notify user
-    createNotification(user._id, 'Video Reward! 📺', `You earned ${rewardedAmount} points for watching ${typeLabel} ${user.videoAdCount}/5 today.`, 'earning');
+    createNotification(user._id, 'Video Reward! 📺', `You earned ${rewardedAmount} points for watching ${typeLabel} ${user[countField]}/5 today.`, 'earning');
 
     res.json({ 
-      message: converted ? `Rewarded ${rewardedAmount} points! You reached 1000+ points and got 50৳ converted!` : `Rewarded ${rewardedAmount} points! (${user.videoAdCount}/5 completed)`,
+      message: converted ? `Rewarded ${rewardedAmount} points! You reached 1000+ points and got 50৳ converted!` : `Rewarded ${rewardedAmount} points! (${user[countField]}/5 completed)`,
       balance: user.balance,
       points: user.points,
       lifetimePoints: user.lifetimePoints,
-      count: user.videoAdCount,
-      lastVideoAd: user.lastVideoAd
+      count: user[countField],
+      lastAd: user[lastAdField]
     });
 
   } catch (error) {

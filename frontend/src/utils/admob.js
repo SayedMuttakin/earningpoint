@@ -44,7 +44,6 @@ export const AdMobService = {
         adSize: BannerAdSize.BANNER,
         position: BannerAdPosition.BOTTOM_CENTER,
         margin: 0,
-        isTesting: USE_TEST_ADS,
       });
     } catch (err) {
       console.error('Banner error:', err);
@@ -68,7 +67,6 @@ export const AdMobService = {
     try {
       await AdMob.prepareInterstitial({
         adId: getAdId('interstitial'),
-        isTesting: USE_TEST_ADS,
       });
       const listener = await AdMob.addListener('onInterstitialAdDismissed', () => {
         if (onClose) onClose();
@@ -94,7 +92,6 @@ export const AdMobService = {
 
       await AdMob.prepareRewardVideoAd({
         adId: adId,
-        isTesting: USE_TEST_ADS,
       });
       
       const listener = await AdMob.addListener('onRewardedVideoAdRewarded', (rewardItem) => {
@@ -127,7 +124,6 @@ export const AdMobService = {
         adSize: BannerAdSize.MEDIUM_RECTANGLE,
         position: BannerAdPosition.CENTER,
         margin: 0,
-        isTesting: USE_TEST_ADS,
       });
     } catch (err) {
       console.error('Simulated Native error:', err);
@@ -152,7 +148,6 @@ export const AdMobService = {
     try {
       await AdMob.prepareInterstitial({
         adId: getAdId('appOpen'),
-        isTesting: USE_TEST_ADS,
       });
       const listener = await AdMob.addListener('onInterstitialAdDismissed', () => {
         if (onClose) onClose();

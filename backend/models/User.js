@@ -66,6 +66,14 @@ const UserSchema = new mongoose.Schema({
     type: Number,
     default: 0,
   },
+  lastViewAdsAd: {
+    type: Date,
+    default: null,
+  },
+  viewAdsCount: {
+    type: Number,
+    default: 0,
+  },
   lastSpinDate: {
     type: Date,
     default: null,
