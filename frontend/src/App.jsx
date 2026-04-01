@@ -39,19 +39,17 @@ function App() {
           testingDevices: ['2077ef9a63d2b398840261c8221a0c9b'],
         });
         console.log('AdMob Initialized');
-
-        // Add App Open Ad listener for resume
-        CapacitorApp.addListener('appStateChange', ({ isActive }) => {
-          if (isActive) {
-            AdMobService.showAppOpenAd();
-          }
-        });
       } catch (err) {
         console.error('AdMob initialization failed:', err);
       }
     };
     initAdMob();
   }, []);
+
+  // Show an interstitial ad, then run the callback (back navigation)
+  const showBackAd = (callback) => {
+    AdMobService.showInterstitial(callback);
+  };
 
   // Apply/remove dark class on <html>
   useEffect(() => {
@@ -104,8 +102,8 @@ function App() {
         {activeTab === 'Home' && <HomePage onBuyNow={handleBuyNow} />}
         {activeTab === 'Cart' && <CartPage onBuyNow={handleBuyNow} />}
         {activeTab === 'Checkout' && <CheckoutPage product={selectedProduct} onBack={() => setActiveTab('Cart')} onSuccess={() => setActiveTab('PaymentSuccess')} />}
-        {activeTab === 'Notification' && <NotificationPage onBack={() => setActiveTab('Home')} />}
-        {activeTab === 'PaymentSuccess' && <PaymentSuccess onBack={() => setActiveTab('Home')} />}
+        {activeTab === 'Notification' && <NotificationPage onBack={() => showBackAd(() => setActiveTab('Home'))} />}
+        {activeTab === 'PaymentSuccess' && <PaymentSuccess onBack={() => showBackAd(() => setActiveTab('Home'))} />}
         {activeTab === 'Profile' && <ProfilePage 
           onVerifyClick={() => setActiveTab('Verify')} 
           onLanguageClick={() => setActiveTab('Language')} 
@@ -117,13 +115,13 @@ function App() {
           darkMode={darkMode}
           onToggleDarkMode={handleToggleDarkMode}
         />}
-        {activeTab === 'Verify' && <VerificationPage onBack={() => setActiveTab('Profile')} />}
-        {activeTab === 'Language' && <LanguagePage onBack={() => setActiveTab('Profile')} />}
-        {activeTab === 'ChangePassword' && <ChangePasswordPage onBack={() => setActiveTab('Profile')} />}
-        {activeTab === 'Referrals' && <ReferralsPage onBack={() => setActiveTab('Profile')} />}
-        {activeTab === 'Leaderboard' && <LeaderboardPage onBack={() => setActiveTab('Profile')} />}
-        {activeTab === 'TermsPrivacy' && <TermsPrivacyPage onBack={() => setActiveTab('Profile')} />}
-        {activeTab === 'DeleteAccount' && <DeleteAccountPage onBack={() => setActiveTab('Profile')} onLogout={handleLogout} />}
+        {activeTab === 'Verify' && <VerificationPage onBack={() => showBackAd(() => setActiveTab('Profile'))} />}
+        {activeTab === 'Language' && <LanguagePage onBack={() => showBackAd(() => setActiveTab('Profile'))} />}
+        {activeTab === 'ChangePassword' && <ChangePasswordPage onBack={() => showBackAd(() => setActiveTab('Profile'))} />}
+        {activeTab === 'Referrals' && <ReferralsPage onBack={() => showBackAd(() => setActiveTab('Profile'))} />}
+        {activeTab === 'Leaderboard' && <LeaderboardPage onBack={() => showBackAd(() => setActiveTab('Profile'))} />}
+        {activeTab === 'TermsPrivacy' && <TermsPrivacyPage onBack={() => showBackAd(() => setActiveTab('Profile'))} />}
+        {activeTab === 'DeleteAccount' && <DeleteAccountPage onBack={() => showBackAd(() => setActiveTab('Profile'))} onLogout={handleLogout} />}
         {activeTab === 'Earning' && <EarningPage onReferralsClick={() => setActiveTab('Referrals')} setActiveTab={setActiveTab} onSuccess={() => setActiveTab('PaymentSuccess')} />}
         
         {activeTab === 'Setting' && (
