@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { AdMobService } from '../utils/admob';
 import { 
   Medal, Globe, Film, Gamepad2, 
@@ -43,6 +43,7 @@ const EarningPage = ({ onReferralsClick, setActiveTab, onSuccess }) => {
   const [showLevelView, setShowLevelView] = React.useState(false);
   const [isHovered, setIsHovered] = React.useState(false);
   const [activeEarningTab, setActiveEarningTab] = React.useState('rewards');
+  const isAdLoading = useRef(false);
 
   // Withdraw States
   const [withdrawAmount, setWithdrawAmount] = React.useState('');
@@ -265,7 +266,11 @@ const EarningPage = ({ onReferralsClick, setActiveTab, onSuccess }) => {
 
   // Show interstitial ad before closing a section (back button)
   const goBackWithAd = (closeFn) => {
+    if (isAdLoading.current) return;
+    
+    isAdLoading.current = true;
     AdMobService.showInterstitial(() => {
+      isAdLoading.current = false;
       if (closeFn) closeFn();
     });
   };
@@ -1397,7 +1402,7 @@ const EarningPage = ({ onReferralsClick, setActiveTab, onSuccess }) => {
               </div>
 
               <button 
-                onClick={() => setShowLevelView(false)}
+                onClick={() => goBackWithAd(() => setShowLevelView(false))}
                 className="mt-8 w-full py-4 rounded-full bg-gradient-to-r from-amber-400 to-orange-500 text-white font-black hover:shadow-lg hover:shadow-orange-500/25 transition-all text-sm uppercase tracking-wide"
               >
                 Continue Earning
@@ -1426,7 +1431,7 @@ const EarningPage = ({ onReferralsClick, setActiveTab, onSuccess }) => {
                 onClick={() => {
                   if (ipStep > 1 && ipStep < 5) setIpStep(ipStep - 1);
                   else {
-                    setShowPremiumIPView(false);
+                    goBackWithAd(() => setShowPremiumIPView(false));
                     setIpStep(1);
                   }
                 }}
@@ -1839,10 +1844,10 @@ const EarningPage = ({ onReferralsClick, setActiveTab, onSuccess }) => {
             <div className="sticky top-0 z-10 bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl border-b border-slate-200 dark:border-slate-800 px-4 py-4 sm:px-6 flex items-center justify-between shadow-sm">
               <h2 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white truncate pr-4">গফুর মিয়ার স্মার্ট মুরগি ২.০</h2>
               <button 
-                onClick={() => setShowArticleView(false)}
-                className="bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-300 w-10 h-10 rounded-full flex items-center justify-center hover:bg-slate-300 dark:hover:bg-slate-700 transition-colors flex-shrink-0"
+                onClick={() => goBackWithAd(() => setShowArticleView(false))}
+                className="bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-300 w-10 h-10 rounded-full flex items-center justify-center hover:bg-slate-300 dark:hover:text-white transition-colors flex-shrink-0"
               >
-                <MonitorPlay className="w-5 h-5 hover:rotate-90 transition-transform" />
+                <ArrowLeft className="w-5 h-5 hover:-translate-x-1 transition-transform" />
               </button>
             </div>
 
@@ -1894,7 +1899,7 @@ const EarningPage = ({ onReferralsClick, setActiveTab, onSuccess }) => {
                   <motion.button
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
-                    onClick={() => setShowArticleView(false)}
+                    onClick={() => goBackWithAd(() => setShowArticleView(false))}
                     className="bg-green-600 hover:bg-green-500 text-white font-black text-lg py-4 px-10 rounded-full shadow-xl shadow-green-500/30 transition-all flex items-center gap-2"
                   >
                     FINISH READING <Medal className="w-5 h-5 ml-2" />
@@ -1918,8 +1923,8 @@ const EarningPage = ({ onReferralsClick, setActiveTab, onSuccess }) => {
             <div className="bg-white dark:bg-slate-800 w-full max-w-lg rounded-3xl shadow-2xl overflow-hidden border border-slate-200 dark:border-slate-700 max-h-[90vh] flex flex-col">
                <div className="bg-slate-50 dark:bg-slate-900 px-8 py-6 flex justify-between items-center border-b border-slate-200 dark:border-slate-700 shrink-0">
                   <h3 className="text-xl font-bold text-slate-800 dark:text-white">{videoType === 'video' ? 'Videos' : 'View Ads'}</h3>
-                  <button onClick={() => setShowVideoView(false)} className="text-slate-400 hover:text-slate-600 dark:hover:text-white transition-colors">
-                     <MonitorPlay className="w-6 h-6 hover:rotate-90 transition-transform" />
+                  <button onClick={() => goBackWithAd(() => setShowVideoView(false))} className="text-slate-400 hover:text-slate-600 dark:hover:text-white transition-colors">
+                     <ArrowLeft className="w-6 h-6 hover:-translate-x-1 transition-transform" />
                   </button>
                </div>
                <div className="p-6 sm:p-8 overflow-y-auto space-y-4">
@@ -2003,8 +2008,8 @@ const EarningPage = ({ onReferralsClick, setActiveTab, onSuccess }) => {
             <div className="bg-white dark:bg-slate-800 w-full max-w-lg rounded-3xl shadow-2xl overflow-hidden border border-slate-200 dark:border-slate-700 max-h-[90vh] flex flex-col">
               <div className="bg-slate-50 dark:bg-slate-900 px-8 py-6 flex justify-between items-center border-b border-slate-200 dark:border-slate-700 shrink-0">
                 <h3 className="text-xl font-bold text-slate-800 dark:text-white">Games</h3>
-                <button onClick={() => setShowGamesView(false)} className="text-slate-400 hover:text-slate-600 dark:hover:text-white transition-colors">
-                  <Gamepad2 className="w-6 h-6 hover:rotate-12 transition-transform" />
+                <button onClick={() => goBackWithAd(() => setShowGamesView(false))} className="text-slate-400 hover:text-slate-600 dark:hover:text-white transition-colors">
+                  <ArrowLeft className="w-6 h-6 hover:-translate-x-1 transition-transform" />
                 </button>
               </div>
               <div className="p-6 sm:p-8 overflow-y-auto space-y-4">
@@ -2056,8 +2061,8 @@ const EarningPage = ({ onReferralsClick, setActiveTab, onSuccess }) => {
             <div className="bg-white dark:bg-slate-800 w-full max-w-md rounded-3xl shadow-2xl overflow-hidden border border-slate-200 dark:border-slate-700 max-h-[95vh] flex flex-col">
               <div className="bg-slate-50 dark:bg-slate-900 px-8 py-5 flex justify-between items-center border-b border-slate-200 dark:border-slate-700 shrink-0">
                 <h3 className="text-xl font-bold text-slate-800 dark:text-white">Fortune Wheel</h3>
-                <button onClick={() => setShowWheelView(false)} className="text-slate-400 hover:text-slate-600 dark:hover:text-white transition-colors">
-                  <LifeBuoy className="w-6 h-6 hover:rotate-90 transition-transform" />
+                <button onClick={() => goBackWithAd(() => setShowWheelView(false))} className="text-slate-400 hover:text-slate-600 dark:hover:text-white transition-colors">
+                  <ArrowLeft className="w-6 h-6 hover:-translate-x-1 transition-transform" />
                 </button>
               </div>
               <div className="p-6 overflow-y-auto flex flex-col items-center space-y-6">
@@ -2185,8 +2190,8 @@ const EarningPage = ({ onReferralsClick, setActiveTab, onSuccess }) => {
             <div className="bg-white dark:bg-slate-800 w-full max-w-lg rounded-3xl shadow-2xl overflow-hidden border border-slate-200 dark:border-slate-700 max-h-[95vh] flex flex-col">
               <div className="bg-slate-50 dark:bg-slate-900 px-8 py-5 flex justify-between items-center border-b border-slate-200 dark:border-slate-700 shrink-0">
                 <h3 className="text-xl font-bold text-slate-800 dark:text-white">Scratch Cards</h3>
-                <button onClick={() => setShowScratchView(false)} className="text-slate-400 hover:text-slate-600 dark:hover:text-white transition-colors">
-                  <Gift className="w-6 h-6 hover:rotate-12 transition-transform" />
+                <button onClick={() => goBackWithAd(() => setShowScratchView(false))} className="text-slate-400 hover:text-slate-600 dark:hover:text-white transition-colors">
+                  <ArrowLeft className="w-6 h-6 hover:-translate-x-1 transition-transform" />
                 </button>
               </div>
               <div className="p-6 sm:p-8 overflow-y-auto space-y-5">
@@ -2279,7 +2284,7 @@ const EarningPage = ({ onReferralsClick, setActiveTab, onSuccess }) => {
             {/* Header */}
             <div className="bg-[#1a362d] text-white px-4 py-4 flex items-center gap-4 shadow-md shrink-0">
               <button
-                onClick={() => setActiveScratchCard(null)}
+                onClick={() => goBackWithAd(() => setActiveScratchCard(null))}
                 className="p-1 hover:bg-white/10 rounded-lg transition-colors"
               >
                 <ArrowLeft className="w-6 h-6" />
@@ -2392,7 +2397,7 @@ const EarningPage = ({ onReferralsClick, setActiveTab, onSuccess }) => {
               <div className="bg-[#1a362d] text-white px-4 py-4 flex items-center justify-between shadow-md shrink-0">
               <div className="flex items-center gap-4">
                 <button
-                  onClick={() => { setShowQuizView(false); setQuizTimerActive(false); }}
+                  onClick={() => goBackWithAd(() => { setShowQuizView(false); setQuizTimerActive(false); })}
                   className="p-1 hover:bg-white/10 rounded-lg transition-colors"
                 >
                   <ArrowLeft className="w-6 h-6" />
@@ -2548,7 +2553,7 @@ const EarningPage = ({ onReferralsClick, setActiveTab, onSuccess }) => {
                <div className="bg-slate-50 dark:bg-slate-900 px-8 py-6 flex justify-between items-center border-b border-slate-200 dark:border-slate-700">
                   <h3 className="text-xl font-bold text-slate-800 dark:text-white">Daily Checkin</h3>
                   <button onClick={() => goBackWithAd(() => setShowCheckinView(false))} className="text-slate-400 hover:text-slate-600 dark:hover:text-white transition-colors">
-                     <MonitorPlay className="w-6 h-6 hover:rotate-90 transition-transform" />
+                     <ArrowLeft className="w-6 h-6 hover:-translate-x-1 transition-transform" />
                   </button>
                </div>
                <div className="p-8 space-y-8">

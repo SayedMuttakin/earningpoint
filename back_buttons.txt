@@ -1,0 +1,8 @@
+﻿1429: setShowPremiumIPView(false);
+1813: setShowPremiumIPView(false);
+1842: onClick={() => setShowArticleView(false)}
+1897: onClick={() => setShowArticleView(false)}
+1921: <button onClick={() => setShowVideoView(false)} className="text-slate-400 hover:text-slate-600 dark:hover:text-white transition-colors">
+2006: <button onClick={() => setShowGamesView(false)} className="text-slate-400 hover:text-slate-600 dark:hover:text-white transition-colors">
+2059: <button onClick={() => setShowWheelView(false)} className="text-slate-400 hover:text-slate-600 dark:hover:text-white transition-colors">
+2188: <button onClick={() => setShowScratchView(false)} className="text-slate-400 hover:text-slate-600 dark:hover:text-white transition-colors">

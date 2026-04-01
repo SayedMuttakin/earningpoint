@@ -64,18 +64,42 @@ export const AdMobService = {
       if (onClose) onClose();
       return;
     }
+    
+    let isFinished = false;
+    const safeClose = () => {
+      if (!isFinished) {
+        isFinished = true;
+        if (onClose) onClose();
+      }
+    };
+
     try {
+      console.log('[AdMob] Preparing Interstitial...');
       await AdMob.prepareInterstitial({
         adId: getAdId('interstitial'),
       });
-      const listener = await AdMob.addListener('onInterstitialAdDismissed', () => {
-        if (onClose) onClose();
+
+      const listener = await AdMob.addListener('interstitialAdDismissed', () => {
+        console.log('[AdMob] Interstitial Dismissed');
+        safeClose();
         listener.remove();
       });
+
+      const failListener = await AdMob.addListener('interstitialAdFailedToLoad', (info) => {
+        console.error('[AdMob] Interstitial failed to load:', info);
+        safeClose();
+        failListener.remove();
+      });
+
+      // Show it
       await AdMob.showInterstitial();
+      
+      // Safety timeout - if user is stuck more than 30s without event, close anyway
+      setTimeout(safeClose, 30000);
+
     } catch (err) {
       console.error('Interstitial error:', err);
-      if (onClose) onClose();
+      safeClose();
     }
   },
 
@@ -94,13 +118,13 @@ export const AdMobService = {
         adId: adId,
       });
       
-      const listener = await AdMob.addListener('onRewardedVideoAdRewarded', (rewardItem) => {
+      const listener = await AdMob.addListener('rewardVideoAdRewarded', (rewardItem) => {
         console.log('[AdMob] Rewarded video finished!', rewardItem);
         if (onReward) onReward(rewardItem);
         listener.remove();
       });
 
-      const closeListener = await AdMob.addListener('onRewardedVideoAdDismissed', () => {
+      const closeListener = await AdMob.addListener('rewardVideoAdDismissed', () => {
         console.log('[AdMob] Rewarded video dismissed');
         closeListener.remove();
       });
