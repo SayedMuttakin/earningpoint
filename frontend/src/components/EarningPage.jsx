@@ -263,6 +263,13 @@ const EarningPage = ({ onReferralsClick, setActiveTab, onSuccess }) => {
     setShowCheckinView(true);
   };
 
+  // Show interstitial ad before closing a section (back button)
+  const goBackWithAd = (closeFn) => {
+    AdMobService.showInterstitial(() => {
+      if (closeFn) closeFn();
+    });
+  };
+
   const startAd = (type) => {
     // If called from onClick={startAd}, type is an event, so default to 'daily'
     const activeType = typeof type === 'string' ? type : 'daily';
@@ -970,7 +977,7 @@ const EarningPage = ({ onReferralsClick, setActiveTab, onSuccess }) => {
           {/* Header */}
           <div className="relative z-50 flex items-center justify-between px-4 py-4 pt-safe">
             <button
-              onClick={() => setShowIntroScreen(false)}
+              onClick={() => goBackWithAd(() => setShowIntroScreen(false))}
               className="w-9 h-9 rounded-full bg-white/10 flex items-center justify-center text-white hover:bg-white/20 transition-colors"
             >
               <ArrowLeft className="w-5 h-5" />
@@ -2508,7 +2515,7 @@ const EarningPage = ({ onReferralsClick, setActiveTab, onSuccess }) => {
               {/* Bottom Controls */}
               <div className="w-full max-w-lg flex items-center justify-between mt-4">
                 <button
-                  onClick={() => { setShowQuizView(false); setQuizTimerActive(false); }}
+                  onClick={() => { goBackWithAd(() => { setShowQuizView(false); setQuizTimerActive(false); }); }}
                   className="px-6 py-3 rounded-full border-2 border-red-400 text-red-500 font-bold hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
                 >
                   Leave Game
@@ -2540,7 +2547,7 @@ const EarningPage = ({ onReferralsClick, setActiveTab, onSuccess }) => {
             <div className="bg-white dark:bg-slate-800 w-full max-w-lg rounded-3xl shadow-2xl overflow-hidden border border-slate-200 dark:border-slate-700">
                <div className="bg-slate-50 dark:bg-slate-900 px-8 py-6 flex justify-between items-center border-b border-slate-200 dark:border-slate-700">
                   <h3 className="text-xl font-bold text-slate-800 dark:text-white">Daily Checkin</h3>
-                  <button onClick={() => setShowCheckinView(false)} className="text-slate-400 hover:text-slate-600 dark:hover:text-white transition-colors">
+                  <button onClick={() => goBackWithAd(() => setShowCheckinView(false))} className="text-slate-400 hover:text-slate-600 dark:hover:text-white transition-colors">
                      <MonitorPlay className="w-6 h-6 hover:rotate-90 transition-transform" />
                   </button>
                </div>
@@ -2615,7 +2622,7 @@ const EarningPage = ({ onReferralsClick, setActiveTab, onSuccess }) => {
                   <div className="text-white font-bold bg-black/20 px-3 py-1 rounded-full text-sm">
                     {currentGkIndex + 1} / 10
                   </div>
-                  <button onClick={() => setShowGkQuizView(false)} className="text-white/70 hover:text-white text-xl font-bold">✕</button>
+                  <button onClick={() => goBackWithAd(() => setShowGkQuizView(false))} className="text-white/70 hover:text-white text-xl font-bold">✕</button>
                 </div>
               </div>
 
@@ -2784,7 +2791,7 @@ const EarningPage = ({ onReferralsClick, setActiveTab, onSuccess }) => {
         {activeEarningTab === 'wallet' && (
           <div className="max-w-lg mx-auto space-y-6">
             <div className="flex items-center gap-3 mb-2">
-               <button onClick={() => setActiveEarningTab('rewards')} className="p-2 bg-slate-100 dark:bg-slate-800 rounded-full text-slate-500 hover:text-brand-500 dark:hover:text-brand-400 transition-colors">
+               <button onClick={() => goBackWithAd(() => setActiveEarningTab('rewards'))} className="p-2 bg-slate-100 dark:bg-slate-800 rounded-full text-slate-500 hover:text-brand-500 dark:hover:text-brand-400 transition-colors">
                   <ArrowLeft className="w-5 h-5" />
                </button>
                <h2 className="text-xl font-black text-slate-800 dark:text-white">Wallet</h2>
@@ -2886,7 +2893,7 @@ const EarningPage = ({ onReferralsClick, setActiveTab, onSuccess }) => {
         {activeEarningTab === 'history' && (
           <div className="max-w-lg mx-auto space-y-4">
             <div className="flex items-center gap-3 mb-2">
-               <button onClick={() => setActiveEarningTab('rewards')} className="p-2 bg-slate-100 dark:bg-slate-800 rounded-full text-slate-500 hover:text-brand-500 dark:hover:text-brand-400 transition-colors">
+               <button onClick={() => goBackWithAd(() => setActiveEarningTab('rewards'))} className="p-2 bg-slate-100 dark:bg-slate-800 rounded-full text-slate-500 hover:text-brand-500 dark:hover:text-brand-400 transition-colors">
                   <ArrowLeft className="w-5 h-5" />
                </button>
                <h3 className="font-black text-slate-800 dark:text-white text-lg">Withdrawal History</h3>
@@ -2920,7 +2927,7 @@ const EarningPage = ({ onReferralsClick, setActiveTab, onSuccess }) => {
         {activeEarningTab === 'tutorial' && (
           <div className="max-w-lg mx-auto space-y-6">
             <div className="flex items-center gap-3 mb-2">
-               <button onClick={() => setActiveEarningTab('rewards')} className="p-2 bg-slate-100 dark:bg-slate-800 rounded-full text-slate-500 hover:text-brand-500 dark:hover:text-brand-400 transition-colors">
+               <button onClick={() => goBackWithAd(() => setActiveEarningTab('rewards'))} className="p-2 bg-slate-100 dark:bg-slate-800 rounded-full text-slate-500 hover:text-brand-500 dark:hover:text-brand-400 transition-colors">
                   <ArrowLeft className="w-5 h-5" />
                </button>
                <h3 className="font-black text-slate-800 dark:text-white text-lg">Tutorial</h3>
