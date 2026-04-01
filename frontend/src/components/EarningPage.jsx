@@ -63,6 +63,7 @@ const EarningPage = ({ onReferralsClick, setActiveTab, onSuccess }) => {
   // Video Ads States
   const [showVideoView, setShowVideoView] = React.useState(false);
   const [videoStatus, setVideoStatus] = React.useState({ lastVideoAd: null, count: 0 });
+  const [videoType, setVideoType] = React.useState('video'); // 'video' or 'view_ads'
 
   // Fortune Wheel States
   const [showWheelView, setShowWheelView] = React.useState(false);
@@ -256,9 +257,18 @@ const EarningPage = ({ onReferralsClick, setActiveTab, onSuccess }) => {
   };
 
   const startAd = (type) => {
-    setAdType(type);
-    // Real AdMob Rewarded Video for Daily Checkin and Video Ads
-    AdMobService.showRewarded(() => claimReward(type));
+    // If called from onClick={startAd}, type is an event, so default to 'daily'
+    const activeType = typeof type === 'string' ? type : 'daily';
+    setAdType(activeType);
+
+    // Map internal type to AdMob placement key
+    let placement = 'rewarded';
+    if (activeType === 'daily') placement = 'rewarded_daily';
+    if (activeType === 'video') placement = 'rewarded_videos';
+    if (activeType === 'view_ads') placement = 'rewarded_view_ads';
+
+    console.log(`[EarningPage] Starting ad for ${activeType} using placement ${placement}`);
+    AdMobService.showRewarded(() => claimReward(activeType), placement);
   };
 
   const claimReward = async (typeOverride) => {
@@ -1913,7 +1923,7 @@ const EarningPage = ({ onReferralsClick, setActiveTab, onSuccess }) => {
                             key={adInfo.id}
                             whileHover={isLocked || isCompleted ? {} : { scale: 1.02 }}
                             whileTap={isLocked || isCompleted ? {} : { scale: 0.98 }}
-                            onClick={() => !isLocked && !isCompleted && startAd('video')}
+                            onClick={() => !isLocked && !isCompleted && startAd(videoType)}
                             disabled={isLocked || isCompleted}
                             className={`flex items-center justify-between w-full p-4 border rounded-2xl transition-all group ${
                               isCompleted ? 'bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700 opacity-60' :
@@ -2947,10 +2957,10 @@ const EarningPage = ({ onReferralsClick, setActiveTab, onSuccess }) => {
               <div className="grid grid-cols-3 sm:grid-cols-5 gap-4 md:gap-6 justify-items-center">
                 {[
                   { id: 'l1-article', name: 'Articles', icon: <Newspaper className="w-7 h-7" />, coins: 15, color: 'from-blue-400 to-indigo-500', action: () => setShowArticleView(true) },
-                  { id: 'l1-videos', name: 'Videos', icon: <Video className="w-7 h-7" />, coins: 25, color: 'from-purple-400 to-pink-500', action: () => setShowVideoView(true) },
+                  { id: 'l1-videos', name: 'Videos', icon: <Video className="w-7 h-7" />, coins: 25, color: 'from-purple-400 to-pink-500', action: () => { setVideoType('video'); setShowVideoView(true); } },
                   { id: 'l1-games', name: 'Games', icon: <Gamepad2 className="w-7 h-7" />, coins: 50, color: 'from-emerald-400 to-teal-500', action: () => setShowGamesView(true) },
                   { id: 'l1-wheel', name: 'Fortune Wheel', icon: <Aperture className="w-7 h-7" />, coins: null, color: 'from-amber-400 to-orange-500', action: () => setShowWheelView(true) },
-                  { id: 'l1-ads', name: 'View Ads', icon: <MonitorPlay className="w-7 h-7" />, coins: 10, color: 'from-sky-400 to-cyan-500', action: () => setShowVideoView(true) },
+                  { id: 'l1-ads', name: 'View Ads', icon: <MonitorPlay className="w-7 h-7" />, coins: 10, color: 'from-sky-400 to-cyan-500', action: () => { setVideoType('view_ads'); setShowVideoView(true); } },
                 ].map(item => <OptionCard key={item.id} item={item} />)}
               </div>
             </div>
