@@ -282,7 +282,11 @@ const EarningPage = ({ onReferralsClick, setActiveTab, onSuccess }) => {
 
       const response = await fetch(endpoint, {
         method: 'POST',
-        headers: { Authorization: `Bearer ${token}` },
+        headers: { 
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ type: activeType })
       });
       const data = await response.json();
       
@@ -1892,14 +1896,18 @@ const EarningPage = ({ onReferralsClick, setActiveTab, onSuccess }) => {
           >
             <div className="bg-white dark:bg-slate-800 w-full max-w-lg rounded-3xl shadow-2xl overflow-hidden border border-slate-200 dark:border-slate-700 max-h-[90vh] flex flex-col">
                <div className="bg-slate-50 dark:bg-slate-900 px-8 py-6 flex justify-between items-center border-b border-slate-200 dark:border-slate-700 shrink-0">
-                  <h3 className="text-xl font-bold text-slate-800 dark:text-white">View Ads</h3>
+                  <h3 className="text-xl font-bold text-slate-800 dark:text-white">{videoType === 'video' ? 'Videos' : 'View Ads'}</h3>
                   <button onClick={() => setShowVideoView(false)} className="text-slate-400 hover:text-slate-600 dark:hover:text-white transition-colors">
                      <MonitorPlay className="w-6 h-6 hover:rotate-90 transition-transform" />
                   </button>
                </div>
                <div className="p-6 sm:p-8 overflow-y-auto space-y-4">
                   <div className="text-center space-y-2 mb-6">
-                     <p className="text-slate-500 dark:text-slate-400 font-medium">Watch 5 video ads daily to earn 50 Coins!</p>
+                     <p className="text-slate-500 dark:text-slate-400 font-medium">
+                        {videoType === 'video' 
+                          ? 'Watch 5 videos daily to earn 125 Coins!' 
+                          : 'Watch 5 video ads daily to earn 50 Coins!'}
+                     </p>
                      <div className="flex items-center justify-center gap-2">
                         {[0, 1, 2, 3, 4].map(i => (
                           <div key={i} className={`w-3 h-3 rounded-full ${videoStatus.count > i ? 'bg-purple-500' : 'bg-slate-300 dark:bg-slate-700'}`}></div>
@@ -1909,11 +1917,11 @@ const EarningPage = ({ onReferralsClick, setActiveTab, onSuccess }) => {
 
                   <div className="space-y-4">
                      {[
-                       { id: 1, type: 'Admob Video Ads', pts: 10, logo: 'https://img.icons8.com/color/96/google-ads.png' },
-                       { id: 2, type: 'Startapp Video Ads', pts: 10, logo: 'https://img.icons8.com/fluency/96/play-button-circled.png' },
-                       { id: 3, type: 'Unity Video Ads', pts: 10, logo: 'https://img.icons8.com/ios-filled/100/unity.png' },
-                       { id: 4, type: 'Facebook Video Ads', pts: 10, logo: 'https://img.icons8.com/fluency/96/facebook-new.png' },
-                       { id: 5, type: 'Admob Interstitial', pts: 10, logo: 'https://img.icons8.com/color/96/google-ads.png' }
+                       { id: 1, type: 'Admob Video Ads', pts: videoType === 'video' ? 25 : 10, logo: 'https://img.icons8.com/color/96/google-ads.png' },
+                       { id: 2, type: 'Startapp Video Ads', pts: videoType === 'video' ? 25 : 10, logo: 'https://img.icons8.com/fluency/96/play-button-circled.png' },
+                       { id: 3, type: 'Unity Video Ads', pts: videoType === 'video' ? 25 : 10, logo: 'https://img.icons8.com/ios-filled/100/unity.png' },
+                       { id: 4, type: 'Facebook Video Ads', pts: videoType === 'video' ? 25 : 10, logo: 'https://img.icons8.com/fluency/96/facebook-new.png' },
+                       { id: 5, type: 'Admob Interstitial', pts: videoType === 'video' ? 25 : 10, logo: 'https://img.icons8.com/color/96/google-ads.png' }
                      ].map((adInfo) => {
                         const isCompleted = videoStatus.count >= adInfo.id;
                         const isLocked = !isCompleted && videoStatus.count + 1 !== adInfo.id;

@@ -98,6 +98,7 @@ exports.getVideoAdStatus = async (req, res) => {
 
 exports.claimVideoAd = async (req, res) => {
   try {
+    const { type } = req.body;
     const user = await User.findById(req.user._id);
     const now = new Date();
     
@@ -114,8 +115,12 @@ exports.claimVideoAd = async (req, res) => {
       return res.status(400).json({ message: `You have reached the daily limit of 5 video ads. Please come back tomorrow.` });
     }
 
+    // Determine reward amount: video = 25, view_ads = 10
+    const rewardedAmount = type === 'video' ? 25 : 10;
+    const typeLabel = type === 'video' ? 'Videos' : 'View Ads';
+
     // Process the claim
-    const converted = processPoints(user, 20);
+    const converted = processPoints(user, rewardedAmount);
     user.videoAdCount = currentCount + 1;
     user.lastVideoAd = now;
 
@@ -124,16 +129,16 @@ exports.claimVideoAd = async (req, res) => {
     await Transaction.create({
       userId: user._id,
       type: 'earning',
-      amount: 20,
-      description: `Video Ad Reward (${user.videoAdCount}/5)`,
+      amount: rewardedAmount,
+      description: `${typeLabel} Reward (${user.videoAdCount}/5)`,
       status: 'completed'
     });
 
     // Notify user
-    createNotification(user._id, 'Video Reward! 📺', `You earned 20 points for watching ad ${user.videoAdCount}/5 today.`, 'earning');
+    createNotification(user._id, 'Video Reward! 📺', `You earned ${rewardedAmount} points for watching ${typeLabel} ${user.videoAdCount}/5 today.`, 'earning');
 
     res.json({ 
-      message: converted ? `Rewarded 20 points! You reached 1000+ points and got 50৳ converted!` : `Rewarded 20 points! (${user.videoAdCount}/5 ads completed)`,
+      message: converted ? `Rewarded ${rewardedAmount} points! You reached 1000+ points and got 50৳ converted!` : `Rewarded ${rewardedAmount} points! (${user.videoAdCount}/5 completed)`,
       balance: user.balance,
       points: user.points,
       lifetimePoints: user.lifetimePoints,
