@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { AdMobService } from '../utils/admob';
+import { API_BASE } from '../config';
 import { 
   Medal, Globe, Film, Gamepad2, 
   LifeBuoy, Gift, MonitorPlay, Users,
@@ -2304,7 +2305,7 @@ const EarningPage = ({ onReferralsClick, setActiveTab, onSuccess }) => {
                   setIsLoading(true);
                   try {
                     const token = localStorage.getItem('token');
-                    const response = await fetch('http://localhost:5001/api/earning/scratch-claim', {
+                    const response = await fetch(`${API_BASE}/api/earning/scratch-claim`, {
                       method: 'POST',
                       headers: { Authorization: `Bearer ${token}` },
                     });
@@ -2475,7 +2476,7 @@ const EarningPage = ({ onReferralsClick, setActiveTab, onSuccess }) => {
                       // Claim reward from backend
                       try {
                         const token = localStorage.getItem('token');
-                        const response = await fetch('http://localhost:5001/api/earning/quiz-claim', {
+                        const response = await fetch(`${API_BASE}/api/earning/quiz-claim`, {
                           method: 'POST',
                           headers: { Authorization: `Bearer ${token}` },
                         });

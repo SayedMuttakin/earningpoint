@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
-
-const API_BASE = 'http://192.168.31.163:5001';
+import { API_BASE } from '../config';
 
 const AdminLogin = ({ onLogin }) => {
   const [email, setEmail] = useState('');
