@@ -26,7 +26,7 @@ const gkQuizDB = [
   { id: 12, image: 'https://upload.wikimedia.org/wikipedia/commons/9/90/Kevin_De_Bruyne_201807092.jpg', answer: 'Kevin De Bruyne', options: ['Erling Haaland', 'Phil Foden', 'Bernardo Silva', 'Kevin De Bruyne'] }
 ];
 
-import { API_BASE } from '../config';
+
 import { countries } from '../utils/countries';
 
 const ipPackages = [
