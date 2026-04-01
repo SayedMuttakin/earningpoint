@@ -10,7 +10,8 @@ import PremiumOrders from './pages/PremiumOrders';
 import Settings from './pages/Settings';
 import Posts from './pages/Posts';
 
-export const API_BASE = `http://${window.location.hostname}:5001`;
+import { API_BASE as GlobalApiBase } from '../config';
+export const API_BASE = GlobalApiBase;
 export const ADMIN_API = `${API_BASE}/api/admin`;
 
 const AdminApp = () => {
