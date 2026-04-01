@@ -1,24 +1,43 @@
 import { AdMob, BannerAdSize, BannerAdPosition } from '@capacitor-community/admob';
 import { Capacitor } from '@capacitor/core';
 
+// Standard Google Test Ad Unit IDs for Android
+const TEST_ADMOB_IDS = {
+  banner: 'ca-app-pub-3940256099942544/6300978111',
+  interstitial: 'ca-app-pub-3940256099942544/1033173712',
+  rewarded: 'ca-app-pub-3940256099942544/5224354917',
+  native: 'ca-app-pub-3940256099942544/2247696110',
+  appOpen: 'ca-app-pub-3940256099942544/3419835294'
+};
+
 // Real Ad Unit IDs provided
-const ADMOB_IDS = {
+const REAL_ADMOB_IDS = {
   interstitial: 'ca-app-pub-7161684117324999/1594218732',
   rewardedInterstitial: 'ca-app-pub-7161684117324999/7790027198',
   rewarded: 'ca-app-pub-7161684117324999/6435481873',
-  native: 'ca-app-pub-7161684117324999/5630767711', // Note: Native ads are simulated using banners
-  appOpen: 'ca-app-pub-7161684117324999/6476945526' // App Open Ads (fallback to interstitial)
+  native: 'ca-app-pub-7161684117324999/5630767711',
+  appOpen: 'ca-app-pub-7161684117324999/6476945526'
+};
+
+// Toggle for Test Mode (Set to true for development)
+const USE_TEST_ADS = true;
+
+const getAdId = (type) => {
+  if (USE_TEST_ADS) {
+    return TEST_ADMOB_IDS[type] || TEST_ADMOB_IDS.banner;
+  }
+  return REAL_ADMOB_IDS[type] || REAL_ADMOB_IDS.interstitial;
 };
 
 export const AdMobService = {
   async showBanner() {
     try {
       await AdMob.showBanner({
-        adId: ADMOB_IDS.native, // Using native ID for banner as fallback
+        adId: getAdId('banner'),
         adSize: BannerAdSize.BANNER,
         position: BannerAdPosition.BOTTOM_CENTER,
         margin: 0,
-        isTesting: false,
+        isTesting: USE_TEST_ADS,
       });
     } catch (err) {
       console.error('Banner error:', err);
@@ -36,8 +55,8 @@ export const AdMobService = {
   async showInterstitial(onClose) {
     try {
       await AdMob.prepareInterstitial({
-        adId: ADMOB_IDS.interstitial,
-        isTesting: false,
+        adId: getAdId('interstitial'),
+        isTesting: USE_TEST_ADS,
       });
       const listener = await AdMob.addListener('onInterstitialAdDismissed', () => {
         if (onClose) onClose();
@@ -53,8 +72,8 @@ export const AdMobService = {
   async showRewarded(onReward) {
     try {
       await AdMob.prepareRewardVideoAd({
-        adId: ADMOB_IDS.rewarded,
-        isTesting: false,
+        adId: getAdId('rewarded'),
+        isTesting: USE_TEST_ADS,
       });
       
       const listener = await AdMob.addListener('onRewardedVideoAdRewarded', (rewardItem) => {
@@ -77,11 +96,11 @@ export const AdMobService = {
   async showNativeSimulatedAd() {
     try {
       await AdMob.showBanner({
-        adId: ADMOB_IDS.native,
+        adId: getAdId('native'),
         adSize: BannerAdSize.MEDIUM_RECTANGLE,
         position: BannerAdPosition.CENTER,
         margin: 0,
-        isTesting: false,
+        isTesting: USE_TEST_ADS,
       });
     } catch (err) {
       console.error('Simulated Native error:', err);
@@ -101,8 +120,8 @@ export const AdMobService = {
     try {
       // Fallback to interstitial using the App Open Ad ID
       await AdMob.prepareInterstitial({
-        adId: ADMOB_IDS.appOpen,
-        isTesting: false,
+        adId: getAdId('appOpen'),
+        isTesting: USE_TEST_ADS,
       });
       const listener = await AdMob.addListener('onInterstitialAdDismissed', () => {
         if (onClose) onClose();
