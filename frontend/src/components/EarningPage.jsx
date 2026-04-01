@@ -784,24 +784,13 @@ const EarningPage = ({ onReferralsClick, setActiveTab, onSuccess }) => {
         {[...Array(12)].map((_, i) => (
           <motion.div
             key={i}
-            className="absolute rounded-full opacity-20"
+            className="absolute rounded-full opacity-20 animate-float"
             style={{
               width: Math.random() * 8 + 3,
               height: Math.random() * 8 + 3,
               background: 'white',
               left: `${Math.random() * 100}%`,
               top: `${Math.random() * 100}%`,
-            }}
-            animate={{
-              y: [0, -20, 0],
-              opacity: [0.1, 0.3, 0.1],
-              scale: [1, 1.2, 1],
-            }}
-            transition={{
-              duration: 2 + Math.random() * 2,
-              repeat: Infinity,
-              delay: Math.random() * 2,
-              ease: 'easeInOut',
             }}
           />
         ))}
@@ -827,16 +816,14 @@ const EarningPage = ({ onReferralsClick, setActiveTab, onSuccess }) => {
 
       if (animType === 'quiz') return (
         <div className="relative flex items-center justify-center">
-          <motion.div animate={{ scale: [1, 1.08, 1], rotate: [0, -3, 3, 0] }} transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}>
+          <motion.div className="animate-scale-pulse"  >
             {bigIcon}
           </motion.div>
           {/* orbiting dots */}
           {[0, 1, 2].map(i => (
             <motion.div
               key={i}
-              className="absolute w-4 h-4 rounded-full bg-white/60"
-              animate={{ rotate: 360 }}
-              transition={{ duration: 3 + i, repeat: Infinity, ease: 'linear', delay: i * 0.5 }}
+              className="absolute w-4 h-4 rounded-full bg-white/60 animate-float"
               style={{ transformOrigin: `${70 + i * 10}px center`, originX: `${70 + i * 10}px` }}
             />
           ))}
@@ -844,10 +831,8 @@ const EarningPage = ({ onReferralsClick, setActiveTab, onSuccess }) => {
           {['?', '!', '?'].map((sym, i) => (
             <motion.div
               key={i}
-              className="absolute text-white/60 font-black text-2xl z-20"
+              className="absolute text-white/60 font-black text-2xl z-20 animate-float"
               style={{ top: `${[5, 75, 25][i]}%`, left: `${[0, 85, 95][i]}%` }}
-              animate={{ y: [0, -10, 0], opacity: [0.4, 0.9, 0.4] }}
-              transition={{ duration: 2, repeat: Infinity, delay: i * 0.6 }}
             >{sym}</motion.div>
           ))}
         </div>
@@ -855,7 +840,7 @@ const EarningPage = ({ onReferralsClick, setActiveTab, onSuccess }) => {
 
       if (animType === 'spin') return (
         <div className="relative flex items-center justify-center">
-          <motion.div animate={{ rotate: 360 }} transition={{ duration: 8, repeat: Infinity, ease: 'linear' }}>
+          <motion.div className="animate-spin-slow"  >
             <div className="w-48 h-48 rounded-full border-4 border-dashed border-white/20 absolute -inset-6" />
             {bigIcon}
           </motion.div>
@@ -864,17 +849,15 @@ const EarningPage = ({ onReferralsClick, setActiveTab, onSuccess }) => {
 
       if (animType === 'video') return (
         <div className="relative flex items-center justify-center">
-          <motion.div animate={{ scale: [1, 1.05, 1] }} transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}>
+          <motion.div className="animate-scale-pulse"  >
             {bigIcon}
           </motion.div>
           {/* pulse rings */}
           {[1, 2, 3].map(i => (
             <motion.div
               key={i}
-              className="absolute rounded-full border-2 border-white/20"
+              className="absolute rounded-full border-2 border-white/20 animate-float"
               style={{ width: 36 * i * 1.5, height: 36 * i * 1.5 }}
-              animate={{ scale: [1, 1.1, 1], opacity: [0.3, 0.1, 0.3] }}
-              transition={{ duration: 2, repeat: Infinity, delay: i * 0.4 }}
             />
           ))}
         </div>
@@ -882,30 +865,26 @@ const EarningPage = ({ onReferralsClick, setActiveTab, onSuccess }) => {
 
       if (animType === 'checkin') return (
         <div className="relative flex items-center justify-center">
-          <motion.div animate={{ scale: [1, 1.1, 1], rotateY: [0, 15, 0, -15, 0] }} transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}>
+          <motion.div className="animate-scale-pulse"  >
             {bigIcon}
           </motion.div>
           <motion.div
-            className="absolute -top-4 -right-4 text-4xl z-20 bg-emerald-500 rounded-full w-12 h-12 flex items-center justify-center shadow-lg border-2 border-white/20"
-            animate={{ scale: [1, 1.2, 1], rotate: [0, 10, 0] }}
-            transition={{ duration: 1.5, repeat: Infinity }}
+            className="absolute -top-4 -right-4 text-4xl z-20 bg-emerald-500 rounded-full w-12 h-12 flex items-center justify-center shadow-lg border-2 border-white/20 animate-scale-pulse"
           ><span className="text-white drop-shadow-md pb-1">✓</span></motion.div>
         </div>
       );
 
       if (animType === 'scratch') return (
         <div className="relative flex items-center justify-center">
-          <motion.div animate={{ rotate: [-3, 3, -3], scale: [1, 1.05, 1] }} transition={{ duration: 2.5, repeat: Infinity, ease: 'easeInOut' }}>
+          <motion.div className="animate-scale-pulse"  >
             {bigIcon}
           </motion.div>
           {/* scratch sparkles */}
           {['✨', '⭐', '💫'].map((s, i) => (
             <motion.div
               key={i}
-              className="absolute text-2xl z-20"
+              className="absolute text-2xl z-20 animate-float"
               style={{ top: ['10%', '60%', '20%'][i], left: ['90%', '-10%', '80%'][i] }}
-              animate={{ scale: [0, 1.5, 0], opacity: [0, 1, 0] }}
-              transition={{ duration: 1.5, repeat: Infinity, delay: i * 0.5 }}
             >{s}</motion.div>
           ))}
         </div>
@@ -913,17 +892,15 @@ const EarningPage = ({ onReferralsClick, setActiveTab, onSuccess }) => {
 
       if (animType === 'refer') return (
         <div className="relative flex items-center justify-center">
-          <motion.div animate={{ scale: [1, 1.06, 1] }} transition={{ duration: 2, repeat: Infinity }}>
+          <motion.div className="animate-scale-pulse"  >
             {bigIcon}
           </motion.div>
           {/* connection lines pulse */}
           {[-1, 0, 1].map(i => (
             <motion.div
               key={i}
-              className="absolute w-10 h-10 rounded-full bg-indigo-500 flex items-center justify-center text-xl z-20 shadow-lg border border-white/20"
+              className="absolute w-10 h-10 rounded-full bg-indigo-500 flex items-center justify-center text-xl z-20 shadow-lg border border-white/20 animate-float"
               style={{ left: `${30 + i * 40}%`, top: i === 0 ? '-20%' : '100%' }}
-              animate={{ scale: [1, 1.2, 1], opacity: [0.8, 1, 0.8] }}
-              transition={{ duration: 1.5, repeat: Infinity, delay: Math.abs(i) * 0.4 }}
             ><span className="text-white pb-1">👤</span></motion.div>
           ))}
         </div>
@@ -931,17 +908,15 @@ const EarningPage = ({ onReferralsClick, setActiveTab, onSuccess }) => {
 
       if (animType === 'premium') return (
         <div className="relative flex items-center justify-center">
-          <motion.div animate={{ y: [0, -8, 0], rotate: [0, 5, -5, 0] }} transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut' }}>
+          <motion.div className="animate-float"  >
             {bigIcon}
           </motion.div>
           {/* sparkles */}
           {['✨', '⭐', '💎'].map((s, i) => (
             <motion.div
               key={i}
-              className="absolute text-2xl z-20"
+              className="absolute text-2xl z-20 animate-float"
               style={{ top: ['5%', '85%', '15%'][i], left: ['-5%', '80%', '95%'][i] }}
-              animate={{ rotate: 360, scale: [1, 1.4, 1] }}
-              transition={{ duration: 3, repeat: Infinity, delay: i * 0.8 }}
             >{s}</motion.div>
           ))}
         </div>
@@ -950,7 +925,7 @@ const EarningPage = ({ onReferralsClick, setActiveTab, onSuccess }) => {
       // Generic / article / game
       return (
         <div className="relative flex items-center justify-center">
-          <motion.div animate={{ scale: [1, 1.08, 1], rotate: [0, 3, -3, 0] }} transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}>
+          <motion.div className="animate-scale-pulse"  >
             {bigIcon}
           </motion.div>
         </div>
@@ -1134,9 +1109,7 @@ const EarningPage = ({ onReferralsClick, setActiveTab, onSuccess }) => {
             >
               {/* Shine effect */}
               <motion.div
-                className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent"
-                animate={{ x: ['-100%', '200%'] }}
-                transition={{ duration: 2, repeat: Infinity, repeatDelay: 1.5 }}
+                className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent animate-float"
               />
               <span className="relative z-10">
                 {animType === 'premium' ? 'Get' : animType === 'refer' ? 'Invite' : animType === 'article' ? 'Read' : '▶ Play'} {item.name}
@@ -1321,9 +1294,7 @@ const EarningPage = ({ onReferralsClick, setActiveTab, onSuccess }) => {
 
               {/* Level Badge */}
               <motion.div
-                animate={{ y: [0, -6, 0], rotate: [0, 3, -3, 0] }}
-                transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
-                className="w-20 h-20 rounded-full bg-gradient-to-br from-amber-400 to-orange-600 shadow-xl shadow-orange-500/30 flex items-center justify-center border-4 border-amber-300/30 mt-6 mb-3"
+                className="w-20 h-20 rounded-full bg-gradient-to-br from-amber-400 to-orange-600 shadow-xl shadow-orange-500/30 flex items-center justify-center border-4 border-amber-300/30 mt-6 mb-3 animate-float"
               >
                 <span className="font-black text-white text-3xl">{levelInfo.level}</span>
               </motion.div>
@@ -1453,9 +1424,7 @@ const EarningPage = ({ onReferralsClick, setActiveTab, onSuccess }) => {
                     >
                       {/* Crown Icon */}
                       <motion.div
-                        animate={{ y: [0, -5, 0], rotate: [0, 5, -5, 0] }}
-                        transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
-                        className="mb-4 text-yellow-400 mt-2"
+                        className="mb-4 text-yellow-400 mt-2 animate-float"
                       >
                          <Crown className="w-16 h-16 fill-current" strokeWidth={1} />
                       </motion.div>
@@ -2242,9 +2211,7 @@ const EarningPage = ({ onReferralsClick, setActiveTab, onSuccess }) => {
                               {/* Scratch cover overlay */}
                               <div className="absolute inset-0 bg-gradient-to-br from-amber-400 via-yellow-400 to-orange-400 flex flex-col items-center justify-center gap-2 group-hover:opacity-90 transition-opacity z-10">
                                 <motion.div
-                                  animate={{ rotate: [0, 5, -5, 0] }}
-                                  transition={{ duration: 1.5, repeat: Infinity }}
-                                  className="text-4xl"
+                                  className="text-4xl animate-spin-slow"
                                 >
                                   🎁
                                 </motion.div>
@@ -3268,9 +3235,7 @@ const EarningPage = ({ onReferralsClick, setActiveTab, onSuccess }) => {
             <span className="absolute top-0 right-0 bg-slate-700 text-white text-[10px] px-3 py-1 font-bold rounded-bl-xl">Ad</span>
             <div className="relative">
               <motion.div
-                animate={{ y: [0, -10, 0] }}
-                transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
-                className="w-32 h-32 bg-rose-100 rounded-full flex items-center justify-center"
+                className="w-32 h-32 bg-rose-100 rounded-full flex items-center justify-center animate-float"
               >
                 <img src="https://img.icons8.com/color/144/monster.png" alt="Ad Character" className="w-24 h-24" />
               </motion.div>

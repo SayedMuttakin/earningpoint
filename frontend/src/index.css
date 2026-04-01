@@ -29,3 +29,52 @@
     color: var(--color-slate-100);
   }
 }
+
+@layer utilities {
+  .animate-float {
+    animation: float 4s ease-in-out infinite;
+  }
+  .animate-float-fast {
+    animation: float 2s ease-in-out infinite;
+  }
+  .animate-spin-slow {
+    animation: spin 8s linear infinite;
+  }
+  .animate-pulse-glow {
+    animation: pulse-glow 3s ease-in-out infinite;
+  }
+  .animate-pulse-glow-fast {
+    animation: pulse-glow-fast 1.5s ease-in-out infinite;
+  }
+  .animate-rotate-pulse {
+    animation: rotate-pulse 4s ease-in-out infinite;
+  }
+  .animate-scale-pulse {
+    animation: scale-pulse 3s ease-in-out infinite;
+  }
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-8px); }
+}
+
+@keyframes pulse-glow {
+  0%, 100% { opacity: 0.4; transform: scale(1); }
+  50% { opacity: 0.9; transform: scale(1.08); }
+}
+
+@keyframes pulse-glow-fast {
+  0%, 100% { opacity: 0.5; transform: scale(1); }
+  50% { opacity: 1; transform: scale(1.15); }
+}
+
+@keyframes rotate-pulse {
+  0%, 100% { transform: scale(1) rotate(0deg); opacity: 0.8; }
+  50% { transform: scale(1.1) rotate(5deg); opacity: 1; }
+}
+
+@keyframes scale-pulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.06); }
+}
