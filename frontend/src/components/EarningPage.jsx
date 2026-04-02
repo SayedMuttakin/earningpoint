@@ -114,7 +114,7 @@ const EarningPage = ({ onReferralsClick, setActiveTab, onSuccess }) => {
 
   // Premium IP States
   const [showPremiumIPView, setShowPremiumIPView] = React.useState(false);
-  const [isPremium, setIsPremium] = React.useState(false);
+  const [isPremium, setIsPremium] = React.useState(true); // Default to true for testing as requested
   const [selectedPackage, setSelectedPackage] = React.useState('month-1');
   const [ipStep, setIpStep] = React.useState(1);
   const [selectedCountry, setSelectedCountry] = React.useState('');
@@ -2670,26 +2670,26 @@ const EarningPage = ({ onReferralsClick, setActiveTab, onSuccess }) => {
       <div className="w-full max-w-4xl mx-auto bg-white dark:bg-slate-900 md:rounded-3xl shadow-xl overflow-hidden border border-slate-200 dark:border-slate-800">
 
         {/* Top Header - Points & Balance only */}
-        <div className="bg-[#1f2937] dark:bg-slate-950 text-white px-4 py-3 sm:px-6 sm:py-4 flex justify-end items-center border-b border-slate-800 gap-3">
+        <div className="bg-[#1f2937] dark:bg-slate-950 text-white px-2 py-2 sm:px-6 sm:py-4 flex justify-center items-center border-b border-slate-800 gap-1 sm:gap-3">
 
             {/* Premium IP Indicator - Added before Coins */}
             <motion.button
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
               onClick={() => { setShowPremiumIPView(true); setIpStep(1); }}
-              className={`px-4 py-2 rounded-full flex items-center gap-2 border shadow-sm transition-all ${
+              className={`px-2 py-1.5 sm:px-4 sm:py-2 rounded-full flex items-center gap-1 sm:gap-2 border shadow-sm transition-all ${
                 isPremium 
                   ? "bg-amber-500/20 border-amber-500/30 hover:bg-amber-500/30" 
                   : "bg-slate-800/80 hover:bg-slate-700 border-slate-700"
               }`}
             >
-              <div className={`w-6 h-6 rounded-full flex items-center justify-center ${
+              <div className={`w-5 h-5 sm:w-6 sm:h-6 rounded-full flex items-center justify-center ${
                 isPremium ? "bg-amber-400" : "bg-slate-700"
               }`}>
-                <Shield className={`w-4 h-4 ${isPremium ? "text-amber-900" : "text-slate-400"}`} strokeWidth={2.5} />
+                <Shield className={`w-3 h-3 sm:w-4 sm:h-4 ${isPremium ? "text-amber-900" : "text-slate-400"}`} strokeWidth={2.5} />
               </div>
               <div className="flex flex-col items-start pr-1">
-                 <span className={`text-[12px] font-black leading-none ${
+                 <span className={`text-[10px] sm:text-[12px] font-black leading-none ${
                    isPremium ? "text-amber-300" : "text-slate-300"
                  }`}>
                    Premium IP
@@ -2702,14 +2702,14 @@ const EarningPage = ({ onReferralsClick, setActiveTab, onSuccess }) => {
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
               onClick={() => setShowCoinsDetails(true)}
-              className="bg-slate-800/80 hover:bg-slate-700 px-4 py-2 rounded-full flex items-center gap-2 border border-slate-700 shadow-sm transition-colors"
+              className="bg-slate-800/80 hover:bg-slate-700 px-2 py-1.5 sm:px-4 sm:py-2 rounded-full flex items-center gap-1 sm:gap-2 border border-slate-700 shadow-sm transition-colors"
             >
-              <div className="w-6 h-6 bg-emerald-500/20 rounded-full flex items-center justify-center">
-                <Medal className="w-4 h-4 text-emerald-400" strokeWidth={2.5} />
+              <div className="w-5 h-5 sm:w-6 sm:h-6 bg-emerald-500/20 rounded-full flex items-center justify-center">
+                <Medal className="w-3 h-3 sm:w-4 sm:h-4 text-emerald-400" strokeWidth={2.5} />
               </div>
               <div className="flex flex-col items-start pr-1">
-                 <span className="text-[10px] text-slate-400 font-bold leading-none mb-0.5">Coins</span>
-                 <span className="text-[13px] font-black text-emerald-400 leading-none">{coins.toLocaleString()}</span>
+                 <span className="text-[8px] sm:text-[10px] text-slate-400 font-bold leading-none mb-0.5">Coins</span>
+                 <span className="text-[11px] sm:text-[13px] font-black text-emerald-400 leading-none">{coins.toLocaleString()}</span>
               </div>
             </motion.button>
 
@@ -2719,7 +2719,7 @@ const EarningPage = ({ onReferralsClick, setActiveTab, onSuccess }) => {
               onHoverStart={() => setIsHovered(true)}
               onHoverEnd={() => setIsHovered(false)}
               onTap={() => setIsHovered(!isHovered)}
-              className="bg-white/10 px-4 py-2 rounded-full flex items-center relative overflow-hidden min-w-[120px] justify-between border border-white/20 transition-colors hover:bg-white/20 cursor-pointer"
+              className="bg-white/10 px-2 py-1.5 sm:px-4 sm:py-2 rounded-full flex items-center relative overflow-hidden min-w-[90px] sm:min-w-[120px] justify-between border border-white/20 transition-colors hover:bg-white/20 cursor-pointer"
             >
               <AnimatePresence mode="wait">
                 {!isHovered ? (
@@ -2729,12 +2729,12 @@ const EarningPage = ({ onReferralsClick, setActiveTab, onSuccess }) => {
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     exit={{ opacity: 0 }}
-                    className="flex items-center gap-2 w-full"
+                    className="flex items-center gap-1 sm:gap-2 w-full"
                   >
-                     <div className="w-6 h-6 bg-yellow-400 rounded-full flex items-center justify-center shrink-0 shadow-sm">
-                       <span className="text-black text-xs font-black">৳</span>
+                     <div className="w-5 h-5 sm:w-6 sm:h-6 bg-yellow-400 rounded-full flex items-center justify-center shrink-0 shadow-sm">
+                       <span className="text-black text-[10px] sm:text-xs font-black">৳</span>
                      </div>
-                     <span className="text-sm font-bold">Balance</span>
+                     <span className="text-xs sm:text-sm font-bold">Balance</span>
                   </motion.div>
                 ) : (
                   <motion.div
@@ -2745,10 +2745,10 @@ const EarningPage = ({ onReferralsClick, setActiveTab, onSuccess }) => {
                     exit={{ opacity: 0 }}
                     className="flex items-center flex-row-reverse justify-between w-full"
                   >
-                     <div className="w-6 h-6 bg-yellow-400 rounded-full flex items-center justify-center shrink-0 shadow-sm">
-                       <span className="text-black text-xs font-black">৳</span>
+                     <div className="w-5 h-5 sm:w-6 sm:h-6 bg-yellow-400 rounded-full flex items-center justify-center shrink-0 shadow-sm">
+                       <span className="text-black text-[10px] sm:text-xs font-black">৳</span>
                      </div>
-                     <span className="text-sm font-bold text-yellow-400">
+                     <span className="text-xs sm:text-sm font-bold text-yellow-400">
                        ৳{balance.toLocaleString()}
                      </span>
                   </motion.div>
@@ -2935,25 +2935,8 @@ const EarningPage = ({ onReferralsClick, setActiveTab, onSuccess }) => {
 
           {/* ═══════ LEVEL 1 ═══════ */}
           <div className="space-y-5 max-w-5xl mx-auto relative">
-            {/* Lock Overlay when not Premium */}
-            {!isPremium && (
-              <div
-                onClick={() => { setShowPremiumIPView(true); setIpStep(1); }}
-                className="absolute inset-0 z-10 rounded-2xl bg-white/5 dark:bg-slate-800/10 backdrop-blur-[2px] flex flex-col items-center justify-center cursor-pointer gap-3 py-4 border border-amber-500/10"
-              >
-                <div className="w-14 h-14 rounded-full bg-amber-500/20 border-2 border-amber-500/40 flex items-center justify-center shadow-lg">
-                  <svg xmlns="http://www.w3.org/2000/svg" className="w-7 h-7 text-amber-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-                  </svg>
-                </div>
-                <div className="text-center px-4">
-                  <p className="text-slate-800 dark:text-white font-black text-base">Get Premium IP to unlock</p>
-                  <p className="text-amber-600 dark:text-amber-400 text-xs font-bold mt-1">Tap to Get Premium IP</p>
-                </div>
-                <span className="px-5 py-2 bg-gradient-to-r from-amber-500 to-orange-500 text-white text-xs font-black rounded-full shadow-lg border border-white/20">Get Premium IP →</span>
-              </div>
-            )}
-            <div className={!isPremium ? 'opacity-30 select-none pointer-events-none' : ''}>
+            {/* Lock Overlay when not Premium - REMOVED FOR TESTING */}
+            <div className="">
               <div className="flex items-center gap-3">
                 <div className="w-9 h-9 rounded-full bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center shadow-md">
                   <span className="font-black text-white text-sm">1</span>
@@ -2988,26 +2971,8 @@ const EarningPage = ({ onReferralsClick, setActiveTab, onSuccess }) => {
 
           {/* ═══════ LEVEL 2 ═══════ */}
           <div className="space-y-5 max-w-5xl mx-auto relative">
-            {/* Lock Overlay for Level 2: need 1500 coins AND premium */}
-            {(!isPremium || lifetimeCoins < 1500) && (
-              <div
-                onClick={() => { if (!isPremium) { setShowPremiumIPView(true); setIpStep(1); } }}
-                className={`absolute inset-0 z-10 rounded-2xl backdrop-blur-[2px] flex flex-col items-center justify-center gap-2 py-4 border border-slate-200/10 ${
-                  !isPremium ? 'bg-white/10 dark:bg-slate-900/20 cursor-pointer' : 'bg-white/5 dark:bg-slate-900/10 cursor-default'
-                }`}
-              >
-                <div className="w-10 h-10 rounded-full bg-white/50 dark:bg-slate-800/80 border border-slate-300 dark:border-slate-600 flex items-center justify-center shadow-sm">
-                  <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5 text-slate-600 dark:text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-                  </svg>
-                </div>
-                <p className="text-slate-800 dark:text-slate-200 font-black text-sm text-center px-2">
-                  {!isPremium ? 'Get Premium IP to unlock' : `Earn ${(1500 - lifetimeCoins).toLocaleString()} more coins to unlock`}
-                </p>
-                {!isPremium && <span className="text-xs text-amber-600 dark:text-amber-400 font-bold italic">Tap to Get Premium IP</span>}
-              </div>
-            )}
-            <div className={(!isPremium || lifetimeCoins < 1500) ? 'opacity-25 select-none pointer-events-none' : ''}>
+            {/* Lock Overlay for Level 2 - REMOVED FOR TESTING */}
+            <div className="">
               <div className="flex items-center gap-3">
                 <div className="w-9 h-9 rounded-full bg-gradient-to-br from-sky-400 to-blue-600 flex items-center justify-center shadow-md">
                   <span className="font-black text-white text-sm">2</span>
@@ -3044,25 +3009,8 @@ const EarningPage = ({ onReferralsClick, setActiveTab, onSuccess }) => {
 
           {/* ═══════ LEVEL 3 ═══════ */}
           <div className="space-y-5 max-w-5xl mx-auto relative">
-            {(!isPremium || lifetimeCoins < 3500) && (
-              <div
-                onClick={() => { if (!isPremium) { setShowPremiumIPView(true); setIpStep(1); } }}
-                className={`absolute inset-0 z-10 rounded-2xl backdrop-blur-[2px] flex flex-col items-center justify-center gap-2 py-4 border border-slate-200/10 ${
-                  !isPremium ? 'bg-white/10 dark:bg-slate-900/20 cursor-pointer' : 'bg-white/5 dark:bg-slate-900/10 cursor-default'
-                }`}
-              >
-                <div className="w-10 h-10 rounded-full bg-white/50 dark:bg-slate-800/80 border border-slate-300 dark:border-slate-600 flex items-center justify-center shadow-sm">
-                  <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5 text-slate-600 dark:text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-                  </svg>
-                </div>
-                <p className="text-slate-800 dark:text-slate-200 font-black text-sm text-center px-2">
-                  {!isPremium ? 'Get Premium IP to unlock' : `Earn ${(3500 - lifetimeCoins).toLocaleString()} more coins to unlock`}
-                </p>
-                {!isPremium && <span className="text-xs text-amber-600 dark:text-amber-400 font-bold italic">Tap to Get Premium IP</span>}
-              </div>
-            )}
-            <div className={(!isPremium || lifetimeCoins < 3500) ? 'opacity-25 select-none pointer-events-none' : ''}>
+            {/* Lock Overlay Level 3 - REMOVED FOR TESTING */}
+            <div className="">
               <div className="flex items-center gap-3">
                 <div className="w-9 h-9 rounded-full bg-gradient-to-br from-emerald-400 to-green-600 flex items-center justify-center shadow-md">
                   <span className="font-black text-white text-sm">3</span>
@@ -3095,25 +3043,8 @@ const EarningPage = ({ onReferralsClick, setActiveTab, onSuccess }) => {
 
           {/* ═══════ LEVEL 4 ═══════ */}
           <div className="space-y-5 max-w-5xl mx-auto relative">
-            {(!isPremium || lifetimeCoins < 6000) && (
-              <div
-                onClick={() => { if (!isPremium) { setShowPremiumIPView(true); setIpStep(1); } }}
-                className={`absolute inset-0 z-10 rounded-2xl backdrop-blur-[2px] flex flex-col items-center justify-center gap-2 py-4 border border-slate-200/10 ${
-                  !isPremium ? 'bg-white/10 dark:bg-slate-900/20 cursor-pointer' : 'bg-white/5 dark:bg-slate-900/10 cursor-default'
-                }`}
-              >
-                <div className="w-10 h-10 rounded-full bg-white/50 dark:bg-slate-800/80 border border-slate-300 dark:border-slate-600 flex items-center justify-center shadow-sm">
-                  <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5 text-slate-600 dark:text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-                  </svg>
-                </div>
-                <p className="text-slate-800 dark:text-slate-200 font-black text-sm text-center px-2">
-                  {!isPremium ? 'Get Premium IP to unlock' : `Earn ${(6000 - lifetimeCoins).toLocaleString()} more coins to unlock`}
-                </p>
-                {!isPremium && <span className="text-xs text-amber-600 dark:text-amber-400 font-bold italic">Tap to Get Premium IP</span>}
-              </div>
-            )}
-            <div className={(!isPremium || lifetimeCoins < 6000) ? 'opacity-25 select-none pointer-events-none' : ''}>
+            {/* Lock Overlay Level 4 - REMOVED FOR TESTING */}
+            <div className="">
               <div className="flex items-center gap-3">
                 <div className="w-9 h-9 rounded-full bg-gradient-to-br from-purple-500 to-violet-600 flex items-center justify-center shadow-md">
                   <span className="font-black text-white text-sm">4</span>
@@ -3150,25 +3081,8 @@ const EarningPage = ({ onReferralsClick, setActiveTab, onSuccess }) => {
 
           {/* ═══════ LEVEL 5 ═══════ */}
           <div className="space-y-5 max-w-5xl mx-auto relative">
-            {(!isPremium || lifetimeCoins < 10000) && (
-              <div
-                onClick={() => { if (!isPremium) { setShowPremiumIPView(true); setIpStep(1); } }}
-                className={`absolute inset-0 z-10 rounded-2xl backdrop-blur-[2px] flex flex-col items-center justify-center gap-2 py-4 border border-slate-200/10 ${
-                  !isPremium ? 'bg-white/10 dark:bg-slate-900/20 cursor-pointer' : 'bg-white/5 dark:bg-slate-900/10 cursor-default'
-                }`}
-              >
-                <div className="w-10 h-10 rounded-full bg-white/50 dark:bg-slate-800/80 border border-slate-300 dark:border-slate-600 flex items-center justify-center shadow-sm">
-                  <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5 text-slate-600 dark:text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-                  </svg>
-                </div>
-                <p className="text-slate-800 dark:text-slate-200 font-black text-sm text-center px-2">
-                  {!isPremium ? 'Get Premium IP to unlock' : `Earn ${(10000 - lifetimeCoins).toLocaleString()} more coins to unlock`}
-                </p>
-                {!isPremium && <span className="text-xs text-amber-600 dark:text-amber-400 font-bold italic">Tap to Get Premium IP</span>}
-              </div>
-            )}
-            <div className={(!isPremium || lifetimeCoins < 10000) ? 'opacity-25 select-none pointer-events-none' : ''}>
+            {/* Lock Overlay Level 5 - REMOVED FOR TESTING */}
+            <div className="">
               <div className="flex items-center gap-3">
                 <div className="w-9 h-9 rounded-full bg-gradient-to-br from-rose-500 to-pink-600 flex items-center justify-center shadow-md">
                   <span className="font-black text-white text-sm">5</span>

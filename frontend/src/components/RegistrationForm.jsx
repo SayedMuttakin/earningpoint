@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { API_BASE } from '../config';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Lock, UserPlus, AtSign, Globe, ChevronDown, Check, Search, Users } from 'lucide-react';
@@ -94,6 +94,14 @@ const RegistrationForm = ({ onToggleForm, onRegisterSuccess }) => {
   const [error, setError] = useState('');
   const [isCountryDropdownOpen, setIsCountryDropdownOpen] = useState(false);
   const [countrySearchQuery, setCountrySearchQuery] = useState('');
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const refToken = params.get('ref');
+    if (refToken) {
+      setFormData(prev => ({ ...prev, referCode: refToken }));
+    }
+  }, []);
 
   const filteredCountries = countries.filter(c => 
     c.name.toLowerCase().includes(countrySearchQuery.toLowerCase())
