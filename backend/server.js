@@ -10,7 +10,9 @@ const allowedOrigins = [
   'http://localhost:5173',
   'http://localhost:3000',
   'http://localhost',
+  'https://localhost',
   'capacitor://localhost',
+  'ionic://localhost',
   'https://satrong-sajghor.top',
   'http://192.168.31.163:5001'
 ];
@@ -20,7 +22,9 @@ app.use(cors({
     if (!origin || 
         allowedOrigins.indexOf(origin) !== -1 || 
         origin.startsWith('capacitor://') || 
-        origin.startsWith('http://localhost')) {
+        origin.startsWith('ionic://') ||
+        origin.startsWith('http://localhost') ||
+        origin.startsWith('https://localhost')) {
       return callback(null, true);
     }
     console.log(`[CORS REJECTED] Origin: ${origin}`);
