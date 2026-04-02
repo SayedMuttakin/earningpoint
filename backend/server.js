@@ -5,39 +5,22 @@ require('dotenv').config();
 
 const app = express();
 
-// Middleware
-const allowedOrigins = [
-  'http://localhost:5173',
-  'http://localhost:3000',
-  'http://localhost',
-  'https://localhost',
-  'capacitor://localhost',
-  'ionic://localhost',
-  'https://satrong-sajghor.top',
-  'http://192.168.31.163:5001'
-];
-
-app.use(cors({
-  origin: function (origin, callback) {
-    if (!origin || 
-        allowedOrigins.indexOf(origin) !== -1 || 
-        origin.startsWith('capacitor://') || 
-        origin.startsWith('ionic://') ||
-        origin.startsWith('http://localhost') ||
-        origin.startsWith('https://localhost')) {
-      return callback(null, true);
-    }
-    console.log(`[CORS REJECTED] Origin: ${origin}`);
-    return callback(new Error('CORS Not Allowed'), false);
-  },
-  credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept', 'Origin']
-}));
-
-// Request Logger for Debugging
+// CORS - Allow all origins (safe since JWT is used, not cookies)
 app.use((req, res, next) => {
-  console.log(`${new Date().toISOString()} - ${req.method} ${req.url} - Origin: ${req.get('Origin')}`);
+  const origin = req.headers.origin;
+  res.setHeader('Access-Control-Allow-Origin', origin || '*');
+  res.setHeader('Access-Control-Allow-Credentials', 'true');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With, Accept, Origin');
+  if (req.method === 'OPTIONS') {
+    return res.status(204).end();
+  }
+  next();
+});
+
+// Request Logger
+app.use((req, res, next) => {
+  console.log(`${new Date().toISOString()} - ${req.method} ${req.url} - Origin: ${req.get('Origin') || 'none'}`);
   next();
 });
 
