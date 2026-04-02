@@ -113,8 +113,8 @@ const PostCard = ({ post }) => {
 
       {/* Post Heading (Title) */}
       {post.title && (
-        <div className="px-4 pb-3">
-          <h2 className="text-2xl sm:text-[32px] font-black text-slate-900 leading-[1.2] tracking-tight decoration-indigo-500/30 underline-offset-8">
+        <div className="px-4 pb-4 pt-1">
+          <h2 className="text-2xl sm:text-[32px] font-black text-slate-900 leading-[1.1] tracking-tight decoration-indigo-500/30 underline-offset-8">
             {post.title}
           </h2>
         </div>
