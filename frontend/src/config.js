@@ -1,3 +1,7 @@
-// Production URL (works for both web and Android app)
-// Local dev: "http://192.168.31.163:5001"
-export const API_BASE = "https://satrong-sajghor.top"; 
+// Set to true to use your local development server (http://localhost:5001)
+// Set to false to use the production server (https://satrong-sajghor.top)
+const USE_LOCAL = false; 
+
+export const API_BASE = USE_LOCAL 
+  ? "http://localhost:5001" 
+  : "https://satrong-sajghor.top";
