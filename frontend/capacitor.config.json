@@ -4,7 +4,7 @@
   "webDir": "dist",
   "server": {
     "cleartext": true,
-    "allowNavigation": ["192.168.31.163"]
+    "allowNavigation": ["192.168.31.163", "satrong-sajghor.top"]
   },
   "plugins": {
     "AdMob": {

@@ -9,6 +9,8 @@ const app = express();
 const allowedOrigins = [
   'http://localhost:5173',
   'http://localhost:3000',
+  'http://localhost',
+  'capacitor://localhost',
   'https://satrong-sajghor.top',
   'http://192.168.31.163:5001'
 ];
