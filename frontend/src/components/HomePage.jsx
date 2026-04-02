@@ -3,27 +3,32 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { BadgeCheck, Loader2 } from 'lucide-react';
 import { API_BASE } from '../config';
 
-const PostAd = ({ index }) => (
-  <div className="my-6 relative bg-slate-50 border-2 border-dashed border-slate-200 rounded-2xl p-6 overflow-hidden group">
-    <div className="absolute top-0 right-0 bg-amber-500 text-white text-[9px] font-black px-3 py-1 rounded-bl-xl uppercase tracking-widest z-10">
-      Sponsored
-    </div>
-    <div className="flex flex-col items-center justify-center gap-3">
-      <div className="w-full h-32 sm:h-20 bg-white border border-slate-100 rounded-xl flex items-center justify-center shadow-inner relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-br from-indigo-50/50 to-transparent" />
-        <div className="flex flex-col items-center">
-          <span className="text-slate-400 font-black text-sm tracking-tight group-hover:scale-105 transition-transform">
-            NICE JOB! TEST AD {index}
-          </span>
-          <span className="text-[10px] text-slate-400 font-bold mt-1">320 x 50 Responsive Banner</span>
-        </div>
+const PostAd = ({ index }) => {
+  const isLarge = index > 1; // 1st is 320x50, 2nd and 3rd are 320x250
+  const sizeText = isLarge ? "320 x 250 Medium Rectangle" : "320 x 50 Responsive Banner";
+  
+  return (
+    <div className="my-6 relative bg-slate-50 border-2 border-dashed border-slate-200 rounded-2xl p-6 overflow-hidden group">
+      <div className="absolute top-0 right-0 bg-amber-500 text-white text-[9px] font-black px-3 py-1 rounded-bl-xl uppercase tracking-widest z-10">
+        Sponsored
       </div>
-      <button className="w-full py-2 bg-indigo-600 text-white rounded-lg text-xs font-black uppercase tracking-wider shadow-lg shadow-indigo-600/20 active:scale-95 transition-all">
-        Learn More
-      </button>
+      <div className="flex flex-col items-center justify-center gap-3">
+        <div className={`w-full ${isLarge ? 'h-64 sm:h-72' : 'h-32 sm:h-20'} bg-white border border-slate-100 rounded-xl flex items-center justify-center shadow-inner relative overflow-hidden transition-all duration-500`}>
+          <div className="absolute inset-0 bg-gradient-to-br from-indigo-50/50 to-transparent" />
+          <div className="flex flex-col items-center">
+            <span className="text-slate-400 font-black text-sm tracking-tight group-hover:scale-105 transition-transform">
+              NICE JOB! TEST AD {index}
+            </span>
+            <span className="text-[10px] text-slate-400 font-bold mt-1">{sizeText}</span>
+          </div>
+        </div>
+        <button className="w-full py-2 bg-indigo-600 text-white rounded-lg text-xs font-black uppercase tracking-wider shadow-lg shadow-indigo-600/20 active:scale-95 transition-all">
+          Learn More
+        </button>
+      </div>
     </div>
-  </div>
-);
+  );
+};
 
 const PostCard = ({ post }) => {
   const [isExpanded, setIsExpanded] = useState(false);
