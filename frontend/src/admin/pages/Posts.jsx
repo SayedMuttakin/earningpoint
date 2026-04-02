@@ -6,7 +6,7 @@ const Posts = ({ authHeaders, ADMIN_API }) => {
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [isAdding, setIsAdding] = useState(false);
-  const [newPost, setNewPost] = useState({ content: '', image: null, authorName: 'Zenvio', isVerified: true });
+  const [newPost, setNewPost] = useState({ content: '', title: '', image: null, authorName: 'Zenvio', isVerified: true });
   const [imagePreview, setImagePreview] = useState(null);
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(null);
@@ -59,7 +59,7 @@ const Posts = ({ authHeaders, ADMIN_API }) => {
 
       if (res.ok) {
         setSuccess('Post published successfully!');
-        setNewPost({ content: '', image: null, authorName: 'Zenvio', isVerified: true });
+        setNewPost({ content: '', title: '', image: null, authorName: 'Zenvio', isVerified: true });
         setImagePreview(null);
         setIsAdding(false);
         fetchPosts();
@@ -114,6 +114,17 @@ const Posts = ({ authHeaders, ADMIN_API }) => {
           <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-600/5 rounded-full blur-3xl" />
           
           <form onSubmit={handleCreatePost} className="space-y-6 relative z-10">
+            <div>
+              <label className="block text-slate-400 text-xs font-black uppercase tracking-widest mb-3 ml-1">Post Heading (Title)</label>
+              <input
+                type="text"
+                className="w-full bg-slate-950 border border-slate-800 rounded-2xl px-5 py-3 text-white focus:ring-2 focus:ring-indigo-500/50 outline-none transition-all placeholder:text-slate-600"
+                placeholder="Enter post heading..."
+                value={newPost.title}
+                onChange={(e) => setNewPost({ ...newPost, title: e.target.value })}
+              />
+            </div>
+
             <div>
               <label className="block text-slate-400 text-xs font-black uppercase tracking-widest mb-3 ml-1">Post Content</label>
               <textarea
@@ -251,6 +262,12 @@ const Posts = ({ authHeaders, ADMIN_API }) => {
                   </div>
                 </div>
                 
+                {post.title && (
+                  <h3 className="text-white font-black text-xl mb-3 line-clamp-2 leading-tight group-hover:text-indigo-400 transition-colors uppercase tracking-tight">
+                    {post.title}
+                  </h3>
+                )}
+
                 <p className="text-slate-300 text-[15px] leading-relaxed mb-6 line-clamp-4 flex-1 font-medium">
                   {post.content}
                 </p>

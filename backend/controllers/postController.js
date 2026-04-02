@@ -19,7 +19,7 @@ exports.getPosts = async (req, res) => {
 // @access  Private/Admin
 exports.createPost = async (req, res) => {
   try {
-    const { content, image, authorName, isVerified } = req.body;
+    const { content, title, image, authorName, isVerified } = req.body;
     
     if (!content) {
       return res.status(400).json({ message: 'Content is required' });
@@ -27,6 +27,7 @@ exports.createPost = async (req, res) => {
 
     const post = await Post.create({
       content,
+      title: title || null,
       image: image || null,
       authorName: authorName || 'Zenvio',
       isVerified: isVerified !== undefined ? isVerified : true
@@ -59,7 +60,7 @@ exports.createPost = async (req, res) => {
 // @access  Private/Admin
 exports.updatePost = async (req, res) => {
   try {
-    const { content, image, authorName, isVerified } = req.body;
+    const { content, title, image, authorName, isVerified } = req.body;
     const post = await Post.findById(req.params.id);
 
     if (!post) {
@@ -67,6 +68,7 @@ exports.updatePost = async (req, res) => {
     }
 
     post.content = content || post.content;
+    post.title = title !== undefined ? title : post.title;
     post.image = image !== undefined ? image : post.image;
     post.authorName = authorName || post.authorName;
     post.isVerified = isVerified !== undefined ? isVerified : post.isVerified;

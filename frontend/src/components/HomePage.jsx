@@ -3,16 +3,33 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { BadgeCheck, Loader2 } from 'lucide-react';
 import { API_BASE } from '../config';
 
+const PostAd = ({ index }) => (
+  <div className="my-6 relative bg-slate-50 border-2 border-dashed border-slate-200 rounded-2xl p-6 overflow-hidden group">
+    <div className="absolute top-0 right-0 bg-amber-500 text-white text-[9px] font-black px-3 py-1 rounded-bl-xl uppercase tracking-widest z-10">
+      Sponsored
+    </div>
+    <div className="flex flex-col items-center justify-center gap-3">
+      <div className="w-full h-32 sm:h-20 bg-white border border-slate-100 rounded-xl flex items-center justify-center shadow-inner relative overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-br from-indigo-50/50 to-transparent" />
+        <div className="flex flex-col items-center">
+          <span className="text-slate-400 font-black text-sm tracking-tight group-hover:scale-105 transition-transform">
+            NICE JOB! TEST AD {index}
+          </span>
+          <span className="text-[10px] text-slate-400 font-bold mt-1">320 x 50 Responsive Banner</span>
+        </div>
+      </div>
+      <button className="w-full py-2 bg-indigo-600 text-white rounded-lg text-xs font-black uppercase tracking-wider shadow-lg shadow-indigo-600/20 active:scale-95 transition-all">
+        Learn More
+      </button>
+    </div>
+  </div>
+);
+
 const PostCard = ({ post }) => {
   const [isExpanded, setIsExpanded] = useState(false);
   const textThreshold = 180;
   const shouldTruncate = post.content.length > textThreshold;
   
-  const displayContent = isExpanded 
-    ? post.content 
-    : post.content.slice(0, textThreshold) + (shouldTruncate ? '...' : '');
-
-  // Format date correctly (e.g., Mar 17)
   const formatDate = (dateStr) => {
     try {
       const date = new Date(dateStr);
@@ -20,6 +37,50 @@ const PostCard = ({ post }) => {
     } catch (e) {
       return 'Today';
     }
+  };
+
+  const renderContentWithAds = () => {
+    if (!isExpanded) {
+      return (
+        <p className="text-slate-800 text-[15px] leading-relaxed whitespace-pre-wrap">
+          {post.content.slice(0, textThreshold)}{shouldTruncate ? '...' : ''}
+        </p>
+      );
+    }
+
+    // Split content into paragraphs
+    const paragraphs = post.content.split('\n').filter(p => p.trim() !== '');
+    
+    // If not many paragraphs, just show content
+    if (paragraphs.length < 3) {
+      return (
+        <p className="text-slate-800 text-[15px] leading-relaxed whitespace-pre-wrap">
+          {post.content}
+        </p>
+      );
+    }
+
+    // Logic to insert 3 ads
+    const adPositions = [
+      Math.floor(paragraphs.length / 4),
+      Math.floor(paragraphs.length / 2),
+      Math.floor((3 * paragraphs.length) / 4)
+    ];
+
+    return (
+      <div className="space-y-4">
+        {paragraphs.map((para, idx) => (
+          <React.Fragment key={idx}>
+            <p className="text-slate-800 text-[15px] leading-relaxed">
+              {para}
+            </p>
+            {adPositions.includes(idx + 1) && (
+              <PostAd index={adPositions.indexOf(idx + 1) + 1} />
+            )}
+          </React.Fragment>
+        ))}
+      </div>
+    );
   };
 
   return (
@@ -31,7 +92,6 @@ const PostCard = ({ post }) => {
     >
       {/* Post Header */}
       <div className="p-4 flex items-center gap-2">
-        {/* Zenvio Logo */}
         <div className="w-9 h-9 rounded-full overflow-hidden flex-shrink-0 bg-white border border-slate-100 shadow-sm p-[1.5px]">
           <img 
             src="/zenvio-logo.png" 
@@ -40,7 +100,6 @@ const PostCard = ({ post }) => {
           />
         </div>
 
-        {/* Name & Verified Badge */}
         <div className="flex flex-col sm:flex-row sm:items-center gap-0 sm:gap-2">
           <div className="flex items-center gap-1.5">
             <span className="font-bold text-slate-900 text-[16px] tracking-tight">{post.authorName || 'Zenvio'}</span>
@@ -52,16 +111,23 @@ const PostCard = ({ post }) => {
         </div>
       </div>
 
+      {/* Post Heading (Title) */}
+      {post.title && (
+        <div className="px-4 pb-3">
+          <h2 className="text-2xl sm:text-[32px] font-black text-slate-900 leading-[1.2] tracking-tight decoration-indigo-500/30 underline-offset-8">
+            {post.title}
+          </h2>
+        </div>
+      )}
+
       {/* Post Content */}
       <div className="px-4 pb-3">
-        <p className="text-slate-800 text-[15px] leading-relaxed whitespace-pre-wrap">
-          {displayContent}
-        </p>
+        {renderContentWithAds()}
         
         {shouldTruncate && !isExpanded && (
           <button 
             onClick={() => setIsExpanded(true)}
-            className="text-blue-500 font-bold text-sm mt-1 hover:underline underline-offset-2 transition-all"
+            className="text-blue-500 font-bold text-sm mt-2 hover:underline underline-offset-2 transition-all"
           >
             See more
           </button>
