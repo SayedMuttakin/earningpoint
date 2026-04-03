@@ -36,6 +36,51 @@ const ipPackages = [
   { id: 'year-1', name: '1 Year', price: 4200, freeInfo: '2 Month free', bestValue: true, label: '1 Year (+2 Months free)' },
 ];
 
+
+const BigAdBanner = () => {
+  return (
+    <div className="w-full flex justify-center mt-6">
+      <div className="w-[320px] h-[250px] bg-slate-50 dark:bg-slate-800/50 border-2 border-slate-200 dark:border-slate-700 relative rounded-2xl flex flex-col items-center justify-center overflow-hidden shadow-sm">
+        {/* AdMob Branding/UI mimic */}
+        <div className="absolute top-0 left-0 right-0 h-7 bg-slate-100 dark:bg-slate-800 flex items-center px-4 justify-between border-b border-slate-200 dark:border-slate-700">
+          <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest flex items-center gap-1.5">
+            <Shield className="w-3 h-3" /> Sponsored
+          </span>
+          <div className="flex items-center gap-1.5">
+             <div className="w-3 h-3 rounded-full bg-slate-200 dark:bg-slate-700" />
+             <div className="w-3.5 h-3.5 bg-blue-500 rounded-sm flex items-center justify-center">
+                <Check className="w-2.5 h-2.5 text-white" strokeWidth={4} />
+             </div>
+          </div>
+        </div>
+
+        <div className="flex flex-col items-center text-center p-6 pt-10 space-y-4">
+          <div className="w-20 h-20 bg-white dark:bg-slate-900 rounded-3xl shadow-md flex items-center justify-center ring-4 ring-blue-500/10 transition-transform">
+             <img src="https://img.icons8.com/fluency/96/google-logo.png" alt="Ad Mascot" className="w-12 h-12" />
+          </div>
+          
+          <div className="space-y-1">
+            <h4 className="text-base font-black text-blue-600 dark:text-blue-400 leading-none">Google AdMob Test</h4>
+            <p className="text-[12px] text-slate-500 dark:text-slate-400 font-bold leading-tight px-4 opacity-80">
+              320x250 Medium Rectangle Ad Ready for Production Implementation.
+            </p>
+          </div>
+
+          <button className="px-8 py-2.5 rounded-full bg-blue-500 text-white text-xs font-black shadow-lg shadow-blue-500/30 hover:scale-105 active:scale-95 transition-all">
+            AD UNIT ACTIVE
+          </button>
+        </div>
+
+        {/* Ad Attribution */}
+        <div className="absolute bottom-2 right-4 flex items-center gap-1.5 opacity-30 group-hover:opacity-60 transition-opacity">
+           <span className="text-[9px] font-black text-slate-400 tracking-tighter">Ads by Google</span>
+           <img src="https://img.icons8.com/color/48/google-logo.png" className="w-3.5 h-3.5 grayscale" />
+        </div>
+      </div>
+    </div>
+  );
+};
+
 const EarningPage = ({ onReferralsClick, setActiveTab, onSuccess }) => {
   const [balance, setBalance] = React.useState(0);
   const [coins, setCoins] = React.useState(0);
@@ -111,6 +156,32 @@ const EarningPage = ({ onReferralsClick, setActiveTab, onSuccess }) => {
   const [showNativeAd, setShowNativeAd] = React.useState(false);
   const [showOfferwallAd, setShowOfferwallAd] = React.useState(false);
   const [currentAdInfo, setCurrentAdInfo] = React.useState({ name: '', type: '', coins: 0, time: 0 });
+
+  // Multi-Ad Sub-View State (Level 3 & Level 4 options — 5 ads each)
+  const [showMultiAdView, setShowMultiAdView] = React.useState(false);
+  const [multiAdConfig, setMultiAdConfig] = React.useState(null); // { key, name, adType, coins, logo, color, ads[] }
+
+  // Helper: get today's count for a multi-ad option key from localStorage
+  const getMultiAdCount = (key) => {
+    const today = new Date().toDateString();
+    const stored = JSON.parse(localStorage.getItem(`multi_ad_${key}`) || '{"date":"","count":0}');
+    if (stored.date !== today) return 0;
+    return stored.count;
+  };
+
+  // Helper: increment today's count for a multi-ad option key
+  const incrementMultiAdCount = (key) => {
+    const today = new Date().toDateString();
+    const newCount = getMultiAdCount(key) + 1;
+    localStorage.setItem(`multi_ad_${key}`, JSON.stringify({ date: today, count: newCount }));
+    return newCount;
+  };
+
+  // Open the multi-ad sub-view
+  const openMultiAdView = (config) => {
+    setMultiAdConfig(config);
+    setShowMultiAdView(true);
+  };
 
   // Premium IP States
   const [showPremiumIPView, setShowPremiumIPView] = React.useState(false);
@@ -1115,6 +1186,7 @@ const EarningPage = ({ onReferralsClick, setActiveTab, onSuccess }) => {
                 {animType === 'premium' ? 'Get' : animType === 'refer' ? 'Invite' : animType === 'article' ? 'Read' : '▶ Play'} {item.name}
               </span>
             </motion.button>
+            <BigAdBanner />
           </motion.div>
         </motion.div>
       </AnimatePresence>
@@ -1204,6 +1276,177 @@ const EarningPage = ({ onReferralsClick, setActiveTab, onSuccess }) => {
       {/* Option Intro Screen — full screen overlay */}
       <AnimatePresence>
         {showIntroScreen && introItem && <OptionIntroScreen />}
+      </AnimatePresence>
+
+      {/* ═══════ Multi-Ad Sub-View Overlay (5 ads per option) ═══════ */}
+      <AnimatePresence>
+        {showMultiAdView && multiAdConfig && (() => {
+          const currentCount = getMultiAdCount(multiAdConfig.key);
+          const adSlots = [
+            { id: 1, label: `${multiAdConfig.name} Ad 1`, icon: '🎬' },
+            { id: 2, label: `${multiAdConfig.name} Ad 2`, icon: '📺' },
+            { id: 3, label: `${multiAdConfig.name} Ad 3`, icon: '🎥' },
+            { id: 4, label: `${multiAdConfig.name} Ad 4`, icon: '📡' },
+            { id: 5, label: `${multiAdConfig.name} Ad 5`, icon: '🎯' },
+          ];
+
+          const handleMultiAdSlotClick = async (slotId) => {
+            const cnt = getMultiAdCount(multiAdConfig.key);
+            if (cnt >= slotId) return;
+            if (cnt + 1 !== slotId) return;
+
+            const triggerReward = async () => {
+              setIsLoading(true);
+              try {
+                const token = localStorage.getItem('token');
+                const response = await fetch(`${API_BASE}/api/earning/spin-claim`, {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+                  body: JSON.stringify({ coins: multiAdConfig.coins })
+                });
+                const data = await response.json();
+                if (response.ok) {
+                  setBalance(data.balance);
+                  if (data.coins !== undefined) setCoins(data.coins);
+                  if (data.lifetimeCoins !== undefined) setLifetimeCoins(data.lifetimeCoins);
+                  incrementMultiAdCount(multiAdConfig.key);
+                  setMultiAdConfig(prev => ({...prev}));
+                  alert(`🎉 You earned ${multiAdConfig.coins} Coins from ${multiAdConfig.name}!`);
+                } else {
+                  alert(data.message || 'Failed to claim coins.');
+                }
+              } catch (err) {
+                alert('Network error.');
+              } finally {
+                setIsLoading(false);
+              }
+            };
+
+            if (multiAdConfig.adType === 'rewarded') {
+              AdMobService.showRewarded(triggerReward);
+            } else if (multiAdConfig.adType === 'interstitial') {
+              AdMobService.showInterstitial(triggerReward);
+            } else {
+              AdMobService.showRewarded(triggerReward);
+            }
+          };
+
+          return (
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.9 }}
+              className="fixed inset-0 z-[95] bg-slate-900/95 backdrop-blur-xl flex items-center justify-center p-4"
+            >
+              <div className="bg-white dark:bg-slate-800 w-full max-w-lg rounded-3xl shadow-2xl overflow-hidden border border-slate-200 dark:border-slate-700 max-h-[90vh] flex flex-col">
+                {/* Header */}
+                <div className="bg-slate-50 dark:bg-slate-900 px-6 py-5 flex justify-between items-center border-b border-slate-200 dark:border-slate-700 shrink-0">
+                  <div className="flex items-center gap-3">
+                    <img src={multiAdConfig.logo} alt={multiAdConfig.name} className="w-10 h-10 rounded-xl object-contain bg-white p-1 shadow-sm" />
+                    <div>
+                      <h3 className="text-lg font-bold text-slate-800 dark:text-white">{multiAdConfig.name}</h3>
+                      <p className="text-xs text-amber-600 dark:text-amber-400 font-bold">+{multiAdConfig.coins} Coins per ad</p>
+                    </div>
+                  </div>
+                  <button onClick={() => goBackWithAd(() => setShowMultiAdView(false))} className="text-slate-400 hover:text-slate-600 dark:hover:text-white transition-colors">
+                    <ArrowLeft className="w-6 h-6 hover:-translate-x-1 transition-transform" />
+                  </button>
+                </div>
+
+                {/* Content */}
+                <div className="p-6 sm:p-8 overflow-y-auto space-y-4">
+                  <div className="text-center space-y-2 mb-4">
+                    <p className="text-slate-500 dark:text-slate-400 font-medium text-sm">
+                      Watch 5 ads daily to earn <span className="text-amber-600 dark:text-amber-400 font-bold">{multiAdConfig.coins * 5} Coins</span>!
+                    </p>
+                    <div className="flex items-center justify-center gap-2">
+                      {[0, 1, 2, 3, 4].map(i => (
+                        <div key={i} className={`w-3 h-3 rounded-full transition-all ${currentCount > i ? `bg-gradient-to-br ${multiAdConfig.color}` : 'bg-slate-300 dark:bg-slate-700'}`}></div>
+                      ))}
+                    </div>
+                    <p className="text-xs text-slate-400">{currentCount}/5 ads watched today</p>
+                  </div>
+
+                  {/* Ad Slots */}
+                  <div className="space-y-3">
+                    {adSlots.map((slot) => {
+                      const cnt = getMultiAdCount(multiAdConfig.key);
+                      const isCompleted = cnt >= slot.id;
+                      const isNext = cnt + 1 === slot.id;
+                      const isLocked = !isCompleted && !isNext;
+
+                      return (
+                        <motion.button
+                          key={slot.id}
+                          whileHover={isLocked || isCompleted ? {} : { scale: 1.02 }}
+                          whileTap={isLocked || isCompleted ? {} : { scale: 0.98 }}
+                          onClick={() => handleMultiAdSlotClick(slot.id)}
+                          disabled={isLocked || isCompleted || isLoading}
+                          className={`flex items-center justify-between w-full p-4 border-2 rounded-2xl transition-all group ${
+                            isCompleted ? 'bg-emerald-50 dark:bg-emerald-900/20 border-emerald-200 dark:border-emerald-800' :
+                            isNext ? 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 shadow-md hover:shadow-lg cursor-pointer hover:border-amber-400 dark:hover:border-amber-500' :
+                            'bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700 opacity-40 cursor-not-allowed'
+                          }`}
+                        >
+                          <div className="flex items-center gap-4 text-left">
+                            <div className={`w-12 h-12 rounded-xl flex items-center justify-center text-2xl shrink-0 ${
+                              isCompleted ? 'bg-emerald-100 dark:bg-emerald-900/40' :
+                              isNext ? `bg-gradient-to-br ${multiAdConfig.color} shadow-lg` :
+                              'bg-slate-100 dark:bg-slate-700'
+                            }`}>
+                              {isCompleted ? <Check className="w-6 h-6 text-emerald-500" /> : (
+                                <span className={isNext ? '' : 'grayscale opacity-50'}>{slot.icon}</span>
+                              )}
+                            </div>
+                            <div>
+                              <h4 className={`font-bold text-sm ${
+                                isCompleted ? 'text-emerald-700 dark:text-emerald-400' :
+                                isNext ? 'text-slate-800 dark:text-slate-200' :
+                                'text-slate-400 dark:text-slate-500'
+                              }`}>{slot.label}</h4>
+                              <p className="text-[11px] text-slate-400 dark:text-slate-500">
+                                {isCompleted ? '✓ Claimed' : isNext ? 'Tap to watch & earn' : 'Locked — watch previous ad first'}
+                              </p>
+                            </div>
+                          </div>
+                          <div className={`px-4 py-2 rounded-full font-bold text-sm shrink-0 ${
+                            isCompleted ? 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400' :
+                            isNext ? `bg-gradient-to-r ${multiAdConfig.color} text-white shadow-sm` :
+                            'bg-slate-100 dark:bg-slate-700 text-slate-400'
+                          }`}>
+                            {isCompleted ? '✓' : `+${multiAdConfig.coins}`}
+                          </div>
+                        </motion.button>
+                      );
+                    })}
+                  </div>
+
+                  {/* All done message */}
+                  {currentCount >= 5 && (
+                    <motion.div
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      className="bg-emerald-50 dark:bg-emerald-900/20 border-2 border-emerald-200 dark:border-emerald-800 rounded-2xl p-4 text-center"
+                    >
+                      <p className="text-emerald-600 dark:text-emerald-400 font-bold">🎉 All 5 ads completed!</p>
+                      <p className="text-xs text-emerald-500 dark:text-emerald-500 mt-1">Come back tomorrow for more!</p>
+                    </motion.div>
+                  )}
+
+                  {/* Ad placeholder */}
+                  <div className="w-full border border-slate-100 dark:border-slate-800 rounded-xl p-3 flex items-center justify-center bg-slate-50 dark:bg-slate-800/50 relative overflow-hidden mt-4">
+                    <span className="absolute top-0 right-0 bg-slate-600 text-white text-[8px] px-1.5 py-0.5 font-bold rounded-bl-lg">Ad</span>
+                    <div className="flex items-center gap-4">
+                      <span className="text-blue-500 font-bold text-sm">Nice job!</span>
+                      <div className="h-6 w-px bg-slate-200 dark:bg-slate-700"></div>
+                      <span className="text-slate-500 dark:text-slate-400 text-xs font-medium">This is a 468x60 test ad.</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+          );
+        })()}
       </AnimatePresence>
 
       <AnimatePresence mode="wait">
@@ -1843,10 +2086,8 @@ const EarningPage = ({ onReferralsClick, setActiveTab, onSuccess }) => {
                   </div>
 
                   {/* Banner Ad After Each Section */}
-                  <div className="w-full relative bg-slate-100 dark:bg-slate-800/80 border-2 border-dashed border-slate-300 dark:border-slate-700 rounded-2xl h-[250px] sm:h-[120px] flex flex-col items-center justify-center mb-10 overflow-hidden group">
-                     <div className="absolute top-0 right-0 bg-yellow-500 text-black text-[10px] font-black px-3 py-1 rounded-bl-xl uppercase tracking-widest z-10">Sponsored</div>
-                     <span className="text-slate-400 dark:text-slate-500 font-bold group-hover:scale-105 transition-transform">PLACEHOLDER AD BANNER</span>
-                     <span className="text-xs text-slate-400 dark:text-slate-500 mt-2">Responsive Ad Unit</span>
+                  <div className="w-full mb-10 flex justify-center">
+                    <BigAdBanner />
                   </div>
                 </motion.div>
               ))}
@@ -2142,6 +2383,7 @@ const EarningPage = ({ onReferralsClick, setActiveTab, onSuccess }) => {
                 >
                   {isSpinning ? 'Spinning...' : wheelStatus.count >= 10 ? 'All Spins Used ✓' : `SPIN NOW (${10 - wheelStatus.count} left)`}
                 </motion.button>
+                <BigAdBanner />
               </div>
             </div>
           </motion.div>
@@ -2327,19 +2569,7 @@ const EarningPage = ({ onReferralsClick, setActiveTab, onSuccess }) => {
                 </AnimatePresence>
               </motion.button>
 
-              {/* Banner Ad Placeholder Matching Screenshot */}
-              <div className="w-full max-w-[300px] aspect-[1.2] bg-slate-200 border border-slate-300 relative rounded-sm flex flex-col items-center justify-center overflow-hidden">
-                <span className="absolute top-0 right-1/2 translate-x-1/2 bg-slate-600 text-white text-[10px] px-2 py-0.5 rounded-b font-medium">Test Ad</span>
-                <div className="flex flex-col items-center text-slate-500">
-                  <img src="https://img.icons8.com/fluency/96/bot.png" alt="Ad Mascot" className="w-24 h-24 mb-2 opacity-80" />
-                  <span className="text-sm font-bold text-blue-500 mb-1">Nice job!</span>
-                  <span className="text-xs">This is a 300x250 test ad.</span>
-                  <div className="mt-4 flex items-center gap-1 text-xs font-medium opacity-70">
-                    <img src="https://img.icons8.com/color/48/google-logo.png" className="w-4 h-4" />
-                    Google AdMob
-                  </div>
-                </div>
-              </div>
+              <BigAdBanner />
 
             </div>
           </motion.div>
@@ -2502,6 +2732,9 @@ const EarningPage = ({ onReferralsClick, setActiveTab, onSuccess }) => {
               <p className="text-sm text-slate-500 dark:text-slate-400 font-medium mt-4 text-center pb-8 sm:pb-0">
                 {quizStatus.count}/10 quizzes completed today
               </p>
+              <div className="w-full flex justify-center">
+                <BigAdBanner />
+              </div>
             </div>
             </motion.div>
           </motion.div>
@@ -2937,15 +3170,15 @@ const EarningPage = ({ onReferralsClick, setActiveTab, onSuccess }) => {
           <div className="space-y-5 max-w-5xl mx-auto relative">
             {/* Lock Overlay when not Premium - REMOVED FOR TESTING */}
             <div className="">
-              <div className="flex items-center gap-3">
-                <div className="w-9 h-9 rounded-full bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center shadow-md">
+              <div className="flex flex-col sm:flex-row items-center gap-3 mb-8">
+                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center shadow-md shrink-0">
                   <span className="font-black text-white text-sm">1</span>
                 </div>
-                <div>
-                  <h3 className="font-black text-slate-800 dark:text-slate-200 text-lg md:text-xl leading-none">Level 1</h3>
+                <div className="text-center sm:text-left">
+                  <h3 className="font-black text-slate-800 dark:text-slate-200 text-lg md:text-xl leading-none mb-1">Level 1</h3>
                   <p className="text-[11px] text-slate-400 font-medium">0 — 1,500 Coins</p>
                 </div>
-                <div className="flex-1 h-px bg-gradient-to-r from-amber-400/50 to-transparent ml-2" />
+                <div className="hidden sm:block flex-1 h-px bg-gradient-to-r from-amber-400/50 to-transparent ml-2" />
               </div>
               <div className="grid grid-cols-3 sm:grid-cols-5 gap-4 md:gap-6 justify-items-center">
                 {[
@@ -2973,15 +3206,15 @@ const EarningPage = ({ onReferralsClick, setActiveTab, onSuccess }) => {
           <div className="space-y-5 max-w-5xl mx-auto relative">
             {/* Lock Overlay for Level 2 - REMOVED FOR TESTING */}
             <div className="">
-              <div className="flex items-center gap-3">
-                <div className="w-9 h-9 rounded-full bg-gradient-to-br from-sky-400 to-blue-600 flex items-center justify-center shadow-md">
+              <div className="flex flex-col sm:flex-row items-center gap-3 mb-8">
+                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-sky-400 to-blue-600 flex items-center justify-center shadow-md shrink-0">
                   <span className="font-black text-white text-sm">2</span>
                 </div>
-                <div>
-                  <h3 className="font-black text-slate-800 dark:text-slate-200 text-lg md:text-xl leading-none">Level 2</h3>
+                <div className="text-center sm:text-left">
+                  <h3 className="font-black text-slate-800 dark:text-slate-200 text-lg md:text-xl leading-none mb-1">Level 2</h3>
                   <p className="text-[11px] text-slate-400 font-medium">1,500 — 3,500 Coins</p>
                 </div>
-                <div className="flex-1 h-px bg-gradient-to-r from-sky-400/50 to-transparent ml-2" />
+                <div className="hidden sm:block flex-1 h-px bg-gradient-to-r from-sky-400/50 to-transparent ml-2" />
               </div>
               <div className="grid grid-cols-4 sm:grid-cols-7 gap-3 md:gap-5 justify-items-center">
                 {[
@@ -3011,22 +3244,22 @@ const EarningPage = ({ onReferralsClick, setActiveTab, onSuccess }) => {
           <div className="space-y-5 max-w-5xl mx-auto relative">
             {/* Lock Overlay Level 3 - REMOVED FOR TESTING */}
             <div className="">
-              <div className="flex items-center gap-3">
-                <div className="w-9 h-9 rounded-full bg-gradient-to-br from-emerald-400 to-green-600 flex items-center justify-center shadow-md">
+              <div className="flex flex-col sm:flex-row items-center gap-3 mb-8">
+                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-emerald-400 to-green-600 flex items-center justify-center shadow-md shrink-0">
                   <span className="font-black text-white text-sm">3</span>
                 </div>
-                <div>
-                  <h3 className="font-black text-slate-800 dark:text-slate-200 text-lg md:text-xl leading-none">Level 3</h3>
+                <div className="text-center sm:text-left">
+                  <h3 className="font-black text-slate-800 dark:text-slate-200 text-lg md:text-xl leading-none mb-1">Level 3</h3>
                   <p className="text-[11px] text-slate-400 font-medium">3,500 — 6,000 Coins</p>
                 </div>
-                <div className="flex-1 h-px bg-gradient-to-r from-emerald-400/50 to-transparent ml-2" />
+                <div className="hidden sm:block flex-1 h-px bg-gradient-to-r from-emerald-400/50 to-transparent ml-2" />
               </div>
               <div className="grid grid-cols-3 gap-4 md:gap-6 justify-items-center">
                 {[
-                  { id: 'l3-youtube', name: 'YouTube', logo: 'https://img.icons8.com/color/96/youtube-play.png', coins: 30, color: 'from-red-500 to-rose-600', action: () => handleAdOptionClick('YouTube', 'Rewarded Video', 30) },
-                  { id: 'l3-tiktok', name: 'TikTok', logo: 'https://img.icons8.com/color/96/tiktok.png', coins: 25, color: 'from-slate-800 to-slate-900', action: () => handleAdOptionClick('TikTok', 'Rewarded Video', 25) },
-                  { id: 'l3-facebook', name: 'Facebook', logo: 'https://img.icons8.com/color/96/facebook-new.png', coins: 20, color: 'from-blue-500 to-blue-700', action: () => handleAdOptionClick('Facebook', 'Rewarded Video', 20) },
-                ].map(item => <OptionCard key={item.id} item={item} />)}
+                  { id: 'l3-youtube', name: 'YouTube', logo: 'https://img.icons8.com/color/96/youtube-play.png', coins: 30, color: 'from-red-500 to-rose-600', action: () => openMultiAdView({ key: 'youtube', name: 'YouTube', adType: 'rewarded', coins: 30, logo: 'https://img.icons8.com/color/96/youtube-play.png', color: 'from-red-500 to-rose-600' }) },
+                  { id: 'l3-tiktok', name: 'TikTok', logo: 'https://img.icons8.com/color/96/tiktok.png', coins: 25, color: 'from-slate-800 to-slate-900', action: () => openMultiAdView({ key: 'tiktok', name: 'TikTok', adType: 'rewarded', coins: 25, logo: 'https://img.icons8.com/color/96/tiktok.png', color: 'from-slate-800 to-slate-900' }) },
+                  { id: 'l3-facebook', name: 'Facebook', logo: 'https://img.icons8.com/color/96/facebook-new.png', coins: 20, color: 'from-blue-500 to-blue-700', action: () => openMultiAdView({ key: 'facebook', name: 'Facebook', adType: 'rewarded', coins: 20, logo: 'https://img.icons8.com/color/96/facebook-new.png', color: 'from-blue-500 to-blue-700' }) },
+                ].map(item => <OptionCard key={item.id} item={item} count={getMultiAdCount(item.id.replace('l3-',''))} maxCount={5} />)}
               </div>
             </div>
           </div>
@@ -3045,26 +3278,26 @@ const EarningPage = ({ onReferralsClick, setActiveTab, onSuccess }) => {
           <div className="space-y-5 max-w-5xl mx-auto relative">
             {/* Lock Overlay Level 4 - REMOVED FOR TESTING */}
             <div className="">
-              <div className="flex items-center gap-3">
-                <div className="w-9 h-9 rounded-full bg-gradient-to-br from-purple-500 to-violet-600 flex items-center justify-center shadow-md">
+              <div className="flex flex-col sm:flex-row items-center gap-3 mb-8">
+                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-purple-500 to-violet-600 flex items-center justify-center shadow-md shrink-0">
                   <span className="font-black text-white text-sm">4</span>
                 </div>
-                <div>
-                  <h3 className="font-black text-slate-800 dark:text-slate-200 text-lg md:text-xl leading-none">Level 4</h3>
+                <div className="text-center sm:text-left">
+                  <h3 className="font-black text-slate-800 dark:text-slate-200 text-lg md:text-xl leading-none mb-1">Level 4</h3>
                   <p className="text-[11px] text-slate-400 font-medium">6,000 — 10,000 Coins</p>
                 </div>
-                <div className="flex-1 h-px bg-gradient-to-r from-purple-500/50 to-transparent ml-2" />
+                <div className="hidden sm:block flex-1 h-px bg-gradient-to-r from-purple-500/50 to-transparent ml-2" />
               </div>
               <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-7 gap-3 md:gap-4 justify-items-center">
                 {[
-                  { id: 'l4-reward-video', name: 'Reward Video', logo: 'https://img.icons8.com/color/96/youtube-play.png', coins: 25, color: 'from-red-500 to-rose-600', action: () => handleAdOptionClick('Reward Video', 'Rewarded Video', 25) },
-                  { id: 'l4-interstitial', name: 'Interstitial Ad', logo: 'https://img.icons8.com/color/96/google-ads.png', coins: 15, color: 'from-blue-500 to-indigo-600', action: () => handleAdOptionClick('Interstitial Ad', 'Interstitial', 15) },
-                  { id: 'l4-native', name: 'Native Ad Click', logo: 'https://img.icons8.com/color/96/facebook-new.png', coins: 10, color: 'from-indigo-500 to-blue-600', action: () => handleAdOptionClick('Native Ad Click', 'Native Ad', 10) },
-                  { id: 'l4-bonus', name: 'Bonus Ad', logo: 'https://img.icons8.com/color/96/gift.png', coins: 30, color: 'from-amber-400 to-orange-500', action: () => handleAdOptionClick('Bonus Ad', 'Rewarded Interstitial', 30) },
-                  { id: 'l4-hourly', name: 'Hourly Ad', logo: 'https://img.icons8.com/color/96/hourglass.png', coins: 20, color: 'from-teal-400 to-emerald-500', action: () => handleAdOptionClick('Hourly Ad', 'Interstitial', 20) },
-                  { id: 'l4-weekly-refer', name: 'Weekly Refer', logo: 'https://img.icons8.com/color/96/conference-call.png', coins: 100, color: 'from-purple-400 to-pink-500', action: () => handleAdOptionClick('Weekly Refer Challenge', 'App Open Ad', 100) },
-                  { id: 'l4-surprise', name: 'Surprise Bonus', logo: 'https://img.icons8.com/color/96/confetti.png', coins: 50, color: 'from-pink-400 to-rose-500', action: () => handleAdOptionClick('Surprise Ad Bonus', 'Rewarded Video', 50) },
-                ].map(item => <OptionCard key={item.id} item={item} />)}
+                  { id: 'l4-reward-video', name: 'Reward Video', logo: 'https://img.icons8.com/color/96/youtube-play.png', coins: 25, color: 'from-red-500 to-rose-600', action: () => openMultiAdView({ key: 'reward_video', name: 'Reward Video', adType: 'rewarded', coins: 25, logo: 'https://img.icons8.com/color/96/youtube-play.png', color: 'from-red-500 to-rose-600' }) },
+                  { id: 'l4-interstitial', name: 'Interstitial Ad', logo: 'https://img.icons8.com/color/96/google-ads.png', coins: 15, color: 'from-blue-500 to-indigo-600', action: () => openMultiAdView({ key: 'interstitial_ad', name: 'Interstitial Ad', adType: 'interstitial', coins: 15, logo: 'https://img.icons8.com/color/96/google-ads.png', color: 'from-blue-500 to-indigo-600' }) },
+                  { id: 'l4-native', name: 'Native Ad Click', logo: 'https://img.icons8.com/color/96/facebook-new.png', coins: 10, color: 'from-indigo-500 to-blue-600', action: () => openMultiAdView({ key: 'native_ad', name: 'Native Ad Click', adType: 'native', coins: 10, logo: 'https://img.icons8.com/color/96/facebook-new.png', color: 'from-indigo-500 to-blue-600' }) },
+                  { id: 'l4-bonus', name: 'Bonus Ad', logo: 'https://img.icons8.com/color/96/gift.png', coins: 30, color: 'from-amber-400 to-orange-500', action: () => openMultiAdView({ key: 'bonus_ad', name: 'Bonus Ad', adType: 'rewarded', coins: 30, logo: 'https://img.icons8.com/color/96/gift.png', color: 'from-amber-400 to-orange-500' }) },
+                  { id: 'l4-hourly', name: 'Hourly Ad', logo: 'https://img.icons8.com/color/96/hourglass.png', coins: 20, color: 'from-teal-400 to-emerald-500', action: () => openMultiAdView({ key: 'hourly_ad', name: 'Hourly Ad', adType: 'interstitial', coins: 20, logo: 'https://img.icons8.com/color/96/hourglass.png', color: 'from-teal-400 to-emerald-500' }) },
+                  { id: 'l4-weekly-refer', name: 'Weekly Refer', logo: 'https://img.icons8.com/color/96/conference-call.png', coins: 100, color: 'from-purple-400 to-pink-500', action: () => openMultiAdView({ key: 'weekly_refer', name: 'Weekly Refer', adType: 'rewarded', coins: 100, logo: 'https://img.icons8.com/color/96/conference-call.png', color: 'from-purple-400 to-pink-500' }) },
+                  { id: 'l4-surprise', name: 'Surprise Bonus', logo: 'https://img.icons8.com/color/96/confetti.png', coins: 50, color: 'from-pink-400 to-rose-500', action: () => openMultiAdView({ key: 'surprise_bonus', name: 'Surprise Bonus', adType: 'rewarded', coins: 50, logo: 'https://img.icons8.com/color/96/confetti.png', color: 'from-pink-400 to-rose-500' }) },
+                ].map(item => <OptionCard key={item.id} item={item} count={getMultiAdCount(item.id.replace('l4-','').replace(/-/g,'_'))} maxCount={5} />)}
               </div>
             </div>
           </div>
@@ -3083,15 +3316,15 @@ const EarningPage = ({ onReferralsClick, setActiveTab, onSuccess }) => {
           <div className="space-y-5 max-w-5xl mx-auto relative">
             {/* Lock Overlay Level 5 - REMOVED FOR TESTING */}
             <div className="">
-              <div className="flex items-center gap-3">
-                <div className="w-9 h-9 rounded-full bg-gradient-to-br from-rose-500 to-pink-600 flex items-center justify-center shadow-md">
+              <div className="flex flex-col sm:flex-row items-center gap-3 mb-8">
+                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-rose-500 to-pink-600 flex items-center justify-center shadow-md shrink-0">
                   <span className="font-black text-white text-sm">5</span>
                 </div>
-                <div>
-                  <h3 className="font-black text-slate-800 dark:text-slate-200 text-lg md:text-xl leading-none">Level 5</h3>
+                <div className="text-center sm:text-left">
+                  <h3 className="font-black text-slate-800 dark:text-slate-200 text-lg md:text-xl leading-none mb-1">Level 5</h3>
                   <p className="text-[11px] text-slate-400 font-medium">10,000+ Coins</p>
                 </div>
-                <div className="flex-1 h-px bg-gradient-to-r from-rose-500/50 to-transparent ml-2" />
+                <div className="hidden sm:block flex-1 h-px bg-gradient-to-r from-rose-500/50 to-transparent ml-2" />
               </div>
               <div className="grid grid-cols-3 sm:grid-cols-3 md:grid-cols-6 gap-3 md:gap-4 justify-items-center">
                 {[
