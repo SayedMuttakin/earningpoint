@@ -196,16 +196,16 @@ const HomePage = () => {
               <span className="font-black text-brand-600 uppercase tracking-widest text-xs hidden sm:inline-block">LATEST NEWS</span>
               <span className="font-black text-brand-600 uppercase tracking-widest text-xs sm:hidden">LATEST</span>
             </div>
-            <div className="flex-1 overflow-hidden ml-4 relative h-6 flex items-center">
+            <div className="flex-1 overflow-hidden ml-4 relative h-8 flex items-center">
               <motion.div
                 initial={{ x: "100%" }}
                 animate={{ x: "-100%" }}
                 transition={{
                   repeat: Infinity,
-                  duration: 60, // Slower speed
+                  duration: 70, // Slower
                   ease: "linear",
                 }}
-                className="flex whitespace-nowrap absolute"
+                className="flex whitespace-nowrap absolute will-change-transform"
               >
                 {posts.map((post, idx) => (
                   <a 
@@ -215,7 +215,7 @@ const HomePage = () => {
                       e.preventDefault();
                       document.getElementById(`post-${post._id}`)?.scrollIntoView({ behavior: 'smooth' });
                     }}
-                    className="mx-8 hover:text-brand-600 transition-colors inline-flex items-center gap-2 text-[15px] font-semibold text-slate-700"
+                    className="mx-10 hover:text-brand-600 transition-colors inline-flex items-center gap-2 text-[15px] font-bold text-slate-700"
                   >
                     {idx > 0 && <span className="text-slate-300 font-black px-4">•</span>}
                     {post.title || post.content.substring(0, 60) + "..."}
