@@ -198,11 +198,11 @@ const HomePage = () => {
             </div>
             <div className="flex-1 overflow-hidden ml-4 relative h-6 flex items-center">
               <motion.div
-                initial={{ x: "20%" }}
+                initial={{ x: "100%" }}
                 animate={{ x: "-100%" }}
                 transition={{
                   repeat: Infinity,
-                  duration: 25,
+                  duration: 60, // Slower speed
                   ease: "linear",
                 }}
                 className="flex whitespace-nowrap absolute"
