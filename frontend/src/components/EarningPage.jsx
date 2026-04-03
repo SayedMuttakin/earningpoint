@@ -39,7 +39,7 @@ const ipPackages = [
 
 const BigAdBanner = () => {
   return (
-    <div className="w-full flex justify-center mt-6">
+    <div className="w-full flex justify-center mt-2">
       <div className="w-[320px] h-[250px] bg-slate-50 dark:bg-slate-800/50 border-2 border-slate-200 dark:border-slate-700 relative rounded-2xl flex flex-col items-center justify-center overflow-hidden shadow-sm">
         {/* AdMob Branding/UI mimic */}
         <div className="absolute top-0 left-0 right-0 h-7 bg-slate-100 dark:bg-slate-800 flex items-center px-4 justify-between border-b border-slate-200 dark:border-slate-700">
@@ -872,12 +872,12 @@ const EarningPage = ({ onReferralsClick, setActiveTab, onSuccess }) => {
     const CenterAnimation = () => {
       // Helper to render the actual option's icon/logo very large
       const renderBigIcon = () => (
-        <div className={`w-36 h-36 rounded-3xl bg-gradient-to-br ${bgClass} shadow-2xl backdrop-blur-sm flex items-center justify-center relative z-10 border border-white/20`}>
+        <div className={`w-28 h-28 rounded-3xl bg-gradient-to-br ${bgClass} shadow-2xl backdrop-blur-sm flex items-center justify-center relative z-10 border border-white/20`}>
           {typeof item.logo === 'string' && item.logo.startsWith('http') ? (
-             <img src={item.logo} alt={item.name} className="w-20 h-20 object-contain drop-shadow-xl" />
+             <img src={item.logo} alt={item.name} className="w-14 h-14 object-contain drop-shadow-xl" />
           ) : (
-             <div className="w-20 h-20 text-white flex items-center justify-center drop-shadow-xl">
-               {item.icon ? React.cloneElement(item.icon, { className: "w-full h-full text-white drop-shadow-md" }) : <span className="text-6xl text-white">🎯</span>}
+             <div className="w-14 h-14 text-white flex items-center justify-center drop-shadow-xl">
+               {item.icon ? React.cloneElement(item.icon, { className: "w-full h-full text-white drop-shadow-md" }) : <span className="text-4xl text-white">🎯</span>}
              </div>
           )}
         </div>
@@ -1027,7 +1027,7 @@ const EarningPage = ({ onReferralsClick, setActiveTab, onSuccess }) => {
           <FloatingDots />
 
           {/* Header */}
-          <div className="relative z-50 flex items-center justify-between px-4 py-4 pt-safe">
+          <div className="relative z-50 flex items-center justify-between px-4 py-2 pt-safe">
             <button
               onClick={() => goBackWithAd(() => setShowIntroScreen(false))}
               className="w-9 h-9 rounded-full bg-white/10 flex items-center justify-center text-white hover:bg-white/20 transition-colors"
@@ -1083,9 +1083,9 @@ const EarningPage = ({ onReferralsClick, setActiveTab, onSuccess }) => {
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: 0.1 }}
-            className="relative z-10 flex justify-center mt-1 mb-3"
+            className="relative z-10 flex justify-center mt-1 mb-2"
           >
-            <div className="flex items-center gap-2 bg-white/10 backdrop-blur-md border border-white/20 rounded-full px-4 py-1.5">
+            <div className="flex items-center gap-2 bg-white/10 backdrop-blur-md border border-white/20 rounded-full px-4 py-1">
               <span className="text-amber-400">💰</span>
               <span className="text-white font-black text-sm">৳{balance.toFixed(2)}</span>
               <span className="text-white/40 text-xs font-medium">|</span>
@@ -1095,53 +1095,53 @@ const EarningPage = ({ onReferralsClick, setActiveTab, onSuccess }) => {
 
           {/* Option logo + name block */}
           <motion.div
-            initial={{ opacity: 0, y: -15 }}
+            initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.15 }}
-            className="relative z-10 flex items-center gap-3 mx-4 mb-6 bg-white/8 backdrop-blur-sm border border-white/10 rounded-2xl px-4 py-3"
+            className="relative z-10 flex items-center gap-3 mx-4 mb-4 bg-white/8 backdrop-blur-sm border border-white/10 rounded-2xl px-4 py-2"
           >
-            <div className={`w-12 h-12 rounded-2xl bg-gradient-to-br ${bgClass} flex items-center justify-center shadow-lg flex-shrink-0`}>
+            <div className={`w-10 h-10 rounded-xl bg-gradient-to-br ${bgClass} flex items-center justify-center shadow-lg flex-shrink-0`}>
               {typeof item.logo === 'string' && item.logo.startsWith('http') ? (
-                <img src={item.logo} alt={item.name} className="w-7 h-7 object-contain" />
+                <img src={item.logo} alt={item.name} className="w-6 h-6 object-contain" />
               ) : (
-                <span className="text-white">{item.icon}</span>
+                <span className="text-white scale-90">{item.icon}</span>
               )}
             </div>
             <div>
-              <div className="text-white font-black text-base leading-none">{item.name}</div>
-              <div className="text-white/50 text-xs font-medium mt-0.5">Earning Activity</div>
+              <div className="text-white font-black text-sm leading-none">{item.name}</div>
+              <div className="text-white/50 text-[10px] font-medium mt-0.5">Earning Activity</div>
             </div>
           </motion.div>
 
           {/* Central Animated Logo */}
           <motion.div
-            initial={{ opacity: 0, scale: 0.6 }}
+            initial={{ opacity: 0, scale: 0.8 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ delay: 0.2, type: 'spring', stiffness: 200, damping: 15 }}
-            className="relative z-10 flex items-center justify-center mb-8"
-            style={{ minHeight: 180 }}
+            className="relative z-10 flex items-center justify-center mb-4"
+            style={{ minHeight: 120 }}
           >
             <CenterAnimation />
           </motion.div>
 
           {/* Duration & Prize info */}
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
+            initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.35 }}
-            className="relative z-10 mx-4 space-y-3 mb-8"
+            transition={{ delay: 0.3 }}
+            className="relative z-10 mx-4 space-y-2 mb-4"
           >
             {/* Duration info - Show for time-based items */}
             {['quiz', 'video', 'game', 'scratch'].includes(animType) && (
-              <div className="flex items-center gap-4 bg-white/8 border border-white/10 rounded-2xl px-5 py-4">
-                <div className="w-11 h-11 rounded-xl bg-blue-500/20 flex items-center justify-center flex-shrink-0">
-                  <span className="text-2xl">⏱️</span>
+              <div className="flex items-center gap-3 bg-white/8 border border-white/10 rounded-2xl px-4 py-3">
+                <div className="w-9 h-9 rounded-xl bg-blue-500/20 flex items-center justify-center flex-shrink-0">
+                  <span className="text-xl">⏱️</span>
                 </div>
                 <div>
-                  <div className="text-white font-black text-base leading-none">
-                    Duration: <span className="text-blue-400">30 seconds</span>
+                  <div className="text-white font-black text-sm leading-none">
+                    Duration: <span className="text-blue-400">30s</span>
                   </div>
-                  <div className="text-white/50 text-xs font-medium mt-0.5">
+                  <div className="text-white/50 text-[10px] font-medium mt-0.5">
                     {animType === 'quiz' ? '(per question)' : animType === 'video' ? '(per video)' : '(per complete)'}
                   </div>
                 </div>
@@ -1150,15 +1150,15 @@ const EarningPage = ({ onReferralsClick, setActiveTab, onSuccess }) => {
 
             {/* Prize info */}
             {item.coins != null && (
-              <div className="flex items-center gap-4 bg-white/8 border border-white/10 rounded-2xl px-5 py-4">
-                <div className="w-11 h-11 rounded-xl bg-amber-500/20 flex items-center justify-center flex-shrink-0">
-                  <span className="text-2xl">🪙</span>
+              <div className="flex items-center gap-3 bg-white/8 border border-white/10 rounded-2xl px-4 py-3">
+                <div className="w-9 h-9 rounded-xl bg-amber-500/20 flex items-center justify-center flex-shrink-0">
+                  <span className="text-xl">🪙</span>
                 </div>
                 <div>
-                  <div className="text-white font-black text-base leading-none">
+                  <div className="text-white font-black text-sm leading-none">
                     Prize: <span className="text-amber-400">{item.coins} coins</span>
                   </div>
-                  <div className="text-white/50 text-xs font-medium mt-0.5">
+                  <div className="text-white/50 text-[10px] font-medium mt-0.5">
                     {animType === 'quiz' ? '(per answer)' : animType === 'video' ? '(per video)' : animType === 'refer' ? '(per invite)' : '(upon completion)'}
                   </div>
                 </div>
@@ -1168,15 +1168,16 @@ const EarningPage = ({ onReferralsClick, setActiveTab, onSuccess }) => {
 
           {/* Play Button */}
           <motion.div
-            initial={{ opacity: 0, y: 30 }}
+            initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.45 }}
+            transition={{ delay: 0.4 }}
             className="relative z-10 px-4"
           >
             <motion.button
-              whileTap={{ scale: 0.97 }}
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
               onClick={handlePlay}
-              className={`w-full py-4 rounded-2xl bg-gradient-to-r ${bgClass} text-white font-black text-lg shadow-2xl relative overflow-hidden`}
+              className={`w-full py-3 rounded-2xl bg-gradient-to-r ${bgClass} text-white font-black text-lg shadow-xl shadow-blue-500/20 flex items-center justify-center gap-3 relative overflow-hidden`}
             >
               {/* Shine effect */}
               <motion.div
@@ -1186,7 +1187,9 @@ const EarningPage = ({ onReferralsClick, setActiveTab, onSuccess }) => {
                 {animType === 'premium' ? 'Get' : animType === 'refer' ? 'Invite' : animType === 'article' ? 'Read' : '▶ Play'} {item.name}
               </span>
             </motion.button>
-            <BigAdBanner />
+            <div className="mt-2">
+              <BigAdBanner />
+            </div>
           </motion.div>
         </motion.div>
       </AnimatePresence>
