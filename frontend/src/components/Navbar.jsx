@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Home, Bell, DollarSign, ShoppingCart, User, Settings, LogOut, Menu, X } from 'lucide-react';
+import { Home, Bell, DollarSign, ShoppingCart, User, Settings, LogOut, Menu, X, HelpCircle } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { API_BASE } from '../config';
 
@@ -10,6 +10,7 @@ const navItems = [
   { name: 'Cart', icon: ShoppingCart },
   { name: 'Profile', icon: User },
   { name: 'Setting', icon: Settings },
+  { name: 'Support', icon: HelpCircle },
 ];
 
 const mobileNavItems = navItems.filter(item => item.name !== 'Setting');

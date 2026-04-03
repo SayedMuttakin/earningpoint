@@ -358,15 +358,31 @@ const EarningPage = ({ onReferralsClick, setActiveTab, onSuccess }) => {
     if (activeType === 'video') placement = 'rewarded_videos';
     if (activeType === 'view_ads') placement = 'rewarded_view_ads';
 
-    console.log(`[EarningPage] Starting ad for ${activeType} using placement ${placement}`);
-    AdMobService.showRewarded(() => claimReward(activeType), placement);
+    if (isLoading) return;
+    setIsLoading(true);
+
+    console.log(`[DEBUG-ADMOB] User clicked startAd for: ${activeType} (Placement: ${placement})`);
+
+    AdMobService.showRewarded((rewardItem) => {
+      console.log(`[DEBUG-ADMOB] showRewarded callback triggered for: ${activeType}`);
+      claimReward(activeType);
+    }, placement).finally(() => {
+      // In case showRewarded itself finishes without triggering callback (handled in admob.js)
+      // but we need to ensure setIsLoading(false) happens if it didn't hit claimReward
+    });
   };
 
-  const claimReward = async (typeOverride) => {
+  const claimReward = async (typeOverride, onSuccess) => {
     const activeType = typeOverride || adType;
-    setIsLoading(true);
+    console.log(`[DEBUG-ADMOB] Attempting to claim reward for: ${activeType}`);
+    
     try {
       const token = localStorage.getItem('token');
+      if (!token) {
+        setIsLoading(false);
+        return;
+      }
+
       const endpoint = activeType === 'daily' 
         ? `${API_BASE}/api/earning/daily-checkin`
         : `${API_BASE}/api/earning/video-claim`;
@@ -379,9 +395,11 @@ const EarningPage = ({ onReferralsClick, setActiveTab, onSuccess }) => {
         },
         body: JSON.stringify({ type: activeType })
       });
+
       const data = await response.json();
       
       if (response.ok) {
+        console.log(`[DEBUG-ADMOB] Claim successful:`, data.message);
         setBalance(data.balance);
         if (data.coins !== undefined) setCoins(data.coins);
         if (data.lifetimeCoins !== undefined) setLifetimeCoins(data.lifetimeCoins);
@@ -398,12 +416,18 @@ const EarningPage = ({ onReferralsClick, setActiveTab, onSuccess }) => {
           } else {
             alert(data.message);
           }
+        } else {
+          alert(data.message || "Reward claimed successfully!");
         }
+        
+        if (onSuccess) onSuccess();
       } else {
-        alert(data.message);
+        console.error(`[DEBUG-ADMOB] Claim failed:`, data.message);
+        alert(data.message || "Failed to claim reward.");
       }
     } catch (err) {
-      alert("Failed to claim reward.");
+      console.error(`[DEBUG-ADMOB] Error in claimReward:`, err);
+      alert("Network error. Please check your connection.");
     } finally {
       setIsLoading(false);
     }
@@ -682,13 +706,19 @@ const EarningPage = ({ onReferralsClick, setActiveTab, onSuccess }) => {
   // Custom Ad Handlers for Levels 3, 4, 5
   // ==========================================
   const handleAdOptionClick = async (adName, adType, coins) => {
-    setCurrentAdInfo({ name: adName, type: adType, coins, time: 0 }); // time not needed for real ads
+    if (isLoading) return;
+    setCurrentAdInfo({ name: adName, type: adType, coins, time: 0 });
     
+    console.log(`[DEBUG-ADMOB] handleAdOptionClick: ${adName} (${adType})`);
+
     if (adType === 'Rewarded Video' || adType === 'Rewarded Interstitial') {
-      await AdMobService.showRewarded(() => handleCustomAdReward(coins, adName));
+      setIsLoading(true);
+      await AdMobService.showRewarded(() => handleCustomAdReward(coins, adName), 'rewarded');
     } else if (adType === 'App Open Ad') {
+      setIsLoading(true);
       await AdMobService.showAppOpenAd(() => handleCustomAdReward(coins, adName));
     } else if (adType === 'Interstitial') {
+      setIsLoading(true);
       await AdMobService.showInterstitial(() => handleCustomAdReward(coins, adName));
     } else if (adType === 'Native Ad') {
       // Simulate Native Ad by showing a large banner for 5 seconds
@@ -731,24 +761,36 @@ const EarningPage = ({ onReferralsClick, setActiveTab, onSuccess }) => {
   };
 
   const handleCustomAdReward = async (pts, adName) => {
+    console.log(`[DEBUG-ADMOB] handleCustomAdReward for ${adName} with ${pts} points`);
     setIsLoading(true);
     try {
       const token = localStorage.getItem('token');
+      if (!token) {
+        setIsLoading(false);
+        return;
+      }
+      
       const response = await fetch(`${API_BASE}/api/earning/spin-claim`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ coins: pts }) 
+        body: JSON.stringify({ points: pts }) // Changed from 'coins' to 'points' to match backend
       });
+      
       const data = await response.json();
       if (response.ok) {
+        console.log(`[DEBUG-ADMOB] Custom reward successful:`, data.message);
         setBalance(data.balance);
         if (data.coins !== undefined) setCoins(data.coins);
         if (data.lifetimeCoins !== undefined) setLifetimeCoins(data.lifetimeCoins);
         alert(`🎉 You earned ${pts} Coins from ${adName}!`);
+        
+        if (onSuccess) onSuccess();
       } else {
+        console.error(`[DEBUG-ADMOB] Custom reward failed:`, data.message);
         alert(data.message || 'Failed to claim coins.');
       }
     } catch (err) {
+      console.error(`[DEBUG-ADMOB] Error in handleCustomAdReward:`, err);
       alert('Network error.');
     } finally {
       setIsLoading(false);
@@ -1299,26 +1341,36 @@ const EarningPage = ({ onReferralsClick, setActiveTab, onSuccess }) => {
             if (cnt + 1 !== slotId) return;
 
             const triggerReward = async () => {
+              console.log(`[DEBUG-ADMOB] Multi-ad triggerReward for ${multiAdConfig.name}, slot ${slotId}`);
               setIsLoading(true);
               try {
                 const token = localStorage.getItem('token');
+                if (!token) {
+                  setIsLoading(false);
+                  return;
+                }
                 const response = await fetch(`${API_BASE}/api/earning/spin-claim`, {
                   method: 'POST',
                   headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-                  body: JSON.stringify({ coins: multiAdConfig.coins })
+                  body: JSON.stringify({ points: multiAdConfig.coins }) // Changed from 'coins' to 'points'
                 });
                 const data = await response.json();
                 if (response.ok) {
+                  console.log(`[DEBUG-ADMOB] Multi-ad claim successful:`, data.message);
                   setBalance(data.balance);
                   if (data.coins !== undefined) setCoins(data.coins);
                   if (data.lifetimeCoins !== undefined) setLifetimeCoins(data.lifetimeCoins);
                   incrementMultiAdCount(multiAdConfig.key);
                   setMultiAdConfig(prev => ({...prev}));
                   alert(`🎉 You earned ${multiAdConfig.coins} Coins from ${multiAdConfig.name}!`);
+                  
+                  if (onSuccess) onSuccess();
                 } else {
+                  console.error(`[DEBUG-ADMOB] Multi-ad claim failed:`, data.message);
                   alert(data.message || 'Failed to claim coins.');
                 }
               } catch (err) {
+                console.error(`[DEBUG-ADMOB] Error in multi-ad triggerReward:`, err);
                 alert('Network error.');
               } finally {
                 setIsLoading(false);
@@ -1326,11 +1378,14 @@ const EarningPage = ({ onReferralsClick, setActiveTab, onSuccess }) => {
             };
 
             if (multiAdConfig.adType === 'rewarded') {
-              AdMobService.showRewarded(triggerReward);
+              setIsLoading(true);
+              AdMobService.showRewarded(triggerReward, 'rewarded');
             } else if (multiAdConfig.adType === 'interstitial') {
+              setIsLoading(true);
               AdMobService.showInterstitial(triggerReward);
             } else {
-              AdMobService.showRewarded(triggerReward);
+              setIsLoading(true);
+              AdMobService.showRewarded(triggerReward, 'rewarded');
             }
           };
 
@@ -2905,93 +2960,37 @@ const EarningPage = ({ onReferralsClick, setActiveTab, onSuccess }) => {
       {/* Responsive Container */}
       <div className="w-full max-w-4xl mx-auto bg-white dark:bg-slate-900 md:rounded-3xl shadow-xl overflow-hidden border border-slate-200 dark:border-slate-800">
 
-        {/* Top Header - Points & Balance only */}
-        <div className="bg-[#1f2937] dark:bg-slate-950 text-white px-2 py-2 sm:px-6 sm:py-4 flex justify-center items-center border-b border-slate-800 gap-1 sm:gap-3">
-
-            {/* Premium IP Indicator - Added before Coins */}
+        {/* Top Header - more compact height */}
+        <div className="bg-[#f5f3ff] dark:bg-slate-900 text-slate-800 dark:text-white px-4 py-3 sm:px-6 sm:py-4 flex justify-center items-center gap-3 sm:gap-6 border-b border-purple-100 dark:border-slate-800">
+            {/* Premium IP Indicator - Compact and Larger */}
             <motion.button
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
               onClick={() => { setShowPremiumIPView(true); setIpStep(1); }}
-              className={`px-2 py-1.5 sm:px-4 sm:py-2 rounded-full flex items-center gap-1 sm:gap-2 border shadow-sm transition-all ${
+              className={`px-5 py-2 sm:px-6 sm:py-2.5 rounded-2xl flex items-center gap-2 border-2 shadow-sm transition-all ${
                 isPremium 
-                  ? "bg-amber-500/20 border-amber-500/30 hover:bg-amber-500/30" 
-                  : "bg-slate-800/80 hover:bg-slate-700 border-slate-700"
+                  ? "bg-amber-500 border-amber-600 text-white" 
+                  : "bg-white dark:bg-slate-800 hover:bg-purple-50 border-purple-200 dark:border-slate-700 text-purple-700 dark:text-purple-300"
               }`}
             >
-              <div className={`w-5 h-5 sm:w-6 sm:h-6 rounded-full flex items-center justify-center ${
-                isPremium ? "bg-amber-400" : "bg-slate-700"
-              }`}>
-                <Shield className={`w-3 h-3 sm:w-4 sm:h-4 ${isPremium ? "text-amber-900" : "text-slate-400"}`} strokeWidth={2.5} />
-              </div>
-              <div className="flex flex-col items-start pr-1">
-                 <span className={`text-[10px] sm:text-[12px] font-black leading-none ${
-                   isPremium ? "text-amber-300" : "text-slate-300"
-                 }`}>
-                   Premium IP
-                 </span>
-              </div>
+              <Shield className={`w-4 h-4 sm:w-5 sm:h-5 ${isPremium ? "text-white" : "text-purple-500"}`} strokeWidth={3} />
+              <span className="text-sm sm:text-base font-black uppercase tracking-tight">
+                Premium IP
+              </span>
             </motion.button>
 
-            {/* Points Button */}
-            <motion.button
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-              onClick={() => setShowCoinsDetails(true)}
-              className="bg-slate-800/80 hover:bg-slate-700 px-2 py-1.5 sm:px-4 sm:py-2 rounded-full flex items-center gap-1 sm:gap-2 border border-slate-700 shadow-sm transition-colors"
+            {/* Wallet Quick Access - Compact and Larger */}
+            <motion.button 
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={() => setActiveEarningTab('wallet')}
+              className="flex items-center gap-2 bg-purple-600 hover:bg-purple-700 px-5 py-2 sm:px-6 sm:py-2.5 rounded-2xl border-2 border-purple-700 shadow-md shadow-purple-500/20 transition-all text-white"
             >
-              <div className="w-5 h-5 sm:w-6 sm:h-6 bg-emerald-500/20 rounded-full flex items-center justify-center">
-                <Medal className="w-3 h-3 sm:w-4 sm:h-4 text-emerald-400" strokeWidth={2.5} />
-              </div>
-              <div className="flex flex-col items-start pr-1">
-                 <span className="text-[8px] sm:text-[10px] text-slate-400 font-bold leading-none mb-0.5">Coins</span>
-                 <span className="text-[11px] sm:text-[13px] font-black text-emerald-400 leading-none">{coins.toLocaleString()}</span>
-              </div>
+               <Wallet className="w-4 h-4 sm:w-5 sm:h-5" />
+               <span className="text-sm sm:text-base font-black uppercase tracking-tight">My Wallet</span>
             </motion.button>
-
-            {/* Balance Display */}
-            <motion.div
-              layout
-              onHoverStart={() => setIsHovered(true)}
-              onHoverEnd={() => setIsHovered(false)}
-              onTap={() => setIsHovered(!isHovered)}
-              className="bg-white/10 px-2 py-1.5 sm:px-4 sm:py-2 rounded-full flex items-center relative overflow-hidden min-w-[90px] sm:min-w-[120px] justify-between border border-white/20 transition-colors hover:bg-white/20 cursor-pointer"
-            >
-              <AnimatePresence mode="wait">
-                {!isHovered ? (
-                  <motion.div
-                    layout
-                    key="balance-text"
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    exit={{ opacity: 0 }}
-                    className="flex items-center gap-1 sm:gap-2 w-full"
-                  >
-                     <div className="w-5 h-5 sm:w-6 sm:h-6 bg-yellow-400 rounded-full flex items-center justify-center shrink-0 shadow-sm">
-                       <span className="text-black text-[10px] sm:text-xs font-black">৳</span>
-                     </div>
-                     <span className="text-xs sm:text-sm font-bold">Balance</span>
-                  </motion.div>
-                ) : (
-                  <motion.div
-                    layout
-                    key="balance-value"
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    exit={{ opacity: 0 }}
-                    className="flex items-center flex-row-reverse justify-between w-full"
-                  >
-                     <div className="w-5 h-5 sm:w-6 sm:h-6 bg-yellow-400 rounded-full flex items-center justify-center shrink-0 shadow-sm">
-                       <span className="text-black text-[10px] sm:text-xs font-black">৳</span>
-                     </div>
-                     <span className="text-xs sm:text-sm font-bold text-yellow-400">
-                       ৳{balance.toLocaleString()}
-                     </span>
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </motion.div>
         </div>
+
 
         {/* Content */}
         <div className="p-4 sm:p-6 md:p-10 space-y-8 md:space-y-10 bg-white dark:bg-slate-900">
@@ -3005,21 +3004,73 @@ const EarningPage = ({ onReferralsClick, setActiveTab, onSuccess }) => {
                </button>
                <h2 className="text-xl font-black text-slate-800 dark:text-white">Wallet</h2>
             </div>
-            {/* Balance Card */}
-            <div className="bg-gradient-to-br from-slate-800 to-slate-900 rounded-3xl p-6 text-white shadow-2xl border border-slate-700/50 relative overflow-hidden">
-              <div className="absolute inset-0 bg-gradient-to-br from-brand-600/10 to-purple-600/10" />
-              <div className="relative">
-                <p className="text-slate-400 text-sm font-medium mb-1">Available Balance</p>
-                <p className="text-4xl font-black text-white mb-1">৳ {balance.toLocaleString()}</p>
-                <p className="text-slate-500 text-xs">Minimum withdrawal: <span className="text-amber-400 font-bold">1,000 ৳</span></p>
-              </div>
-              {withdrawSuccess && (
-                <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
-                  className="absolute bottom-4 right-4 bg-emerald-500 text-white text-xs font-bold px-3 py-1.5 rounded-full shadow-lg flex items-center gap-1">
-                  <Check className="w-3 h-3" /> Withdrawal Requested!
-                </motion.div>
-              )}
+            {/* ═══ Combined Balance Dashboard ═══ */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+               {/* Cash Balance Card */}
+               <div className="bg-gradient-to-br from-slate-800 to-slate-900 rounded-3xl p-6 text-white shadow-xl border border-slate-700/50 relative overflow-hidden group">
+                 <div className="absolute inset-0 bg-gradient-to-br from-brand-600/10 to-purple-600/10 opacity-50 group-hover:opacity-100 transition-opacity" />
+                 <div className="relative">
+                   <div className="flex items-center gap-2 mb-3">
+                      <div className="w-8 h-8 bg-yellow-400 rounded-full flex items-center justify-center shadow-lg">
+                        <span className="text-black text-xs font-black">৳</span>
+                      </div>
+                      <p className="text-slate-400 text-sm font-bold uppercase tracking-wider">Balance</p>
+                   </div>
+                   <p className="text-4xl font-black text-white mb-2 leading-none">৳ {balance.toLocaleString()}</p>
+                   <p className="text-slate-500 text-[10px] font-bold">MIN. WITHDRAW: <span className="text-amber-400">1,000 ৳</span></p>
+                 </div>
+                 {withdrawSuccess && (
+                   <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
+                     className="absolute bottom-4 right-4 bg-emerald-500 text-white text-[10px] font-bold px-3 py-1 rounded-full shadow-lg flex items-center gap-1">
+                     <Check className="w-3 h-3" /> Requested!
+                   </motion.div>
+                 )}
+               </div>
+
+               {/* Coin Balance Card */}
+               <div className="bg-gradient-to-br from-[#1a362d] to-[#0a1f18] rounded-3xl p-6 text-white shadow-xl border border-emerald-900/30 relative overflow-hidden group">
+                 <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/10 to-teal-500/10 opacity-50 group-hover:opacity-100 transition-opacity" />
+                 <div className="relative">
+                    <div className="flex justify-between items-start mb-3">
+                       <div className="flex items-center gap-2">
+                          <div className="w-8 h-8 bg-emerald-500 rounded-full flex items-center justify-center shadow-lg shadow-emerald-500/20">
+                            <Medal className="w-4 h-4 text-white" />
+                          </div>
+                          <p className="text-emerald-400/80 text-sm font-bold uppercase tracking-wider">Coins</p>
+                       </div>
+                    </div>
+                    <p className="text-4xl font-black text-white mb-2 leading-none">{coins.toLocaleString()}</p>
+                    <p className="text-emerald-500/60 text-[10px] font-bold">LIFETIME: {lifetimeCoins.toLocaleString()}</p>
+                 </div>
+               </div>
             </div>
+
+            {/* ═══ Coin Conversion Section ═══ */}
+            <div className="bg-white dark:bg-slate-800/50 rounded-3xl p-5 border-2 border-dashed border-slate-200 dark:border-slate-700 flex flex-col sm:flex-row items-center justify-between gap-4">
+               <div className="flex items-center gap-4">
+                  <div className="w-12 h-12 bg-amber-100 dark:bg-amber-900/30 rounded-2xl flex items-center justify-center shrink-0">
+                     <TrendingUp className="w-6 h-6 text-amber-500" />
+                  </div>
+                  <div>
+                     <p className="text-sm font-black text-slate-800 dark:text-white">Convert Coins to Cash</p>
+                     <p className="text-xs text-slate-500 font-medium">1000 Coins = 10 ৳ Balance</p>
+                  </div>
+               </div>
+               <motion.button
+                 whileHover={{ scale: 1.05 }}
+                 whileTap={{ scale: 0.95 }}
+                 onClick={handleConvertCoins}
+                 disabled={coins < 1000 || isLoading}
+                 className={`px-6 py-3 rounded-2xl font-black text-sm shadow-lg transition-all ${
+                   coins < 1000 
+                     ? 'bg-slate-200 dark:bg-slate-700 text-slate-400 cursor-not-allowed'
+                     : 'bg-amber-500 text-white hover:bg-amber-600 shadow-amber-500/20'
+                 }`}
+               >
+                 {isLoading ? 'Converting...' : 'Convert Now'}
+               </motion.button>
+            </div>
+
 
             {/* Amount Input */}
             <div className="space-y-2">

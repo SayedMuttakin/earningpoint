@@ -462,7 +462,7 @@ exports.convertCoins = async (req, res) => {
     
     // Convert all possible multiples of 1000 coins
     const conversionCount = Math.floor(user.points / 1000);
-    const convertedTk = conversionCount * 50;
+    const convertedTk = conversionCount * 10;
     const usedCoins = conversionCount * 1000;
     
     user.balance = (user.balance || 0) + convertedTk;

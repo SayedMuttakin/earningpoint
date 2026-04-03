@@ -4,6 +4,7 @@ const Referral = require('../models/Referral');
 const SupportTicket = require('../models/SupportTicket');
 const Verification = require('../models/Verification');
 const PremiumOrder = require('../models/PremiumOrder');
+const ChatSession = require('../models/ChatSession');
 const jwt = require('jsonwebtoken');
 const { createNotification } = require('./notificationController');
 
@@ -394,6 +395,42 @@ exports.getVerifications = async (req, res) => {
       .limit(Number(limit));
 
     res.json({ verifications, total });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+// ─── Live Support (ChatSessions) ─────────────────────────────────────────────
+exports.getChatSessions = async (req, res) => {
+  try {
+    const { status, page = 1, limit = 15 } = req.query;
+    const query = {};
+    if (status && status !== 'all') query.status = status;
+
+    const total = await ChatSession.countDocuments(query);
+    const sessions = await ChatSession.find(query)
+      .populate('userId', 'name phoneOrEmail')
+      .sort({ createdAt: -1 })
+      .skip((Number(page) - 1) * Number(limit))
+      .limit(Number(limit));
+
+    res.json({ 
+      sessions, 
+      total, 
+      page: Number(page), 
+      pages: Math.ceil(total / Number(limit)) 
+    });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+exports.getChatSession = async (req, res) => {
+  try {
+    const session = await ChatSession.findById(req.params.id)
+      .populate('userId', 'name phoneOrEmail');
+    if (!session) return res.status(404).json({ message: 'Session not found' });
+    res.json(session);
   } catch (error) {
     res.status(500).json({ message: error.message });
   }

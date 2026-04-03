@@ -18,6 +18,7 @@ import EarningPage from './components/EarningPage';
 import NotificationPage from './components/NotificationPage';
 import PaymentSuccess from './components/PaymentSuccess';
 import SettingsPage from './components/SettingsPage';
+import SupportPage from './components/SupportPage';
 import { API_BASE } from './config';
 
 import { AdMob } from '@capacitor-community/admob';
@@ -25,7 +26,7 @@ import { App as CapacitorApp } from '@capacitor/app';
 import { AdMobService } from './utils/admob';
 
 function App() {
-  const [isLogin, setIsLogin] = useState(false);
+  const [isLogin, setIsLogin] = useState(true);
   const [isAuthenticated, setIsAuthenticated] = useState(() => !!localStorage.getItem('token'));
   const [activeTab, setActiveTab] = useState('Home');
   const [selectedProduct, setSelectedProduct] = useState(null);
@@ -135,8 +136,11 @@ function App() {
             onTermsClick={() => setActiveTab('TermsPrivacy')}
             onDeleteClick={() => setActiveTab('DeleteAccount')}
             onNotificationClick={() => setActiveTab('Notification')}
+            onSupportClick={() => setActiveTab('Support')}
           />
         )}
+        
+        {activeTab === 'Support' && <SupportPage onBack={() => setActiveTab('Home')} />}
       </div>
     );
   }

@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { API_BASE } from '../config';
 import { motion } from 'framer-motion';
-import { Lock, LogIn, AtSign } from 'lucide-react';
+import { Lock, LogIn, AtSign, Eye, EyeOff } from 'lucide-react';
 
 const GOOGLE_CLIENT_ID = '683886612726-hpfnmmev12c8fbl7f4bbe37s03s48r23.apps.googleusercontent.com';
 
@@ -75,6 +75,7 @@ const LoginForm = ({ onToggleForm, onLoginSuccess }) => {
   const [formData, setFormData] = useState({ phoneOrEmail: '', password: '' });
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -171,13 +172,20 @@ const LoginForm = ({ onToggleForm, onLoginSuccess }) => {
             <input
               id="password"
               name="password"
-              type="password"
+              type={showPassword ? 'text' : 'password'}
               required
-              className="pl-10 block w-full border-2 border-slate-100 rounded-xl py-3 px-4 bg-slate-50 outline-none transition-all duration-200 focus:border-brand-500"
+              className="pl-10 pr-12 block w-full border-2 border-slate-100 rounded-xl py-3 px-4 bg-slate-50 outline-none transition-all duration-200 focus:border-brand-500"
               placeholder="••••••••"
               value={formData.password}
               onChange={handleChange}
             />
+            <button
+              type="button"
+              onClick={() => setShowPassword(!showPassword)}
+              className="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-slate-600 focus:outline-none"
+            >
+              {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+            </button>
           </div>
         </div>
 

@@ -30,7 +30,8 @@ const SettingsPage = ({
   onLanguageClick, 
   onTermsClick, 
   onDeleteClick, 
-  onNotificationClick 
+  onNotificationClick,
+  onSupportClick
 }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -118,7 +119,7 @@ const SettingsPage = ({
       title: 'Others',
       items: [
         { id: 'terms', icon: FileText, label: 'Terms of Service', sub: 'Read our usage guidelines', action: onTermsClick },
-        { id: 'help', icon: HelpCircle, label: 'Help & Support', sub: 'Contact our support team', action: () => window.open('https://wa.me/447476591257', '_blank') },
+        { id: 'help', icon: HelpCircle, label: 'Help & Support', sub: 'Contact our support team', action: onSupportClick },
         { id: 'data', icon: Database, label: 'Data Management', sub: 'Download or clear your data', action: () => alert('Data management feature is coming soon!') },
       ]
     }

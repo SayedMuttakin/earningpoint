@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { API_BASE } from '../config';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Lock, UserPlus, AtSign, Globe, ChevronDown, Check, Search, Users } from 'lucide-react';
+import { Lock, UserPlus, AtSign, Globe, ChevronDown, Check, Search, Users, Eye, EyeOff } from 'lucide-react';
 import { countries } from '../utils/countries';
 
 const GOOGLE_CLIENT_ID = '683886612726-hpfnmmev12c8fbl7f4bbe37s03s48r23.apps.googleusercontent.com';
@@ -94,6 +94,39 @@ const RegistrationForm = ({ onToggleForm, onRegisterSuccess }) => {
   const [error, setError] = useState('');
   const [isCountryDropdownOpen, setIsCountryDropdownOpen] = useState(false);
   const [countrySearchQuery, setCountrySearchQuery] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [referrerName, setReferrerName] = useState(null);
+  const [isCheckingReferrer, setIsCheckingReferrer] = useState(false);
+
+  // Debounced refer code check
+  useEffect(() => {
+    const checkReferrer = async () => {
+      if (!formData.referCode) {
+        setReferrerName(null);
+        return;
+      }
+      setIsCheckingReferrer(true);
+      try {
+        const response = await fetch(`${API_BASE}/api/auth/referrer/${formData.referCode}`);
+        const data = await response.json();
+        if (response.ok) {
+          setReferrerName(data.name);
+        } else {
+          setReferrerName(null);
+        }
+      } catch (err) {
+        setReferrerName(null);
+      } finally {
+        setIsCheckingReferrer(false);
+      }
+    };
+
+    const timer = setTimeout(() => {
+      checkReferrer();
+    }, 500); // 500ms debounce
+
+    return () => clearTimeout(timer);
+  }, [formData.referCode]);
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -222,13 +255,20 @@ const RegistrationForm = ({ onToggleForm, onRegisterSuccess }) => {
             <input
               id="password"
               name="password"
-              type="password"
+              type={showPassword ? 'text' : 'password'}
               required
-              className="pl-12 block w-full border-2 border-slate-100 rounded-2xl py-4 px-4 bg-slate-50 outline-none transition-all duration-300 font-semibold focus:border-brand-500"
+              className="pl-12 pr-12 block w-full border-2 border-slate-100 rounded-2xl py-4 px-4 bg-slate-50 outline-none transition-all duration-300 font-semibold focus:border-brand-500"
               placeholder="••••••••"
               value={formData.password}
               onChange={handleChange}
             />
+            <button
+              type="button"
+              onClick={() => setShowPassword(!showPassword)}
+              className="absolute inset-y-0 right-0 pr-4 flex items-center text-slate-400 hover:text-slate-600 focus:outline-none"
+            >
+              {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+            </button>
           </div>
         </div>
 
@@ -335,7 +375,15 @@ const RegistrationForm = ({ onToggleForm, onRegisterSuccess }) => {
               onChange={handleChange}
             />
           </div>
-          <p className="text-[10px] text-slate-400 font-bold ml-1 mt-1.5 uppercase tracking-wider">Leave blank if you don't have a code</p>
+          {isCheckingReferrer ? (
+            <p className="text-xs text-brand-500 font-bold ml-1 mt-1.5 animate-pulse">Checking...</p>
+          ) : formData.referCode && referrerName ? (
+            <p className="text-xs text-emerald-500 font-bold ml-1 mt-1.5">Referred by: {referrerName}</p>
+          ) : formData.referCode ? (
+            <p className="text-xs text-rose-500 font-bold ml-1 mt-1.5">Invalid refer code</p>
+          ) : (
+            <p className="text-[10px] text-slate-400 font-bold ml-1 mt-1.5 uppercase tracking-wider">Leave blank if you don't have a code</p>
+          )}
         </div>
 
         <motion.button

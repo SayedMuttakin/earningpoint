@@ -25,6 +25,10 @@ router.get('/support', adminProtect, adminController.getSupportTickets);
 router.get('/support/:id', adminProtect, adminController.getSupportTicket);
 router.put('/support/:id', adminProtect, adminController.replyToTicket);
 
+// Live Chat Sessions
+router.get('/chat-sessions', adminProtect, adminController.getChatSessions);
+router.get('/chat-sessions/:id', adminProtect, adminController.getChatSession);
+
 // Referrals
 router.get('/referrals', adminProtect, adminController.getReferrals);
 

@@ -6,6 +6,24 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const { OAuth2Client } = require('google-auth-library');
 
+// Get referrer name
+exports.getReferrerName = async (req, res) => {
+  try {
+    const { code } = req.params;
+    if (!code) {
+      return res.status(400).json({ message: 'Referral code is required' });
+    }
+    const referrer = await User.findOne({ referralCode: code.toUpperCase() }).select('name phoneOrEmail');
+    if (!referrer) {
+      return res.status(404).json({ message: 'Referrer not found' });
+    }
+    res.json({ name: referrer.name || 'Anonymous User' });
+  } catch (error) {
+    console.error('Fetch Referrer Error:', error);
+    res.status(500).json({ message: 'Server Error' });
+  }
+};
+
 const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID;
 const googleClient = new OAuth2Client(GOOGLE_CLIENT_ID);
 

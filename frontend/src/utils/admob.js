@@ -65,10 +65,17 @@ export const AdMobService = {
       return;
     }
     
+    if (this.isShowingInterstitial) {
+      console.warn('[AdMob] Interstitial already showing, skipping...');
+      return;
+    }
+    this.isShowingInterstitial = true;
+
     let isFinished = false;
     const safeClose = () => {
       if (!isFinished) {
         isFinished = true;
+        this.isShowingInterstitial = false;
         if (onClose) onClose();
       }
     };
@@ -79,22 +86,28 @@ export const AdMobService = {
         adId: getAdId('interstitial'),
       });
 
-      const listener = await AdMob.addListener('interstitialAdDismissed', () => {
+      const dismissListener = await AdMob.addListener('interstitialAdDismissed', () => {
         console.log('[AdMob] Interstitial Dismissed');
         safeClose();
-        listener.remove();
+        dismissListener.remove();
       });
 
-      const failListener = await AdMob.addListener('interstitialAdFailedToLoad', (info) => {
+      const loadFailListener = await AdMob.addListener('interstitialAdFailedToLoad', (info) => {
         console.error('[AdMob] Interstitial failed to load:', info);
         safeClose();
-        failListener.remove();
+        loadFailListener.remove();
+      });
+
+      const showFailListener = await AdMob.addListener('interstitialAdFailedToShow', (info) => {
+        console.error('[AdMob] Interstitial failed to show:', info);
+        safeClose();
+        showFailListener.remove();
       });
 
       // Show it
       await AdMob.showInterstitial();
       
-      // Safety timeout - if user is stuck more than 30s without event, close anyway
+      // Safety timeout
       setTimeout(safeClose, 30000);
 
     } catch (err) {
@@ -104,39 +117,82 @@ export const AdMobService = {
   },
 
   // placement: 'rewarded', 'rewarded_daily', 'rewarded_videos', 'rewarded_view_ads'
+  isShowingRewarded: false,
   async showRewarded(onReward, placement = 'rewarded') {
+    if (this.isShowingRewarded) {
+      console.warn('[AdMob] Reward video already showing or loading.');
+      return;
+    }
+
     if (!Capacitor.isNativePlatform()) {
       console.log('[AdMob] Not on native platform. Faking reward.');
       if (onReward) onReward();
       return;
     }
+
+    this.isShowingRewarded = true;
+    let rewardGranted = false;
+    const adId = getAdId(placement);
+    
+    console.log(`[DEBUG-ADMOB] Preparing rewarded ad: ${placement} (ID: ${adId})`);
+
+    const cleanup = (listeners) => {
+      listeners.forEach(l => l.remove());
+      this.isShowingRewarded = false;
+    };
+
     try {
-      const adId = getAdId(placement);
-      console.log(`[AdMob] Preparing rewarded ad for placement: ${placement} (ID: ${adId})`);
+      const listeners = [];
 
-      await AdMob.prepareRewardVideoAd({
-        adId: adId,
-      });
-      
-      const listener = await AdMob.addListener('rewardVideoAdRewarded', (rewardItem) => {
-        console.log('[AdMob] Rewarded video finished!', rewardItem);
+      // 1. Reward Listener
+      listeners.push(await AdMob.addListener('rewardVideoAdRewarded', (rewardItem) => {
+        console.log('[DEBUG-ADMOB] Reward video finished! Calling onReward.', rewardItem);
+        rewardGranted = true;
         if (onReward) onReward(rewardItem);
-        listener.remove();
-      });
+      }));
 
-      const closeListener = await AdMob.addListener('rewardVideoAdDismissed', () => {
-        console.log('[AdMob] Rewarded video dismissed');
-        closeListener.remove();
-      });
+      // 2. Dismissed Listener
+      listeners.push(await AdMob.addListener('rewardVideoAdDismissed', () => {
+        console.log('[DEBUG-ADMOB] Reward video dismissed');
+        if (!rewardGranted) {
+          console.warn('[DEBUG-ADMOB] Video dismissed but no reward event fired yet.');
+          // In some cases, reward event fires AFTER dismissal or not at all if skipped early.
+          // We let the user know through EarningPage if needed.
+        }
+        cleanup(listeners);
+      }));
 
+      // 3. Failed to Load Listener
+      listeners.push(await AdMob.addListener('rewardVideoAdFailedToLoad', (info) => {
+        console.error('[DEBUG-ADMOB] Reward video failed to load:', info);
+        alert("Ad failed to load. Please try again later.");
+        cleanup(listeners);
+      }));
+
+      // 4. Failed to Show Listener
+      listeners.push(await AdMob.addListener('rewardVideoAdShowFailed', (info) => {
+        console.error('[DEBUG-ADMOB] Reward video failed to show:', info);
+        alert("Ad failed to show. Please try again.");
+        cleanup(listeners);
+      }));
+
+      // Prepare
+      await AdMob.prepareRewardVideoAd({ adId });
+      
+      // Show
       await AdMob.showRewardVideoAd();
+
+      // Safety timeout in case no event fires (e.g. plugin hang)
+      setTimeout(() => {
+        if (this.isShowingRewarded) {
+          console.warn('[DEBUG-ADMOB] Safety timeout reached for rewarded ad.');
+          cleanup(listeners);
+        }
+      }, 45000);
+
     } catch (err) {
-      console.error(`Rewarded ad error (${placement}):`, err);
-      // Fallback reward in test mode if it fails
-      if (USE_TEST_ADS && onReward) {
-        console.warn('[AdMob] Faking reward because of error in test mode');
-        onReward();
-      }
+      console.error(`[DEBUG-ADMOB] Catch error during rewarded ad (${placement}):`, err);
+      this.isShowingRewarded = false;
     }
   },
 
@@ -169,18 +225,41 @@ export const AdMobService = {
       if (onClose) onClose();
       return;
     }
+    
+    let isFinished = false;
+    const safeClose = () => {
+      if (!isFinished) {
+        isFinished = true;
+        if (onClose) onClose();
+      }
+    };
+
     try {
+      console.log('[AdMob] Preparing App Open Ad (using Interstitial ID)...');
       await AdMob.prepareInterstitial({
         adId: getAdId('appOpen'),
       });
-      const listener = await AdMob.addListener('onInterstitialAdDismissed', () => {
-        if (onClose) onClose();
-        listener.remove();
+
+      const dismissListener = await AdMob.addListener('interstitialAdDismissed', () => {
+        console.log('[AdMob] App Open Ad Dismissed');
+        safeClose();
+        dismissListener.remove();
       });
+
+      const failListener = await AdMob.addListener('interstitialAdFailedToLoad', (info) => {
+        console.error('[AdMob] App Open Ad failed to load:', info);
+        safeClose();
+        failListener.remove();
+      });
+
       await AdMob.showInterstitial();
+      
+      // Safety timeout
+      setTimeout(safeClose, 30000);
+
     } catch (err) {
       console.error('App Open error:', err);
-      if (onClose) onClose();
+      safeClose();
     }
   }
 };
