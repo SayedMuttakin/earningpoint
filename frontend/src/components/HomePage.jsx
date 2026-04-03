@@ -196,22 +196,33 @@ const HomePage = () => {
               <span className="font-black text-brand-600 uppercase tracking-widest text-xs hidden sm:inline-block">LATEST NEWS</span>
               <span className="font-black text-brand-600 uppercase tracking-widest text-xs sm:hidden">LATEST</span>
             </div>
-            <marquee className="text-[15px] font-semibold flex-1 overflow-hidden ml-4 text-slate-700" scrollamount="6">
-              {posts.map((post, idx) => (
-                <a 
-                  key={post._id} 
-                  href={`#post-${post._id}`} 
-                  onClick={(e) => {
-                    e.preventDefault();
-                    document.getElementById(`post-${post._id}`)?.scrollIntoView({ behavior: 'smooth' });
-                  }}
-                  className="mx-8 hover:text-brand-600 transition-colors inline-flex items-center gap-2"
-                >
-                  {idx > 0 && <span className="text-slate-300 font-black px-4">•</span>}
-                  {post.title || post.content.substring(0, 60) + "..."}
-                </a>
-              ))}
-            </marquee>
+            <div className="flex-1 overflow-hidden ml-4 relative h-6 flex items-center">
+              <motion.div
+                initial={{ x: "20%" }}
+                animate={{ x: "-100%" }}
+                transition={{
+                  repeat: Infinity,
+                  duration: 25,
+                  ease: "linear",
+                }}
+                className="flex whitespace-nowrap absolute"
+              >
+                {posts.map((post, idx) => (
+                  <a 
+                    key={post._id} 
+                    href={`#post-${post._id}`} 
+                    onClick={(e) => {
+                      e.preventDefault();
+                      document.getElementById(`post-${post._id}`)?.scrollIntoView({ behavior: 'smooth' });
+                    }}
+                    className="mx-8 hover:text-brand-600 transition-colors inline-flex items-center gap-2 text-[15px] font-semibold text-slate-700"
+                  >
+                    {idx > 0 && <span className="text-slate-300 font-black px-4">•</span>}
+                    {post.title || post.content.substring(0, 60) + "..."}
+                  </a>
+                ))}
+              </motion.div>
+            </div>
           </div>
         </div>
       )}
