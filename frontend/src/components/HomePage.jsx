@@ -198,18 +198,18 @@ const HomePage = () => {
             </div>
             <div className="flex-1 overflow-hidden ml-4 relative h-8 flex items-center">
               <motion.div
-                initial={{ x: "100%" }}
-                animate={{ x: "-100%" }}
+                animate={{ x: [0, "-50%"] }}
                 transition={{
                   repeat: Infinity,
-                  duration: 70, // Slower
+                  duration: 50, // Comfortable slow speed
                   ease: "linear",
                 }}
-                className="flex whitespace-nowrap absolute will-change-transform"
+                className="flex whitespace-nowrap absolute left-0 will-change-transform"
               >
-                {posts.map((post, idx) => (
+                {/* Render posts twice for a seamless continuous loop */}
+                {[...posts, ...posts].map((post, idx) => (
                   <a 
-                    key={post._id} 
+                    key={`${post._id}-${idx}`} 
                     href={`#post-${post._id}`} 
                     onClick={(e) => {
                       e.preventDefault();
