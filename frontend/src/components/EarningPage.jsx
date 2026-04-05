@@ -165,6 +165,29 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
   const [showOfferwallAd, setShowOfferwallAd] = React.useState(false);
   const [currentAdInfo, setCurrentAdInfo] = React.useState({ name: '', type: '', coins: 0, time: 0 });
 
+  // Global Settings State
+  const [globalSettings, setGlobalSettings] = React.useState({
+    premiumIpPrice: 600,
+    premiumIpDuration: '30 Days',
+    bkashNumber: '01700-000000',
+    nagadNumber: '01700-000000',
+    rocketNumber: '01700-000000'
+  });
+
+  const fetchGlobalSettings = async () => {
+    try {
+      const res = await fetch(`${API_BASE}/earning/settings`);
+      const data = await res.json();
+      if (data) setGlobalSettings(data);
+    } catch (error) {
+      console.error('Error fetching global settings:', error);
+    }
+  };
+
+  useEffect(() => {
+    fetchGlobalSettings();
+  }, []);
+
   // Status Sub-View State (Upcoming / Unavailable)
   const [showStatusView, setShowStatusView] = React.useState(false);
   const [statusViewType, setStatusViewType] = React.useState(''); // 'upcoming' or 'unavailable'
@@ -1865,57 +1888,35 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
 
                       {/* Free Trial Section */}
                       <div className="text-center mb-6">
-                        <h3 className="text-white font-black text-lg tracking-tight">30 days <span className="text-blue-500">Free Trial</span></h3>
+                        <h3 className="text-white font-black text-lg tracking-tight">{globalSettings.premiumIpDuration} <span className="text-blue-500">Premium IP</span></h3>
                         <p className="text-[11px] text-slate-500 mt-1 font-medium">
                           No commitment & Cancel Anytime
                         </p>
                       </div>
 
-                      {/* Pricing Cards */}
+                      {/* Single Package Card (Managed by Admin) */}
                       <div className="w-full space-y-3 mb-8">
-                        {ipPackages.map((pkg) => (
                           <motion.button
-                            key={pkg.id}
-                            onClick={() => setSelectedPackage(pkg.id)}
+                            onClick={() => setSelectedPackage('month-1')}
                             whileTap={{ scale: 0.98 }}
-                            className={`w-full flex items-center justify-between p-4 rounded-3xl border transition-all relative overflow-hidden ${
-                              selectedPackage === pkg.id 
-                                ? 'bg-slate-800/80 border-blue-500 shadow-lg shadow-blue-500/10' 
-                                : 'bg-[#161F36] border-slate-700/50 hover:bg-[#1A2542]'
-                            }`}
+                            className="w-full flex items-center justify-between p-5 rounded-3xl border transition-all relative overflow-hidden bg-slate-800/80 border-blue-500 shadow-lg shadow-blue-500/10"
                           >
-                            {pkg.bestValue && (
-                              <div className="absolute -left-2 top-1/2 -translate-y-1/2 opacity-100 mt-0 z-10">
-                                <span className="bg-[#10B981] text-white text-[10px] font-black px-2 mt-4 ml-2 py-1.5 rounded uppercase tracking-tighter shrink-0 flex items-center justify-center transform -rotate-0 shadow-lg">
-                                  % OFF
-                                </span>
-                              </div>
-                            )}
-
-                            <div className={`flex flex-wrap items-baseline gap-2 ${pkg.bestValue ? 'ml-12' : 'ml-2'} z-0`}>
-                              <span className="font-bold text-[16px] text-white tracking-wide">
-                                ৳ {pkg.price}/-
+                            <div className="flex flex-wrap items-baseline gap-3 ml-2 z-0">
+                              <span className="font-black text-2xl text-white tracking-tight">
+                                ৳ {globalSettings.premiumIpPrice}/-
                               </span>
-                              <span className="text-[14px] text-slate-300 font-medium">
-                                {pkg.name}
+                              <span className="text-[15px] text-slate-300 font-bold">
+                                {globalSettings.premiumIpDuration} Access
                               </span>
-                              {pkg.freeInfo && (
-                                <span className="text-[12px] font-bold text-emerald-400">
-                                  (+{pkg.freeInfo})
-                                </span>
-                              )}
                             </div>
 
                             {/* Radio Button */}
                             <div className="mr-2 shrink-0 z-10">
-                               <div className={`w-5 h-5 rounded-full border-[2.5px] items-center justify-center flex transition-all ${
-                                 selectedPackage === pkg.id ? 'border-blue-500 bg-transparent' : 'border-slate-500 bg-transparent'
-                               }`}>
-                                 {selectedPackage === pkg.id && <div className="w-[10px] h-[10px] bg-blue-500 rounded-full" />}
+                               <div className="w-6 h-6 rounded-full border-[2.5px] items-center justify-center flex transition-all border-blue-500 bg-transparent">
+                                 <div className="w-3 h-3 bg-blue-500 rounded-full" />
                                </div>
                             </div>
                           </motion.button>
-                        ))}
                       </div>
 
                       {/* Upgrade Button */}
@@ -2012,36 +2013,13 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
                         </div>
                       </div>
 
-                      {/* Address Fields */}
-                      <div className="w-full space-y-3 mb-6">
-                        <p className="text-slate-400 text-xs font-bold uppercase tracking-widest text-center mb-3">Your Address Details</p>
-                        {[
-                          { label: 'Division', value: division, set: setDivision, placeholder: 'e.g. Dhaka' },
-                          { label: 'District', value: district, set: setDistrict, placeholder: 'e.g. Gazipur' },
-                          { label: 'Thana', value: thana, set: setThana, placeholder: 'e.g. Tongi' },
-                          { label: 'Village', value: village, set: setVillage, placeholder: 'e.g. Nayapara' },
-                          { label: 'Postal Code', value: postalCode, set: setPostalCode, placeholder: 'e.g. 1710' },
-                        ].map((field) => (
-                          <div key={field.label}>
-                            <label className="text-slate-500 text-[10px] font-bold uppercase tracking-widest block ml-1 mb-1">{field.label}</label>
-                            <input
-                              type="text"
-                              placeholder={field.placeholder}
-                              value={field.value}
-                              onChange={(e) => field.set(e.target.value)}
-                              className="w-full bg-[#161F36] border-2 border-slate-700/50 focus:border-blue-500 rounded-xl py-3 px-4 text-white placeholder-slate-600 transition-all font-medium text-sm outline-none"
-                            />
-                          </div>
-                        ))}
-                      </div>
-
                       <motion.button
                         whileHover={{ scale: 1.02, y: -2 }}
                         whileTap={{ scale: 0.98 }}
-                        disabled={!selectedCountry || !division || !district || !thana || !village || !postalCode}
+                        disabled={!selectedCountry}
                         onClick={() => setIpStep(3)}
                         className={`w-full py-4 rounded-full font-bold text-[16px] shadow-lg transition-all ${
-                          selectedCountry && division && district && thana && village && postalCode
+                          selectedCountry
                             ? 'bg-gradient-to-r from-indigo-500 to-cyan-400 text-white shadow-blue-500/20'
                             : 'bg-slate-800 text-slate-500 cursor-not-allowed'
                         }`}
@@ -2113,15 +2091,19 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
                       exit={{ x: -20, opacity: 0 }}
                       className="w-full flex flex-col items-center"
                     >
-                      <h3 className="text-white font-black text-2xl mb-2 text-center mt-4 tracking-tight capitalize">{paymentMethod} Payment</h3>
-                      <p className="text-slate-400 text-sm mb-8 text-center max-w-[260px]">
-                        Send ৳ {ipPackages.find(p => p.id === selectedPackage)?.price}/- to the number below and submit the transaction ID.
+                      <h2 className="text-white font-black text-2xl mb-2 text-center mt-4 tracking-tight uppercase tracking-widest">{paymentMethod} Payment</h2>
+                      <p className="text-slate-400 text-sm mb-8 text-center max-w-[320px]">
+                        Send <span className="text-white font-bold select-all whitespace-nowrap">৳ {globalSettings.premiumIpPrice}/-</span> to the number below and submit the transaction ID.
                       </p>
 
-                      <div className="bg-[#161F36] p-6 rounded-[1.5rem] border border-slate-700/50 mb-6 text-center w-full shadow-inner">
-                        <p className="text-slate-500 text-[10px] font-bold uppercase tracking-widest mb-1">Our {paymentMethod} Number</p>
-                        <p className="text-white text-3xl font-black tracking-tight tracking-wider select-all">01700-000000</p>
-                        <p className="text-blue-400 text-[10px] font-bold mt-2 tracking-widest uppercase">(Personal)</p>
+                      <div className="w-full bg-[#161F36]/50 border-2 border-slate-700/50 rounded-[2rem] p-8 flex flex-col items-center justify-center mb-8 shadow-inner group transition-all hover:border-blue-500/30">
+                        <p className="text-slate-500 text-[10px] font-bold uppercase tracking-widest mb-2 opacity-60">Our {paymentMethod} Number</p>
+                        <p className="text-white text-3xl font-black tracking-tight select-all whitespace-nowrap">
+                          {paymentMethod === 'bkash' ? globalSettings.bkashNumber : 
+                           paymentMethod === 'nagad' ? globalSettings.nagadNumber : 
+                           globalSettings.rocketNumber}
+                        </p>
+                        <p className="text-blue-400 text-[10px] font-bold mt-2 tracking-widest uppercase opacity-80">(Personal)</p>
                       </div>
 
                       <div className="space-y-4 mb-8 w-full">
@@ -2147,15 +2129,15 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
                           try {
                             const token = localStorage.getItem('token');
                             const pkg = ipPackages.find(p => p.id === selectedPackage);
-                            const res = await fetch(`${API_BASE}/api/earning/premium-order`, {
+                            const res = await fetch(`${API_BASE}/earning/premium-order`, {
                               method: 'POST',
                               headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
                               body: JSON.stringify({
                                 packageId: selectedPackage,
-                                packageName: pkg?.label || selectedPackage,
-                                amount: pkg?.price,
+                                packageName: `${globalSettings.premiumIpDuration} Premium IP`,
+                                amount: globalSettings.premiumIpPrice,
                                 country: selectedCountry,
-                                division, district, thana, village, postalCode,
+                                division: '', district: '', thana: '', village: '', postalCode: '',
                                 paymentMethod,
                                 transactionId,
                               }),
@@ -3097,16 +3079,14 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
                 Premium IP
               </span>
             </motion.button>
-
-            {/* Wallet Quick Access - Compact and Larger */}
             <motion.button 
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
-              onClick={() => setActiveEarningTab('wallet')}
-              className="flex items-center gap-2 bg-purple-600 hover:bg-purple-700 px-5 py-2 sm:px-6 sm:py-2.5 rounded-2xl border-2 border-purple-700 shadow-md shadow-purple-500/20 transition-all text-white"
+              onClick={() => setShowPremiumIPView(true)}
+              className="flex items-center gap-2 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 px-5 py-2 sm:px-6 sm:py-2.5 rounded-2xl border-2 border-purple-500/30 shadow-md shadow-purple-500/20 transition-all text-white"
             >
-               <Wallet className="w-4 h-4 sm:w-5 sm:h-5" />
-               <span className="text-sm sm:text-base font-black uppercase tracking-tight">My Wallet</span>
+               <Crown className="w-4 h-4 sm:w-5 sm:h-5 text-yellow-400 fill-current" />
+               <span className="text-sm sm:text-base font-black uppercase tracking-tight">Premium IP</span>
             </motion.button>
         </div>
 

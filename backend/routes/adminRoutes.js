@@ -45,4 +45,8 @@ router.post('/posts', adminProtect, postController.createPost);
 router.put('/posts/:id', adminProtect, postController.updatePost);
 router.delete('/posts/:id', adminProtect, postController.deletePost);
 
+// Global App Settings
+router.get('/settings/global', adminProtect, adminController.getGlobalSettings);
+router.put('/settings/global', adminProtect, adminController.updateGlobalSettings);
+
 module.exports = router;

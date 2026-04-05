@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 
 const Settings = ({ ADMIN_API, authHeaders, onLogout }) => {
   const [email, setEmail] = useState('admin@zenvio.com');
@@ -8,7 +8,52 @@ const Settings = ({ ADMIN_API, authHeaders, onLogout }) => {
   const [toast, setToast] = useState('');
   const [loading, setLoading] = useState(false);
 
+  // Global Settings State
+  const [globalSettings, setGlobalSettings] = useState({
+    premiumIpPrice: 600,
+    premiumIpDuration: '30 Days',
+    bkashNumber: '01700-000000',
+    nagadNumber: '01700-000000',
+    rocketNumber: '01700-000000'
+  });
+  const [settingsLoading, setSettingsLoading] = useState(false);
+
   const showToast = (msg) => { setToast(msg); setTimeout(() => setToast(''), 4000); };
+
+  const fetchSettings = async () => {
+    try {
+      const res = await fetch(`${ADMIN_API}/settings/global`, { headers: authHeaders });
+      const data = await res.json();
+      if (data) setGlobalSettings(data);
+    } catch (error) {
+      console.error('Error fetching global settings:', error);
+    }
+  };
+
+  useEffect(() => {
+    fetchSettings();
+  }, []);
+
+  const handleUpdateSettings = async (e) => {
+    e.preventDefault();
+    setSettingsLoading(true);
+    try {
+      const res = await fetch(`${ADMIN_API}/settings/global`, {
+        method: 'PUT',
+        headers: { ...authHeaders, 'Content-Type': 'application/json' },
+        body: JSON.stringify(globalSettings)
+      });
+      if (res.ok) {
+        showToast('✅ Global settings updated successfully!');
+      } else {
+        showToast('❌ Failed to update settings');
+      }
+    } catch (error) {
+      showToast('❌ Error updating settings');
+    } finally {
+      setSettingsLoading(false);
+    }
+  };
 
   const handlePasswordChange = async (e) => {
     e.preventDefault();
@@ -16,7 +61,6 @@ const Settings = ({ ADMIN_API, authHeaders, onLogout }) => {
     if (newPass.length < 6) { showToast('❌ Password must be at least 6 characters'); return; }
     setLoading(true);
     try {
-      // This would normally call a backend endpoint. For now, show instructions.
       showToast('✅ To change admin password, update ADMIN_PASSWORD in your backend .env file and restart the server.');
     } finally {
       setLoading(false);
@@ -40,6 +84,80 @@ const Settings = ({ ADMIN_API, authHeaders, onLogout }) => {
       {toast && (
         <div className={`fixed top-4 right-4 z-50 px-5 py-3 rounded-xl text-sm font-bold shadow-2xl max-w-sm ${toast.startsWith('✅') ? 'bg-emerald-600 text-white' : 'bg-rose-600 text-white'}`}>{toast}</div>
       )}
+
+      {/* Premium IP Settings */}
+      <div className="bg-[#111827] border border-slate-800 rounded-2xl p-6">
+        <div className="flex items-center justify-between mb-6">
+          <h3 className="text-white font-bold text-base">Premium IP Settings</h3>
+          <span className="text-[10px] font-bold text-indigo-400 bg-indigo-500/10 px-2 py-1 rounded-full uppercase tracking-widest">Global Config</span>
+        </div>
+        
+        <form onSubmit={handleUpdateSettings} className="space-y-5">
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="text-slate-400 text-xs font-bold uppercase tracking-wider block mb-2">Price (৳)</label>
+              <input 
+                type="number" 
+                value={globalSettings.premiumIpPrice} 
+                onChange={e => setGlobalSettings({...globalSettings, premiumIpPrice: e.target.value})}
+                className="w-full bg-slate-800 border border-slate-700 focus:border-indigo-500 rounded-xl px-4 py-3 text-white text-sm outline-none transition-all font-bold"
+              />
+            </div>
+            <div>
+              <label className="text-slate-400 text-xs font-bold uppercase tracking-wider block mb-2">Duration</label>
+              <input 
+                type="text" 
+                value={globalSettings.premiumIpDuration} 
+                onChange={e => setGlobalSettings({...globalSettings, premiumIpDuration: e.target.value})}
+                placeholder="e.g. 30 Days"
+                className="w-full bg-slate-800 border border-slate-700 focus:border-indigo-500 rounded-xl px-4 py-3 text-white text-sm outline-none transition-all"
+              />
+            </div>
+          </div>
+
+          <div className="space-y-4 pt-2 border-t border-slate-800">
+            <p className="text-slate-500 text-[10px] font-black uppercase tracking-[0.2em] mb-4">Payment Phone Numbers</p>
+            
+            <div className="space-y-3">
+              <div>
+                <label className="text-slate-400 text-[11px] font-bold block mb-1.5 ml-1">bKash Number</label>
+                <input 
+                  type="text" 
+                  value={globalSettings.bkashNumber} 
+                  onChange={e => setGlobalSettings({...globalSettings, bkashNumber: e.target.value})}
+                  className="w-full bg-slate-800/50 border border-slate-700 hover:border-slate-600 focus:border-indigo-500 rounded-xl px-4 py-3 text-white text-sm outline-none transition-all"
+                />
+              </div>
+              <div>
+                <label className="text-slate-400 text-[11px] font-bold block mb-1.5 ml-1">Nagad Number</label>
+                <input 
+                  type="text" 
+                  value={globalSettings.nagadNumber} 
+                  onChange={e => setGlobalSettings({...globalSettings, nagadNumber: e.target.value})}
+                  className="w-full bg-slate-800/50 border border-slate-700 hover:border-slate-600 focus:border-indigo-500 rounded-xl px-4 py-3 text-white text-sm outline-none transition-all"
+                />
+              </div>
+              <div>
+                <label className="text-slate-400 text-[11px] font-bold block mb-1.5 ml-1">Rocket Number</label>
+                <input 
+                  type="text" 
+                  value={globalSettings.rocketNumber} 
+                  onChange={e => setGlobalSettings({...globalSettings, rocketNumber: e.target.value})}
+                  className="w-full bg-slate-800/50 border border-slate-700 hover:border-slate-600 focus:border-indigo-500 rounded-xl px-4 py-3 text-white text-sm outline-none transition-all"
+                />
+              </div>
+            </div>
+          </div>
+
+          <button 
+            type="submit" 
+            disabled={settingsLoading}
+            className="w-full py-3.5 bg-indigo-600 hover:bg-indigo-500 text-white font-black text-sm rounded-xl transition-all shadow-lg shadow-indigo-600/20 disabled:opacity-50 mt-2"
+          >
+            {settingsLoading ? 'Saving Changes...' : 'Save IP Settings'}
+          </button>
+        </form>
+      </div>
 
       {/* App Info */}
       <div className="bg-[#111827] border border-slate-800 rounded-2xl p-6">

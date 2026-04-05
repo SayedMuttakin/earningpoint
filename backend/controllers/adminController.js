@@ -4,7 +4,7 @@ const Referral = require('../models/Referral');
 const SupportTicket = require('../models/SupportTicket');
 const Verification = require('../models/Verification');
 const PremiumOrder = require('../models/PremiumOrder');
-const ChatSession = require('../models/ChatSession');
+const GlobalSetting = require('../models/GlobalSetting');
 const jwt = require('jsonwebtoken');
 const { createNotification } = require('./notificationController');
 
@@ -431,6 +431,40 @@ exports.getChatSession = async (req, res) => {
       .populate('userId', 'name phoneOrEmail');
     if (!session) return res.status(404).json({ message: 'Session not found' });
     res.json(session);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+// ─── Global Settings ─────────────────────────────────────────────────────────
+exports.getGlobalSettings = async (req, res) => {
+  try {
+    let settings = await GlobalSetting.findOne({ configKey: 'main_config' });
+    if (!settings) {
+      settings = await GlobalSetting.create({ configKey: 'main_config' });
+    }
+    res.json(settings);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+exports.updateGlobalSettings = async (req, res) => {
+  try {
+    const { premiumIpPrice, premiumIpDuration, bkashNumber, nagadNumber, rocketNumber } = req.body;
+    let settings = await GlobalSetting.findOne({ configKey: 'main_config' });
+    if (!settings) {
+      settings = new GlobalSetting({ configKey: 'main_config' });
+    }
+
+    if (premiumIpPrice !== undefined) settings.premiumIpPrice = Number(premiumIpPrice);
+    if (premiumIpDuration !== undefined) settings.premiumIpDuration = premiumIpDuration;
+    if (bkashNumber !== undefined) settings.bkashNumber = bkashNumber;
+    if (nagadNumber !== undefined) settings.nagadNumber = nagadNumber;
+    if (rocketNumber !== undefined) settings.rocketNumber = rocketNumber;
+
+    await settings.save();
+    res.json({ message: 'Settings updated successfully', settings });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }

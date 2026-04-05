@@ -1,5 +1,6 @@
 const User = require('../models/User');
 const Transaction = require('../models/Transaction');
+const GlobalSetting = require('../models/GlobalSetting');
 const { createNotification } = require('./notificationController');
 
 const processPoints = (user, reward) => {
@@ -526,5 +527,24 @@ exports.convertCoins = async (req, res) => {
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: error.message || 'Server Error' });
+  }
+};
+
+exports.getGlobalSettings = async (req, res) => {
+  try {
+    let settings = await GlobalSetting.findOne({ configKey: 'main_config' });
+    if (!settings) {
+      settings = await GlobalSetting.create({ configKey: 'main_config' });
+    }
+    // Return only public fields
+    res.json({
+      premiumIpPrice: settings.premiumIpPrice,
+      premiumIpDuration: settings.premiumIpDuration,
+      bkashNumber: settings.bkashNumber,
+      nagadNumber: settings.nagadNumber,
+      rocketNumber: settings.rocketNumber
+    });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
   }
 };
