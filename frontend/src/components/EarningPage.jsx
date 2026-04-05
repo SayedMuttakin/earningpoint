@@ -370,12 +370,20 @@ const EarningPage = ({ onReferralsClick, setActiveTab, onSuccess }) => {
 
     console.log(`[DEBUG-ADMOB] User clicked startAd for: ${activeType} (Placement: ${placement})`);
 
+    const onError = (msg) => {
+      setIsLoading(false);
+      showToast(msg, "error");
+    };
+
+    const onDismiss = () => {
+      setIsLoading(false);
+    };
+
     AdMobService.showRewarded((rewardItem) => {
       console.log(`[DEBUG-ADMOB] showRewarded callback triggered for: ${activeType}`);
       claimReward(activeType);
-    }, placement).finally(() => {
-      // In case showRewarded itself finishes without triggering callback (handled in admob.js)
-      // but we need to ensure setIsLoading(false) happens if it didn't hit claimReward
+    }, placement, onError, onDismiss).catch(err => {
+      onError("Something went wrong");
     });
   };
 
