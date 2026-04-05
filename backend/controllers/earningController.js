@@ -238,6 +238,42 @@ exports.claimSpin = async (req, res) => {
   }
 };
 
+exports.claimTask = async (req, res) => {
+  try {
+    const { points, name } = req.body;
+    const user = await User.findById(req.user._id);
+    
+    const reward = Number(points) > 0 ? Number(points) : 10;
+    const taskName = name || 'Ad Task';
+
+    const converted = processPoints(user, reward);
+
+    await user.save();
+
+    await Transaction.create({
+      userId: user._id,
+      type: 'earning',
+      amount: reward,
+      description: `${taskName} Reward`,
+      status: 'completed'
+    });
+
+    // Notify user
+    createNotification(user._id, 'Task Completed! ✅', `Congratulations! You earned ${reward} points from ${taskName}!`, 'earning');
+
+    res.json({ 
+      message: converted ? `Rewarded ${reward} points! You reached 1000+ points and got 50৳ converted!` : `Rewarded ${reward} points!`,
+      balance: user.balance,
+      points: user.points,
+      lifetimePoints: user.lifetimePoints
+    });
+
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: error.message || 'Server Error' });
+  }
+};
+
 exports.getScratchStatus = async (req, res) => {
   try {
     const user = await User.findById(req.user._id).select('lastScratchDate scratchCount');

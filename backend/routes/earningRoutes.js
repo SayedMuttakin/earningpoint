@@ -12,6 +12,8 @@ router.post('/video-claim', protect, earningController.claimVideoAd);
 router.get('/spin-status', protect, earningController.getSpinStatus);
 router.post('/spin-claim', protect, earningController.claimSpin);
 
+router.post('/task-claim', protect, earningController.claimTask);
+
 router.get('/scratch-status', protect, earningController.getScratchStatus);
 router.post('/scratch-claim', protect, earningController.claimScratch);
 

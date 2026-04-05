@@ -7,7 +7,8 @@ import {
   Calculator, Binary, Type, HelpCircle,
   Wallet, History as HistoryIcon, BookOpen, ArrowLeft,
   Crown, Shield, Check, CalendarCheck, Newspaper, Video, Aperture, Search,
-  TrendingUp, Star, ChevronRight, ChevronDown, Menu, Home, Bell, User, Settings, LogOut
+  TrendingUp, Star, ChevronRight, ChevronDown, Menu, Home, Bell, User, Settings, LogOut,
+  Clock, AlertCircle, X
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -81,7 +82,7 @@ const BigAdBanner = () => {
   );
 };
 
-const EarningPage = ({ onReferralsClick, setActiveTab, onSuccess }) => {
+const EarningPage = ({ onReferralsClick, setActiveTab }) => {
   const [balance, setBalance] = React.useState(0);
   const [coins, setCoins] = React.useState(0);
   const [lifetimeCoins, setLifetimeCoins] = React.useState(0);
@@ -163,6 +164,17 @@ const EarningPage = ({ onReferralsClick, setActiveTab, onSuccess }) => {
   const [showNativeAd, setShowNativeAd] = React.useState(false);
   const [showOfferwallAd, setShowOfferwallAd] = React.useState(false);
   const [currentAdInfo, setCurrentAdInfo] = React.useState({ name: '', type: '', coins: 0, time: 0 });
+
+  // Status Sub-View State (Upcoming / Unavailable)
+  const [showStatusView, setShowStatusView] = React.useState(false);
+  const [statusViewType, setStatusViewType] = React.useState(''); // 'upcoming' or 'unavailable'
+  const [statusViewTitle, setStatusViewTitle] = React.useState('');
+
+  const handleStatusClick = (title, type) => {
+    setStatusViewTitle(title);
+    setStatusViewType(type);
+    setShowStatusView(true);
+  };
 
   // Multi-Ad Sub-View State (Level 3 & Level 4 options — 5 ads each)
   const [showMultiAdView, setShowMultiAdView] = React.useState(false);
@@ -790,10 +802,10 @@ const EarningPage = ({ onReferralsClick, setActiveTab, onSuccess }) => {
         return;
       }
       
-      const response = await fetch(`${API_BASE}/api/earning/spin-claim`, {
+      const response = await fetch(`${API_BASE}/api/earning/task-claim`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ points: pts }) // Changed from 'coins' to 'points' to match backend
+        body: JSON.stringify({ points: pts, name: adName })
       });
       
       const data = await response.json();
@@ -804,7 +816,7 @@ const EarningPage = ({ onReferralsClick, setActiveTab, onSuccess }) => {
         if (data.lifetimeCoins !== undefined) setLifetimeCoins(data.lifetimeCoins);
         showToast(`🎉 You earned ${pts} Coins from ${adName}!`, "success");
         
-        if (onSuccess) onSuccess();
+        // The calling context can add success logic here
       } else {
         console.error(`[DEBUG-ADMOB] Custom reward failed:`, data.message);
         showToast(data.message || 'Failed to claim coins.', "error");
@@ -1319,7 +1331,7 @@ const EarningPage = ({ onReferralsClick, setActiveTab, onSuccess }) => {
     await new Promise(r => setTimeout(r, 1500));
     setWithdrawLoading(false);
     // Call the premium success screen instead of showing the inline success message
-    onSuccess();
+    setActiveTab('PaymentSuccess');
     setWithdrawAmount('');
     setWithdrawPhone('');
     setWithdrawMethod('');
@@ -1385,10 +1397,10 @@ const EarningPage = ({ onReferralsClick, setActiveTab, onSuccess }) => {
                   setIsLoading(false);
                   return;
                 }
-                const response = await fetch(`${API_BASE}/api/earning/spin-claim`, {
+                const response = await fetch(`${API_BASE}/api/earning/task-claim`, {
                   method: 'POST',
                   headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-                  body: JSON.stringify({ points: multiAdConfig.coins }) // Changed from 'coins' to 'points'
+                  body: JSON.stringify({ points: multiAdConfig.coins, name: multiAdConfig.name })
                 });
                 const data = await response.json();
                 if (response.ok) {
@@ -1399,8 +1411,6 @@ const EarningPage = ({ onReferralsClick, setActiveTab, onSuccess }) => {
                   incrementMultiAdCount(multiAdConfig.key);
                   setMultiAdConfig(prev => ({...prev}));
                   showToast(`🎉 You earned ${multiAdConfig.coins} Coins from ${multiAdConfig.name}!`, "success");
-                  
-                  if (onSuccess) onSuccess();
                 } else {
                   console.error(`[DEBUG-ADMOB] Multi-ad claim failed:`, data.message);
                   showToast(data.message || 'Failed to claim coins.', "error");
@@ -1541,6 +1551,74 @@ const EarningPage = ({ onReferralsClick, setActiveTab, onSuccess }) => {
             </motion.div>
           );
         })()}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {showStatusView && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[150] bg-slate-950/90 backdrop-blur-md flex items-center justify-center p-4 shadow-2xl"
+          >
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0, y: 20 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.9, opacity: 0, y: 20 }}
+              className="bg-white dark:bg-slate-900 w-full max-w-sm rounded-[2.5rem] shadow-2xl overflow-hidden relative border border-slate-200 dark:border-slate-800 flex flex-col items-center p-8 text-center"
+            >
+              <button 
+                onClick={() => setShowStatusView(false)}
+                className="absolute top-6 right-6 p-2 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors"
+                aria-label="Close"
+              >
+                <X className="w-5 h-5" />
+              </button>
+
+              <div className={`w-20 h-20 rounded-3xl flex items-center justify-center mb-6 shadow-lg ${
+                statusViewType === 'upcoming' 
+                  ? 'bg-gradient-to-br from-indigo-500 to-blue-600 shadow-blue-500/20' 
+                  : 'bg-gradient-to-br from-rose-500 to-pink-600 shadow-rose-500/20'
+              }`}>
+                {statusViewType === 'upcoming' ? (
+                  <Clock className="w-10 h-10 text-white animate-pulse" />
+                ) : (
+                  <AlertCircle className="w-10 h-10 text-white" />
+                )}
+              </div>
+
+              <h2 className="text-2xl font-black text-slate-800 dark:text-slate-100 mb-2">
+                {statusViewTitle}
+              </h2>
+              
+              <p className="text-slate-500 dark:text-slate-400 text-sm font-medium leading-relaxed mb-8 px-4">
+                {statusViewType === 'upcoming' 
+                  ? "This feature is coming soon! Our team is working hard to bring you more ways to earn. Stay tuned!" 
+                  : "This task is currently unavailable for your region or level. We are refreshing the offers, please check back later!"}
+              </p>
+
+              <button
+                onClick={() => setShowStatusView(false)}
+                className={`w-full py-4 rounded-2xl font-black text-sm uppercase tracking-widest transition-all shadow-lg mb-8 ${
+                  statusViewType === 'upcoming'
+                    ? 'bg-indigo-600 hover:bg-indigo-700 text-white shadow-indigo-600/20'
+                    : 'bg-slate-800 dark:bg-slate-100 text-white dark:text-slate-900 shadow-slate-900/20'
+                }`}
+              >
+                Continue Earning
+              </button>
+
+              <div className="w-full mt-auto">
+                 <div className="flex flex-col items-center">
+                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2 flex items-center gap-1.5 justify-center">
+                       <Shield className="w-3 h-3" /> Sponsored Task
+                    </span>
+                    <BigAdBanner />
+                 </div>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
       </AnimatePresence>
 
       <AnimatePresence mode="wait">
@@ -3390,7 +3468,7 @@ const EarningPage = ({ onReferralsClick, setActiveTab, onSuccess }) => {
                   { id: 'l4-native', name: 'Native Ad Click', logo: 'https://img.icons8.com/color/96/facebook-new.png', coins: 10, color: 'from-indigo-500 to-blue-600', action: () => openMultiAdView({ key: 'native_ad', name: 'Native Ad Click', adType: 'native', coins: 10, logo: 'https://img.icons8.com/color/96/facebook-new.png', color: 'from-indigo-500 to-blue-600' }) },
                   { id: 'l4-bonus', name: 'Bonus Ad', logo: 'https://img.icons8.com/color/96/gift.png', coins: 30, color: 'from-amber-400 to-orange-500', action: () => openMultiAdView({ key: 'bonus_ad', name: 'Bonus Ad', adType: 'rewarded', coins: 30, logo: 'https://img.icons8.com/color/96/gift.png', color: 'from-amber-400 to-orange-500' }) },
                   { id: 'l4-hourly', name: 'Hourly Ad', logo: 'https://img.icons8.com/color/96/hourglass.png', coins: 20, color: 'from-teal-400 to-emerald-500', action: () => openMultiAdView({ key: 'hourly_ad', name: 'Hourly Ad', adType: 'interstitial', coins: 20, logo: 'https://img.icons8.com/color/96/hourglass.png', color: 'from-teal-400 to-emerald-500' }) },
-                  { id: 'l4-weekly-refer', name: 'Weekly Refer', logo: 'https://img.icons8.com/color/96/conference-call.png', coins: 100, color: 'from-purple-400 to-pink-500', action: () => openMultiAdView({ key: 'weekly_refer', name: 'Weekly Refer', adType: 'rewarded', coins: 100, logo: 'https://img.icons8.com/color/96/conference-call.png', color: 'from-purple-400 to-pink-500' }) },
+                  { id: 'l4-weekly-refer', name: 'Change Meta', logo: 'https://img.icons8.com/color/96/conference-call.png', coins: 100, color: 'from-purple-400 to-pink-500', action: () => openMultiAdView({ key: 'weekly_refer', name: 'Change Meta', adType: 'rewarded', coins: 100, logo: 'https://img.icons8.com/color/96/conference-call.png', color: 'from-purple-400 to-pink-500' }) },
                   { id: 'l4-surprise', name: 'Surprise Bonus', logo: 'https://img.icons8.com/color/96/confetti.png', coins: 50, color: 'from-pink-400 to-rose-500', action: () => openMultiAdView({ key: 'surprise_bonus', name: 'Surprise Bonus', adType: 'rewarded', coins: 50, logo: 'https://img.icons8.com/color/96/confetti.png', color: 'from-pink-400 to-rose-500' }) },
                 ].map(item => <OptionCard key={item.id} item={item} count={getMultiAdCount(item.id.replace('l4-','').replace(/-/g,'_'))} maxCount={5} />)}
               </div>
@@ -3423,11 +3501,11 @@ const EarningPage = ({ onReferralsClick, setActiveTab, onSuccess }) => {
               </div>
               <div className="grid grid-cols-3 sm:grid-cols-3 md:grid-cols-6 gap-3 md:gap-4 justify-items-center">
                 {[
-                  { id: 'l5-rik-survey', name: 'Rik Survey', logo: 'https://img.icons8.com/color/96/survey.png', coins: 50, color: 'from-sky-400 to-blue-500', action: () => handleAdOptionClick('Rik Survey', 'Offerwall', 50) },
+                  { id: 'l5-rik-survey', name: 'Rik Survey', logo: 'https://img.icons8.com/color/96/survey.png', coins: 1200, color: 'from-sky-400 to-blue-500', action: () => handleStatusClick('Rik Survey', 'unavailable') },
                   { id: 'l5-web-reg', name: 'Website Reg.', logo: 'https://img.icons8.com/color/96/domain.png', coins: 30, color: 'from-violet-400 to-purple-500', action: () => handleAdOptionClick('Website Registration', 'Offerwall', 30) },
-                  { id: 'l5-email', name: 'Email Submit', logo: 'https://img.icons8.com/color/96/email.png', coins: 20, color: 'from-orange-400 to-red-500', action: () => handleAdOptionClick('Email Submit', 'Offerwall', 20) },
+                  { id: 'l5-email', name: 'Email Submit', logo: 'https://img.icons8.com/color/96/email.png', coins: 20, color: 'from-orange-400 to-red-500', action: () => handleStatusClick('Email Submit', 'upcoming') },
                   { id: 'l5-app', name: 'App Install', logo: 'https://img.icons8.com/color/96/google-play.png', coins: 40, color: 'from-emerald-400 to-green-500', action: () => handleAdOptionClick('App Install', 'Offerwall', 40) },
-                  { id: 'l5-affiliate', name: 'Affiliate Market', logo: 'https://img.icons8.com/color/96/merchant-account.png', coins: 75, color: 'from-amber-400 to-yellow-500', action: () => handleAdOptionClick('Affiliate Market', 'Offerwall', 75) },
+                  { id: 'l5-affiliate', name: 'Affiliate Market', logo: 'https://img.icons8.com/color/96/merchant-account.png', coins: 75, color: 'from-amber-400 to-yellow-500', action: () => handleStatusClick('Affiliate Market', 'upcoming') },
                   { id: 'l5-trial', name: 'Trial Signup', logo: 'https://img.icons8.com/color/96/key.png', coins: 60, color: 'from-rose-400 to-pink-500', action: () => handleAdOptionClick('Trial Signup', 'Offerwall', 60) },
                 ].map(item => <OptionCard key={item.id} item={item} />)}
               </div>
