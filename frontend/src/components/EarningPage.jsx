@@ -91,6 +91,13 @@ const EarningPage = ({ onReferralsClick, setActiveTab, onSuccess }) => {
   const [activeEarningTab, setActiveEarningTab] = React.useState('rewards');
   const isAdLoading = useRef(false);
 
+  // Toast State
+  const [toast, setToast] = React.useState({ visible: false, message: '', type: 'success' });
+  const showToast = (message, type = 'success') => {
+    setToast({ visible: true, message, type });
+    setTimeout(() => setToast(prev => ({ ...prev, visible: false })), 4000);
+  };
+
   // Withdraw States
   const [withdrawAmount, setWithdrawAmount] = React.useState('');
   const [withdrawPhone, setWithdrawPhone] = React.useState('');
@@ -411,23 +418,23 @@ const EarningPage = ({ onReferralsClick, setActiveTab, onSuccess }) => {
         } else if (activeType === 'daily') {
           setCheckinStatus({ lastCheckin: data.lastCheckin, count: data.count });
           if (data.count === 2) {
-            alert(data.message + "\nCheckin complete! Come back in 2 hours.");
+            showToast(data.message + " Checkin complete! Come back in 2 hours.", "success");
             setShowCheckinView(false);
           } else {
-            alert(data.message);
+            showToast(data.message, "success");
           }
         } else {
-          alert(data.message || "Reward claimed successfully!");
+          showToast(data.message || "Reward claimed successfully!", "success");
         }
         
         if (onSuccess) onSuccess();
       } else {
         console.error(`[DEBUG-ADMOB] Claim failed:`, data.message);
-        alert(data.message || "Failed to claim reward.");
+        showToast(data.message || "Failed to claim reward.", "error");
       }
     } catch (err) {
       console.error(`[DEBUG-ADMOB] Error in claimReward:`, err);
-      alert("Network error. Please check your connection.");
+      showToast("Network error. Please check your connection.", "error");
     } finally {
       setIsLoading(false);
     }
@@ -662,11 +669,11 @@ const EarningPage = ({ onReferralsClick, setActiveTab, onSuccess }) => {
         setGkAnswered(false);
       } else {
         const finalScore = correct ? gkQuizScore + 1 : gkQuizScore;
-        alert(`Quiz finished! You scored ${finalScore}/10.`);
+        
         if (finalScore >= 5) {
-          alert('Congratulations! +40 Coins added to your account.');
+          showToast(`Quiz finished! You scored ${finalScore}/10. +40 Coins added!`, 'success');
         } else {
-          alert('You need at least 5 correct answers to win Coins!');
+          showToast(`Quiz finished! You scored ${finalScore}/10. You need at least 5 correct to win Coins!`, 'error');
         }
         localStorage.setItem('gk_last_played', new Date().toDateString());
         setShowGkQuizView(false);
@@ -782,16 +789,16 @@ const EarningPage = ({ onReferralsClick, setActiveTab, onSuccess }) => {
         setBalance(data.balance);
         if (data.coins !== undefined) setCoins(data.coins);
         if (data.lifetimeCoins !== undefined) setLifetimeCoins(data.lifetimeCoins);
-        alert(`🎉 You earned ${pts} Coins from ${adName}!`);
+        showToast(`🎉 You earned ${pts} Coins from ${adName}!`, "success");
         
         if (onSuccess) onSuccess();
       } else {
         console.error(`[DEBUG-ADMOB] Custom reward failed:`, data.message);
-        alert(data.message || 'Failed to claim coins.');
+        showToast(data.message || 'Failed to claim coins.', "error");
       }
     } catch (err) {
       console.error(`[DEBUG-ADMOB] Error in handleCustomAdReward:`, err);
-      alert('Network error.');
+      showToast('Network error.', "error");
     } finally {
       setIsLoading(false);
     }
@@ -1318,6 +1325,22 @@ const EarningPage = ({ onReferralsClick, setActiveTab, onSuccess }) => {
 
   return (
     <main className="min-h-screen bg-slate-50 dark:bg-slate-950 transition-colors duration-500 pb-24 md:pb-8">
+      {/* Toast Notification */}
+      <AnimatePresence>
+        {toast.visible && (
+          <motion.div
+            initial={{ opacity: 0, y: -50, scale: 0.9 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: -50, scale: 0.9 }}
+            className={`fixed top-4 left-1/2 -translate-x-1/2 z-[999] px-6 py-3 rounded-full flex items-center gap-3 shadow-2xl backdrop-blur-md font-bold text-sm min-w-max max-w-[90vw] text-center ${
+              toast.type === 'error' ? 'bg-red-500/90 text-white border border-red-400' : 'bg-emerald-500/90 text-white border border-emerald-400'
+            }`}
+          >
+            {toast.type === 'error' ? '✖' : '🎉'} {toast.message}
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* Option Intro Screen — full screen overlay */}
       <AnimatePresence>
         {showIntroScreen && introItem && <OptionIntroScreen />}
@@ -1362,16 +1385,16 @@ const EarningPage = ({ onReferralsClick, setActiveTab, onSuccess }) => {
                   if (data.lifetimeCoins !== undefined) setLifetimeCoins(data.lifetimeCoins);
                   incrementMultiAdCount(multiAdConfig.key);
                   setMultiAdConfig(prev => ({...prev}));
-                  alert(`🎉 You earned ${multiAdConfig.coins} Coins from ${multiAdConfig.name}!`);
+                  showToast(`🎉 You earned ${multiAdConfig.coins} Coins from ${multiAdConfig.name}!`, "success");
                   
                   if (onSuccess) onSuccess();
                 } else {
                   console.error(`[DEBUG-ADMOB] Multi-ad claim failed:`, data.message);
-                  alert(data.message || 'Failed to claim coins.');
+                  showToast(data.message || 'Failed to claim coins.', "error");
                 }
               } catch (err) {
                 console.error(`[DEBUG-ADMOB] Error in multi-ad triggerReward:`, err);
-                alert('Network error.');
+                showToast('Network error.', "error");
               } finally {
                 setIsLoading(false);
               }
@@ -2374,12 +2397,12 @@ const EarningPage = ({ onReferralsClick, setActiveTab, onSuccess }) => {
                               if (data.coins !== undefined) setCoins(data.coins);
                               if (data.lifetimeCoins !== undefined) setLifetimeCoins(data.lifetimeCoins);
                               setWheelStatus({ lastSpinDate: data.lastSpinDate, count: data.count });
-                              alert(data.message || `🎉 You won ${reward} Coins!`);
+                              showToast(data.message || `🎉 You won ${reward} Coins!`, "success");
                             } else {
-                              alert(data.message || 'Failed to claim spin.');
+                              showToast(data.message || 'Failed to claim spin.', "error");
                             }
                           } catch (err) {
-                            alert('Network error.');
+                            showToast('Network error.', "error");
                           }
                         })();
                       }
@@ -2583,11 +2606,12 @@ const EarningPage = ({ onReferralsClick, setActiveTab, onSuccess }) => {
                       if (data.lifetimeCoins !== undefined) setLifetimeCoins(data.lifetimeCoins);
                       setScratchStatus({ lastScratchDate: data.lastScratchDate, count: data.count });
                       setActiveScratchCard(prev => ({ ...prev, isRevealed: true, reward: data.reward }));
+                      showToast(`🎉 You won ${data.reward} Coins!`, "success");
                     } else {
-                      alert(data.message || 'Failed to scratch.');
+                      showToast(data.message || 'Failed to scratch.', "error");
                     }
                   } catch (err) {
-                    alert('Network error.');
+                    showToast('Network error.', "error");
                   } finally {
                     setIsLoading(false);
                   }
