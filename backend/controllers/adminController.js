@@ -351,16 +351,26 @@ exports.updatePremiumOrder = async (req, res) => {
     if (status === 'approved') {
       const packageDays = { 'month-1': 37, 'month-3': 105, 'month-6': 210, 'year-1': 424 };
       const days = packageDays[order.packageId] || 30;
-      const premiumExpiry = new Date();
-      premiumExpiry.setDate(premiumExpiry.getDate() + days);
-      premiumExpiry.setDate(premiumExpiry.getDate() + days);
-      await User.findByIdAndUpdate(order.userId._id, { isPremium: true, premiumExpiry });
+      
+      let currentExpiry = order.userId.premiumExpiry ? new Date(order.userId.premiumExpiry) : new Date();
+      if (currentExpiry < new Date()) {
+        currentExpiry = new Date();
+      }
+      
+      const premiumExpiry = new Date(currentExpiry.getTime() + days * 24 * 60 * 60 * 1000);
+      
+      await User.findByIdAndUpdate(order.userId._id, { 
+        isPremium: true, 
+        premiumExpiry,
+        premiumCountry: order.country || '',
+        premiumPackageName: order.packageName || ''
+      });
 
       // Notify user about approval
       createNotification(
         order.userId._id, 
         'Premium Account Activated! ✨', 
-        `Your order for ${order.packageName} has been approved! Enjoy premium features until ${premiumExpiry.toLocaleDateString()}.`,
+        `Your order for ${order.packageName} has been approved! Your subscription is now active until ${premiumExpiry.toLocaleDateString()}.`,
         'premium'
       );
     } else if (status === 'rejected') {

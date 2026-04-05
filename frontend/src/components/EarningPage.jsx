@@ -147,6 +147,12 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
   const [quizTimer, setQuizTimer] = React.useState(30);
   const [quizTimerActive, setQuizTimerActive] = React.useState(false);
 
+  // Premium Countdown State
+  const [timeLeft, setTimeLeft] = React.useState({ days: 0, hours: 0, minutes: 0, seconds: 0 });
+  const [premiumExpiryDate, setPremiumExpiryDate] = React.useState(null);
+  const [premiumCountry, setPremiumCountry] = React.useState('');
+  const [premiumPackageName, setPremiumPackageName] = React.useState('');
+
   // GK Quiz States
   const [showGkQuizView, setShowGkQuizView] = React.useState(false);
   const [gkQuizQuestions, setGkQuizQuestions] = React.useState([]);
@@ -257,6 +263,7 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
   const [village, setVillage] = React.useState('');
   const [postalCode, setPostalCode] = React.useState('');
   const [ipSubmitting, setIpSubmitting] = React.useState(false);
+  const [showUpgradeOptions, setShowUpgradeOptions] = React.useState(false);
 
   // Option Intro Screen State
   const [showIntroScreen, setShowIntroScreen] = React.useState(false);
@@ -286,6 +293,9 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
         setCoins(data.coins || 0);
         setLifetimeCoins(data.lifetimeCoins || 0);
         setIsPremium(data.isPremium || false);
+        setPremiumExpiryDate(data.premiumExpiry || null);
+        setPremiumCountry(data.premiumCountry || '');
+        setPremiumPackageName(data.premiumPackageName || '');
       }
     } catch (err) {
       console.error('Failed to fetch balance:', err);
@@ -378,6 +388,33 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
       AdMobService.hideBanner();
     };
   }, []);
+
+  // Update Countdown Timer every second
+  React.useEffect(() => {
+    if (!isPremium || !premiumExpiryDate) return;
+
+    const timer = setInterval(() => {
+      const now = new Date().getTime();
+      const expiry = new Date(premiumExpiryDate).getTime();
+      const diff = expiry - now;
+
+      if (diff <= 0) {
+        setIsPremium(false);
+        setTimeLeft({ days: 0, hours: 0, minutes: 0, seconds: 0 });
+        clearInterval(timer);
+        return;
+      }
+
+      const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+      const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+      const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+      const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+
+      setTimeLeft({ days, hours, minutes, seconds });
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, [isPremium, premiumExpiryDate]);
 
   // Legacy Mock Ad Timer Removed
 
@@ -1854,8 +1891,11 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
               {/* Back Button */}
               <button 
                 onClick={() => {
-                  if (ipStep > 1 && ipStep < 5) setIpStep(ipStep - 1);
-                  else {
+                  if (showUpgradeOptions) {
+                    setShowUpgradeOptions(false);
+                  } else if (ipStep > 1 && ipStep < 5) {
+                    setIpStep(ipStep - 1);
+                  } else {
                     goBackWithAd(() => setShowPremiumIPView(false));
                     setIpStep(1);
                   }
@@ -1867,7 +1907,58 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
 
               <div className="flex-1 overflow-y-auto px-5 pt-12 custom-scrollbar flex flex-col items-center w-full">
                 <AnimatePresence mode="wait">
-                  {ipStep === 1 && (
+                  {isPremium && premiumExpiryDate && new Date(premiumExpiryDate) > new Date() && !showUpgradeOptions && (
+                    <motion.div
+                      key="active-status"
+                      initial={{ scale: 0.9, opacity: 0 }}
+                      animate={{ scale: 1, opacity: 1 }}
+                      exit={{ scale: 0.9, opacity: 0 }}
+                      className="w-full flex flex-col items-center pt-2"
+                    >
+                      <div className="w-20 h-20 rounded-full bg-yellow-400/10 border border-yellow-400/20 flex items-center justify-center mb-6 relative">
+                        <div className="absolute inset-0 rounded-full bg-yellow-400/5 animate-ping" />
+                        <Crown className="w-10 h-10 text-yellow-500 fill-current" />
+                      </div>
+
+                      <h2 className="text-2xl font-black text-white mb-1 tracking-tight">Active Plan</h2>
+                      <p className="text-yellow-500 font-bold text-xs uppercase tracking-[0.2em] mb-6">{premiumPackageName || 'Premium Subscriber'}</p>
+
+                      {premiumCountry && (
+                        <div className="flex items-center gap-2 px-4 py-2 bg-emerald-500/10 border border-emerald-500/20 rounded-2xl mb-8">
+                          <Globe className="w-4 h-4 text-emerald-500" />
+                          <span className="text-emerald-500 text-xs font-bold uppercase tracking-wider">Server: {premiumCountry}</span>
+                        </div>
+                      )}
+
+                      {/* Countdown Grid */}
+                      <div className="grid grid-cols-4 gap-2 w-full mb-8">
+                        {[
+                          { label: 'D', value: timeLeft.days },
+                          { label: 'H', value: timeLeft.hours },
+                          { label: 'M', value: timeLeft.minutes },
+                          { label: 'S', value: timeLeft.seconds }
+                        ].map((item, idx) => (
+                          <div key={idx} className="flex flex-col items-center">
+                            <div className="w-full aspect-square bg-[#1E293B] rounded-2xl border border-white/5 flex items-center justify-center mb-1.5 shadow-inner">
+                              <span className="text-xl font-black text-white tabular-nums">
+                                {String(item.value).padStart(2, '0')}
+                              </span>
+                            </div>
+                            <span className="text-[10px] text-slate-500 font-black uppercase tracking-tighter">{item.label}</span>
+                          </div>
+                        ))}
+                      </div>
+
+                      <button 
+                        onClick={() => setShowUpgradeOptions(true)}
+                        className="w-full py-4 bg-gradient-to-r from-yellow-400 to-amber-500 text-[#0F172A] font-black rounded-[1.5rem] shadow-xl hover:shadow-yellow-500/10 transition-all active:scale-95 text-sm uppercase tracking-widest"
+                      >
+                        Extend Subscription
+                      </button>
+                    </motion.div>
+                  )}
+
+                  {(!(isPremium && premiumExpiryDate && new Date(premiumExpiryDate) > new Date()) || showUpgradeOptions) && ipStep === 1 && (
                     <motion.div 
                       key="step1"
                       initial={{ x: 20, opacity: 0 }}
@@ -1974,7 +2065,6 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
                         GET IP NOW
                       </motion.button>
 
-                      {/* Terms & Privacy */}
                       <div className="flex w-full items-center justify-between px-4 pb-2">
                         <button className="text-[12px] font-medium text-blue-500 hover:text-blue-400 underline underline-offset-4 transition-colors">Terms of Conditions</button>
                         <button className="text-[12px] font-medium text-blue-500 hover:text-blue-400 underline underline-offset-4 transition-colors">Privacy Policy</button>

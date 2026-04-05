@@ -115,6 +115,14 @@ const UserSchema = new mongoose.Schema({
     type: Date,
     default: null,
   },
+  premiumCountry: {
+    type: String,
+    default: '',
+  },
+  premiumPackageName: {
+    type: String,
+    default: '',
+  },
 }, { timestamps: true });
 
 // Auto-generate referral code before saving if not set
