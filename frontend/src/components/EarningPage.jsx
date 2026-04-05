@@ -1911,8 +1911,9 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
 
                       {/* Dynamic Packages Mapping */}
                       <div className="w-full space-y-3 mb-8">
-                        {globalSettings.premiumIpPackages && globalSettings.premiumIpPackages.length > 0 ? (
-                          globalSettings.premiumIpPackages.map((pkg) => (
+                        {(globalSettings.premiumIpPackages && globalSettings.premiumIpPackages.length > 0
+                          ? globalSettings.premiumIpPackages
+                          : ipPackages).map((pkg) => (
                             <motion.button
                               key={pkg.id}
                               onClick={() => setSelectedPackage(pkg.id)}
@@ -1929,12 +1930,12 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
                                     ৳ {pkg.price}/-
                                   </span>
                                   <span className="text-[14px] text-slate-300 font-bold">
-                                    {pkg.duration}
+                                    {pkg.duration || pkg.name}
                                   </span>
                                 </div>
-                                {pkg.freeDays > 0 && (
+                                {(pkg.freeDays > 0 || pkg.freeInfo) && (
                                   <span className="text-[10px] text-blue-400 font-bold uppercase tracking-widest mt-1">
-                                    +{pkg.freeDays} Days Free Trial
+                                    +{pkg.freeDays || pkg.freeInfo} Free Trial
                                   </span>
                                 )}
                               </div>
@@ -1946,6 +1947,11 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
                                     {pkg.offTag}
                                   </span>
                                 )}
+                                {pkg.bestValue && (
+                                  <span className="bg-amber-500 text-[9px] font-black px-2 py-0.5 rounded-full text-white uppercase tracking-tighter">
+                                    Best Value
+                                  </span>
+                                )}
                                 <div className={`w-6 h-6 rounded-full border-[2.5px] items-center justify-center flex transition-all ${
                                   selectedPackage === pkg.id ? 'border-blue-500 bg-transparent' : 'border-slate-600'
                                 }`}>
@@ -1953,29 +1959,7 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
                                 </div>
                               </div>
                             </motion.button>
-                          ))
-                        ) : (
-                          /* Fallback single package if none defined */
-                          <motion.button
-                            onClick={() => setSelectedPackage('month-1')}
-                            whileTap={{ scale: 0.98 }}
-                            className="w-full flex items-center justify-between p-5 rounded-3xl border transition-all relative overflow-hidden bg-slate-800/80 border-blue-500 shadow-lg shadow-blue-500/10"
-                          >
-                            <div className="flex flex-wrap items-baseline gap-3 ml-2 z-0">
-                              <span className="font-black text-2xl text-white tracking-tight">
-                                ৳ {globalSettings.premiumIpPrice}/-
-                              </span>
-                              <span className="text-[15px] text-slate-300 font-bold">
-                                {globalSettings.premiumIpDuration} Access
-                              </span>
-                            </div>
-                            <div className="mr-2 shrink-0 z-10">
-                               <div className="w-6 h-6 rounded-full border-[2.5px] items-center justify-center flex transition-all border-blue-500 bg-transparent">
-                                 <div className="w-3 h-3 bg-blue-500 rounded-full" />
-                               </div>
-                            </div>
-                          </motion.button>
-                        )}
+                          ))}
                       </div>
 
                       {/* Upgrade Button */}
@@ -3141,17 +3125,17 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
             >
               <Shield className={`w-4 h-4 sm:w-5 sm:h-5 ${isPremium ? "text-white" : "text-purple-500"}`} strokeWidth={3} />
               <span className="text-sm sm:text-base font-black uppercase tracking-tight">
-                Premium IP
+                Get IP
               </span>
             </motion.button>
             <motion.button 
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
-              onClick={() => setShowPremiumIPView(true)}
+              onClick={() => setActiveEarningTab('wallet')}
               className="flex items-center gap-2 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 px-5 py-2 sm:px-6 sm:py-2.5 rounded-2xl border-2 border-purple-500/30 shadow-md shadow-purple-500/20 transition-all text-white"
             >
-               <Crown className="w-4 h-4 sm:w-5 sm:h-5 text-yellow-400 fill-current" />
-               <span className="text-sm sm:text-base font-black uppercase tracking-tight">Premium IP</span>
+               <Wallet className="w-4 h-4 sm:w-5 sm:h-5 text-yellow-400 fill-current" />
+               <span className="text-sm sm:text-base font-black uppercase tracking-tight">My Wallet</span>
             </motion.button>
         </div>
 
