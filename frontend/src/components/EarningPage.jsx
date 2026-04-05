@@ -417,22 +417,27 @@ const EarningPage = ({ onReferralsClick, setActiveTab, onSuccess }) => {
         console.log(`[DEBUG-ADMOB] Claim successful:`, data.message);
         setBalance(data.balance);
         if (data.coins !== undefined) setCoins(data.coins);
+        else if (data.points !== undefined) setCoins(data.points);
+        
         if (data.lifetimeCoins !== undefined) setLifetimeCoins(data.lifetimeCoins);
+        else if (data.lifetimePoints !== undefined) setLifetimeCoins(data.lifetimePoints);
         
         if (activeType === 'view_ads') {
           setViewAdsStatus({ lastAdDate: data.lastAd, count: data.count });
+          showToast(`🎉 Congratulations! You earned 10 Coins!`, "success");
         } else if (activeType === 'video') {
           setVideoStatus({ lastVideoDate: data.lastAd, count: data.count });
+          showToast(`🎉 Congratulations! You earned 25 Coins!`, "success");
         } else if (activeType === 'daily') {
           setCheckinStatus({ lastCheckin: data.lastCheckin, count: data.count });
           if (data.count === 2) {
-            showToast(data.message + " Checkin complete! Come back in 2 hours.", "success");
+            showToast("🎉 Congratulations! You earned 50 Coins! Checkin complete! Come back in 2 hours.", "success");
             setShowCheckinView(false);
           } else {
-            showToast(data.message, "success");
+            showToast("🎉 Congratulations! You earned 50 Coins!", "success");
           }
         } else {
-          showToast(data.message || "Reward claimed successfully!", "success");
+          showToast(data.message || "🎉 Congratulations! Reward claimed successfully!", "success");
         }
         
         if (onSuccess) onSuccess();
@@ -2403,9 +2408,11 @@ const EarningPage = ({ onReferralsClick, setActiveTab, onSuccess }) => {
                             if (response.ok) {
                               setBalance(data.balance);
                               if (data.coins !== undefined) setCoins(data.coins);
+                              else if (data.points !== undefined) setCoins(data.points);
                               if (data.lifetimeCoins !== undefined) setLifetimeCoins(data.lifetimeCoins);
+                              else if (data.lifetimePoints !== undefined) setLifetimeCoins(data.lifetimePoints);
                               setWheelStatus({ lastSpinDate: data.lastSpinDate, count: data.count });
-                              showToast(data.message || `🎉 You won ${reward} Coins!`, "success");
+                              showToast(`🎉 Congratulations! You won ${reward} Coins!`, "success");
                             } else {
                               showToast(data.message || 'Failed to claim spin.', "error");
                             }
@@ -2611,10 +2618,12 @@ const EarningPage = ({ onReferralsClick, setActiveTab, onSuccess }) => {
                     if (response.ok) {
                       setBalance(data.balance);
                       if (data.coins !== undefined) setCoins(data.coins);
+                      else if (data.points !== undefined) setCoins(data.points);
                       if (data.lifetimeCoins !== undefined) setLifetimeCoins(data.lifetimeCoins);
+                      else if (data.lifetimePoints !== undefined) setLifetimeCoins(data.lifetimePoints);
                       setScratchStatus({ lastScratchDate: data.lastScratchDate, count: data.count });
                       setActiveScratchCard(prev => ({ ...prev, isRevealed: true, reward: data.reward }));
-                      showToast(`🎉 You won ${data.reward} Coins!`, "success");
+                      showToast(`🎉 Congratulations! You won ${data.reward} Coins!`, "success");
                     } else {
                       showToast(data.message || 'Failed to scratch.', "error");
                     }
