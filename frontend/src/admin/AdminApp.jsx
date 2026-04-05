@@ -7,6 +7,7 @@ import Transactions from './pages/Transactions';
 import Support from './pages/Support';
 import Referrals from './pages/Referrals';
 import PremiumOrders from './pages/PremiumOrders';
+import PremiumIpSettings from './pages/PremiumIpSettings';
 import Settings from './pages/Settings';
 import Posts from './pages/Posts';
 
@@ -47,6 +48,7 @@ const AdminApp = () => {
       {activePage === 'support' && <Support {...pageProps} />}
       {activePage === 'referrals' && <Referrals {...pageProps} />}
       {activePage === 'premium' && <PremiumOrders {...pageProps} />}
+      {activePage === 'ip-settings' && <PremiumIpSettings {...pageProps} />}
       {activePage === 'posts' && <Posts {...pageProps} />}
       {activePage === 'settings' && <Settings {...pageProps} onLogout={handleLogout} />}
     </AdminLayout>

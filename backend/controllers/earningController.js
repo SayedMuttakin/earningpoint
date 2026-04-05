@@ -542,7 +542,8 @@ exports.getGlobalSettings = async (req, res) => {
       premiumIpDuration: settings.premiumIpDuration,
       bkashNumber: settings.bkashNumber,
       nagadNumber: settings.nagadNumber,
-      rocketNumber: settings.rocketNumber
+      rocketNumber: settings.rocketNumber,
+      premiumIpPackages: settings.premiumIpPackages
     });
   } catch (error) {
     res.status(500).json({ message: error.message });

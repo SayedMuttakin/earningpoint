@@ -171,14 +171,29 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
     premiumIpDuration: '30 Days',
     bkashNumber: '01700-000000',
     nagadNumber: '01700-000000',
-    rocketNumber: '01700-000000'
+    rocketNumber: '01700-000000',
+    premiumIpPackages: []
   });
 
   const fetchGlobalSettings = async () => {
     try {
       const res = await fetch(`${API_BASE}/earning/settings`);
       const data = await res.json();
-      if (data) setGlobalSettings(data);
+      if (data.success) {
+        setGlobalSettings({
+          premiumIpPrice: data.settings.premiumIpPrice || 600,
+          premiumIpDuration: data.settings.premiumIpDuration || '30 Days',
+          bkashNumber: data.settings.bkashNumber || '01700-000000',
+          nagadNumber: data.settings.nagadNumber || '01700-000000',
+          rocketNumber: data.settings.rocketNumber || '01700-000000',
+          premiumIpPackages: data.settings.premiumIpPackages || []
+        });
+        
+        // Set default selected package if available
+        if (data.settings.premiumIpPackages && data.settings.premiumIpPackages.length > 0) {
+          setSelectedPackage(data.settings.premiumIpPackages[0].id);
+        }
+      }
     } catch (error) {
       console.error('Error fetching global settings:', error);
     }
@@ -1894,8 +1909,53 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
                         </p>
                       </div>
 
-                      {/* Single Package Card (Managed by Admin) */}
+                      {/* Dynamic Packages Mapping */}
                       <div className="w-full space-y-3 mb-8">
+                        {globalSettings.premiumIpPackages && globalSettings.premiumIpPackages.length > 0 ? (
+                          globalSettings.premiumIpPackages.map((pkg) => (
+                            <motion.button
+                              key={pkg.id}
+                              onClick={() => setSelectedPackage(pkg.id)}
+                              whileTap={{ scale: 0.98 }}
+                              className={`w-full flex items-center justify-between p-5 rounded-3xl border transition-all relative overflow-hidden ${
+                                selectedPackage === pkg.id 
+                                  ? 'bg-slate-800/80 border-blue-500 shadow-lg shadow-blue-500/10' 
+                                  : 'bg-slate-800/40 border-slate-700 hover:border-slate-600'
+                              }`}
+                            >
+                              <div className="flex flex-col items-start ml-2 z-0">
+                                <div className="flex items-baseline gap-3">
+                                  <span className="font-black text-2xl text-white tracking-tight">
+                                    ৳ {pkg.price}/-
+                                  </span>
+                                  <span className="text-[14px] text-slate-300 font-bold">
+                                    {pkg.duration}
+                                  </span>
+                                </div>
+                                {pkg.freeDays > 0 && (
+                                  <span className="text-[10px] text-blue-400 font-bold uppercase tracking-widest mt-1">
+                                    +{pkg.freeDays} Days Free Trial
+                                  </span>
+                                )}
+                              </div>
+
+                              {/* Radio Button & Off Tag */}
+                              <div className="flex items-center gap-3 mr-2 shrink-0 z-10">
+                                {pkg.offTag && (
+                                  <span className="bg-blue-600 text-[9px] font-black px-2 py-0.5 rounded-full text-white uppercase tracking-tighter">
+                                    {pkg.offTag}
+                                  </span>
+                                )}
+                                <div className={`w-6 h-6 rounded-full border-[2.5px] items-center justify-center flex transition-all ${
+                                  selectedPackage === pkg.id ? 'border-blue-500 bg-transparent' : 'border-slate-600'
+                                }`}>
+                                  {selectedPackage === pkg.id && <div className="w-3 h-3 bg-blue-500 rounded-full" />}
+                                </div>
+                              </div>
+                            </motion.button>
+                          ))
+                        ) : (
+                          /* Fallback single package if none defined */
                           <motion.button
                             onClick={() => setSelectedPackage('month-1')}
                             whileTap={{ scale: 0.98 }}
@@ -1909,14 +1969,13 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
                                 {globalSettings.premiumIpDuration} Access
                               </span>
                             </div>
-
-                            {/* Radio Button */}
                             <div className="mr-2 shrink-0 z-10">
                                <div className="w-6 h-6 rounded-full border-[2.5px] items-center justify-center flex transition-all border-blue-500 bg-transparent">
                                  <div className="w-3 h-3 bg-blue-500 rounded-full" />
                                </div>
                             </div>
                           </motion.button>
+                        )}
                       </div>
 
                       {/* Upgrade Button */}
@@ -2093,7 +2152,9 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
                     >
                       <h2 className="text-white font-black text-2xl mb-2 text-center mt-4 tracking-tight uppercase tracking-widest">{paymentMethod} Payment</h2>
                       <p className="text-slate-400 text-sm mb-8 text-center max-w-[320px]">
-                        Send <span className="text-white font-bold select-all whitespace-nowrap">৳ {globalSettings.premiumIpPrice}/-</span> to the number below and submit the transaction ID.
+                        Send <span className="text-white font-bold select-all whitespace-nowrap">৳ {
+                          globalSettings.premiumIpPackages.find(p => p.id === selectedPackage)?.price || globalSettings.premiumIpPrice
+                        }/-</span> to the number below and submit the transaction ID.
                       </p>
 
                       <div className="w-full bg-[#161F36]/50 border-2 border-slate-700/50 rounded-[2rem] p-8 flex flex-col items-center justify-center mb-8 shadow-inner group transition-all hover:border-blue-500/30">
@@ -2128,14 +2189,18 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
                           setIpSubmitting(true);
                           try {
                             const token = localStorage.getItem('token');
-                            const pkg = ipPackages.find(p => p.id === selectedPackage);
+                            const currentPkg = globalSettings.premiumIpPackages.find(p => p.id === selectedPackage) || {
+                              id: selectedPackage,
+                              duration: globalSettings.premiumIpDuration,
+                              price: globalSettings.premiumIpPrice
+                            };
                             const res = await fetch(`${API_BASE}/earning/premium-order`, {
                               method: 'POST',
                               headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
                               body: JSON.stringify({
-                                packageId: selectedPackage,
-                                packageName: `${globalSettings.premiumIpDuration} Premium IP`,
-                                amount: globalSettings.premiumIpPrice,
+                                packageId: currentPkg.id,
+                                packageName: `${currentPkg.duration} Premium IP`,
+                                amount: currentPkg.price,
                                 country: selectedCountry,
                                 division: '', district: '', thana: '', village: '', postalCode: '',
                                 paymentMethod,

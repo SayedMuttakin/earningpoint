@@ -451,7 +451,7 @@ exports.getGlobalSettings = async (req, res) => {
 
 exports.updateGlobalSettings = async (req, res) => {
   try {
-    const { premiumIpPrice, premiumIpDuration, bkashNumber, nagadNumber, rocketNumber } = req.body;
+    const { premiumIpPrice, premiumIpDuration, bkashNumber, nagadNumber, rocketNumber, premiumIpPackages } = req.body;
     let settings = await GlobalSetting.findOne({ configKey: 'main_config' });
     if (!settings) {
       settings = new GlobalSetting({ configKey: 'main_config' });
@@ -462,6 +462,7 @@ exports.updateGlobalSettings = async (req, res) => {
     if (bkashNumber !== undefined) settings.bkashNumber = bkashNumber;
     if (nagadNumber !== undefined) settings.nagadNumber = nagadNumber;
     if (rocketNumber !== undefined) settings.rocketNumber = rocketNumber;
+    if (premiumIpPackages !== undefined) settings.premiumIpPackages = premiumIpPackages;
 
     await settings.save();
     res.json({ message: 'Settings updated successfully', settings });
