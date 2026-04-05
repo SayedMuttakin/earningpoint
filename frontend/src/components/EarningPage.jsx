@@ -1849,7 +1849,7 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
               initial={{ scale: 0.95, opacity: 0, y: 20 }}
               animate={{ scale: 1, opacity: 1, y: 0 }}
               exit={{ scale: 0.95, opacity: 0, y: 20 }}
-              className="bg-[#0F172A] w-full max-w-[400px] sm:max-w-[420px] rounded-[2.5rem] shadow-2xl border border-slate-800 flex flex-col relative overflow-hidden min-h-[600px] my-auto pb-6"
+              className="bg-[#0F172A] w-full max-w-[400px] sm:max-w-[420px] rounded-[2.5rem] shadow-2xl border border-slate-800 flex flex-col relative overflow-hidden min-h-[480px] my-auto pb-4"
             >
               {/* Back Button */}
               <button 
@@ -1862,10 +1862,10 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
                 }}
                 className="absolute top-6 left-6 text-slate-400 hover:text-white transition-colors z-20 p-2 rounded-full"
               >
-                <ArrowLeft className="w-6 h-6" />
+                <ArrowLeft className="w-5 h-5" />
               </button>
 
-              <div className="flex-1 overflow-y-auto px-6 pt-16 custom-scrollbar flex flex-col items-center w-full">
+              <div className="flex-1 overflow-y-auto px-5 pt-12 custom-scrollbar flex flex-col items-center w-full">
                 <AnimatePresence mode="wait">
                   {ipStep === 1 && (
                     <motion.div 
@@ -1877,34 +1877,34 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
                     >
                       {/* Crown Icon */}
                       <motion.div
-                        className="mb-4 text-yellow-400 mt-2 animate-float"
+                        className="mb-2 text-yellow-400 mt-1 animate-float"
                       >
-                         <Crown className="w-16 h-16 fill-current" strokeWidth={1} />
+                         <Crown className="w-12 h-12 fill-current" strokeWidth={1} />
                       </motion.div>
 
-                      <h2 className="text-2xl font-black text-white mb-2 tracking-tight">Get IP</h2>
-                      <p className="text-slate-400 text-sm font-medium leading-relaxed max-w-[240px] text-center mb-8">
+                      <h2 className="text-xl font-black text-white mb-1 tracking-tight">Get IP</h2>
+                      <p className="text-slate-400 text-[11px] font-medium leading-relaxed max-w-[240px] text-center mb-4">
                         Upgrade to Premium IP to enjoy more features
                       </p>
 
                       {/* Features List */}
-                      <div className="w-full max-w-[260px] space-y-4 mb-8">
+                      <div className="w-full max-w-[260px] space-y-2 mb-4">
                         {[
                           { icon: Globe, text: "All Global Services" },
                           { icon: Shield, text: "Super fast Connections" },
                           { icon: Globe, text: "All 30+ country Server for VIP" },
                         ].map((feat, i) => (
-                          <div key={i} className="flex items-center gap-4 text-slate-300">
-                            <feat.icon className="w-5 h-5 text-slate-400 shrink-0" strokeWidth={1.5} />
-                            <span className="text-[13px] font-bold tracking-wide">{feat.text}</span>
+                          <div key={i} className="flex items-center gap-3 text-slate-300">
+                            <feat.icon className="w-4 h-4 text-slate-400 shrink-0" strokeWidth={1.5} />
+                            <span className="text-[11px] font-bold tracking-wide">{feat.text}</span>
                           </div>
                         ))}
                       </div>
 
                       {/* Free Trial Section */}
-                      <div className="text-center mb-6">
-                        <h3 className="text-white font-black text-lg tracking-tight">{globalSettings.premiumIpDuration} <span className="text-blue-500">Premium IP</span></h3>
-                        <p className="text-[11px] text-slate-500 mt-1 font-medium">
+                      <div className="text-center mb-3">
+                        <h3 className="text-white font-black text-base tracking-tight">{globalSettings.premiumIpDuration} <span className="text-blue-500">Premium IP</span></h3>
+                        <p className="text-[10px] text-slate-500 mt-0.5 font-medium">
                           No commitment & Cancel Anytime
                         </p>
                       </div>
@@ -1918,44 +1918,46 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
                               key={pkg.id}
                               onClick={() => setSelectedPackage(pkg.id)}
                               whileTap={{ scale: 0.98 }}
-                              className={`w-full flex items-center justify-between p-5 rounded-3xl border transition-all relative overflow-hidden ${
+                              className={`w-full flex items-center justify-between p-3 rounded-2xl border transition-all relative overflow-hidden ${
                                 selectedPackage === pkg.id 
                                   ? 'bg-slate-800/80 border-blue-500 shadow-lg shadow-blue-500/10' 
                                   : 'bg-slate-800/40 border-slate-700 hover:border-slate-600'
                               }`}
                             >
-                              <div className="flex flex-col items-start ml-2 z-0">
-                                <div className="flex items-baseline gap-3">
-                                  <span className="font-black text-2xl text-white tracking-tight">
-                                    ৳ {pkg.price}/-
-                                  </span>
-                                  <span className="text-[14px] text-slate-300 font-bold">
-                                    {pkg.duration || pkg.name}
-                                  </span>
-                                </div>
+                              <div className="flex items-center gap-3 ml-1 z-0 w-full overflow-hidden">
+                                <span className="font-black text-base text-white tracking-tight shrink-0">
+                                  ৳ {pkg.price}/-
+                                </span>
+                                <div className="h-4 w-[1px] bg-slate-700 shrink-0 mx-1" />
+                                <span className="text-[12px] text-slate-300 font-bold shrink-0">
+                                  {pkg.duration || pkg.name}
+                                </span>
                                 {(pkg.freeDays > 0 || pkg.freeInfo) && (
-                                  <span className="text-[10px] text-blue-400 font-bold uppercase tracking-widest mt-1">
-                                    +{pkg.freeDays || pkg.freeInfo} Free Trial
-                                  </span>
+                                  <div className="flex items-center gap-2">
+                                     <div className="h-4 w-[1px] bg-slate-700 shrink-0 mx-1" />
+                                     <span className="text-[10px] text-blue-400 font-bold uppercase tracking-tight truncate">
+                                       +{pkg.freeDays || pkg.freeInfo} Free
+                                     </span>
+                                  </div>
                                 )}
                               </div>
 
                               {/* Radio Button & Off Tag */}
-                              <div className="flex items-center gap-3 mr-2 shrink-0 z-10">
+                              <div className="flex items-center gap-2 mr-1 shrink-0 z-10 scale-90">
                                 {pkg.offTag && (
-                                  <span className="bg-blue-600 text-[9px] font-black px-2 py-0.5 rounded-full text-white uppercase tracking-tighter">
+                                  <span className="bg-blue-600 text-[8px] font-black px-1.5 py-0.5 rounded-full text-white uppercase tracking-tighter">
                                     {pkg.offTag}
                                   </span>
                                 )}
                                 {pkg.bestValue && (
-                                  <span className="bg-amber-500 text-[9px] font-black px-2 py-0.5 rounded-full text-white uppercase tracking-tighter">
-                                    Best Value
+                                  <span className="bg-amber-500 text-[8px] font-black px-1.5 py-0.5 rounded-full text-white uppercase tracking-tighter">
+                                    SAVE
                                   </span>
                                 )}
-                                <div className={`w-6 h-6 rounded-full border-[2.5px] items-center justify-center flex transition-all ${
+                                <div className={`w-5 h-5 rounded-full border-[2px] items-center justify-center flex transition-all ${
                                   selectedPackage === pkg.id ? 'border-blue-500 bg-transparent' : 'border-slate-600'
                                 }`}>
-                                  {selectedPackage === pkg.id && <div className="w-3 h-3 bg-blue-500 rounded-full" />}
+                                  {selectedPackage === pkg.id && <div className="w-2.5 h-2.5 bg-blue-500 rounded-full" />}
                                 </div>
                               </div>
                             </motion.button>
