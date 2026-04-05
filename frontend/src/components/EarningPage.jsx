@@ -1925,17 +1925,17 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
                               }`}
                             >
                               <div className="flex items-center gap-3 ml-1 z-0 w-full overflow-hidden">
-                                <span className="font-black text-base text-white tracking-tight shrink-0">
+                                <span className="font-black text-base text-yellow-400 tracking-tight shrink-0">
                                   ৳ {pkg.price}/-
                                 </span>
                                 <div className="h-4 w-[1px] bg-slate-700 shrink-0 mx-1" />
-                                <span className="text-[12px] text-slate-300 font-bold shrink-0">
+                                <span className="text-[12px] text-white font-bold shrink-0">
                                   {pkg.duration || pkg.name}
                                 </span>
                                 {(pkg.freeDays > 0 || pkg.freeInfo) && (
                                   <div className="flex items-center gap-2">
                                      <div className="h-4 w-[1px] bg-slate-700 shrink-0 mx-1" />
-                                     <span className="text-[10px] text-blue-400 font-bold uppercase tracking-tight truncate">
+                                     <span className="text-[10px] text-emerald-400 font-bold uppercase tracking-tight truncate">
                                        +{pkg.freeDays || pkg.freeInfo} Free
                                      </span>
                                   </div>
@@ -1945,7 +1945,7 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
                               {/* Radio Button & Off Tag */}
                               <div className="flex items-center gap-2 mr-1 shrink-0 z-10 scale-90">
                                 {pkg.offTag && (
-                                  <span className="bg-blue-600 text-[8px] font-black px-1.5 py-0.5 rounded-full text-white uppercase tracking-tighter">
+                                  <span className="bg-red-500 text-[8px] font-black px-1.5 py-0.5 rounded-full text-white uppercase tracking-tighter">
                                     {pkg.offTag}
                                   </span>
                                 )}
@@ -1969,9 +1969,9 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
                         whileHover={{ scale: 1.02, y: -2 }}
                         whileTap={{ scale: 0.98 }}
                         onClick={() => setIpStep(2)}
-                        className="w-full py-4 rounded-full bg-gradient-to-r from-indigo-500 to-cyan-400 text-white font-bold text-[16px] shadow-lg shadow-blue-500/20 mb-6"
+                        className="w-full py-3 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-500 text-white font-black text-sm shadow-lg shadow-blue-500/20 mb-4 tracking-wide"
                       >
-                        Get IP
+                        GET IP NOW
                       </motion.button>
 
                       {/* Terms & Privacy */}
