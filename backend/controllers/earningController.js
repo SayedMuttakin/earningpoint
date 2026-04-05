@@ -57,7 +57,7 @@ exports.claimDailyCheckin = async (req, res) => {
     createNotification(user._id, 'Reward Earned! 💰', 'You just earned 20 points from Daily Checkin!', 'earning');
 
     res.json({ 
-      message: converted ? `Rewarded 20 points! You reached 1000+ points and got 50৳ converted!` : `Rewarded 20 points! (${user.dailyCheckinCount}/2 ads completed)`,
+      message: `Rewarded 20 points! (${user.dailyCheckinCount}/2 ads completed)`,
       balance: user.balance,
       points: user.points,
       lifetimePoints: user.lifetimePoints,
@@ -405,7 +405,7 @@ exports.claimQuiz = async (req, res) => {
     createNotification(user._id, 'Brain Power! 🧠', `Correct answer! You earned ${reward} points from Math Quiz.`, 'earning');
 
     res.json({ 
-      message: converted ? `Rewarded ${reward} points! You reached 1000+ points and got 50৳ converted!` : `Rewarded ${reward} points! (${user.quizCount}/10 quizzes completed)`,
+      message: `Rewarded ${reward} points! (${user.quizCount}/10 quizzes completed)`,
       reward: reward,
       balance: user.balance,
       points: user.points,
@@ -498,7 +498,7 @@ exports.convertCoins = async (req, res) => {
     
     // Convert all possible multiples of 1000 coins
     const conversionCount = Math.floor(user.points / 1000);
-    const convertedTk = conversionCount * 10;
+    const convertedTk = conversionCount * 50;
     const usedCoins = conversionCount * 1000;
     
     user.balance = (user.balance || 0) + convertedTk;

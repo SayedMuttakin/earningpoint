@@ -3172,7 +3172,7 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
                   </div>
                   <div>
                      <p className="text-sm font-black text-slate-800 dark:text-white">Convert Coins to Cash</p>
-                     <p className="text-xs text-slate-500 font-medium">1000 Coins = 10 ৳ Balance</p>
+                     <p className="text-xs text-slate-500 font-medium">1000 Coins = 50 ৳ Balance</p>
                   </div>
                </div>
                <motion.button
