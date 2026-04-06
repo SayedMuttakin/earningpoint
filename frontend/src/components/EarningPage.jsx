@@ -8,7 +8,7 @@ import {
   Calculator, Binary, Type, HelpCircle,
   Wallet, History as HistoryIcon, BookOpen, ArrowLeft,
   Crown, Shield, Check, CalendarCheck, Newspaper, Video, Aperture, Search,
-  TrendingUp, Star, ChevronRight, ChevronDown, Menu, Home, Bell, User, Settings, LogOut,
+  TrendingUp, Star, ChevronRight, ChevronDown, ChevronUp, Menu, Home, Bell, User, Settings, LogOut,
   Clock, AlertCircle, X, ShieldCheck, Zap, Radio, Tv
 } from 'lucide-react';
 const gkQuizDB = [
