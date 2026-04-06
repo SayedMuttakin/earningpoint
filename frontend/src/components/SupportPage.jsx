@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Send, UserCircle, Mail, HelpCircle, ArrowLeft, Loader2, Bot, User as UserIcon } from 'lucide-react';
+import { Send, UserCircle, Mail, HelpCircle, ArrowLeft, Loader2, Bot, User as UserIcon, RefreshCw } from 'lucide-react';
 import { io } from 'socket.io-client';
 import { API_BASE } from '../config';
 
@@ -16,6 +16,7 @@ const SupportPage = ({ onBack }) => {
   const [isAdminJoined, setIsAdminJoined] = useState(false);
   const [isAdminTyping, setIsAdminTyping] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
   
   const messagesEndRef = useRef(null);
   const typingTimeoutRef = useRef(null);
@@ -100,6 +101,20 @@ const SupportPage = ({ onBack }) => {
     }
   };
 
+  const handleRefresh = () => {
+    setRefreshing(true);
+    // Reset to initial state or reconnect socket
+    if (step > 1) {
+      setStep(1);
+      setName('');
+      setEmail('');
+      setMessages([]);
+      setSessionId(null);
+      setIsAdminJoined(false);
+    }
+    setTimeout(() => setRefreshing(false), 500);
+  };
+
   return (
     <div className="absolute inset-0 z-50 bg-slate-50 dark:bg-slate-950 flex flex-col overflow-hidden">
       {/* Header */}
@@ -107,9 +122,17 @@ const SupportPage = ({ onBack }) => {
         <button onClick={onBack} className="p-2 -ml-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
           <ArrowLeft className="w-6 h-6 text-slate-700 dark:text-slate-300" />
         </button>
+        <button
+          onClick={handleRefresh}
+          disabled={refreshing}
+          className="p-2 rounded-full bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors"
+          aria-label="Refresh support"
+        >
+          <RefreshCw className={`w-4 h-4 text-slate-600 dark:text-slate-300 ${refreshing ? 'animate-spin' : ''}`} />
+        </button>
         <div>
           <h1 className="text-xl font-black text-slate-800 dark:text-white flex items-center gap-2">
-            <HelpCircle className="w-5 h-5 text-indigo-500" /> 
+            <HelpCircle className="w-5 h-5 text-indigo-500" />
             Live Support
           </h1>
           {step === 3 && isAdminJoined && (

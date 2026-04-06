@@ -1,14 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { 
-  User, 
-  Lock, 
-  Bell, 
-  Globe, 
-  Shield, 
-  Trash2, 
-  ChevronRight, 
-  Moon, 
+import {
+  User,
+  Lock,
+  Bell,
+  Globe,
+  Shield,
+  Trash2,
+  ChevronRight,
+  Moon,
   Sun,
   Database,
   HelpCircle,
@@ -17,7 +17,8 @@ import {
   ArrowLeft,
   Smartphone,
   CheckCircle2,
-  X
+  X,
+  RefreshCw
 } from 'lucide-react';
 import { API_BASE } from '../config';
 
@@ -39,6 +40,7 @@ const SettingsPage = ({
   const [editName, setEditName] = useState('');
   const [editEmail, setEditEmail] = useState('');
   const [updateLoading, setUpdateLoading] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
 
   useEffect(() => {
     fetchProfile();
@@ -61,7 +63,13 @@ const SettingsPage = ({
       console.error('Failed to fetch profile:', err);
     } finally {
       setLoading(false);
+      setRefreshing(false);
     }
+  };
+
+  const handleRefresh = async () => {
+    setRefreshing(true);
+    await fetchProfile();
   };
 
   const handleUpdateProfile = async (e) => {
@@ -138,7 +146,7 @@ const SettingsPage = ({
       <div className="sticky top-0 z-30 bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl border-b border-slate-200 dark:border-slate-800">
         <div className="max-w-4xl mx-auto px-4 h-16 sm:h-20 flex items-center justify-between">
           <div className="flex items-center gap-4">
-            <button 
+            <button
               onClick={onBack}
               className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full transition-colors text-slate-600 dark:text-slate-400"
             >
@@ -146,13 +154,23 @@ const SettingsPage = ({
             </button>
             <h1 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white">Settings</h1>
           </div>
-          <button 
-            onClick={onLogout}
-            className="flex items-center gap-2 px-4 py-2 bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 rounded-xl font-bold text-sm hover:bg-red-100 dark:hover:bg-red-900/30 transition-colors"
-          >
-            <LogOut className="w-4 h-4" />
-            <span>Logout</span>
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={handleRefresh}
+              disabled={refreshing}
+              className="p-2 rounded-full bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors"
+              aria-label="Refresh settings"
+            >
+              <RefreshCw className={`w-4 h-4 text-slate-600 dark:text-slate-300 ${refreshing ? 'animate-spin' : ''}`} />
+            </button>
+            <button
+              onClick={onLogout}
+              className="flex items-center gap-2 px-4 py-2 bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 rounded-xl font-bold text-sm hover:bg-red-100 dark:hover:bg-red-900/30 transition-colors"
+            >
+              <LogOut className="w-4 h-4" />
+              <span>Logout</span>
+            </button>
+          </div>
         </div>
       </div>
 
