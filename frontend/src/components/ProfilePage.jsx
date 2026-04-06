@@ -1,48 +1,57 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { API_BASE } from '../config';
 import { motion } from 'framer-motion';
-import { 
-  Settings, 
-  History, 
-  Users, 
-  ShieldCheck, 
-  Lock, 
-  Globe, 
-  HeadphonesIcon, 
-  FileText, 
-  Trash2, 
+import {
+  Settings,
+  History,
+  Users,
+  ShieldCheck,
+  Lock,
+  Globe,
+  HeadphonesIcon,
+  FileText,
+  Trash2,
   Moon,
   ChevronRight,
   Camera,
-  Trophy
+  Trophy,
+  RefreshCw
 } from 'lucide-react';
 
 const ProfilePage = ({ onVerifyClick, onLanguageClick, onPasswordClick, onReferralsClick, onLeaderboardClick, onTermsClick, onDeleteClick, darkMode, onToggleDarkMode }) => {
   const [profilePic, setProfilePic] = useState('https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=facearea&facepad=2&w=256&h=256&q=80');
   const [userName, setUserName] = useState('User');
   const [userEmail, setUserEmail] = useState('');
+  const [refreshing, setRefreshing] = useState(false);
   const fileInputRef = useRef(null);
 
-  useEffect(() => {
-    const fetchProfile = async () => {
-      try {
-        const token = localStorage.getItem('token');
-        if (!token) return;
-        const response = await fetch(`${API_BASE}/api/profile`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        if (response.ok) {
-          const data = await response.json();
-          setUserName(data.name || data.phoneOrEmail || 'User');
-          setUserEmail(data.phoneOrEmail || '');
-          if (data.profilePic) setProfilePic(data.profilePic);
-        }
-      } catch (err) {
-        console.error('Failed to fetch profile:', err);
+  const fetchProfile = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) return;
+      const response = await fetch(`${API_BASE}/api/profile`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (response.ok) {
+        const data = await response.json();
+        setUserName(data.name || data.phoneOrEmail || 'User');
+        setUserEmail(data.phoneOrEmail || '');
+        if (data.profilePic) setProfilePic(data.profilePic);
       }
-    };
+    } catch (err) {
+      console.error('Failed to fetch profile:', err);
+    }
+  };
+
+  useEffect(() => {
     fetchProfile();
   }, []);
+
+  const handleRefresh = async () => {
+    setRefreshing(true);
+    await fetchProfile();
+    setTimeout(() => setRefreshing(false), 500);
+  };
 
   const handleImageUpload = (e) => {
     const file = e.target.files[0];
@@ -93,7 +102,15 @@ const ProfilePage = ({ onVerifyClick, onLanguageClick, onPasswordClick, onReferr
         {/* Header */}
         <div className="flex items-center justify-between pb-6 sm:pb-10 mb-6 sm:mb-10 text-center relative border-b border-slate-100 dark:border-slate-700">
           <h1 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white absolute left-1/2 -translate-x-1/2">Profile</h1>
-          <div className="w-full flex justify-end">
+          <div className="w-full flex justify-end gap-2">
+            <button
+              onClick={handleRefresh}
+              disabled={refreshing}
+              className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-slate-50 dark:bg-slate-800 flex items-center justify-center hover:bg-slate-100 dark:hover:bg-slate-700 transition-transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-brand-500/30"
+              aria-label="Refresh profile"
+            >
+              <RefreshCw className={`w-5 h-5 sm:w-6 sm:h-6 text-slate-700 dark:text-slate-300 ${refreshing ? 'animate-spin' : ''}`} />
+            </button>
             <button className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-slate-50 dark:bg-slate-800 flex items-center justify-center hover:bg-slate-100 dark:hover:bg-slate-700 transition-transform hover:scale-105">
               <Settings className="w-5 h-5 sm:w-6 sm:h-6 text-slate-700 dark:text-slate-300" />
             </button>

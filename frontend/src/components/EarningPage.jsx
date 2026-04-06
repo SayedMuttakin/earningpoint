@@ -9,7 +9,8 @@ import {
   Wallet, History as HistoryIcon, BookOpen, ArrowLeft,
   Crown, Shield, Check, CalendarCheck, Newspaper, Video, Aperture, Search,
   TrendingUp, Star, ChevronRight, ChevronDown, ChevronUp, Menu, Home, Bell, User, Settings, LogOut,
-  Clock, AlertCircle, X, ShieldCheck, Zap, Radio, Tv
+  Clock, AlertCircle, X, ShieldCheck, Zap, Radio, Tv,
+  RefreshCw
 } from 'lucide-react';
 const gkQuizDB = [
   { id: 1, image: 'https://upload.wikimedia.org/wikipedia/commons/b/b4/Lionel-Messi-Argentina-2022-FIFA-World-Cup_%28cropped%29.jpg', answer: 'Lionel Messi', options: ['Lionel Messi', 'Cristiano Ronaldo', 'Neymar Jr', 'Angel Di Maria'] },
@@ -95,6 +96,7 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
 
   // Toast State
   const [toast, setToast] = React.useState({ visible: false, message: '', type: 'success' });
+  const [refreshing, setRefreshing] = React.useState(false);
   const showToast = (message, type = 'success') => {
     setToast({ visible: true, message, type });
     setTimeout(() => setToast(prev => ({ ...prev, visible: false })), 4000);
@@ -318,6 +320,27 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
       }
     } catch (err) {
       console.error('Failed to fetch balance:', err);
+    }
+  };
+
+  const handleRefresh = async () => {
+    setRefreshing(true);
+    try {
+      await Promise.all([
+        fetchBalance(),
+        fetchCheckinStatus(),
+        fetchVideoStatus(),
+        fetchWheelStatus(),
+        fetchScratchStatus(),
+        fetchQuizStatus(),
+        fetchGlobalSettings()
+      ]);
+      showToast('Data refreshed successfully!', 'success');
+    } catch (error) {
+      console.error('Refresh failed:', error);
+      showToast('Refresh failed', 'error');
+    } finally {
+      setRefreshing(false);
     }
   };
 
@@ -1297,6 +1320,16 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
               <span className="text-white font-black text-sm">৳{balance.toFixed(2)}</span>
               <span className="text-white/40 text-xs font-medium">|</span>
               <span className="text-amber-300 text-xs font-bold">{coins} Coins</span>
+              <button
+                onClick={handleRefresh}
+                disabled={refreshing}
+                className="ml-1 p-1 rounded-full bg-white/10 hover:bg-white/20 active:scale-95 transition-all duration-200 focus:outline-none focus:ring-1 focus:ring-white/30"
+                aria-label="Refresh balance"
+              >
+                <RefreshCw
+                  className={`w-3 h-3 text-white ${refreshing ? 'animate-spin' : ''}`}
+                />
+              </button>
             </div>
           </div>
 

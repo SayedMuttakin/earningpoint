@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { BadgeCheck, Loader2 } from 'lucide-react';
+import { BadgeCheck, Loader2, RefreshCw } from 'lucide-react';
 import { API_BASE } from '../config';
 
 const PostAd = ({ index }) => {
@@ -163,22 +163,30 @@ const HomePage = () => {
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [refreshing, setRefreshing] = useState(false);
+
+  const fetchPosts = async () => {
+    try {
+      const response = await fetch(`${API_BASE}/api/posts`);
+      if (!response.ok) throw new Error('Failed to fetch updates');
+      const data = await response.json();
+      setPosts(data);
+      setError(null);
+    } catch (err) {
+      console.error('Fetch error:', err);
+      setError(err.message);
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
+    }
+  };
+
+  const handleRefresh = () => {
+    setRefreshing(true);
+    fetchPosts();
+  };
 
   useEffect(() => {
-    const fetchPosts = async () => {
-      try {
-        const response = await fetch(`${API_BASE}/api/posts`);
-        if (!response.ok) throw new Error('Failed to fetch updates');
-        const data = await response.json();
-        setPosts(data);
-      } catch (err) {
-        console.error('Fetch error:', err);
-        setError(err.message);
-      } finally {
-        setLoading(false);
-      }
-    };
-
     fetchPosts();
   }, []);
 
@@ -208,9 +216,9 @@ const HomePage = () => {
               >
                 {/* Render posts twice for a seamless continuous loop */}
                 {[...posts, ...posts].map((post, idx) => (
-                  <a 
-                    key={`${post._id}-${idx}`} 
-                    href={`#post-${post._id}`} 
+                  <a
+                    key={`${post._id}-${idx}`}
+                    href={`#post-${post._id}`}
                     onClick={(e) => {
                       e.preventDefault();
                       document.getElementById(`post-${post._id}`)?.scrollIntoView({ behavior: 'smooth' });
@@ -223,6 +231,18 @@ const HomePage = () => {
                 ))}
               </motion.div>
             </div>
+            
+            {/* Refresh Button */}
+            <button
+              onClick={handleRefresh}
+              disabled={refreshing}
+              className="ml-4 p-1.5 rounded-full bg-slate-100 hover:bg-slate-200 active:scale-95 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-brand-500/30"
+              aria-label="Refresh latest updates"
+            >
+              <RefreshCw
+                className={`w-4 h-4 text-slate-600 ${refreshing ? 'animate-spin' : ''}`}
+              />
+            </button>
           </div>
         </div>
       )}

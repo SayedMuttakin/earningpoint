@@ -1,21 +1,23 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { 
-  Bell, 
-  CheckCircle2, 
-  DollarSign, 
-  TrendingUp, 
-  Star, 
-  Trash2, 
+import {
+  Bell,
+  CheckCircle2,
+  DollarSign,
+  TrendingUp,
+  Star,
+  Trash2,
   Clock,
   ArrowLeft,
-  Info
+  Info,
+  RefreshCw
 } from 'lucide-react';
 import { API_BASE } from '../config';
 
 const NotificationPage = ({ onBack }) => {
   const [notifications, setNotifications] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
 
   // Fetch notifications from the backend
   useEffect(() => {
@@ -36,7 +38,13 @@ const NotificationPage = ({ onBack }) => {
       console.error('Failed to fetch notifications:', err);
     } finally {
       setIsLoading(false);
+      setRefreshing(false);
     }
+  };
+
+  const handleRefresh = () => {
+    setRefreshing(true);
+    fetchNotifications();
   };
 
   const markAsRead = async (id) => {
@@ -137,14 +145,28 @@ const NotificationPage = ({ onBack }) => {
             </div>
           </div>
           
-          {notifications.length > 0 && (
-            <button 
-              onClick={markAllAsRead} 
-              className="text-sm font-black bg-indigo-600 text-white px-6 py-3 rounded-2xl flex items-center justify-center gap-2 hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-600/20 active:scale-95"
+          <div className="flex items-center gap-3">
+            {/* Refresh Button */}
+            <button
+              onClick={handleRefresh}
+              disabled={refreshing}
+              className="p-2.5 rounded-full bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 active:scale-95 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-indigo-500/30"
+              aria-label="Refresh notifications"
             >
-              <CheckCircle2 size={18} /> Mark all read
+              <RefreshCw
+                className={`w-4 h-4 text-slate-600 dark:text-slate-300 ${refreshing ? 'animate-spin' : ''}`}
+              />
             </button>
-          )}
+            
+            {notifications.length > 0 && (
+              <button
+                onClick={markAllAsRead}
+                className="text-sm font-black bg-indigo-600 text-white px-6 py-3 rounded-2xl flex items-center justify-center gap-2 hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-600/20 active:scale-95"
+              >
+                <CheckCircle2 size={18} /> Mark all read
+              </button>
+            )}
+          </div>
         </div>
 
         {/* Notification List */}
