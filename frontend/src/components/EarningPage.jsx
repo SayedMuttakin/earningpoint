@@ -67,9 +67,13 @@ const BigAdBanner = () => {
             </p>
           </div>
 
-          <button className="px-8 py-2.5 rounded-full bg-blue-500 text-white text-xs font-black shadow-lg shadow-blue-500/30 hover:scale-105 active:scale-95 transition-all">
+          <motion.button 
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            className="px-8 py-2.5 rounded-full bg-blue-500 text-white text-xs font-black shadow-lg shadow-blue-500/30 transform-gpu"
+          >
             AD UNIT ACTIVE
-          </button>
+          </motion.button>
         </div>
 
         {/* Ad Attribution */}
@@ -929,50 +933,65 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
   // ==========================================
 
   // OptionCard sub-component — shows intro screen first
-  const OptionCard = ({ item, isLarge, skipIntro, count, maxCount }) => {
+  const OptionCard = ({ item, isLarge = false, count = null, maxCount = null, skipIntro = false }) => {
+    const isCompleted = count !== null && count >= maxCount;
+    
     // Determine if this item should skip the intro screen
-    const itemsToSkipIntro = ['Premium IP', 'Refer & Earn', 'Wallet', 'History', 'Tutorial', 'Invite Friends', 'Daily Quiz', 'Math Quiz', 'Binary Quiz', 'Word Quiz', 'Gen. Knowledge'];
+    const itemsToSkipIntro = ['Premium IP', 'Refer & Earn', 'Wallet', 'History', 'Tutorial', 'Invite Friends', 'Daily Quiz', 'Math Quiz', 'Binary Quiz', 'Word Quiz', 'Gen. Knowledge', 'Meta'];
     const shouldSkip = skipIntro || itemsToSkipIntro.includes(item?.name);
+
+    const handleClick = () => {
+      if (shouldSkip || !item.action) {
+        if (item.action) item.action();
+        return;
+      }
+      setIntroItem(item);
+      setShowIntroScreen(true);
+    };
 
     return (
       <motion.button
-        whileHover={{ scale: 1.04, y: -2 }}
-        whileTap={{ scale: 0.98 }}
-        transition={{ type: 'spring', stiffness: 400, damping: 25 }}
-        onClick={() => {
-          if (shouldSkip || !item.action) {
-            if (item.action) item.action();
-            return;
-          }
-          setIntroItem(item);
-          setShowIntroScreen(true);
+        key={item.id}
+        whileHover={{ 
+          scale: 1.06, 
+          y: -4,
+          transition: { type: 'spring', stiffness: 400, damping: 17 }
         }}
-        className="flex flex-col items-center gap-2 group focus:outline-none relative transform-gpu"
-    >
-      <div className={`w-14 h-14 md:w-${isLarge ? '20' : '16'} md:h-${isLarge ? '20' : '16'} rounded-2xl bg-gradient-to-br ${item.color || 'from-blue-500 to-indigo-600'} flex items-center justify-center shadow-lg group-hover:shadow-xl transition-all duration-300`}>
-        {typeof item.logo === 'string' && item.logo.startsWith('http') ? (
-          <img src={item.logo} alt={item.name} className="w-8 h-8 md:w-10 md:h-10 object-contain" onError={(e) => { e.target.style.display='none'; }} />
-        ) : (
-          <span className="text-white">{item.icon}</span>
-        )}
-      </div>
-      <span className="text-[10px] md:text-xs font-bold text-slate-700 dark:text-slate-300 text-center leading-tight w-full">{item.name}</span>
-      {item.coins != null && <span className="text-[9px] md:text-[11px] text-amber-600 dark:text-amber-400 font-black">+{item.coins} Coins</span>}
-      
-      {/* Progress Dots */}
-      {maxCount > 0 && (
-        <div className="flex gap-0.5 mt-1">
-          {[...Array(maxCount)].map((_, i) => (
-            <div 
-              key={i} 
-              className={`w-1.5 h-1.5 rounded-full ${i < count ? 'bg-green-500' : 'bg-slate-300 dark:bg-slate-700'}`}
-            ></div>
-          ))}
+        whileTap={{ scale: 0.95 }}
+        onClick={handleClick}
+        style={{ backfaceVisibility: 'hidden', transformPerspective: 1000 }}
+        className="flex flex-col items-center group w-full transform-gpu will-change-transform"
+      >
+        <div className={`w-14 h-14 md:w-${isLarge ? '20' : '16'} md:h-${isLarge ? '20' : '16'} rounded-2xl bg-gradient-to-br ${item.color || 'from-blue-500 to-indigo-600'} flex items-center justify-center shadow-lg relative`}>
+          {typeof item.icon === 'string' ? (
+            <img src={item.icon} alt={item.name} className="w-7 h-7 md:w-10 md:h-10 object-contain drop-shadow-md" />
+          ) : React.isValidElement(item.icon) ? (
+            <div className="text-white drop-shadow-md">{React.cloneElement(item.icon, { className: `w-7 h-7 md:w-${isLarge ? '10' : '8'} md:h-${isLarge ? '10' : '8'}` })}</div>
+          ) : item.logo ? (
+            <img src={item.logo} alt={item.name} className="w-8 h-8 md:w-11 md:h-11 object-contain drop-shadow-md" />
+          ) : (
+            <div className="w-8 h-8 md:w-10 md:h-10 bg-white/20 rounded-lg" />
+          )}
+          
+          {count !== null && (
+            <div className="absolute -top-1.5 -right-1.5 bg-white dark:bg-slate-800 rounded-full px-1.5 py-0.5 shadow-sm border border-slate-100 dark:border-slate-700 min-w-[20px] flex items-center justify-center">
+              <span className={`text-[9px] font-black ${isCompleted ? 'text-emerald-500' : 'text-slate-600 dark:text-slate-300'}`}>
+                {count}/{maxCount}
+              </span>
+            </div>
+          )}
         </div>
-      )}
-    </motion.button>
-  );
-};
+        <span className="mt-2.5 text-[10px] md:text-xs font-black text-slate-700 dark:text-slate-300 text-center leading-tight">
+          {item.name}
+        </span>
+        {item.coins && (
+          <span className="text-[10px] font-bold text-emerald-500 mt-0.5">
+            +{item.coins} Coins
+          </span>
+        )}
+      </motion.button>
+    );
+  };
 
   // ==========================================
   // Option Intro Screen (animated detail page)
@@ -2019,12 +2038,14 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
                             <motion.button
                               key={pkg.id}
                               onClick={() => setSelectedPackage(pkg.id)}
+                              whileHover={{ scale: 1.01, backgroundColor: "rgba(30, 41, 59, 0.8)" }}
                               whileTap={{ scale: 0.98 }}
-                              className={`w-full flex items-center justify-between p-3 rounded-2xl border transition-all relative overflow-hidden ${
+                              className={`w-full flex items-center justify-between p-3 rounded-2xl border relative overflow-hidden transform-gpu will-change-transform ${
                                 selectedPackage === pkg.id 
                                   ? 'bg-slate-800/80 border-blue-500 shadow-lg shadow-blue-500/10' 
-                                  : 'bg-slate-800/40 border-slate-700 hover:border-slate-600'
+                                  : 'bg-slate-800/40 border-slate-700'
                               }`}
+                              style={{ backfaceVisibility: 'hidden' }}
                             >
                               <div className="flex items-center gap-3 ml-1 z-0 w-full overflow-hidden">
                                 <span className="font-black text-base text-yellow-400 tracking-tight shrink-0">
@@ -2098,9 +2119,12 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
                       <div className="w-full mb-6 relative">
                         <label className="text-slate-500 text-[10px] font-bold uppercase tracking-widest block ml-1 mb-2 text-center">Choose Server Location</label>
                         <div className="relative">
-                          <button
+                          <motion.button
+                            whileHover={{ scale: 1.01, borderColor: "rgba(100, 116, 139, 0.6)" }}
+                            whileTap={{ scale: 0.99 }}
                             onClick={() => setIsCountryDropdownOpen(!isCountryDropdownOpen)}
-                            className="w-full bg-[#161F36] border-2 border-slate-700/50 hover:border-slate-600 rounded-2xl py-4 px-5 text-white flex items-center justify-between transition-all group shadow-inner"
+                            className="w-full bg-[#161F36] border-2 border-slate-700/50 rounded-2xl py-4 px-5 text-white flex items-center justify-between transform-gpu shadow-inner"
+                            style={{ backfaceVisibility: 'hidden' }}
                           >
                             <div className="flex items-center gap-3">
                                 {selectedCountry ? (
@@ -2118,8 +2142,8 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
                                   <span className="text-slate-500 font-bold text-sm">Select Server Country...</span>
                                 )}
                             </div>
-                            <ChevronDown className={`w-5 h-5 text-slate-500 transition-transform duration-300 ${isCountryDropdownOpen ? 'rotate-180' : ''}`} />
-                          </button>
+                            {isCountryDropdownOpen ? <ChevronUp className="w-5 h-5 text-blue-400" /> : <ChevronDown className="w-5 h-5 text-slate-500" />}
+                          </motion.button>
 
                           <AnimatePresence>
                             {isCountryDropdownOpen && (
@@ -2331,6 +2355,22 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
                       </p>
                       
                       <motion.button
+                        whileHover={{ scale: 1.05, y: -2 }}
+                        whileTap={{ scale: 0.95 }}
+                        onClick={() => goBackWithAd(() => setShowQuizView(false))}
+                        className="flex-1 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 font-bold py-4 rounded-2xl border border-slate-200 dark:border-slate-700 transform-gpu"
+                      >
+                        CLOSE
+                      </motion.button>
+                      <motion.button
+                        whileHover={{ scale: 1.05, y: -2 }}
+                        whileTap={{ scale: 0.95 }}
+                        onClick={startNextQuizRound}
+                        className="flex-1 bg-blue-600 text-white font-bold py-4 rounded-2xl shadow-lg shadow-blue-500/30 transform-gpu"
+                      >
+                        RETRY
+                      </motion.button>
+                      <motion.button
                         whileHover={{ scale: 1.05 }}
                         whileTap={{ scale: 0.95 }}
                         onClick={() => {
@@ -2362,12 +2402,14 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
             {/* Header */}
             <div className="sticky top-0 z-10 bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl border-b border-slate-200 dark:border-slate-800 px-4 py-4 sm:px-6 flex items-center justify-between shadow-sm">
               <h2 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white truncate pr-4">গফুর মিয়ার স্মার্ট মুরগি ২.০</h2>
-              <button 
+              <motion.button 
+                whileHover={{ scale: 1.1, x: -2 }}
+                whileTap={{ scale: 0.9 }}
                 onClick={() => goBackWithAd(() => setShowArticleView(false))}
-                className="bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-300 w-10 h-10 rounded-full flex items-center justify-center hover:bg-slate-300 dark:hover:text-white transition-colors flex-shrink-0"
+                className="bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-300 w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 transform-gpu"
               >
-                <ArrowLeft className="w-5 h-5 hover:-translate-x-1 transition-transform" />
-              </button>
+                <ArrowLeft className="w-5 h-5" />
+              </motion.button>
             </div>
 
             {/* Reading Content */}
@@ -2414,10 +2456,10 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
                   </motion.button>
                 ) : (
                   <motion.button
-                    whileHover={{ scale: 1.05 }}
+                    whileHover={{ scale: 1.05, y: -2 }}
                     whileTap={{ scale: 0.95 }}
                     onClick={() => goBackWithAd(() => setShowArticleView(false))}
-                    className="bg-green-600 hover:bg-green-500 text-white font-black text-lg py-4 px-10 rounded-full shadow-xl shadow-green-500/30 transition-all flex items-center gap-2"
+                    className="bg-green-600 text-white font-black text-lg py-4 px-10 rounded-full shadow-xl shadow-green-500/30 flex items-center gap-2 transform-gpu"
                   >
                     FINISH READING <Medal className="w-5 h-5 ml-2" />
                   </motion.button>
@@ -3001,7 +3043,7 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
                       }
                     }
                   }}
-                  className={`w-full max-w-lg py-4 rounded-full text-lg font-black shadow-lg transition-all ${
+                  className={`w-full max-w-lg py-4 rounded-full text-lg font-black shadow-lg ${
                     quizSelected === null
                       ? 'bg-slate-300 dark:bg-slate-700 text-slate-500 cursor-not-allowed'
                       : 'bg-gradient-to-r from-amber-400 to-orange-400 text-white hover:from-amber-500 hover:to-orange-500'
@@ -3263,7 +3305,7 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
             {/* ═══ Combined Balance Dashboard ═══ */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                {/* Cash Balance Card */}
-               <div className="bg-gradient-to-br from-slate-800 to-slate-900 rounded-3xl p-6 text-white shadow-xl border border-slate-700/50 relative overflow-hidden group">
+               <div className="bg-gradient-to-br from-slate-800 to-slate-900 rounded-3xl p-6 text-white shadow-xl border border-slate-700/50 relative overflow-hidden group transform-gpu">
                  <div className="absolute inset-0 bg-gradient-to-br from-brand-600/10 to-purple-600/10 opacity-50 group-hover:opacity-100 transition-opacity" />
                  <div className="relative">
                    <div className="flex items-center gap-2 mb-3">
@@ -3364,12 +3406,12 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
                     key={m.id}
                     onClick={() => m.available && setWithdrawMethod(m.id)}
                     disabled={!m.available}
-                    className={`relative flex flex-col items-center gap-2 p-4 rounded-2xl border-2 transition-all font-bold ${
+                    className={`relative flex flex-col items-center gap-2 p-4 rounded-2xl border-2 font-bold transform-gpu will-change-transform ${
                       !m.available
                         ? 'border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 opacity-60 cursor-not-allowed'
                         : withdrawMethod === m.id
                           ? 'border-brand-500 bg-brand-50 dark:bg-brand-900/20 shadow-md shadow-brand-500/20'
-                          : 'border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:border-brand-400'
+                          : 'border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800'
                     }`}
                   >
                     {!m.available && (
@@ -3394,7 +3436,7 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
               whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}
               onClick={handleWithdraw}
               disabled={withdrawLoading}
-              className="w-full py-4 rounded-2xl bg-gradient-to-r from-brand-500 to-brand-700 text-white font-black text-base shadow-lg shadow-brand-500/30 hover:shadow-xl transition-all disabled:opacity-70 disabled:cursor-not-allowed"
+              className="w-full py-4 rounded-2xl bg-gradient-to-r from-brand-500 to-brand-700 text-white font-black text-base shadow-lg shadow-brand-500/30 transform-gpu disabled:opacity-70 disabled:cursor-not-allowed"
             >
               {withdrawLoading ? (
                 <span className="flex items-center justify-center gap-2"><span className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent" />Processing...</span>
@@ -3409,9 +3451,14 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
         {activeEarningTab === 'history' && (
           <div className="max-w-lg mx-auto space-y-4">
             <div className="flex items-center gap-3 mb-2">
-               <button onClick={() => goBackWithAd(() => setActiveEarningTab('rewards'))} className="p-2 bg-slate-100 dark:bg-slate-800 rounded-full text-slate-500 hover:text-brand-500 dark:hover:text-brand-400 transition-colors">
+               <motion.button 
+                 whileHover={{ scale: 1.1, x: -2 }}
+                 whileTap={{ scale: 0.9 }}
+                 onClick={() => goBackWithAd(() => setActiveEarningTab('rewards'))} 
+                 className="p-2 bg-slate-100 dark:bg-slate-800 rounded-full text-slate-500 transform-gpu"
+               >
                   <ArrowLeft className="w-5 h-5" />
-               </button>
+               </motion.button>
                <h3 className="font-black text-slate-800 dark:text-white text-lg">Withdrawal History</h3>
             </div>
 
@@ -3656,7 +3703,7 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
               whileTap={{ scale: 0.99 }}
               transition={{ type: 'spring', stiffness: 400, damping: 25 }}
               onClick={() => setShowLevelView(true)}
-              className="w-full bg-gradient-to-r from-amber-500/10 to-orange-500/10 border-2 border-amber-400/20 rounded-2xl p-4 md:p-6 flex items-center gap-4 transform-gpu transition-colors"
+              className="w-full bg-gradient-to-r from-amber-500/10 to-orange-500/10 border-2 border-amber-400/20 rounded-2xl p-4 md:p-6 flex items-center gap-4 transform-gpu"
             >
               <div className="w-12 h-12 rounded-full bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center shadow-lg shrink-0">
                 <span className="font-black text-white text-lg">{levelInfo.level}</span>
@@ -3664,9 +3711,14 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
               <div className="flex-1 text-left">
                 <p className="text-sm font-black text-slate-800 dark:text-slate-200">{levelInfo.label}</p>
                 <div className="flex items-center gap-2 mt-1">
-                  <div className="flex-1 h-2 bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden">
-                    <div className="h-full bg-gradient-to-r from-amber-400 to-orange-500 rounded-full transition-all duration-1000" style={{ width: `${progressPercent}%` }} />
-                  </div>
+                    <div className="flex-1 h-2 bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden">
+                      <motion.div 
+                        initial={{ width: 0 }}
+                        animate={{ width: `${progressPercent}%` }}
+                        transition={{ type: 'spring', stiffness: 50, damping: 20 }}
+                        className="h-full bg-gradient-to-r from-amber-400 to-orange-500 rounded-full" 
+                      />
+                    </div>
                   <span className="text-[11px] text-slate-500 font-bold shrink-0">
                     {levelInfo.isMax ? 'MAX' : `${Math.round(progressPercent)}%`}
                   </span>
@@ -3743,8 +3795,10 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
                     <motion.button
                       initial={{ scale: 0.8, opacity: 0 }}
                       animate={{ scale: 1, opacity: 1 }}
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
                       onClick={() => handleCustomAdReward(currentAdInfo.coins)}
-                      className="mt-8 bg-gradient-to-r from-emerald-500 to-teal-500 text-white font-black py-4 px-8 rounded-full shadow-[0_10px_30px_rgba(16,185,129,0.3)] hover:scale-105 transition-transform"
+                      className="mt-8 bg-gradient-to-r from-emerald-500 to-teal-500 text-white font-black py-4 px-8 rounded-full shadow-[0_10px_30px_rgba(16,185,129,0.3)] transform-gpu"
                     >
                       {isLoading ? 'Claiming...' : `Claim ${currentAdInfo.coins} Coins`}
                     </motion.button>
@@ -3785,13 +3839,15 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
                       Please wait {currentAdInfo.time}s...
                     </div>
                   ) : (
-                    <button
+                    <motion.button
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.98 }}
                       disabled={isLoading} 
                       onClick={() => handleCustomAdReward(currentAdInfo.coins)}
-                      className="w-full mt-4 py-3 bg-blue-600 hover:bg-blue-500 text-white rounded-lg text-center font-bold text-sm transition-colors shadow-lg"
+                      className="w-full mt-4 py-3 bg-blue-600 text-white rounded-lg text-center font-bold text-sm transform-gpu shadow-lg"
                     >
                       {isLoading ? 'Claiming...' : `Install & Claim ${currentAdInfo.coins} Coins`}
-                    </button>
+                    </motion.button>
                   )}
                   {currentAdInfo.time === 0 && (
                      <button onClick={() => setShowNativeAd(false)} className="mt-2 w-full text-center text-[10px] bg-transparent text-slate-400 underline">Dismiss</button>
@@ -3846,13 +3902,15 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
                         </div>
                      ) : (
                         <div className="flex flex-col gap-3">
-                          <button
+                          <motion.button
+                            whileHover={{ scale: 1.02, backgroundColor: "rgb(79 70 229)" }}
+                            whileTap={{ scale: 0.98 }}
                             disabled={isLoading} 
                             onClick={() => handleCustomAdReward(currentAdInfo.coins)}
-                            className="bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-3 px-6 rounded-xl transition-colors shadow-lg shadow-indigo-500/30 w-full"
+                            className="bg-indigo-600 text-white font-bold py-3 px-6 rounded-xl shadow-lg shadow-indigo-500/30 w-full transform-gpu"
                           >
                             {isLoading ? 'Processing...' : `Complete Task (+${currentAdInfo.coins} Coins)`}
-                          </button>
+                          </motion.button>
                         </div>
                      )}
                   </div>
