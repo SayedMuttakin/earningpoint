@@ -209,23 +209,25 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
 
   const fetchGlobalSettings = async () => {
     try {
-      const res = await fetch(`${API_BASE}/earning/settings`);
+      const res = await fetch(`${API_BASE}/api/earning/settings`);
       const data = await res.json();
-      if (data.success) {
-        setGlobalSettings({
-          premiumIpPrice: data.settings.premiumIpPrice || 600,
-          premiumIpDuration: data.settings.premiumIpDuration || '30 Days',
-          bkashNumber: data.settings.bkashNumber || '01700-000000',
-          nagadNumber: data.settings.nagadNumber || '01700-000000',
-          rocketNumber: data.settings.rocketNumber || '01700-000000',
-          premiumIpPackages: data.settings.premiumIpPackages || [],
-          nativeAdsConfig: data.settings.nativeAdsConfig || globalSettings.nativeAdsConfig,
-          fortuneWheelConfig: data.settings.fortuneWheelConfig || globalSettings.fortuneWheelConfig
-        });
+      // Backend returns fields directly (no success/settings wrapper)
+      if (res.ok && data) {
+        setGlobalSettings(prev => ({
+          ...prev,
+          premiumIpPrice: data.premiumIpPrice || 600,
+          premiumIpDuration: data.premiumIpDuration || '30 Days',
+          bkashNumber: data.bkashNumber || '01700-000000',
+          nagadNumber: data.nagadNumber || '01700-000000',
+          rocketNumber: data.rocketNumber || '01700-000000',
+          premiumIpPackages: data.premiumIpPackages || [],
+          nativeAdsConfig: data.nativeAdsConfig || prev.nativeAdsConfig,
+          fortuneWheelConfig: data.fortuneWheelConfig || prev.fortuneWheelConfig
+        }));
         
         // Set default selected package if available
-        if (data.settings.premiumIpPackages && data.settings.premiumIpPackages.length > 0) {
-          setSelectedPackage(data.settings.premiumIpPackages[0].id);
+        if (data.premiumIpPackages && data.premiumIpPackages.length > 0) {
+          setSelectedPackage(data.premiumIpPackages[0].id);
         }
       }
     } catch (error) {
@@ -998,16 +1000,11 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
     };
 
     return (
-      <motion.button
+      <button
         key={item.id}
-        whileHover={{ 
-          scale: 1.05, 
-          transition: { type: 'spring', stiffness: 400, damping: 25 }
-        }}
-        whileTap={{ scale: 0.95 }}
         onClick={handleClick}
-        style={{ backfaceVisibility: 'hidden', transformPerspective: 1000 }}
-        className="flex flex-col items-center group w-full transform-gpu will-change-transform"
+        className="flex flex-col items-center group w-full transition-transform duration-150 active:scale-95 hover:scale-105"
+        style={{ transform: 'translateZ(0)' }}
       >
         <div className={`w-14 h-14 md:w-${isLarge ? '20' : '16'} md:h-${isLarge ? '20' : '16'} rounded-2xl bg-gradient-to-br ${item.color || 'from-blue-500 to-indigo-600'} flex items-center justify-center shadow-lg relative`}>
           {typeof item.icon === 'string' ? (
@@ -1036,7 +1033,7 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
             +{item.coins} Coins
           </span>
         )}
-      </motion.button>
+      </button>
     );
   };
 
