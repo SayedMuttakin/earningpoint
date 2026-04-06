@@ -1001,9 +1001,8 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
       <motion.button
         key={item.id}
         whileHover={{ 
-          scale: 1.06, 
-          y: -4,
-          transition: { type: 'spring', stiffness: 400, damping: 17 }
+          scale: 1.05, 
+          transition: { type: 'spring', stiffness: 400, damping: 25 }
         }}
         whileTap={{ scale: 0.95 }}
         onClick={handleClick}
@@ -1149,24 +1148,33 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
 
     const animType = getAnimationType(item.name);
 
-    // Floating particles
-    const FloatingDots = () => (
-      <>
-        {[...Array(12)].map((_, i) => (
-          <motion.div
-            key={i}
-            className="absolute rounded-full opacity-20 animate-float"
-            style={{
-              width: Math.random() * 8 + 3,
-              height: Math.random() * 8 + 3,
-              background: 'white',
-              left: `${Math.random() * 100}%`,
-              top: `${Math.random() * 100}%`,
-            }}
-          />
-        ))}
-      </>
-    );
+    // Floating particles (memoized to prevent jitter on re-renders)
+    const FloatingDots = React.memo(() => {
+      const dots = React.useMemo(() => [...Array(12)].map((_, i) => ({
+        size: Math.random() * 8 + 3,
+        left: `${Math.random() * 100}%`,
+        top: `${Math.random() * 100}%`,
+        delay: Math.random() * 5
+      })), []);
+
+      return (
+        <>
+          {dots.map((dot, i) => (
+            <motion.div
+              key={i}
+              className="absolute rounded-full opacity-20 animate-float"
+              style={{
+                width: dot.size,
+                height: dot.size,
+                background: 'white',
+                left: dot.left,
+                top: dot.top,
+              }}
+            />
+          ))}
+        </>
+      );
+    });
 
     // Central animation based on type
     const CenterAnimation = () => {
@@ -1487,7 +1495,7 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
                 {animType === 'premium' ? 'Get' : animType === 'refer' ? 'Invite' : animType === 'article' ? 'Read' : '▶ Play'} {item.name}
               </span>
             </motion.button>
-            <div className="mt-2">
+            <div className="mt-2 min-h-[280px] flex items-center justify-center">
               <BigAdBanner />
             </div>
           </motion.div>
@@ -1708,7 +1716,7 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
                       return (
                         <motion.button
                           key={slot.id}
-                          whileHover={isLocked || isCompleted ? {} : { scale: 1.02, y: -1 }}
+                          whileHover={isLocked || isCompleted ? {} : { scale: 1.02 }}
                           whileTap={isLocked || isCompleted ? {} : { scale: 0.98 }}
                           transition={{ type: 'spring', stiffness: 400, damping: 25 }}
                           onClick={() => handleMultiAdSlotClick(slot.id)}
@@ -1836,7 +1844,7 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
               </button>
 
               <div className="w-full mt-auto">
-                 <div className="flex flex-col items-center">
+                  <div className="flex flex-col items-center mt-6 min-h-[280px]">
                     <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2 flex items-center gap-1.5 justify-center">
                        <Shield className="w-3 h-3" /> Sponsored Task
                     </span>
@@ -1898,7 +1906,7 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
 
               <motion.button 
                 disabled={isLoading || coins < 1000}
-                whileHover={coins >= 1000 ? { scale: 1.02, y: -1 } : {}}
+                whileHover={coins >= 1000 ? { scale: 1.02 } : {}}
                 whileTap={coins >= 1000 ? { scale: 0.98 } : {}}
                 transition={{ type: 'spring', stiffness: 400, damping: 25 }}
                 onClick={handleConvertCoins}
@@ -2019,7 +2027,7 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
               </div>
 
               <motion.button 
-                whileHover={{ scale: 1.02, y: -1 }}
+                whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
                 transition={{ type: 'spring', stiffness: 400, damping: 25 }}
                 onClick={() => goBackWithAd(() => setShowLevelView(false))}
@@ -2109,7 +2117,7 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
                       </div>
 
                       <motion.button 
-                        whileHover={{ scale: 1.02, y: -1 }}
+                        whileHover={{ scale: 1.02 }}
                         whileTap={{ scale: 0.98 }}
                         transition={{ type: 'spring', stiffness: 400, damping: 25 }}
                         onClick={() => setShowUpgradeOptions(true)}
@@ -2221,7 +2229,7 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
 
                       {/* Upgrade Button */}
                       <motion.button
-                        whileHover={{ scale: 1.02, y: -2 }}
+                        whileHover={{ scale: 1.02 }}
                         whileTap={{ scale: 0.98 }}
                         onClick={() => setIpStep(2)}
                         className="w-full py-3 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-500 text-white font-black text-sm shadow-lg shadow-blue-500/20 mb-4 tracking-wide"
@@ -2316,7 +2324,7 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
                       </div>
 
                       <motion.button
-                        whileHover={{ scale: 1.02, y: -2 }}
+                        whileHover={{ scale: 1.02 }}
                         whileTap={{ scale: 0.98 }}
                         disabled={!selectedCountry}
                         onClick={() => setIpStep(3)}
@@ -2373,7 +2381,7 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
 
                       <motion.button
                         disabled={!paymentMethod}
-                        whileHover={{ scale: 1.02, y: -2 }}
+                        whileHover={{ scale: 1.02 }}
                         whileTap={{ scale: 0.98 }}
                         onClick={() => setIpStep(4)}
                         className={`w-full py-4 rounded-full font-bold text-[16px] transition-all ${
@@ -2425,7 +2433,7 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
 
                       <motion.button
                         disabled={!transactionId || ipSubmitting}
-                        whileHover={{ scale: 1.02, y: -2 }}
+                        whileHover={{ scale: 1.02 }}
                         whileTap={{ scale: 0.98 }}
                         onClick={async () => {
                           if (!transactionId || ipSubmitting) return;
@@ -2487,7 +2495,7 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
                       </p>
                       
                       <motion.button
-                        whileHover={{ scale: 1.05, y: -2 }}
+                        whileHover={{ scale: 1.05 }}
                         whileTap={{ scale: 0.95 }}
                         onClick={() => goBackWithAd(() => setShowQuizView(false))}
                         className="flex-1 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 font-bold py-4 rounded-2xl border border-slate-200 dark:border-slate-700 transform-gpu"
@@ -2495,7 +2503,7 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
                         CLOSE
                       </motion.button>
                       <motion.button
-                        whileHover={{ scale: 1.05, y: -2 }}
+                        whileHover={{ scale: 1.05 }}
                         whileTap={{ scale: 0.95 }}
                         onClick={startNextQuizRound}
                         className="flex-1 bg-blue-600 text-white font-bold py-4 rounded-2xl shadow-lg shadow-blue-500/30 transform-gpu"
@@ -2535,7 +2543,7 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
             <div className="sticky top-0 z-10 bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl border-b border-slate-200 dark:border-slate-800 px-4 py-4 sm:px-6 flex items-center justify-between shadow-sm">
               <h2 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white truncate pr-4">গফুর মিয়ার স্মার্ট মুরগি ২.০</h2>
               <motion.button 
-                whileHover={{ scale: 1.1, x: -2 }}
+                whileHover={{ scale: 1.1 }}
                 whileTap={{ scale: 0.9 }}
                 onClick={() => goBackWithAd(() => setShowArticleView(false))}
                 className="bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-300 w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 transform-gpu"
@@ -2566,7 +2574,7 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
                   </div>
 
                   {/* Banner Ad After Each Section */}
-                  <div className="w-full mb-10 flex justify-center">
+                  <div className="w-full mb-10 flex justify-center min-h-[280px]">
                     <BigAdBanner />
                   </div>
                 </motion.div>
@@ -2576,7 +2584,7 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
               <div className="flex justify-center mt-12 mb-10">
                 {articleStep < articleData.length ? (
                   <motion.button
-                    whileHover={{ scale: 1.05, translateY: -2 }}
+                    whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
                     onClick={() => {
                        setArticleStep(prev => prev + 1);
@@ -2588,7 +2596,7 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
                   </motion.button>
                 ) : (
                   <motion.button
-                    whileHover={{ scale: 1.05, y: -2 }}
+                    whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
                     onClick={() => goBackWithAd(() => setShowArticleView(false))}
                     className="bg-green-600 text-white font-black text-lg py-4 px-10 rounded-full shadow-xl shadow-green-500/30 flex items-center gap-2 transform-gpu"
@@ -2654,8 +2662,8 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
                         return (
                           <motion.button
                             key={adInfo.id}
-                            whileHover={isLocked || isCompleted ? {} : { scale: 1.03, y: -1 }}
-                            whileTap={isLocked || isCompleted ? {} : { scale: 0.98 }}
+                            whileHover={isLocked || isCompleted ? {} : { scale: 1.03 }}
+                            whileTap={isLocked || isCompleted ? {} : { scale: 0.97 }}
                             transition={{ type: 'spring', stiffness: 400, damping: 25 }}
                             onClick={() => !isLocked && !isCompleted && startAd(videoType)}
                             disabled={isLocked || isCompleted}
@@ -2883,7 +2891,9 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
                 >
                   {isSpinning ? 'Spinning...' : wheelStatus.count >= (globalSettings.fortuneWheelConfig?.dailyLimit || 10) ? 'All Spins Used ✓' : `SPIN NOW (${(globalSettings.fortuneWheelConfig?.dailyLimit || 10) - wheelStatus.count} left)`}
                 </motion.button>
-                <BigAdBanner />
+                <div className="mt-6 min-h-[280px] flex items-center justify-center">
+                  <BigAdBanner />
+                </div>
               </div>
             </div>
           </motion.div>
@@ -2927,8 +2937,8 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
                       return (
                         <motion.button
                           key={i}
-                          whileHover={isLocked || isScratched ? {} : { scale: 1.04 }}
-                          whileTap={isLocked || isScratched ? {} : { scale: 0.96 }}
+                          whileHover={isLocked || isScratched ? {} : { scale: 1.03 }}
+                          whileTap={isLocked || isScratched ? {} : { scale: 0.97 }}
                           disabled={isLocked || isScratched || isLoading}
                           onClick={() => {
                             if (isLocked || isScratched) return;
@@ -3076,7 +3086,9 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
                 </AnimatePresence>
               </motion.button>
 
-              <BigAdBanner />
+              <div className="mt-6 min-h-[280px] flex items-center justify-center">
+                <BigAdBanner />
+              </div>
 
             </div>
           </motion.div>
@@ -3115,7 +3127,7 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
                   ].map((quiz) => (
                     <motion.button
                       key={quiz.id}
-                      whileHover={{ scale: 1.02, x: 5 }}
+                      whileHover={{ scale: 1.02 }}
                       whileTap={{ scale: 0.98 }}
                       onClick={() => {
                         setShowQuizSelection(false);
@@ -3243,8 +3255,8 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
               {/* Submit Button */}
               {!quizAnswered ? (
                 <motion.button
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
+                  whileHover={{ scale: 1.03 }}
+                  whileTap={{ scale: 0.97 }}
                   disabled={quizSelected === null || isLoading}
                   onClick={async () => {
                     if (quizSelected === null) return;
@@ -3317,7 +3329,7 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
               <p className="text-sm text-slate-500 dark:text-slate-400 font-medium mt-4 text-center pb-8 sm:pb-0">
                 {quizStatus.count}/10 quizzes completed today
               </p>
-              <div className="w-full flex justify-center">
+              <div className="w-full flex justify-center min-h-[280px]">
                 <BigAdBanner />
               </div>
             </div>
@@ -3354,8 +3366,8 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
                   <div className="grid grid-cols-2 gap-6">
                      {checkinStatus.count < 1 && (
                         <motion.button
-                           whileHover={{ scale: 1.03, y: -2 }}
-                           whileTap={{ scale: 0.95 }}
+                           whileHover={{ scale: 1.03 }}
+                           whileTap={{ scale: 0.97 }}
                            transition={{ type: 'spring', stiffness: 400, damping: 25 }}
                            onClick={startAd}
                            className="flex flex-col items-center gap-4 p-6 bg-orange-50 dark:bg-orange-900/20 border-2 border-orange-200 dark:border-orange-800 rounded-2xl group shadow-sm transform-gpu"
@@ -3369,8 +3381,8 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
 
                      {checkinStatus.count < 2 && (
                         <motion.button
-                           whileHover={{ scale: 1.03, y: -2 }}
-                           whileTap={{ scale: 0.95 }}
+                           whileHover={{ scale: 1.03 }}
+                           whileTap={{ scale: 0.97 }}
                            transition={{ type: 'spring', stiffness: 400, damping: 25 }}
                            onClick={startAd}
                            className="flex flex-col items-center gap-4 p-6 bg-blue-50 dark:bg-blue-900/20 border-2 border-blue-200 dark:border-blue-800 rounded-2xl group shadow-sm transform-gpu"
@@ -3412,9 +3424,13 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
                   <Star className="w-6 h-6" /> Gen. Knowledge
                 </h3>
                 <div className="flex items-center gap-3">
-                  <div className="text-white font-bold bg-black/20 px-3 py-1 rounded-full text-sm">
+                  <motion.div 
+                    whileHover={{ scale: 1.03 }}
+                    whileTap={{ scale: 0.97 }}
+                    className="text-white font-bold bg-black/20 px-3 py-1 rounded-full text-sm"
+                  >
                     {currentGkIndex + 1} / 10
-                  </div>
+                  </motion.div>
                   <button onClick={() => goBackWithAd(() => setShowGkQuizView(false))} className="text-white/70 hover:text-white text-xl font-bold">✕</button>
                 </div>
               </div>
@@ -3683,7 +3699,7 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
           <div className="max-w-lg mx-auto space-y-4">
             <div className="flex items-center gap-3 mb-2">
                <motion.button 
-                 whileHover={{ scale: 1.1, x: -2 }}
+                 whileHover={{ scale: 1.1 }}
                  whileTap={{ scale: 0.9 }}
                  onClick={() => goBackWithAd(() => setActiveEarningTab('rewards'))} 
                  className="p-2 bg-slate-100 dark:bg-slate-800 rounded-full text-slate-500 transform-gpu"
@@ -3930,7 +3946,7 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
           {/* Level Progress Overview Card */}
           <div className="max-w-5xl mx-auto">
             <motion.button
-              whileHover={{ scale: 1.01, y: -2 }}
+              whileHover={{ scale: 1.01 }}
               whileTap={{ scale: 0.99 }}
               transition={{ type: 'spring', stiffness: 400, damping: 25 }}
               onClick={() => setShowLevelView(true)}
