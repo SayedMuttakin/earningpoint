@@ -182,7 +182,29 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
     bkashNumber: '01700-000000',
     nagadNumber: '01700-000000',
     rocketNumber: '01700-000000',
-    premiumIpPackages: []
+    premiumIpPackages: [],
+    nativeAdsConfig: [
+      { id: 'ad-1', name: 'Native Ad Click Ad 1', icon: 'Tv', coins: 10, quizType: 'math', isActive: true },
+      { id: 'ad-2', name: 'Native Ad Click Ad 2', icon: 'Video', coins: 10, quizType: 'math', isActive: true },
+      { id: 'ad-3', name: 'Native Ad Click Ad 3', icon: 'Radio', coins: 10, quizType: 'math', isActive: true },
+      { id: 'ad-4', name: 'Native Ad Click Ad 4', icon: 'Target', coins: 10, quizType: 'math', isActive: true },
+      { id: 'ad-5', name: 'Native Ad Click Ad 5', icon: 'Zap', coins: 10, quizType: 'math', isActive: true }
+    ],
+    fortuneWheelConfig: {
+      coins: [5, 10, 15, 20, 25, 30, 35, 50],
+      adsPerSpin: 1,
+      dailyLimit: 10
+    }
+  });
+
+  // Ad Verification Modal State
+  const [showAdVerificationModal, setShowAdVerificationModal] = React.useState(false);
+  const [adVerificationData, setAdVerificationData] = React.useState({
+    num1: 0,
+    num2: 0,
+    userAnswer: '',
+    onSuccess: null,
+    title: ''
   });
 
   const fetchGlobalSettings = async () => {
@@ -196,7 +218,9 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
           bkashNumber: data.settings.bkashNumber || '01700-000000',
           nagadNumber: data.settings.nagadNumber || '01700-000000',
           rocketNumber: data.settings.rocketNumber || '01700-000000',
-          premiumIpPackages: data.settings.premiumIpPackages || []
+          premiumIpPackages: data.settings.premiumIpPackages || [],
+          nativeAdsConfig: data.settings.nativeAdsConfig || globalSettings.nativeAdsConfig,
+          fortuneWheelConfig: data.settings.fortuneWheelConfig || globalSettings.fortuneWheelConfig
         });
         
         // Set default selected package if available
@@ -393,32 +417,36 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
     };
   }, []);
 
-  // Update Countdown Timer every second
-  React.useEffect(() => {
-    if (!isPremium || !premiumExpiryDate) return;
+  // Premium IP Countdown Timer (High Precision D:H:M:S)
+  useEffect(() => {
+    if (premiumExpiryDate) {
+      const updateTimer = () => {
+        const now = new Date().getTime();
+        const expiry = new Date(premiumExpiryDate).getTime();
+        const distance = expiry - now;
 
-    const timer = setInterval(() => {
-      const now = new Date().getTime();
-      const expiry = new Date(premiumExpiryDate).getTime();
-      const diff = expiry - now;
+        if (distance > 0) {
+          const days = Math.floor(distance / (1000 * 60 * 60 * 24));
+          const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+          const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+          const seconds = Math.floor((distance % (1000 * 60)) / 1000);
 
-      if (diff <= 0) {
-        setIsPremium(false);
-        setTimeLeft({ days: 0, hours: 0, minutes: 0, seconds: 0 });
-        clearInterval(timer);
-        return;
-      }
+          setTimeLeft({ days, hours, minutes, seconds });
+          setIsPremium(true);
+        } else {
+          setIsPremium(false);
+          setTimeLeft({ days: 0, hours: 0, minutes: 0, seconds: 0 });
+        }
+      };
 
-      const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-      const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-      const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-      const seconds = Math.floor((diff % (1000 * 60)) / 1000);
-
-      setTimeLeft({ days, hours, minutes, seconds });
-    }, 1000);
-
-    return () => clearInterval(timer);
-  }, [isPremium, premiumExpiryDate]);
+      updateTimer();
+      const timer = setInterval(updateTimer, 1000);
+      return () => clearInterval(timer);
+    } else {
+      setIsPremium(false);
+      setTimeLeft({ days: 0, hours: 0, minutes: 0, seconds: 0 });
+    }
+  }, [premiumExpiryDate]);
 
   // Legacy Mock Ad Timer Removed
 
@@ -996,6 +1024,74 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
   // ==========================================
   // Option Intro Screen (animated detail page)
   // ==========================================
+  // Sub-component for ad interaction verification
+  const AdVerificationModal = () => {
+    if (!showAdVerificationModal) return null;
+    const { num1, num2, title, onSuccess } = adVerificationData;
+    const [answer, setAnswer] = React.useState('');
+
+    const handleSubmit = (e) => {
+      e.preventDefault();
+      if (parseInt(answer) === (num1 + num2)) {
+        setShowAdVerificationModal(false);
+        setAnswer('');
+        if (onSuccess) onSuccess();
+      } else {
+        showToast("Incorrect answer! Try again.", "error");
+        setAnswer('');
+      }
+    };
+
+    return (
+      <motion.div
+        initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+        className="fixed inset-0 z-[200] bg-slate-950/90 backdrop-blur-md flex items-center justify-center p-4"
+      >
+        <motion.div
+          initial={{ scale: 0.9, opacity: 0, y: 20 }} animate={{ scale: 1, opacity: 1, y: 0 }}
+          className="bg-white dark:bg-slate-900 w-full max-w-sm rounded-[2.5rem] p-8 shadow-2xl border border-slate-200 dark:border-slate-800 flex flex-col items-center"
+        >
+          <div className="w-16 h-16 bg-blue-500/20 rounded-2xl flex items-center justify-center mb-6 shadow-lg shadow-blue-500/10">
+            <ShieldCheck className="w-8 h-8 text-blue-500" />
+          </div>
+          <h2 className="text-2xl font-black text-slate-800 dark:text-white mb-2">{title}</h2>
+          <p className="text-slate-500 dark:text-slate-400 text-sm font-medium mb-8 text-center uppercase tracking-widest">Verification Quiz</p>
+          
+          <form onSubmit={handleSubmit} className="w-full space-y-6">
+            <div className="flex flex-col items-center gap-4">
+              <div className="text-3xl font-black text-slate-900 dark:text-white bg-slate-100 dark:bg-slate-800 px-8 py-4 rounded-3xl border border-slate-200 dark:border-slate-700 shadow-inner">
+                {num1} + {num2} = ?
+              </div>
+              <input
+                type="number"
+                autoFocus
+                value={answer}
+                onChange={(e) => setAnswer(e.target.value)}
+                placeholder="Result"
+                className="w-full bg-slate-50 dark:bg-slate-800 border-2 border-slate-200 dark:border-slate-700 focus:border-blue-500 rounded-2xl p-4 text-center text-xl font-black text-slate-900 dark:text-white outline-none transition-all shadow-md placeholder:text-slate-400"
+              />
+            </div>
+            <div className="flex gap-3">
+              <button 
+                type="button" 
+                onClick={() => setShowAdVerificationModal(false)}
+                className="flex-1 py-4 bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-400 font-bold rounded-2xl transition-all hover:bg-slate-300 dark:hover:bg-slate-700"
+              >
+                CANCEL
+              </button>
+              <button 
+                type="submit" 
+                className="flex-[2] py-4 bg-gradient-to-r from-blue-600 to-indigo-500 text-white font-black rounded-2xl shadow-lg shadow-blue-600/30 transition-all hover:scale-[1.02] active:scale-[0.98]"
+              >
+                VERIFY & CONTINUE
+              </button>
+            </div>
+          </form>
+        </motion.div>
+      </motion.div>
+    );
+  };
+
   const OptionIntroScreen = () => {
     const [moreOpen, setMoreOpen] = React.useState(false);
     const item = introItem;
@@ -1470,64 +1566,64 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
       <AnimatePresence>
         {showMultiAdView && multiAdConfig && (() => {
           const currentCount = getMultiAdCount(multiAdConfig.key);
-          const adSlots = [
-            { id: 1, label: `${multiAdConfig.name} Ad 1`, icon: '🎬' },
-            { id: 2, label: `${multiAdConfig.name} Ad 2`, icon: '📺' },
-            { id: 3, label: `${multiAdConfig.name} Ad 3`, icon: '🎥' },
-            { id: 4, label: `${multiAdConfig.name} Ad 4`, icon: '📡' },
-            { id: 5, label: `${multiAdConfig.name} Ad 5`, icon: '🎯' },
-          ];
+          const adSlots = (multiAdConfig.ads || [
+            { id: 1, name: `${multiAdConfig.name} Ad 1`, icon: '🎬', coins: multiAdConfig.coins },
+            { id: 2, name: `${multiAdConfig.name} Ad 2`, icon: '📺', coins: multiAdConfig.coins },
+            { id: 3, name: `${multiAdConfig.name} Ad 3`, icon: '🎥', coins: multiAdConfig.coins },
+            { id: 4, name: `${multiAdConfig.name} Ad 4`, icon: '📡', coins: multiAdConfig.coins },
+            { id: 5, name: `${multiAdConfig.name} Ad 5`, icon: '🎯', coins: multiAdConfig.coins },
+          ]).filter(a => a.isActive !== false);
 
-          const handleMultiAdSlotClick = async (slotId) => {
+          const handleMultiAdSlotClick = async (slot) => {
+            const slotId = typeof slot === 'object' ? (slot.id || slot._id) : slot;
+            // Find index of slot in adSlots to enforce sequence
+            const currentIndexInSlots = adSlots.findIndex(s => (s.id || s._id) === slotId);
             const cnt = getMultiAdCount(multiAdConfig.key);
-            if (cnt >= slotId) return;
-            if (cnt + 1 !== slotId) return;
+            
+            if (cnt > currentIndexInSlots) return; // Already claimed
+            if (cnt !== currentIndexInSlots) return; // Must do in order
 
             const triggerReward = async () => {
-              console.log(`[DEBUG-ADMOB] Multi-ad triggerReward for ${multiAdConfig.name}, slot ${slotId}`);
-              setIsLoading(true);
-              try {
-                const token = localStorage.getItem('token');
-                if (!token) {
-                  setIsLoading(false);
-                  return;
-                }
-                const response = await fetch(`${API_BASE}/api/earning/task-claim`, {
-                  method: 'POST',
-                  headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-                  body: JSON.stringify({ points: multiAdConfig.coins, name: multiAdConfig.name })
-                });
-                const data = await response.json();
-                if (response.ok) {
-                  console.log(`[DEBUG-ADMOB] Multi-ad claim successful:`, data.message);
-                  setBalance(data.balance);
-                  if (data.coins !== undefined) setCoins(data.coins);
-                  if (data.lifetimeCoins !== undefined) setLifetimeCoins(data.lifetimeCoins);
-                  incrementMultiAdCount(multiAdConfig.key);
-                  setMultiAdConfig(prev => ({...prev}));
-                  showToast(`🎉 You earned ${multiAdConfig.coins} Coins from ${multiAdConfig.name}!`, "success");
-                } else {
-                  console.error(`[DEBUG-ADMOB] Multi-ad claim failed:`, data.message);
-                  showToast(data.message || 'Failed to claim coins.', "error");
-                }
-              } catch (err) {
-                console.error(`[DEBUG-ADMOB] Error in multi-ad triggerReward:`, err);
-                showToast('Network error.', "error");
-              } finally {
-                setIsLoading(false);
-              }
+              AdMobService.showRewarded(() => {
+                console.log(`[DEBUG-ADMOB] Multi-ad triggerReward for ${multiAdConfig.name}, slot ${slotId}`);
+                setIsLoading(true);
+                (async () => {
+                  try {
+                    const token = localStorage.getItem('token');
+                    if (!token) return;
+                    const response = await fetch(`${API_BASE}/api/earning/task-claim`, {
+                      method: 'POST',
+                      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+                      body: JSON.stringify({ points: (slot.coins || multiAdConfig.coins), name: (slot.name || multiAdConfig.name) })
+                    });
+                    const data = await response.json();
+                    if (response.ok) {
+                      setBalance(data.balance);
+                      if (data.coins !== undefined) setCoins(data.coins);
+                      incrementMultiAdCount(multiAdConfig.key);
+                      showToast(`Claimed ${slot.coins || multiAdConfig.coins} Coins!`, 'success');
+                    } else {
+                      showToast(data.message || "Failed to claim reward", "error");
+                    }
+                  } catch (e) {
+                    showToast("Network error", "error");
+                  } finally {
+                    setIsLoading(false);
+                  }
+                })();
+              });
             };
 
-            if (multiAdConfig.adType === 'rewarded') {
-              setIsLoading(true);
-              AdMobService.showRewarded(triggerReward, 'rewarded');
-            } else if (multiAdConfig.adType === 'interstitial') {
-              setIsLoading(true);
-              AdMobService.showInterstitial(triggerReward);
-            } else {
-              setIsLoading(true);
-              AdMobService.showRewarded(triggerReward, 'rewarded');
-            }
+            // Inject Verification Quiz
+            const n1 = Math.floor(Math.random() * 9) + 1;
+            const n2 = Math.floor(Math.random() * 9) + 1;
+            setAdVerificationData({
+              num1: n1,
+              num2: n2,
+              title: slot.name || `${multiAdConfig.name} #${slotId}`,
+              onSuccess: triggerReward
+            });
+            setShowAdVerificationModal(true);
           };
 
           return (
@@ -1957,21 +2053,22 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
                         </div>
                       )}
 
-                      {/* Countdown Grid */}
-                      <div className="grid grid-cols-4 gap-2 w-full mb-8">
+                      {/* Countdown Grid (High Precision) */}
+                      <div className="grid grid-cols-4 gap-3 w-full mb-8">
                         {[
-                          { label: 'D', value: timeLeft.days },
-                          { label: 'H', value: timeLeft.hours },
-                          { label: 'M', value: timeLeft.minutes },
-                          { label: 'S', value: timeLeft.seconds }
+                          { label: 'Days', value: timeLeft.days, color: 'from-blue-500 to-indigo-600' },
+                          { label: 'Hours', value: timeLeft.hours, color: 'from-purple-500 to-fuchsia-600' },
+                          { label: 'Mins', value: timeLeft.minutes, color: 'from-rose-500 to-pink-600' },
+                          { label: 'Secs', value: timeLeft.seconds, color: 'from-amber-500 to-orange-600' }
                         ].map((item, idx) => (
                           <div key={idx} className="flex flex-col items-center">
-                            <div className="w-full aspect-square bg-[#1E293B] rounded-2xl border border-white/5 flex items-center justify-center mb-1.5 shadow-inner">
-                              <span className="text-xl font-black text-white tabular-nums">
+                            <div className="w-full aspect-square bg-[#1E293B] rounded-2xl border border-white/10 flex flex-col items-center justify-center mb-2 shadow-[inset_0_2px_10px_rgba(0,0,0,0.3)] relative overflow-hidden group">
+                              <div className={`absolute inset-0 bg-gradient-to-br ${item.color} opacity-0 group-hover:opacity-5 transition-opacity`} />
+                              <span className="text-2xl font-black text-white tabular-nums tracking-tighter">
                                 {String(item.value).padStart(2, '0')}
                               </span>
                             </div>
-                            <span className="text-[10px] text-slate-500 font-black uppercase tracking-tighter">{item.label}</span>
+                            <span className="text-[9px] text-slate-500 font-black uppercase tracking-widest">{item.label}</span>
                           </div>
                         ))}
                       </div>
@@ -2709,30 +2806,32 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
                 <motion.button
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
-                  disabled={isSpinning || wheelStatus.count >= 10}
+                  disabled={isSpinning || wheelStatus.count >= (globalSettings.fortuneWheelConfig?.dailyLimit || 10)}
                   onClick={() => {
-                    if (wheelStatus.count >= 10) {
-                      alert('You have used all 10 spins today. Come back tomorrow!');
+                    const maxSpins = globalSettings.fortuneWheelConfig?.dailyLimit || 10;
+                    if (wheelStatus.count >= maxSpins) {
+                      showToast(`You have used all ${maxSpins} spins today. Come back tomorrow!`, 'info');
                       return;
                     }
-                    // Pick random segment and calculate rotation to land on it
-                    const segments = [10, 20, 30, 40, 50, 60, 70, 80, 90, 100];
-                    const randomIdx = Math.floor(Math.random() * segments.length);
-                    const segmentAngle = randomIdx * 36 + 18; // center of segment
-                    // Pointer is at top (0deg). Wheel rotates clockwise.
-                    // To land on segment i, final rotation mod 360 should be (360 - segmentAngle)
-                    const landAngle = (360 - segmentAngle + 360) % 360;
-                    const totalRotation = 1800 + landAngle + Math.random() * 10 - 5; // 5 full rotations + land
-                    setSpinReward({ coins: segments[randomIdx], totalRotation });
-                    setIsSpinning(true);
+                    
+                    // Ad before every spin
+                    AdMobService.showInterstitial(() => {
+                      const segments = globalSettings.fortuneWheelConfig?.coins || [10, 20, 30, 40, 50, 60, 70, 80, 90, 100];
+                      const randomIdx = Math.floor(Math.random() * segments.length);
+                      const segmentAngle = randomIdx * (360 / segments.length) + (360 / segments.length / 2);
+                      const landAngle = (360 - segmentAngle + 360) % 360;
+                      const totalRotation = 1800 + landAngle + Math.random() * 10 - 5;
+                      setSpinReward({ coins: segments[randomIdx], totalRotation });
+                      setIsSpinning(true);
+                    });
                   }}
                   className={`w-full py-4 rounded-2xl font-black text-lg transition-all shadow-lg ${
                     isSpinning ? 'bg-slate-300 dark:bg-slate-700 text-slate-500 cursor-wait' :
-                    wheelStatus.count >= 10 ? 'bg-slate-200 dark:bg-slate-700 text-slate-400 cursor-not-allowed' :
+                    wheelStatus.count >= (globalSettings.fortuneWheelConfig?.dailyLimit || 10) ? 'bg-slate-200 dark:bg-slate-700 text-slate-400 cursor-not-allowed' :
                     'bg-gradient-to-r from-teal-500 to-emerald-500 text-white hover:from-teal-400 hover:to-emerald-400 shadow-teal-500/30'
                   }`}
                 >
-                  {isSpinning ? 'Spinning...' : wheelStatus.count >= 10 ? 'All Spins Used ✓' : `SPIN NOW (${10 - wheelStatus.count} left)`}
+                  {isSpinning ? 'Spinning...' : wheelStatus.count >= (globalSettings.fortuneWheelConfig?.dailyLimit || 10) ? 'All Spins Used ✓' : `SPIN NOW (${(globalSettings.fortuneWheelConfig?.dailyLimit || 10) - wheelStatus.count} left)`}
                 </motion.button>
                 <BigAdBanner />
               </div>
@@ -3921,9 +4020,12 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
 
           </>
         )}
-
         </div>
       </div>
+
+      <AnimatePresence>
+        {showAdVerificationModal && <AdVerificationModal />}
+      </AnimatePresence>
     </main>
   );
 };

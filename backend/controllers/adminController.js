@@ -349,8 +349,41 @@ exports.updatePremiumOrder = async (req, res) => {
     await order.save();
 
     if (status === 'approved') {
-      const packageDays = { 'month-1': 37, 'month-3': 105, 'month-6': 210, 'year-1': 424 };
-      const days = packageDays[order.packageId] || 30;
+      const settings = await GlobalSetting.findOne({ configKey: 'main_config' });
+      const pkg = settings?.premiumIpPackages?.find(p => p.id === order.packageId);
+      
+      // Calculate days: Extract number from duration string (e.g. "1 Month" or "30 Days")
+      let days = 30;
+      if (pkg) {
+        const durationMatch = pkg.duration.match(/(\d+)/);
+        if (durationMatch) {
+          const val = parseInt(durationMatch[1]);
+          if (pkg.duration.toLowerCase().includes('month')) {
+            days = val * 30;
+          } else if (pkg.duration.toLowerCase().includes('year')) {
+            days = val * 365;
+          } else {
+            days = val;
+          }
+        }
+        
+        // Add extra/free days if present
+        if (pkg.freeDays) {
+          const freeMatch = pkg.freeDays.match(/(\d+)/);
+          if (freeMatch) {
+            const freeVal = parseInt(freeMatch[1]);
+            if (pkg.freeDays.toLowerCase().includes('month')) {
+              days += freeVal * 30;
+            } else {
+              days += freeVal;
+            }
+          }
+        }
+      } else {
+        // Fallback to old hardcoded map if package not found in settings
+        const packageDays = { 'month-1': 37, 'month-3': 105, 'month-6': 210, 'year-1': 424 };
+        days = packageDays[order.packageId] || 30;
+      }
       
       let currentExpiry = order.userId.premiumExpiry ? new Date(order.userId.premiumExpiry) : new Date();
       if (currentExpiry < new Date()) {
@@ -370,7 +403,7 @@ exports.updatePremiumOrder = async (req, res) => {
       createNotification(
         order.userId._id, 
         'Premium Account Activated! ✨', 
-        `Your order for ${order.packageName} has been approved! Your subscription is now active until ${premiumExpiry.toLocaleDateString()}.`,
+        `Your order for ${order.packageName} has been approved! Your subscription is now active until ${premiumExpiry.toLocaleDateString()}. Added total of ${days} days to your account.`,
         'premium'
       );
     } else if (status === 'rejected') {
@@ -461,7 +494,17 @@ exports.getGlobalSettings = async (req, res) => {
 
 exports.updateGlobalSettings = async (req, res) => {
   try {
-    const { premiumIpPrice, premiumIpDuration, bkashNumber, nagadNumber, rocketNumber, premiumIpPackages } = req.body;
+    const { 
+      premiumIpPrice, 
+      premiumIpDuration, 
+      bkashNumber, 
+      nagadNumber, 
+      rocketNumber, 
+      premiumIpPackages,
+      nativeAdsConfig,
+      fortuneWheelConfig
+    } = req.body;
+    
     let settings = await GlobalSetting.findOne({ configKey: 'main_config' });
     if (!settings) {
       settings = new GlobalSetting({ configKey: 'main_config' });
@@ -473,6 +516,8 @@ exports.updateGlobalSettings = async (req, res) => {
     if (nagadNumber !== undefined) settings.nagadNumber = nagadNumber;
     if (rocketNumber !== undefined) settings.rocketNumber = rocketNumber;
     if (premiumIpPackages !== undefined) settings.premiumIpPackages = premiumIpPackages;
+    if (nativeAdsConfig !== undefined) settings.nativeAdsConfig = nativeAdsConfig;
+    if (fortuneWheelConfig !== undefined) settings.fortuneWheelConfig = fortuneWheelConfig;
 
     await settings.save();
     res.json({ message: 'Settings updated successfully', settings });
