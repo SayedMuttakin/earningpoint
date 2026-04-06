@@ -936,8 +936,9 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
 
     return (
       <motion.button
-        whileHover={{ scale: 1.07, y: -4 }}
-        whileTap={{ scale: 0.95 }}
+        whileHover={{ scale: 1.04, y: -2 }}
+        whileTap={{ scale: 0.98 }}
+        transition={{ type: 'spring', stiffness: 400, damping: 25 }}
         onClick={() => {
           if (shouldSkip || !item.action) {
             if (item.action) item.action();
@@ -946,9 +947,9 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
           setIntroItem(item);
           setShowIntroScreen(true);
         }}
-        className="flex flex-col items-center gap-2 group focus:outline-none relative"
+        className="flex flex-col items-center gap-2 group focus:outline-none relative transform-gpu"
     >
-      <div className={`w-14 h-14 md:w-${isLarge ? '20' : '16'} md:h-${isLarge ? '20' : '16'} rounded-2xl bg-gradient-to-br ${item.color || 'from-blue-500 to-indigo-600'} flex items-center justify-center shadow-lg group-hover:shadow-xl group-hover:scale-110 transition-all duration-300`}>
+      <div className={`w-14 h-14 md:w-${isLarge ? '20' : '16'} md:h-${isLarge ? '20' : '16'} rounded-2xl bg-gradient-to-br ${item.color || 'from-blue-500 to-indigo-600'} flex items-center justify-center shadow-lg group-hover:shadow-xl transition-all duration-300`}>
         {typeof item.logo === 'string' && item.logo.startsWith('http') ? (
           <img src={item.logo} alt={item.name} className="w-8 h-8 md:w-10 md:h-10 object-contain" onError={(e) => { e.target.style.display='none'; }} />
         ) : (
@@ -1557,13 +1558,14 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
                       return (
                         <motion.button
                           key={slot.id}
-                          whileHover={isLocked || isCompleted ? {} : { scale: 1.02 }}
+                          whileHover={isLocked || isCompleted ? {} : { scale: 1.02, y: -1 }}
                           whileTap={isLocked || isCompleted ? {} : { scale: 0.98 }}
+                          transition={{ type: 'spring', stiffness: 400, damping: 25 }}
                           onClick={() => handleMultiAdSlotClick(slot.id)}
                           disabled={isLocked || isCompleted || isLoading}
-                          className={`flex items-center justify-between w-full p-4 border-2 rounded-2xl transition-all group ${
+                          className={`flex items-center justify-between w-full p-4 border-2 rounded-2xl group transform-gpu ${
                             isCompleted ? 'bg-emerald-50 dark:bg-emerald-900/20 border-emerald-200 dark:border-emerald-800' :
-                            isNext ? 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 shadow-md hover:shadow-lg cursor-pointer hover:border-amber-400 dark:hover:border-amber-500' :
+                            isNext ? 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 shadow-md cursor-pointer' :
                             'bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700 opacity-40 cursor-not-allowed'
                           }`}
                         >
@@ -1744,17 +1746,20 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
                 Earn coins through various tasks and convert them manually to your balance whenever you reach 1000 coins!
               </p>
 
-              <button 
+              <motion.button 
                 disabled={isLoading || coins < 1000}
+                whileHover={coins >= 1000 ? { scale: 1.02, y: -1 } : {}}
+                whileTap={coins >= 1000 ? { scale: 0.98 } : {}}
+                transition={{ type: 'spring', stiffness: 400, damping: 25 }}
                 onClick={handleConvertCoins}
-                className={`w-full py-4 rounded-full font-black transition-all text-sm uppercase tracking-wide flex items-center justify-center gap-2 ${
+                className={`w-full py-4 rounded-full font-black text-sm uppercase tracking-wide flex items-center justify-center gap-2 transform-gpu ${
                   coins >= 1000 
-                  ? "bg-gradient-to-r from-amber-500 to-orange-400 text-white hover:shadow-lg hover:shadow-amber-500/25 cursor-pointer" 
+                  ? "bg-gradient-to-r from-amber-500 to-orange-400 text-white shadow-lg shadow-amber-500/20 cursor-pointer" 
                   : "bg-slate-700 text-slate-500 cursor-not-allowed"
                 }`}
               >
                 {isLoading ? 'Processing...' : coins >= 1000 ? 'Convert to Balance' : 'Need 1000 Coins'}
-              </button>
+              </motion.button>
             </motion.div>
           </motion.div>
         )}
@@ -1863,12 +1868,15 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
                 })}
               </div>
 
-              <button 
+              <motion.button 
+                whileHover={{ scale: 1.02, y: -1 }}
+                whileTap={{ scale: 0.98 }}
+                transition={{ type: 'spring', stiffness: 400, damping: 25 }}
                 onClick={() => goBackWithAd(() => setShowLevelView(false))}
-                className="mt-8 w-full py-4 rounded-full bg-gradient-to-r from-amber-400 to-orange-500 text-white font-black hover:shadow-lg hover:shadow-orange-500/25 transition-all text-sm uppercase tracking-wide"
+                className="mt-8 w-full py-4 rounded-full bg-gradient-to-r from-amber-400 to-orange-500 text-white font-black shadow-lg shadow-orange-500/20 transform-gpu text-sm uppercase tracking-wide"
               >
                 Continue Earning
-              </button>
+              </motion.button>
             </motion.div>
           </motion.div>
         )}
@@ -1949,12 +1957,15 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
                         ))}
                       </div>
 
-                      <button 
+                      <motion.button 
+                        whileHover={{ scale: 1.02, y: -1 }}
+                        whileTap={{ scale: 0.98 }}
+                        transition={{ type: 'spring', stiffness: 400, damping: 25 }}
                         onClick={() => setShowUpgradeOptions(true)}
-                        className="w-full py-4 bg-gradient-to-r from-yellow-400 to-amber-500 text-[#0F172A] font-black rounded-[1.5rem] shadow-xl hover:shadow-yellow-500/10 transition-all active:scale-95 text-sm uppercase tracking-widest"
+                        className="w-full py-4 bg-gradient-to-r from-yellow-400 to-amber-500 text-[#0F172A] font-black rounded-[1.5rem] shadow-xl transform-gpu text-sm uppercase tracking-widest"
                       >
                         Extend Subscription
-                      </button>
+                      </motion.button>
                     </motion.div>
                   )}
 
@@ -2469,14 +2480,15 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
                         return (
                           <motion.button
                             key={adInfo.id}
-                            whileHover={isLocked || isCompleted ? {} : { scale: 1.02 }}
+                            whileHover={isLocked || isCompleted ? {} : { scale: 1.03, y: -1 }}
                             whileTap={isLocked || isCompleted ? {} : { scale: 0.98 }}
+                            transition={{ type: 'spring', stiffness: 400, damping: 25 }}
                             onClick={() => !isLocked && !isCompleted && startAd(videoType)}
                             disabled={isLocked || isCompleted}
-                            className={`flex items-center justify-between w-full p-4 border rounded-2xl transition-all group ${
+                            className={`flex items-center justify-between w-full p-4 border rounded-2xl group transform-gpu ${
                               isCompleted ? 'bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700 opacity-60' :
                               isLocked ? 'bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700 opacity-40 cursor-not-allowed' :
-                              'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 shadow-sm hover:shadow-md cursor-pointer'
+                              'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 shadow-sm cursor-pointer'
                             }`}
                           >
                             <div className="flex items-center gap-4 text-left">
@@ -3069,10 +3081,11 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
                   <div className="grid grid-cols-2 gap-6">
                      {checkinStatus.count < 1 && (
                         <motion.button
-                           whileHover={{ scale: 1.05 }}
+                           whileHover={{ scale: 1.03, y: -2 }}
                            whileTap={{ scale: 0.95 }}
+                           transition={{ type: 'spring', stiffness: 400, damping: 25 }}
                            onClick={startAd}
-                           className="flex flex-col items-center gap-4 p-6 bg-orange-50 dark:bg-orange-900/20 border-2 border-orange-200 dark:border-orange-800 rounded-2xl group shadow-sm hover:shadow-md transition-all"
+                           className="flex flex-col items-center gap-4 p-6 bg-orange-50 dark:bg-orange-900/20 border-2 border-orange-200 dark:border-orange-800 rounded-2xl group shadow-sm transform-gpu"
                         >
                            <div className="bg-orange-500 text-white p-4 rounded-xl shadow-lg group-hover:rotate-12 transition-transform">
                               <Film className="w-8 h-8" />
@@ -3083,10 +3096,11 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
 
                      {checkinStatus.count < 2 && (
                         <motion.button
-                           whileHover={{ scale: 1.05 }}
+                           whileHover={{ scale: 1.03, y: -2 }}
                            whileTap={{ scale: 0.95 }}
+                           transition={{ type: 'spring', stiffness: 400, damping: 25 }}
                            onClick={startAd}
-                           className="flex flex-col items-center gap-4 p-6 bg-blue-50 dark:bg-blue-900/20 border-2 border-blue-200 dark:border-blue-800 rounded-2xl group shadow-sm hover:shadow-md transition-all"
+                           className="flex flex-col items-center gap-4 p-6 bg-blue-50 dark:bg-blue-900/20 border-2 border-blue-200 dark:border-blue-800 rounded-2xl group shadow-sm transform-gpu"
                         >
                            <div className="bg-blue-500 text-white p-4 rounded-xl shadow-lg group-hover:rotate-12 transition-transform">
                               <Film className="w-8 h-8" />
@@ -3206,13 +3220,14 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
         <div className="bg-[#f5f3ff] dark:bg-slate-900 text-slate-800 dark:text-white px-4 py-3 sm:px-6 sm:py-4 flex justify-center items-center gap-3 sm:gap-6 border-b border-purple-100 dark:border-slate-800">
             {/* Premium IP Indicator - Compact and Larger */}
             <motion.button
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
+              whileHover={{ scale: 1.03, y: -1 }}
+              whileTap={{ scale: 0.98 }}
+              transition={{ type: 'spring', stiffness: 400, damping: 25 }}
               onClick={() => { setShowPremiumIPView(true); setIpStep(1); }}
-              className={`px-5 py-2 sm:px-6 sm:py-2.5 rounded-2xl flex items-center gap-2 border-2 shadow-sm transition-all ${
+              className={`px-5 py-2 sm:px-6 sm:py-2.5 rounded-2xl flex items-center gap-2 border-2 shadow-sm transform-gpu ${
                 isPremium 
                   ? "bg-amber-500 border-amber-600 text-white" 
-                  : "bg-white dark:bg-slate-800 hover:bg-purple-50 border-purple-200 dark:border-slate-700 text-purple-700 dark:text-purple-300"
+                  : "bg-white dark:bg-slate-800 border-purple-200 dark:border-slate-700 text-purple-700 dark:text-purple-300"
               }`}
             >
               <Shield className={`w-4 h-4 sm:w-5 sm:h-5 ${isPremium ? "text-white" : "text-purple-500"}`} strokeWidth={3} />
@@ -3221,10 +3236,11 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
               </span>
             </motion.button>
             <motion.button 
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
+              whileHover={{ scale: 1.03, y: -1 }}
+              whileTap={{ scale: 0.98 }}
+              transition={{ type: 'spring', stiffness: 400, damping: 25 }}
               onClick={() => setActiveEarningTab('wallet')}
-              className="flex items-center gap-2 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 px-5 py-2 sm:px-6 sm:py-2.5 rounded-2xl border-2 border-purple-500/30 shadow-md shadow-purple-500/20 transition-all text-white"
+              className="flex items-center gap-2 bg-gradient-to-r from-purple-600 to-indigo-600 px-5 py-2 sm:px-6 sm:py-2.5 rounded-2xl border-2 border-purple-500/30 shadow-md shadow-purple-500/20 transform-gpu text-white transition-colors"
             >
                <Wallet className="w-4 h-4 sm:w-5 sm:h-5 text-yellow-400 fill-current" />
                <span className="text-sm sm:text-base font-black uppercase tracking-tight">My Wallet</span>
@@ -3638,8 +3654,9 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
             <motion.button
               whileHover={{ scale: 1.01, y: -2 }}
               whileTap={{ scale: 0.99 }}
+              transition={{ type: 'spring', stiffness: 400, damping: 25 }}
               onClick={() => setShowLevelView(true)}
-              className="w-full bg-gradient-to-r from-amber-500/10 to-orange-500/10 border-2 border-amber-400/20 rounded-2xl p-4 md:p-6 flex items-center gap-4 transition-all hover:border-amber-400/40"
+              className="w-full bg-gradient-to-r from-amber-500/10 to-orange-500/10 border-2 border-amber-400/20 rounded-2xl p-4 md:p-6 flex items-center gap-4 transform-gpu transition-colors"
             >
               <div className="w-12 h-12 rounded-full bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center shadow-lg shrink-0">
                 <span className="font-black text-white text-lg">{levelInfo.level}</span>
