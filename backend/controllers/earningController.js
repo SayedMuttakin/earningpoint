@@ -421,6 +421,48 @@ exports.claimQuiz = async (req, res) => {
   }
 };
 
+exports.claimGkQuiz = async (req, res) => {
+  try {
+    const user = await User.findById(req.user._id);
+    const now = new Date();
+    
+    if (user.lastGkQuizDate) {
+      if (user.lastGkQuizDate.toDateString() === now.toDateString()) {
+        return res.status(400).json({ message: "You already claimed your Daily GK reward today! Come back tomorrow." });
+      }
+    }
+
+    const reward = 40;
+    processPoints(user, reward);
+    user.lastGkQuizDate = now;
+
+    await user.save();
+
+    await Transaction.create({
+      userId: user._id,
+      type: 'earning',
+      amount: reward,
+      description: `Daily GK Quiz Reward`,
+      status: 'completed'
+    });
+
+    createNotification(user._id, 'Knowledge is Power! 📚', `Correct! You earned ${reward} points from Daily GK Quiz.`, 'earning');
+
+    res.json({ 
+      message: `Rewarded ${reward} points! Daily GK Quiz completed!`,
+      reward: reward,
+      balance: user.balance,
+      points: user.points,
+      lifetimePoints: user.lifetimePoints,
+      lastGkQuizDate: user.lastGkQuizDate
+    });
+
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: error.message || 'Server Error' });
+  }
+};
+
 // ─── Withdrawal ───────────────────────────────────────────────────────────────
 exports.submitWithdrawal = async (req, res) => {
   try {

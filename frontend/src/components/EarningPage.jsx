@@ -8,7 +8,7 @@ import {
   Wallet, History as HistoryIcon, BookOpen, ArrowLeft,
   Crown, Shield, Check, CalendarCheck, Newspaper, Video, Aperture, Search,
   TrendingUp, Star, ChevronRight, ChevronDown, Menu, Home, Bell, User, Settings, LogOut,
-  Clock, AlertCircle, X
+  Clock, AlertCircle, X, ShieldCheck, Zap, Radio, Tv
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -803,7 +803,27 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
         const finalScore = correct ? gkQuizScore + 1 : gkQuizScore;
         
         if (finalScore >= 5) {
-          showToast(`Quiz finished! You scored ${finalScore}/10. +40 Coins added!`, 'success');
+          // Trigger Verified Action for Daily GK Reward
+          handleVerifiedAdAction("Daily GK Reward", async () => {
+            try {
+              const token = localStorage.getItem('token');
+              const response = await fetch(`${API_BASE}/api/earning/gk-claim`, {
+                method: 'POST',
+                headers: { Authorization: `Bearer ${token}` },
+              });
+              const data = await response.json();
+              if (response.ok) {
+                setBalance(data.balance);
+                if (data.coins !== undefined) setCoins(data.coins);
+                if (data.lifetimeCoins !== undefined) setLifetimeCoins(data.lifetimeCoins);
+                showToast(`🎉 Daily GK completed! You won ${data.reward} Coins!`, "success");
+              } else {
+                showToast(data.message || 'Failed to claim GK reward.', "error");
+              }
+            } catch (err) {
+              showToast('Network error.', "error");
+            }
+          });
         } else {
           showToast(`Quiz finished! You scored ${finalScore}/10. You need at least 5 correct to win Coins!`, 'error');
         }
@@ -1035,7 +1055,10 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
       if (parseInt(answer) === (num1 + num2)) {
         setShowAdVerificationModal(false);
         setAnswer('');
-        if (onSuccess) onSuccess();
+        // Ad trigger AFTER verification, BEFORE action
+        AdMobService.showInterstitial(() => {
+          if (onSuccess) onSuccess();
+        });
       } else {
         showToast("Incorrect answer! Try again.", "error");
         setAnswer('');
@@ -1090,6 +1113,18 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
         </motion.div>
       </motion.div>
     );
+  };
+
+  const handleVerifiedAdAction = (title, onVerified) => {
+    const n1 = Math.floor(Math.random() * 20) + 1;
+    const n2 = Math.floor(Math.random() * 20) + 1;
+    setAdVerificationData({
+      num1: n1,
+      num2: n2,
+      title: title,
+      onSuccess: onVerified
+    });
+    setShowAdVerificationModal(true);
   };
 
   const OptionIntroScreen = () => {
@@ -2734,13 +2769,13 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
                 </div>
 
                 {/* Wheel */}
-                <div className="relative w-64 h-64 sm:w-72 sm:h-72">
+                <div className="relative w-72 h-72 sm:w-96 sm:h-96">
                   {/* Pointer */}
-                  <div className="absolute -top-3 left-1/2 -translate-x-1/2 z-20 w-0 h-0 border-l-[14px] border-l-transparent border-r-[14px] border-r-transparent border-t-[28px] border-t-red-500 drop-shadow-lg"></div>
+                  <div className="absolute -top-4 left-1/2 -translate-x-1/2 z-20 w-0 h-0 border-l-[16px] border-l-transparent border-r-[16px] border-r-transparent border-t-[32px] border-t-rose-500 drop-shadow-xl"></div>
 
                   <motion.div
                     animate={isSpinning ? { rotate: [0, spinReward?.totalRotation || 1800] } : {}}
-                    transition={{ duration: 4, ease: [0.2, 0.8, 0.3, 1] }}
+                    transition={{ duration: 4.5, ease: [0.2, 0.8, 0.3, 1] }}
                     onAnimationComplete={() => {
                       if (isSpinning && spinReward) {
                         setIsSpinning(false);
@@ -2774,7 +2809,7 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
                         })();
                       }
                     }}
-                    className="w-full h-full rounded-full border-[6px] border-amber-400 dark:border-amber-500 shadow-2xl overflow-hidden relative"
+                    className="w-full h-full rounded-full border-[8px] border-amber-400 dark:border-amber-500 shadow-2xl overflow-hidden relative"
                     style={{ background: `conic-gradient(
                       #ef4444 0deg 36deg, #f97316 36deg 72deg, #eab308 72deg 108deg, #22c55e 108deg 144deg,
                       #06b6d4 144deg 180deg, #3b82f6 180deg 216deg, #8b5cf6 216deg 252deg, #ec4899 252deg 288deg,
@@ -2784,10 +2819,10 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
                     {[10, 20, 30, 40, 50, 60, 70, 80, 90, 100].map((pts, i) => (
                       <div
                         key={i}
-                        className="absolute font-black text-white text-xs sm:text-sm drop-shadow-md"
+                        className="absolute font-black text-white text-sm sm:text-base drop-shadow-md"
                         style={{
                           top: '50%', left: '50%',
-                          transform: `rotate(${i * 36 + 18}deg) translateY(-80px) rotate(-${i * 36 + 18}deg)`,
+                          transform: `rotate(${i * 36 + 18}deg) translateY(-110px) rotate(-${i * 36 + 18}deg)`,
                           transformOrigin: '0 0',
                           marginTop: '-8px', marginLeft: '-12px'
                         }}
@@ -2796,8 +2831,8 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
                       </div>
                     ))}
                     <div className="absolute inset-0 flex items-center justify-center">
-                      <div className="w-14 h-14 bg-white dark:bg-slate-900 rounded-full shadow-lg flex items-center justify-center border-4 border-amber-400">
-                        <span className="font-black text-amber-500 text-sm">SPIN</span>
+                      <div className="w-16 h-16 sm:w-20 sm:h-20 bg-white dark:bg-slate-900 rounded-full shadow-lg flex items-center justify-center border-4 border-amber-400">
+                        <span className="font-black text-amber-500 text-sm sm:text-base tracking-tighter">SPIN</span>
                       </div>
                     </div>
                   </motion.div>
@@ -2814,8 +2849,8 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
                       return;
                     }
                     
-                    // Ad before every spin
-                    AdMobService.showInterstitial(() => {
+                    // Unified Verified Action logic
+                    handleVerifiedAdAction("Wheel Spin", () => {
                       const segments = globalSettings.fortuneWheelConfig?.coins || [10, 20, 30, 40, 50, 60, 70, 80, 90, 100];
                       const randomIdx = Math.floor(Math.random() * segments.length);
                       const segmentAngle = randomIdx * (360 / segments.length) + (360 / segments.length / 2);
@@ -2961,31 +2996,35 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
                 whileTap={activeScratchCard.isRevealed ? {} : { scale: 0.98 }}
                 onClick={async () => {
                   if (activeScratchCard.isRevealed || isLoading) return;
-                  setIsLoading(true);
-                  try {
-                    const token = localStorage.getItem('token');
-                    const response = await fetch(`${API_BASE}/api/earning/scratch-claim`, {
-                      method: 'POST',
-                      headers: { Authorization: `Bearer ${token}` },
-                    });
-                    const data = await response.json();
-                    if (response.ok) {
-                      setBalance(data.balance);
-                      if (data.coins !== undefined) setCoins(data.coins);
-                      else if (data.points !== undefined) setCoins(data.points);
-                      if (data.lifetimeCoins !== undefined) setLifetimeCoins(data.lifetimeCoins);
-                      else if (data.lifetimePoints !== undefined) setLifetimeCoins(data.lifetimePoints);
-                      setScratchStatus({ lastScratchDate: data.lastScratchDate, count: data.count });
-                      setActiveScratchCard(prev => ({ ...prev, isRevealed: true, reward: data.reward }));
-                      showToast(`🎉 Congratulations! You won ${data.reward} Coins!`, "success");
-                    } else {
-                      showToast(data.message || 'Failed to scratch.', "error");
+                  
+                  // Unified Verified Action logic
+                  handleVerifiedAdAction("Scratch Reward", async () => {
+                    setIsLoading(true);
+                    try {
+                      const token = localStorage.getItem('token');
+                      const response = await fetch(`${API_BASE}/api/earning/scratch-claim`, {
+                        method: 'POST',
+                        headers: { Authorization: `Bearer ${token}` },
+                      });
+                      const data = await response.json();
+                      if (response.ok) {
+                        setBalance(data.balance);
+                        if (data.coins !== undefined) setCoins(data.coins);
+                        else if (data.points !== undefined) setCoins(data.points);
+                        if (data.lifetimeCoins !== undefined) setLifetimeCoins(data.lifetimeCoins);
+                        else if (data.lifetimePoints !== undefined) setLifetimeCoins(data.lifetimePoints);
+                        setScratchStatus({ lastScratchDate: data.lastScratchDate, count: data.count });
+                        setActiveScratchCard(prev => ({ ...prev, isRevealed: true, reward: data.reward }));
+                        showToast(`🎉 Congratulations! You won ${data.reward} Coins!`, "success");
+                      } else {
+                        showToast(data.message || 'Failed to scratch.', "error");
+                      }
+                    } catch (err) {
+                      showToast('Network error.', "error");
+                    } finally {
+                      setIsLoading(false);
                     }
-                  } catch (err) {
-                    showToast('Network error.', "error");
-                  } finally {
-                    setIsLoading(false);
-                  }
+                  });
                 }}
                 disabled={activeScratchCard.isRevealed || isLoading}
                 className="relative w-full max-w-sm aspect-square max-h-[350px] overflow-hidden rounded-md shadow-sm border border-slate-300 bg-emerald-700"
@@ -3123,23 +3162,25 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
                     const correct = quizSelected === quizQuestion.answer;
                     if (correct) {
                       setQuizScore(prev => prev + 1);
-                      // Claim reward from backend
-                      try {
-                        const token = localStorage.getItem('token');
-                        const response = await fetch(`${API_BASE}/api/earning/quiz-claim`, {
-                          method: 'POST',
-                          headers: { Authorization: `Bearer ${token}` },
-                        });
-                        const data = await response.json();
-                        if (response.ok) {
-                          setBalance(data.balance);
-                          if (data.coins !== undefined) setCoins(data.coins);
-                          if (data.lifetimeCoins !== undefined) setLifetimeCoins(data.lifetimeCoins);
-                          setQuizStatus({ lastQuizDate: data.lastQuizDate, count: data.count });
+                      // Claim reward from backend — with mandatory Ad trigger
+                      AdMobService.showInterstitial(async () => {
+                        try {
+                          const token = localStorage.getItem('token');
+                          const response = await fetch(`${API_BASE}/api/earning/quiz-claim`, {
+                            method: 'POST',
+                            headers: { Authorization: `Bearer ${token}` },
+                          });
+                          const data = await response.json();
+                          if (response.ok) {
+                            setBalance(data.balance);
+                            if (data.coins !== undefined) setCoins(data.coins);
+                            if (data.lifetimeCoins !== undefined) setLifetimeCoins(data.lifetimeCoins);
+                            setQuizStatus({ lastQuizDate: data.lastQuizDate, count: data.count });
+                          }
+                        } catch (err) {
+                          console.error('Quiz claim error:', err);
                         }
-                      } catch (err) {
-                        console.error('Quiz claim error:', err);
-                      }
+                      });
                     }
                   }}
                   className={`w-full max-w-lg py-4 rounded-full text-lg font-black shadow-lg ${

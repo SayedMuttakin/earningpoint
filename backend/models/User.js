@@ -98,6 +98,10 @@ const UserSchema = new mongoose.Schema({
     type: Number,
     default: 0,
   },
+  lastGkQuizDate: {
+    type: Date,
+    default: null,
+  },
   referralCode: {
     type: String,
     unique: true,
