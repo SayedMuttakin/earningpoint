@@ -1,8 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { AdMobService } from '../utils/admob';
 import { API_BASE } from '../config';
-import { 
-  Medal, Globe, Film, Gamepad2, 
+import {
+  Medal, Globe, Film, Gamepad2,
   LifeBuoy, Gift, MonitorPlay, Users,
   Calculator, Binary, Type, HelpCircle,
   Wallet, History as HistoryIcon, BookOpen, ArrowLeft,
@@ -1248,11 +1249,11 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
               <ArrowLeft className="w-5 h-5" />
             </button>
 
-            <motion.h1
+            <h1
               className="text-white font-black text-base tracking-tight"
             >
               {item.name}
-            </motion.h1>
+            </h1>
 
             {/* Menu dropdown */}
             <div className="relative">
@@ -1583,8 +1584,6 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
                       return (
                         <button
                           key={slot.id}
-                          whileHover={isLocked || isCompleted ? {} : { scale: 1.02 }}
-                          whileTap={isLocked || isCompleted ? {} : { scale: 0.98 }}
                           onClick={() => handleMultiAdSlotClick(slot.id)}
                           disabled={isLocked || isCompleted || isLoading}
                           className={`flex items-center justify-between w-full p-4 border-2 rounded-2xl group transform-gpu ${
@@ -1754,14 +1753,12 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
                 Earn coins through various tasks and convert them manually to your balance whenever you reach 1000 coins!
               </p>
 
-              <button 
+              <button
                 disabled={isLoading || coins < 1000}
-                whileHover={coins >= 1000 ? { scale: 1.02 } : {}}
-                whileTap={coins >= 1000 ? { scale: 0.98 } : {}}
                 onClick={handleConvertCoins}
                 className={`w-full py-4 rounded-full font-black text-sm uppercase tracking-wide flex items-center justify-center gap-2 transform-gpu ${
-                  coins >= 1000 
-                  ? "bg-gradient-to-r from-amber-500 to-orange-400 text-white shadow-lg shadow-amber-500/20 cursor-pointer" 
+                  coins >= 1000
+                  ? "bg-gradient-to-r from-amber-500 to-orange-400 text-white shadow-lg shadow-amber-500/20 cursor-pointer"
                   : "bg-slate-700 text-slate-500 cursor-not-allowed"
                 }`}
               >
@@ -1810,8 +1807,8 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
                 </div>
                 <div className="h-3 w-full bg-slate-900 rounded-full overflow-hidden">
                   <div
-                    animate={{ width: `${progressPercent}%` }}
                     className="h-full bg-gradient-to-r from-amber-400 to-orange-500 rounded-full"
+                    style={{ width: `${progressPercent}%` }}
                   />
                 </div>
                 {!levelInfo.isMax && (
@@ -2432,8 +2429,6 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
                         return (
                           <button
                             key={adInfo.id}
-                            whileHover={isLocked || isCompleted ? {} : { scale: 1.03 }}
-                            whileTap={isLocked || isCompleted ? {} : { scale: 0.97 }}
                             onClick={() => !isLocked && !isCompleted && startAd(videoType)}
                             disabled={isLocked || isCompleted}
                             className={`flex items-center justify-between w-full p-4 border rounded-2xl group transform-gpu ${
@@ -2546,7 +2541,6 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
                   </div>
 
                   <div
-                    animate={isSpinning ? { rotate: [0, spinReward?.totalRotation || 1800] } : {}}
                     onAnimationComplete={() => {
                       if (isSpinning && spinReward) {
                         setIsSpinning(false);
@@ -2689,8 +2683,6 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
                       return (
                         <button
                           key={i}
-                          whileHover={isLocked || isScratched ? {} : { scale: 1.03 }}
-                          whileTap={isLocked || isScratched ? {} : { scale: 0.97 }}
                           disabled={isLocked || isScratched || isLoading}
                           onClick={() => {
                             if (isLocked || isScratched) return;
@@ -2765,8 +2757,6 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
 
               {/* Scratch Area */}
               <button
-                whileHover={activeScratchCard.isRevealed ? {} : { scale: 1.02 }}
-                whileTap={activeScratchCard.isRevealed ? {} : { scale: 0.98 }}
                 onClick={async () => {
                   if (activeScratchCard.isRevealed || isLoading) return;
                   
@@ -2897,8 +2887,8 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
                   <p className="text-xs text-slate-400 dark:text-slate-500 font-medium">Daily Limit: {quizStatus.count}/10 Complete</p>
                   <div className="mt-2 w-full bg-slate-100 dark:bg-slate-800 rounded-full h-1.5 overflow-hidden">
                     <div
-                      animate={{ width: `${(quizStatus.count / 10) * 100}%` }}
                       className="h-full bg-brand-500"
+                      style={{ width: `${(quizStatus.count / 10) * 100}%` }}
                     />
                   </div>
                 </div>
@@ -2970,8 +2960,6 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
                   return (
                     <button
                       key={idx}
-                      whileHover={quizAnswered ? {} : { scale: 1.02 }}
-                      whileTap={quizAnswered ? {} : { scale: 0.98 }}
                       disabled={quizAnswered}
                       onClick={() => setQuizSelected(option)}
                       className={`w-full py-4 px-6 rounded-full text-center text-lg font-semibold transition-all ${optionStyle}`}
@@ -3656,8 +3644,8 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
                 <div className="flex items-center gap-2 mt-1">
                     <div className="flex-1 h-2 bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden">
                       <div
-                        animate={{ width: `${progressPercent}%` }}
-                        className="h-full bg-gradient-to-r from-amber-400 to-orange-500 rounded-full" 
+                        className="h-full bg-gradient-to-r from-amber-400 to-orange-500 rounded-full"
+                        style={{ width: `${progressPercent}%` }}
                       />
                     </div>
                   <span className="text-[11px] text-slate-500 font-bold shrink-0">
