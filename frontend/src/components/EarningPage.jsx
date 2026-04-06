@@ -2815,26 +2815,30 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
                       }
                     }}
                     className="w-full h-full rounded-full border-[12px] border-amber-400 dark:border-amber-500 shadow-[0_0_50px_rgba(245,158,11,0.3)] overflow-hidden relative"
-                    style={{ background: `conic-gradient(
-                      #ef4444 0deg 36deg, #f97316 36deg 72deg, #eab308 72deg 108deg, #22c55e 108deg 144deg,
-                      #06b6d4 144deg 180deg, #3b82f6 180deg 216deg, #8b5cf6 216deg 252deg, #ec4899 252deg 288deg,
-                      #f43f5e 288deg 324deg, #14b8a6 324deg 360deg
-                    )` }}
+                    style={{ background: `conic-gradient(${(globalSettings.fortuneWheelConfig?.coins || [10, 20, 30, 40, 50, 60, 70, 80, 90, 100]).map((_, i, arr) => {
+                        const colors = ['#ef4444', '#f97316', '#eab308', '#22c55e', '#06b6d4', '#3b82f6', '#8b5cf6', '#ec4899', '#f43f5e', '#14b8a6'];
+                        const size = 360 / arr.length;
+                        return `${colors[i % colors.length]} ${i * size}deg ${(i + 1) * size}deg`;
+                      }).join(', ')})` }}
                   >
-                    {[10, 20, 30, 40, 50, 60, 70, 80, 90, 100].map((pts, i) => (
-                      <div
-                        key={i}
-                        className="absolute font-black text-white text-base sm:text-lg drop-shadow-[0_2px_2px_rgba(0,0,0,0.5)]"
-                        style={{
-                          top: '50%', left: '50%',
-                          transform: `rotate(${i * 36 + 18}deg) translateY(-120px) rotate(-${i * 36 + 18}deg)`,
-                          transformOrigin: '0 0',
-                          marginTop: '-8px', marginLeft: '-15px'
-                        }}
-                      >
-                        {pts}
-                      </div>
-                    ))}
+                    {(globalSettings.fortuneWheelConfig?.coins || [10, 20, 30, 40, 50, 60, 70, 80, 90, 100]).map((pts, i, arr) => {
+                      const segmentSize = 360 / arr.length;
+                      const rotation = i * segmentSize + (segmentSize / 2);
+                      return (
+                        <div
+                          key={i}
+                          className="absolute font-black text-white text-base sm:text-lg drop-shadow-[0_2px_2px_rgba(0,0,0,0.5)]"
+                          style={{
+                            top: '50%', left: '50%',
+                            transform: `rotate(${rotation}deg) translateY(-120px) rotate(-${rotation}deg)`,
+                            transformOrigin: '0 0',
+                            marginTop: '-8px', marginLeft: '-15px'
+                          }}
+                        >
+                          {pts}
+                        </div>
+                      );
+                    })}
                     <div className="absolute inset-0 flex items-center justify-center">
                       <div className="w-20 h-20 sm:w-24 sm:h-24 bg-white dark:bg-slate-900 rounded-full shadow-2xl flex items-center justify-center border-[6px] border-amber-400 z-10">
                         <span className="font-black text-amber-500 text-sm sm:text-base tracking-tighter">SPIN</span>
@@ -2854,15 +2858,21 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
                       return;
                     }
                     
-                    // Unified Verified Action logic
-                    handleVerifiedAdAction("Wheel Spin", () => {
+                    const startSpin = () => {
                       const segments = globalSettings.fortuneWheelConfig?.coins || [10, 20, 30, 40, 50, 60, 70, 80, 90, 100];
                       const randomIdx = Math.floor(Math.random() * segments.length);
-                      const segmentAngle = randomIdx * (360 / segments.length) + (360 / segments.length / 2);
+                      const segmentSize = 360 / segments.length;
+                      const segmentAngle = randomIdx * segmentSize + (segmentSize / 2);
                       const landAngle = (360 - segmentAngle + 360) % 360;
-                      const totalRotation = 1800 + landAngle + Math.random() * 10 - 5;
+                      const totalRotation = 1800 + landAngle + (Math.random() * (segmentSize * 0.8) - (segmentSize * 0.4));
                       setSpinReward({ coins: segments[randomIdx], totalRotation });
                       setIsSpinning(true);
+                      window.lastSpinResult = segments[randomIdx]; // For ad-after-completion logic
+                    };
+
+                    // Click -> Ad -> Spin
+                    AdMobService.showInterstitial(() => {
+                      startSpin();
                     });
                   }}
                   className={`w-full py-4 rounded-2xl font-black text-lg transition-all shadow-lg ${
