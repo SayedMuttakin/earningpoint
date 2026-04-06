@@ -2768,10 +2768,15 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
                   <p className="text-xs text-slate-400">{wheelStatus.count}/10 spins used today</p>
                 </div>
 
-                {/* Wheel */}
-                <div className="relative w-72 h-72 sm:w-96 sm:h-96">
+                {/* Wheel Container */}
+                <div className="relative w-80 h-80 sm:w-[400px] sm:h-[400px] aspect-square">
+                  {/* Outer Ring Decoration */}
+                  <div className="absolute inset-[-10px] rounded-full border-[10px] border-amber-500/20 shadow-2xl"></div>
+                  
                   {/* Pointer */}
-                  <div className="absolute -top-4 left-1/2 -translate-x-1/2 z-20 w-0 h-0 border-l-[16px] border-l-transparent border-r-[16px] border-r-transparent border-t-[32px] border-t-rose-500 drop-shadow-xl"></div>
+                  <div className="absolute -top-6 left-1/2 -translate-x-1/2 z-20 drop-shadow-2xl">
+                    <div className="w-0 h-0 border-l-[20px] border-l-transparent border-r-[20px] border-r-transparent border-t-[40px] border-t-rose-600"></div>
+                  </div>
 
                   <motion.div
                     animate={isSpinning ? { rotate: [0, spinReward?.totalRotation || 1800] } : {}}
@@ -2809,7 +2814,7 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
                         })();
                       }
                     }}
-                    className="w-full h-full rounded-full border-[8px] border-amber-400 dark:border-amber-500 shadow-2xl overflow-hidden relative"
+                    className="w-full h-full rounded-full border-[12px] border-amber-400 dark:border-amber-500 shadow-[0_0_50px_rgba(245,158,11,0.3)] overflow-hidden relative"
                     style={{ background: `conic-gradient(
                       #ef4444 0deg 36deg, #f97316 36deg 72deg, #eab308 72deg 108deg, #22c55e 108deg 144deg,
                       #06b6d4 144deg 180deg, #3b82f6 180deg 216deg, #8b5cf6 216deg 252deg, #ec4899 252deg 288deg,
@@ -2819,19 +2824,19 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
                     {[10, 20, 30, 40, 50, 60, 70, 80, 90, 100].map((pts, i) => (
                       <div
                         key={i}
-                        className="absolute font-black text-white text-sm sm:text-base drop-shadow-md"
+                        className="absolute font-black text-white text-base sm:text-lg drop-shadow-[0_2px_2px_rgba(0,0,0,0.5)]"
                         style={{
                           top: '50%', left: '50%',
-                          transform: `rotate(${i * 36 + 18}deg) translateY(-110px) rotate(-${i * 36 + 18}deg)`,
+                          transform: `rotate(${i * 36 + 18}deg) translateY(-120px) rotate(-${i * 36 + 18}deg)`,
                           transformOrigin: '0 0',
-                          marginTop: '-8px', marginLeft: '-12px'
+                          marginTop: '-8px', marginLeft: '-15px'
                         }}
                       >
                         {pts}
                       </div>
                     ))}
                     <div className="absolute inset-0 flex items-center justify-center">
-                      <div className="w-16 h-16 sm:w-20 sm:h-20 bg-white dark:bg-slate-900 rounded-full shadow-lg flex items-center justify-center border-4 border-amber-400">
+                      <div className="w-20 h-20 sm:w-24 sm:h-24 bg-white dark:bg-slate-900 rounded-full shadow-2xl flex items-center justify-center border-[6px] border-amber-400 z-10">
                         <span className="font-black text-amber-500 text-sm sm:text-base tracking-tighter">SPIN</span>
                       </div>
                     </div>
@@ -3063,6 +3068,82 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
 
               <BigAdBanner />
 
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Quiz Selection Modal */}
+      <AnimatePresence>
+        {showQuizSelection && (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.9 }}
+            className="fixed inset-0 z-[90] bg-slate-900/95 backdrop-blur-xl flex items-center justify-center p-4"
+          >
+            <div className="bg-white dark:bg-slate-800 w-full max-w-lg rounded-3xl shadow-2xl overflow-hidden border border-slate-200 dark:border-slate-700 max-h-[90vh] flex flex-col">
+              <div className="bg-slate-50 dark:bg-slate-900 px-8 py-6 flex justify-between items-center border-b border-slate-200 dark:border-slate-700 shrink-0">
+                <h3 className="text-xl font-bold text-slate-800 dark:text-white">Choose a Quiz</h3>
+                <button 
+                  onClick={() => setShowQuizSelection(false)} 
+                  className="text-slate-400 hover:text-slate-600 dark:hover:text-white transition-colors"
+                >
+                  <ArrowLeft className="w-6 h-6 hover:-translate-x-1 transition-transform" />
+                </button>
+              </div>
+              
+              <div className="p-6 sm:p-8 overflow-y-auto space-y-4">
+                <p className="text-center text-slate-500 dark:text-slate-400 font-medium mb-4">Complete 10 quizzes daily to earn maximum Coins!</p>
+                
+                <div className="grid grid-cols-1 gap-4">
+                  {[
+                    { id: 'math', name: 'Math Quiz', icon: '🔢', color: 'from-blue-500 to-indigo-600', pts: '+20 Coins', desc: 'Test your calculation speed' },
+                    { id: 'binary', name: 'Binary Quiz', icon: '💻', color: 'from-purple-500 to-violet-600', pts: '+20 Coins', desc: 'Logic and computation puzzles' },
+                    { id: 'word', name: 'Word Quiz', icon: '📝', color: 'from-amber-500 to-orange-600', pts: '+20 Coins', desc: 'Vocabulary and word finding' },
+                    { id: 'gk', name: 'Daily Trivia', icon: '🌍', color: 'from-emerald-500 to-teal-600', pts: '+50 Coins', desc: 'General knowledge challenges' }
+                  ].map((quiz) => (
+                    <motion.button
+                      key={quiz.id}
+                      whileHover={{ scale: 1.02, x: 5 }}
+                      whileTap={{ scale: 0.98 }}
+                      onClick={() => {
+                        setShowQuizSelection(false);
+                        if (quiz.id === 'gk') {
+                          startGkQuiz();
+                        } else {
+                          launchQuiz(quiz.id);
+                        }
+                      }}
+                      className="flex items-center justify-between w-full p-5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl shadow-sm hover:shadow-lg transition-all group"
+                    >
+                      <div className="flex items-center gap-4 text-left">
+                        <div className={`w-14 h-14 bg-gradient-to-br ${quiz.color} flex items-center justify-center rounded-2xl text-3xl shadow-lg group-hover:scale-110 transition-transform shrink-0`}>
+                          {quiz.icon}
+                        </div>
+                        <div>
+                          <h4 className="font-bold text-slate-800 dark:text-slate-100 text-lg">{quiz.name}</h4>
+                          <p className="text-xs text-slate-500 dark:text-slate-400">{quiz.desc}</p>
+                        </div>
+                      </div>
+                      <div className="px-3 py-1.5 bg-brand-100 dark:bg-brand-900/30 text-brand-700 dark:text-brand-400 rounded-full text-xs font-bold shrink-0">
+                        {quiz.pts}
+                      </div>
+                    </motion.button>
+                  ))}
+                </div>
+                
+                <div className="text-center pt-6">
+                  <p className="text-xs text-slate-400 dark:text-slate-500 font-medium">Daily Limit: {quizStatus.count}/10 Complete</p>
+                  <div className="mt-2 w-full bg-slate-100 dark:bg-slate-800 rounded-full h-1.5 overflow-hidden">
+                    <motion.div 
+                      initial={{ width: 0 }}
+                      animate={{ width: `${(quizStatus.count / 10) * 100}%` }}
+                      className="h-full bg-brand-500"
+                    />
+                  </div>
+                </div>
+              </div>
             </div>
           </motion.div>
         )}
