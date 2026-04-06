@@ -10,6 +10,8 @@ import {
   TrendingUp, Star, ChevronRight, ChevronDown, Menu, Home, Bell, User, Settings, LogOut,
   Clock, AlertCircle, X, ShieldCheck, Zap, Radio, Tv
 } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+
 const gkQuizDB = [
   { id: 1, image: 'https://upload.wikimedia.org/wikipedia/commons/b/b4/Lionel-Messi-Argentina-2022-FIFA-World-Cup_%28cropped%29.jpg', answer: 'Lionel Messi', options: ['Lionel Messi', 'Cristiano Ronaldo', 'Neymar Jr', 'Angel Di Maria'] },
   { id: 2, image: 'https://upload.wikimedia.org/wikipedia/commons/8/8c/Cristiano_Ronaldo_2018.jpg', answer: 'Cristiano Ronaldo', options: ['Lionel Messi', 'Cristiano Ronaldo', 'Gareth Bale', 'Karim Benzema'] },
@@ -65,11 +67,13 @@ const BigAdBanner = () => {
             </p>
           </div>
 
-          <button
+          <motion.button 
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
             className="px-8 py-2.5 rounded-full bg-blue-500 text-white text-xs font-black shadow-lg shadow-blue-500/30 transform-gpu"
           >
             AD UNIT ACTIVE
-          </button>
+          </motion.button>
         </div>
 
         {/* Ad Attribution */}
@@ -193,7 +197,15 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
     }
   });
 
-
+  // Ad Verification Modal State
+  const [showAdVerificationModal, setShowAdVerificationModal] = React.useState(false);
+  const [adVerificationData, setAdVerificationData] = React.useState({
+    num1: 0,
+    num2: 0,
+    userAnswer: '',
+    onSuccess: null,
+    title: ''
+  });
 
   const fetchGlobalSettings = async () => {
     try {
@@ -1028,11 +1040,87 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
   // ==========================================
   // Option Intro Screen (animated detail page)
   // ==========================================
+  // Sub-component for ad interaction verification
+  const AdVerificationModal = () => {
+    if (!showAdVerificationModal) return null;
+    const { num1, num2, title, onSuccess } = adVerificationData;
+    const [answer, setAnswer] = React.useState('');
+
+    const handleSubmit = (e) => {
+      e.preventDefault();
+      if (parseInt(answer) === (num1 + num2)) {
+        setShowAdVerificationModal(false);
+        setAnswer('');
+        // Ad trigger AFTER verification, BEFORE action
+        AdMobService.showInterstitial(() => {
+          if (onSuccess) onSuccess();
+        });
+      } else {
+        showToast("Incorrect answer! Try again.", "error");
+        setAnswer('');
+      }
+    };
+
+    return (
+      <motion.div
+        initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+        className="fixed inset-0 z-[200] bg-slate-950/90 backdrop-blur-md flex items-center justify-center p-4"
+      >
+        <motion.div
+          initial={{ scale: 0.9, opacity: 0, y: 20 }} animate={{ scale: 1, opacity: 1, y: 0 }}
+          className="bg-white dark:bg-slate-900 w-full max-w-sm rounded-[2.5rem] p-8 shadow-2xl border border-slate-200 dark:border-slate-800 flex flex-col items-center"
+        >
+          <div className="w-16 h-16 bg-blue-500/20 rounded-2xl flex items-center justify-center mb-6 shadow-lg shadow-blue-500/10">
+            <ShieldCheck className="w-8 h-8 text-blue-500" />
+          </div>
+          <h2 className="text-2xl font-black text-slate-800 dark:text-white mb-2">{title}</h2>
+          <p className="text-slate-500 dark:text-slate-400 text-sm font-medium mb-8 text-center uppercase tracking-widest">Verification Quiz</p>
+          
+          <form onSubmit={handleSubmit} className="w-full space-y-6">
+            <div className="flex flex-col items-center gap-4">
+              <div className="text-3xl font-black text-slate-900 dark:text-white bg-slate-100 dark:bg-slate-800 px-8 py-4 rounded-3xl border border-slate-200 dark:border-slate-700 shadow-inner">
+                {num1} + {num2} = ?
+              </div>
+              <input
+                type="number"
+                autoFocus
+                value={answer}
+                onChange={(e) => setAnswer(e.target.value)}
+                placeholder="Result"
+                className="w-full bg-slate-50 dark:bg-slate-800 border-2 border-slate-200 dark:border-slate-700 focus:border-blue-500 rounded-2xl p-4 text-center text-xl font-black text-slate-900 dark:text-white outline-none transition-all shadow-md placeholder:text-slate-400"
+              />
+            </div>
+            <div className="flex gap-3">
+              <button 
+                type="button" 
+                onClick={() => setShowAdVerificationModal(false)}
+                className="flex-1 py-4 bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-400 font-bold rounded-2xl transition-all hover:bg-slate-300 dark:hover:bg-slate-700"
+              >
+                CANCEL
+              </button>
+              <button 
+                type="submit" 
+                className="flex-[2] py-4 bg-gradient-to-r from-blue-600 to-indigo-500 text-white font-black rounded-2xl shadow-lg shadow-blue-600/30 transition-all hover:scale-[1.02] active:scale-[0.98]"
+              >
+                VERIFY & CONTINUE
+              </button>
+            </div>
+          </form>
+        </motion.div>
+      </motion.div>
+    );
+  };
+
   const handleVerifiedAdAction = (title, onVerified) => {
-    // Verification removed. Directly show interstitial ad and call onVerified.
-    AdMobService.showInterstitial(() => {
-      if (onVerified) onVerified();
+    const n1 = Math.floor(Math.random() * 20) + 1;
+    const n2 = Math.floor(Math.random() * 20) + 1;
+    setAdVerificationData({
+      num1: n1,
+      num2: n2,
+      title: title,
+      onSuccess: onVerified
     });
+    setShowAdVerificationModal(true);
   };
 
   const OptionIntroScreen = () => {
@@ -1069,7 +1157,7 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
       return (
         <>
           {dots.map((dot, i) => (
-            <div
+            <motion.div
               key={i}
               className="absolute rounded-full opacity-20 animate-float"
               style={{
@@ -1104,12 +1192,12 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
 
       if (animType === 'quiz') return (
         <div className="relative flex items-center justify-center">
-          <div className="animate-scale-pulse"  >
+          <motion.div className="animate-scale-pulse"  >
             {bigIcon}
-          </div>
+          </motion.div>
           {/* orbiting dots */}
           {[0, 1, 2].map(i => (
-            <div
+            <motion.div
               key={i}
               className="absolute w-4 h-4 rounded-full bg-white/60 animate-float"
               style={{ transformOrigin: `${70 + i * 10}px center`, originX: `${70 + i * 10}px` }}
@@ -1117,32 +1205,32 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
           ))}
           {/* question marks floating */}
           {['?', '!', '?'].map((sym, i) => (
-            <div
+            <motion.div
               key={i}
               className="absolute text-white/60 font-black text-2xl z-20 animate-float"
               style={{ top: `${[5, 75, 25][i]}%`, left: `${[0, 85, 95][i]}%` }}
-            >{sym}</div>
+            >{sym}</motion.div>
           ))}
         </div>
       );
 
       if (animType === 'spin') return (
         <div className="relative flex items-center justify-center">
-          <div className="animate-spin-slow"  >
+          <motion.div className="animate-spin-slow"  >
             <div className="w-48 h-48 rounded-full border-4 border-dashed border-white/20 absolute -inset-6" />
             {bigIcon}
-          </div>
+          </motion.div>
         </div>
       );
 
       if (animType === 'video') return (
         <div className="relative flex items-center justify-center">
-          <div className="animate-scale-pulse"  >
+          <motion.div className="animate-scale-pulse"  >
             {bigIcon}
-          </div>
+          </motion.div>
           {/* pulse rings */}
           {[1, 2, 3].map(i => (
-            <div
+            <motion.div
               key={i}
               className="absolute rounded-full border-2 border-white/20 animate-float"
               style={{ width: 36 * i * 1.5, height: 36 * i * 1.5 }}
@@ -1153,59 +1241,59 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
 
       if (animType === 'checkin') return (
         <div className="relative flex items-center justify-center">
-          <div className="animate-scale-pulse"  >
+          <motion.div className="animate-scale-pulse"  >
             {bigIcon}
-          </div>
-          <div
+          </motion.div>
+          <motion.div
             className="absolute -top-4 -right-4 text-4xl z-20 bg-emerald-500 rounded-full w-12 h-12 flex items-center justify-center shadow-lg border-2 border-white/20 animate-scale-pulse"
-          ><span className="text-white drop-shadow-md pb-1">✓</span></div>
+          ><span className="text-white drop-shadow-md pb-1">✓</span></motion.div>
         </div>
       );
 
       if (animType === 'scratch') return (
         <div className="relative flex items-center justify-center">
-          <div className="animate-scale-pulse"  >
+          <motion.div className="animate-scale-pulse"  >
             {bigIcon}
-          </div>
+          </motion.div>
           {/* scratch sparkles */}
           {['✨', '⭐', '💫'].map((s, i) => (
-            <div
+            <motion.div
               key={i}
               className="absolute text-2xl z-20 animate-float"
               style={{ top: ['10%', '60%', '20%'][i], left: ['90%', '-10%', '80%'][i] }}
-            >{s}</div>
+            >{s}</motion.div>
           ))}
         </div>
       );
 
       if (animType === 'refer') return (
         <div className="relative flex items-center justify-center">
-          <div className="animate-scale-pulse"  >
+          <motion.div className="animate-scale-pulse"  >
             {bigIcon}
-          </div>
+          </motion.div>
           {/* connection lines pulse */}
           {[-1, 0, 1].map(i => (
-            <div
+            <motion.div
               key={i}
               className="absolute w-10 h-10 rounded-full bg-indigo-500 flex items-center justify-center text-xl z-20 shadow-lg border border-white/20 animate-float"
               style={{ left: `${30 + i * 40}%`, top: i === 0 ? '-20%' : '100%' }}
-            ><span className="text-white pb-1">👤</span></div>
+            ><span className="text-white pb-1">👤</span></motion.div>
           ))}
         </div>
       );
 
       if (animType === 'premium') return (
         <div className="relative flex items-center justify-center">
-          <div className="animate-float"  >
+          <motion.div className="animate-float"  >
             {bigIcon}
-          </div>
+          </motion.div>
           {/* sparkles */}
           {['✨', '⭐', '💎'].map((s, i) => (
-            <div
+            <motion.div
               key={i}
               className="absolute text-2xl z-20 animate-float"
               style={{ top: ['5%', '85%', '15%'][i], left: ['-5%', '80%', '95%'][i] }}
-            >{s}</div>
+            >{s}</motion.div>
           ))}
         </div>
       );
@@ -1213,9 +1301,9 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
       // Generic / article / game
       return (
         <div className="relative flex items-center justify-center">
-          <div className="animate-scale-pulse"  >
+          <motion.div className="animate-scale-pulse"  >
             {bigIcon}
-          </div>
+          </motion.div>
         </div>
       );
     };
@@ -1231,8 +1319,12 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
     };
 
     return (
-      <div
-          className="fixed inset-0 animate-fade-in z-[200] overflow-hidden"
+      <AnimatePresence>
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          className="fixed inset-0 z-[200] overflow-hidden"
           style={{ background: 'linear-gradient(135deg, #0a0f1e 0%, #111827 100%)' }}
         >
           {/* Gradient overlay based on item color */}
@@ -1249,6 +1341,8 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
             </button>
 
             <motion.h1
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
               className="text-white font-black text-base tracking-tight"
             >
               {item.name}
@@ -1263,7 +1357,9 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
                 <Menu className="w-5 h-5" />
               </button>
               {moreOpen && (
-                <div
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.9, y: -5 }}
+                  animate={{ opacity: 1, scale: 1, y: 0 }}
                   className="absolute right-0 top-11 bg-slate-800 border border-slate-700 rounded-2xl shadow-2xl py-2 w-44 z-50 overflow-hidden"
                 >
                   {[
@@ -1282,13 +1378,16 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
                       {link.name}
                     </button>
                   ))}
-                </div>
+                </motion.div>
               )}
             </div>
           </div>
 
           {/* Balance chip */}
-          <div
+          <motion.div
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: 0.1 }}
             className="relative z-10 flex justify-center mt-1 mb-2"
           >
             <div className="flex items-center gap-2 bg-white/10 backdrop-blur-md border border-white/20 rounded-full px-4 py-1">
@@ -1297,10 +1396,13 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
               <span className="text-white/40 text-xs font-medium">|</span>
               <span className="text-amber-300 text-xs font-bold">{coins} Coins</span>
             </div>
-          </div>
+          </motion.div>
 
           {/* Option logo + name block */}
-          <div
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.15 }}
             className="relative z-10 flex items-center gap-3 mx-4 mb-4 bg-white/8 backdrop-blur-sm border border-white/10 rounded-2xl px-4 py-2"
           >
             <div className={`w-10 h-10 rounded-xl bg-gradient-to-br ${bgClass} flex items-center justify-center shadow-lg flex-shrink-0`}>
@@ -1314,18 +1416,24 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
               <div className="text-white font-black text-sm leading-none">{item.name}</div>
               <div className="text-white/50 text-[10px] font-medium mt-0.5">Earning Activity</div>
             </div>
-          </div>
+          </motion.div>
 
           {/* Central Animated Logo */}
-          <div
+          <motion.div
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ delay: 0.2, type: 'spring', stiffness: 200, damping: 15 }}
             className="relative z-10 flex items-center justify-center mb-4"
             style={{ minHeight: 120 }}
           >
             <CenterAnimation />
-          </div>
+          </motion.div>
 
           {/* Duration & Prize info */}
-          <div
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.3 }}
             className="relative z-10 mx-4 space-y-2 mb-4"
           >
             {/* Duration info - Show for time-based items */}
@@ -1361,30 +1469,35 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
                 </div>
               </div>
             )}
-          </div>
+          </motion.div>
 
           {/* Play Button */}
-          <div
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.4 }}
             className="relative z-10 px-4"
           >
-            <button
+            <motion.button
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
               onClick={handlePlay}
               className={`w-full py-3 rounded-2xl bg-gradient-to-r ${bgClass} text-white font-black text-lg shadow-xl shadow-blue-500/20 flex items-center justify-center gap-3 relative overflow-hidden`}
             >
               {/* Shine effect */}
-              <div
+              <motion.div
                 className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent animate-float"
               />
               <span className="relative z-10">
                 {animType === 'premium' ? 'Get' : animType === 'refer' ? 'Invite' : animType === 'article' ? 'Read' : '▶ Play'} {item.name}
               </span>
-            </button>
+            </motion.button>
             <div className="mt-2 min-h-[280px] flex items-center justify-center">
               <BigAdBanner />
             </div>
-          </div>
-        </div>
-      
+          </motion.div>
+        </motion.div>
+      </AnimatePresence>
     );
   };
 
@@ -1469,23 +1582,29 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
   return (
     <main className="min-h-screen bg-slate-50 dark:bg-slate-950 transition-colors duration-500 pb-24 md:pb-8">
       {/* Toast Notification */}
-      {toast.visible && (
-          <div
+      <AnimatePresence>
+        {toast.visible && (
+          <motion.div
+            initial={{ opacity: 0, y: -50, scale: 0.9 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: -50, scale: 0.9 }}
             className={`fixed top-4 left-1/2 -translate-x-1/2 z-[999] px-6 py-3 rounded-full flex items-center gap-3 shadow-2xl backdrop-blur-md font-bold text-sm min-w-max max-w-[90vw] text-center ${
               toast.type === 'error' ? 'bg-red-500/90 text-white border border-red-400' : 'bg-emerald-500/90 text-white border border-emerald-400'
             }`}
           >
             {toast.type === 'error' ? '✖' : '🎉'} {toast.message}
-          </div>
+          </motion.div>
         )}
-      
+      </AnimatePresence>
 
       {/* Option Intro Screen — full screen overlay */}
-      {showIntroScreen && introItem && <OptionIntroScreen />}
-      
+      <AnimatePresence>
+        {showIntroScreen && introItem && <OptionIntroScreen />}
+      </AnimatePresence>
 
       {/* ═══════ Multi-Ad Sub-View Overlay (5 ads per option) ═══════ */}
-      {showMultiAdView && multiAdConfig && (() => {
+      <AnimatePresence>
+        {showMultiAdView && multiAdConfig && (() => {
           const currentCount = getMultiAdCount(multiAdConfig.key);
           const adSlots = (multiAdConfig.ads || [
             { id: 1, name: `${multiAdConfig.name} Ad 1`, icon: '🎬', coins: multiAdConfig.coins },
@@ -1535,13 +1654,24 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
               });
             };
 
-            // Verification removed. Directly trigger reward.
-            triggerReward();
+            // Inject Verification Quiz
+            const n1 = Math.floor(Math.random() * 9) + 1;
+            const n2 = Math.floor(Math.random() * 9) + 1;
+            setAdVerificationData({
+              num1: n1,
+              num2: n2,
+              title: slot.name || `${multiAdConfig.name} #${slotId}`,
+              onSuccess: triggerReward
+            });
+            setShowAdVerificationModal(true);
           };
 
           return (
-            <div
-              className="fixed inset-0 animate-fade-in z-[95] bg-slate-900/95 backdrop-blur-xl flex items-center justify-center p-4"
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.9 }}
+              className="fixed inset-0 z-[95] bg-slate-900/95 backdrop-blur-xl flex items-center justify-center p-4"
             >
               <div className="bg-white dark:bg-slate-800 w-full max-w-lg rounded-3xl shadow-2xl overflow-hidden border border-slate-200 dark:border-slate-700 max-h-[90vh] flex flex-col">
                 {/* Header */}
@@ -1581,10 +1711,11 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
                       const isLocked = !isCompleted && !isNext;
 
                       return (
-                        <button
+                        <motion.button
                           key={slot.id}
                           whileHover={isLocked || isCompleted ? {} : { scale: 1.02 }}
                           whileTap={isLocked || isCompleted ? {} : { scale: 0.98 }}
+                          transition={{ type: 'spring', stiffness: 400, damping: 25 }}
                           onClick={() => handleMultiAdSlotClick(slot.id)}
                           disabled={isLocked || isCompleted || isLoading}
                           className={`flex items-center justify-between w-full p-4 border-2 rounded-2xl group transform-gpu ${
@@ -1621,19 +1752,21 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
                           }`}>
                             {isCompleted ? '✓' : `+${multiAdConfig.coins}`}
                           </div>
-                        </button>
+                        </motion.button>
                       );
                     })}
                   </div>
 
                   {/* All done message */}
                   {currentCount >= 5 && (
-                    <div
+                    <motion.div
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
                       className="bg-emerald-50 dark:bg-emerald-900/20 border-2 border-emerald-200 dark:border-emerald-800 rounded-2xl p-4 text-center"
                     >
                       <p className="text-emerald-600 dark:text-emerald-400 font-bold">🎉 All 5 ads completed!</p>
                       <p className="text-xs text-emerald-500 dark:text-emerald-500 mt-1">Come back tomorrow for more!</p>
-                    </div>
+                    </motion.div>
                   )}
 
                   {/* Ad placeholder */}
@@ -1647,16 +1780,23 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
                   </div>
                 </div>
               </div>
-            </div>
+            </motion.div>
           );
         })()}
-      
+      </AnimatePresence>
 
-      {showStatusView && (
-          <div
-            className="fixed inset-0 animate-fade-in z-[150] bg-slate-950/90 backdrop-blur-md flex items-center justify-center p-4 shadow-2xl"
+      <AnimatePresence>
+        {showStatusView && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[150] bg-slate-950/90 backdrop-blur-md flex items-center justify-center p-4 shadow-2xl"
           >
-            <div
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0, y: 20 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.9, opacity: 0, y: 20 }}
               className="bg-white dark:bg-slate-900 w-full max-w-sm rounded-[2.5rem] shadow-2xl overflow-hidden relative border border-slate-200 dark:border-slate-800 flex flex-col items-center p-8 text-center"
             >
               <button 
@@ -1708,16 +1848,23 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
                     <BigAdBanner />
                  </div>
               </div>
-            </div>
-          </div>
+            </motion.div>
+          </motion.div>
         )}
-      
+      </AnimatePresence>
 
-      {showCoinsDetails && (
-          <div
-            className="fixed inset-0 animate-fade-in z-[120] bg-[#050B14]/95 backdrop-blur-md flex items-center justify-center p-4"
+      <AnimatePresence mode="wait">
+        {showCoinsDetails && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[120] bg-[#050B14]/95 backdrop-blur-md flex items-center justify-center p-4"
           >
-            <div
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0, y: 20 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.95, opacity: 0, y: 20 }}
               className="bg-[#0F172A] w-full max-w-[360px] rounded-[2rem] shadow-2xl border border-slate-800 flex flex-col items-center relative overflow-hidden p-8"
             >
               {/* Back Button */}
@@ -1754,10 +1901,11 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
                 Earn coins through various tasks and convert them manually to your balance whenever you reach 1000 coins!
               </p>
 
-              <button 
+              <motion.button 
                 disabled={isLoading || coins < 1000}
                 whileHover={coins >= 1000 ? { scale: 1.02 } : {}}
                 whileTap={coins >= 1000 ? { scale: 0.98 } : {}}
+                transition={{ type: 'spring', stiffness: 400, damping: 25 }}
                 onClick={handleConvertCoins}
                 className={`w-full py-4 rounded-full font-black text-sm uppercase tracking-wide flex items-center justify-center gap-2 transform-gpu ${
                   coins >= 1000 
@@ -1766,17 +1914,24 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
                 }`}
               >
                 {isLoading ? 'Processing...' : coins >= 1000 ? 'Convert to Balance' : 'Need 1000 Coins'}
-              </button>
-            </div>
-          </div>
+              </motion.button>
+            </motion.div>
+          </motion.div>
         )}
-      
+      </AnimatePresence>
 
-      {showLevelView && (
-          <div
-            className="fixed inset-0 animate-fade-in z-[120] bg-[#050B14]/95 backdrop-blur-md flex items-center justify-center p-4 overflow-y-auto"
+      <AnimatePresence mode="wait">
+        {showLevelView && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[120] bg-[#050B14]/95 backdrop-blur-md flex items-center justify-center p-4 overflow-y-auto"
           >
-            <div
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0, y: 20 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.95, opacity: 0, y: 20 }}
               className="bg-[#0F172A] w-full max-w-[400px] rounded-[2.5rem] shadow-2xl border border-slate-800 flex flex-col items-center relative overflow-hidden p-6 pb-8 my-auto"
             >
               {/* Back Button */}
@@ -1788,11 +1943,11 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
               </button>
 
               {/* Level Badge */}
-              <div
+              <motion.div
                 className="w-20 h-20 rounded-full bg-gradient-to-br from-amber-400 to-orange-600 shadow-xl shadow-orange-500/30 flex items-center justify-center border-4 border-amber-300/30 mt-6 mb-3 animate-float"
               >
                 <span className="font-black text-white text-3xl">{levelInfo.level}</span>
-              </div>
+              </motion.div>
               <h2 className="text-2xl font-black text-white">{levelInfo.label}</h2>
               <p className="text-sm text-slate-400 font-medium mb-6">
                 {lifetimeCoins.toLocaleString()} lifetime coins collected
@@ -1809,8 +1964,10 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
                   </span>
                 </div>
                 <div className="h-3 w-full bg-slate-900 rounded-full overflow-hidden">
-                  <div
+                  <motion.div 
+                    initial={{ width: 0 }}
                     animate={{ width: `${progressPercent}%` }}
+                    transition={{ duration: 1.2, ease: "easeOut" }}
                     className="h-full bg-gradient-to-r from-amber-400 to-orange-500 rounded-full"
                   />
                 </div>
@@ -1866,22 +2023,32 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
                 })}
               </div>
 
-              <button
+              <motion.button 
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                transition={{ type: 'spring', stiffness: 400, damping: 25 }}
                 onClick={() => goBackWithAd(() => setShowLevelView(false))}
                 className="mt-8 w-full py-4 rounded-full bg-gradient-to-r from-amber-400 to-orange-500 text-white font-black shadow-lg shadow-orange-500/20 transform-gpu text-sm uppercase tracking-wide"
               >
                 Continue Earning
-              </button>
-            </div>
-          </div>
+              </motion.button>
+            </motion.div>
+          </motion.div>
         )}
-      
+      </AnimatePresence>
 
-      {showPremiumIPView && (
-          <div
-            className="fixed inset-0 animate-fade-in z-[120] bg-[#050B14]/95 backdrop-blur-md flex items-center justify-center p-4 overflow-y-auto"
+      <AnimatePresence mode="wait">
+        {showPremiumIPView && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[120] bg-[#050B14]/95 backdrop-blur-md flex items-center justify-center p-4 overflow-y-auto"
           >
-            <div
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0, y: 20 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.95, opacity: 0, y: 20 }}
               className="bg-[#0F172A] w-full max-w-[400px] sm:max-w-[420px] rounded-[2.5rem] shadow-2xl border border-slate-800 flex flex-col relative overflow-hidden min-h-[480px] my-auto pb-4"
             >
               {/* Back Button */}
@@ -1902,9 +2069,13 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
               </button>
 
               <div className="flex-1 overflow-y-auto px-5 pt-12 custom-scrollbar flex flex-col items-center w-full">
-                {isPremium && premiumExpiryDate && new Date(premiumExpiryDate) > new Date() && !showUpgradeOptions && (
-                    <div
+                <AnimatePresence mode="wait">
+                  {isPremium && premiumExpiryDate && new Date(premiumExpiryDate) > new Date() && !showUpgradeOptions && (
+                    <motion.div
                       key="active-status"
+                      initial={{ scale: 0.9, opacity: 0 }}
+                      animate={{ scale: 1, opacity: 1 }}
+                      exit={{ scale: 0.9, opacity: 0 }}
                       className="w-full flex flex-col items-center pt-2"
                     >
                       <div className="w-20 h-20 rounded-full bg-yellow-400/10 border border-yellow-400/20 flex items-center justify-center mb-6 relative">
@@ -1942,26 +2113,32 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
                         ))}
                       </div>
 
-                      <button
+                      <motion.button 
+                        whileHover={{ scale: 1.02 }}
+                        whileTap={{ scale: 0.98 }}
+                        transition={{ type: 'spring', stiffness: 400, damping: 25 }}
                         onClick={() => setShowUpgradeOptions(true)}
                         className="w-full py-4 bg-gradient-to-r from-yellow-400 to-amber-500 text-[#0F172A] font-black rounded-[1.5rem] shadow-xl transform-gpu text-sm uppercase tracking-widest"
                       >
                         Extend Subscription
-                      </button>
-                    </div>
+                      </motion.button>
+                    </motion.div>
                   )}
 
                   {(!(isPremium && premiumExpiryDate && new Date(premiumExpiryDate) > new Date()) || showUpgradeOptions) && ipStep === 1 && (
-                    <div 
+                    <motion.div 
                       key="step1"
-                      className="w-full flex flex-col items-center" animate-fade-in-up
+                      initial={{ x: 20, opacity: 0 }}
+                      animate={{ x: 0, opacity: 1 }}
+                      exit={{ x: -20, opacity: 0 }}
+                      className="w-full flex flex-col items-center"
                     >
                       {/* Crown Icon */}
-                      <div
+                      <motion.div
                         className="mb-2 text-yellow-400 mt-1 animate-float"
                       >
                          <Crown className="w-12 h-12 fill-current" strokeWidth={1} />
-                      </div>
+                      </motion.div>
 
                       <h2 className="text-xl font-black text-white mb-1 tracking-tight">Get IP</h2>
                       <p className="text-slate-400 text-[11px] font-medium leading-relaxed max-w-[240px] text-center mb-4">
@@ -1995,9 +2172,11 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
                         {(globalSettings.premiumIpPackages && globalSettings.premiumIpPackages.length > 0
                           ? globalSettings.premiumIpPackages
                           : ipPackages).map((pkg) => (
-                            <button
+                            <motion.button
                               key={pkg.id}
                               onClick={() => setSelectedPackage(pkg.id)}
+                              whileHover={{ scale: 1.01, backgroundColor: "rgba(30, 41, 59, 0.8)" }}
+                              whileTap={{ scale: 0.98 }}
                               className={`w-full flex items-center justify-between p-3 rounded-2xl border relative overflow-hidden transform-gpu will-change-transform ${
                                 selectedPackage === pkg.id 
                                   ? 'bg-slate-800/80 border-blue-500 shadow-lg shadow-blue-500/10' 
@@ -2041,29 +2220,34 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
                                   {selectedPackage === pkg.id && <div className="w-2.5 h-2.5 bg-blue-500 rounded-full" />}
                                 </div>
                               </div>
-                            </button>
+                            </motion.button>
                           ))}
                       </div>
 
                       {/* Upgrade Button */}
-                      <button
+                      <motion.button
+                        whileHover={{ scale: 1.02 }}
+                        whileTap={{ scale: 0.98 }}
                         onClick={() => setIpStep(2)}
                         className="w-full py-3 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-500 text-white font-black text-sm shadow-lg shadow-blue-500/20 mb-4 tracking-wide"
                       >
                         GET IP NOW
-                      </button>
+                      </motion.button>
 
                       <div className="flex w-full items-center justify-between px-4 pb-2">
                         <button className="text-[12px] font-medium text-blue-500 hover:text-blue-400 underline underline-offset-4 transition-colors">Terms of Conditions</button>
                         <button className="text-[12px] font-medium text-blue-500 hover:text-blue-400 underline underline-offset-4 transition-colors">Privacy Policy</button>
                       </div>
-                    </div>
+                    </motion.div>
                   )}
 
                   {ipStep === 2 && (
-                    <div 
+                    <motion.div 
                       key="step2"
-                      className="w-full flex flex-col items-center" animate-fade-in-up
+                      initial={{ x: 20, opacity: 0 }}
+                      animate={{ x: 0, opacity: 1 }}
+                      exit={{ x: -20, opacity: 0 }}
+                      className="w-full flex flex-col items-center"
                     >
                       <h3 className="text-white font-black text-2xl mb-2 text-center mt-4 tracking-tight">Select Country</h3>
                       <p className="text-slate-400 text-sm mb-6 text-center max-w-[240px]">Choose the server location for your IP</p>
@@ -2072,7 +2256,9 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
                       <div className="w-full mb-6 relative">
                         <label className="text-slate-500 text-[10px] font-bold uppercase tracking-widest block ml-1 mb-2 text-center">Choose Server Location</label>
                         <div className="relative">
-                          <button
+                          <motion.button
+                            whileHover={{ scale: 1.01, borderColor: "rgba(100, 116, 139, 0.6)" }}
+                            whileTap={{ scale: 0.99 }}
                             onClick={() => setIsCountryDropdownOpen(!isCountryDropdownOpen)}
                             className="w-full bg-[#161F36] border-2 border-slate-700/50 rounded-2xl py-4 px-5 text-white flex items-center justify-between transform-gpu shadow-inner"
                             style={{ backfaceVisibility: 'hidden' }}
@@ -2094,10 +2280,14 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
                                 )}
                             </div>
                             {isCountryDropdownOpen ? <ChevronUp className="w-5 h-5 text-blue-400" /> : <ChevronDown className="w-5 h-5 text-slate-500" />}
-                          </button>
+                          </motion.button>
 
-                          {isCountryDropdownOpen && (
-                              <div
+                          <AnimatePresence>
+                            {isCountryDropdownOpen && (
+                              <motion.div
+                                initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                                animate={{ opacity: 1, y: 5, scale: 1 }}
+                                exit={{ opacity: 0, y: 10, scale: 0.95 }}
                                 className="absolute top-full left-0 right-0 z-50 mt-1 bg-[#1A2542] border-2 border-slate-700 rounded-2xl shadow-[0_10px_40px_rgba(0,0,0,0.5)] overflow-hidden py-2"
                               >
                                 <div className="max-h-[240px] overflow-y-auto custom-scrollbar">
@@ -2124,13 +2314,15 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
                                     </button>
                                   ))}
                                 </div>
-                              </div>
+                              </motion.div>
                             )}
-                          
+                          </AnimatePresence>
                         </div>
                       </div>
 
-                      <button
+                      <motion.button
+                        whileHover={{ scale: 1.02 }}
+                        whileTap={{ scale: 0.98 }}
                         disabled={!selectedCountry}
                         onClick={() => setIpStep(3)}
                         className={`w-full py-4 rounded-full font-bold text-[16px] shadow-lg transition-all ${
@@ -2140,14 +2332,17 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
                         }`}
                       >
                         Continue
-                      </button>
-                    </div>
+                      </motion.button>
+                    </motion.div>
                   )}
 
                   {ipStep === 3 && (
-                    <div 
+                    <motion.div 
                       key="step3"
-                      className="w-full flex flex-col items-center" animate-fade-in-up
+                      initial={{ x: 20, opacity: 0 }}
+                      animate={{ x: 0, opacity: 1 }}
+                      exit={{ x: -20, opacity: 0 }}
+                      className="w-full flex flex-col items-center"
                     >
                       <h3 className="text-white font-black text-2xl mb-2 text-center mt-4 tracking-tight">Payment Method</h3>
                       <p className="text-slate-400 text-sm mb-8 text-center max-w-[240px]">Choose how you want to pay</p>
@@ -2181,22 +2376,27 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
                         ))}
                       </div>
 
-                      <button
+                      <motion.button
                         disabled={!paymentMethod}
+                        whileHover={{ scale: 1.02 }}
+                        whileTap={{ scale: 0.98 }}
                         onClick={() => setIpStep(4)}
                         className={`w-full py-4 rounded-full font-bold text-[16px] transition-all ${
                           paymentMethod ? 'bg-gradient-to-r from-indigo-500 to-cyan-400 text-white shadow-lg shadow-blue-500/20' : 'bg-slate-800 text-slate-500 cursor-not-allowed'
                         }`}
                       >
                         Proceed to Pay
-                      </button>
-                    </div>
+                      </motion.button>
+                    </motion.div>
                   )}
 
                   {ipStep === 4 && (
-                    <div 
+                    <motion.div 
                       key="step4"
-                      className="w-full flex flex-col items-center" animate-fade-in-up
+                      initial={{ x: 20, opacity: 0 }}
+                      animate={{ x: 0, opacity: 1 }}
+                      exit={{ x: -20, opacity: 0 }}
+                      className="w-full flex flex-col items-center"
                     >
                       <h2 className="text-white font-black text-2xl mb-2 text-center mt-4 tracking-tight uppercase tracking-widest">{paymentMethod} Payment</h2>
                       <p className="text-slate-400 text-sm mb-8 text-center max-w-[320px]">
@@ -2228,8 +2428,10 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
                         </div>
                       </div>
 
-                      <button
+                      <motion.button
                         disabled={!transactionId || ipSubmitting}
+                        whileHover={{ scale: 1.02 }}
+                        whileTap={{ scale: 0.98 }}
                         onClick={async () => {
                           if (!transactionId || ipSubmitting) return;
                           setIpSubmitting(true);
@@ -2270,13 +2472,15 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
                         }`}
                       >
                         {ipSubmitting ? 'Submitting...' : 'Submit Transaction'}
-                      </button>
-                    </div>
+                      </motion.button>
+                    </motion.div>
                   )}
 
                   {ipStep === 5 && (
-                    <div 
+                    <motion.div 
                       key="step5"
+                      initial={{ scale: 0.9, opacity: 0 }}
+                      animate={{ scale: 1, opacity: 1 }}
                       className="w-full flex flex-col items-center text-center py-8 mt-12"
                     >
                       <div className="w-24 h-24 bg-emerald-500/20 rounded-full flex items-center justify-center mb-8 shadow-[0_0_40px_rgba(16,185,129,0.3)]">
@@ -2287,19 +2491,25 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
                         Your payment is under review. Please wait <b>1 hour</b>. Our admin will provide your IP soon.
                       </p>
                       
-                      <button
+                      <motion.button
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
                         onClick={() => goBackWithAd(() => setShowQuizView(false))}
                         className="flex-1 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 font-bold py-4 rounded-2xl border border-slate-200 dark:border-slate-700 transform-gpu"
                       >
                         CLOSE
-                      </button>
-                      <button
+                      </motion.button>
+                      <motion.button
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
                         onClick={startNextQuizRound}
                         className="flex-1 bg-blue-600 text-white font-bold py-4 rounded-2xl shadow-lg shadow-blue-500/30 transform-gpu"
                       >
                         RETRY
-                      </button>
-                      <button
+                      </motion.button>
+                      <motion.button
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
                         onClick={() => {
                           setShowPremiumIPView(false);
                           setIpStep(1);
@@ -2307,39 +2517,48 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
                         className="px-12 py-4 rounded-full bg-[#161F36] text-white font-bold text-[16px] border border-slate-700 hover:bg-[#1A2542] transition-colors shadow-xl"
                       >
                         Done
-                      </button>
-                    </div>
+                      </motion.button>
+                    </motion.div>
                   )}
-                
+                </AnimatePresence>
               </div>
-            </div>
-          </div>
+            </motion.div>
+          </motion.div>
         )}
-      
+      </AnimatePresence>
 
       {/* Article Reading View Overlay */}
-      {showArticleView && (
-          <div
-            className="fixed inset-0 animate-fade-in z-[110] bg-slate-50 dark:bg-slate-900 overflow-y-auto"
+      <AnimatePresence>
+        {showArticleView && (
+          <motion.div 
+            initial={{ opacity: 0, y: 50 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 50 }}
+            className="fixed inset-0 z-[110] bg-slate-50 dark:bg-slate-900 overflow-y-auto"
           >
             {/* Header */}
             <div className="sticky top-0 z-10 bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl border-b border-slate-200 dark:border-slate-800 px-4 py-4 sm:px-6 flex items-center justify-between shadow-sm">
               <h2 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white truncate pr-4">গফুর মিয়ার স্মার্ট মুরগি ২.০</h2>
-              <button
+              <motion.button 
+                whileHover={{ scale: 1.1 }}
+                whileTap={{ scale: 0.9 }}
                 onClick={() => goBackWithAd(() => setShowArticleView(false))}
                 className="bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-300 w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 transform-gpu"
               >
                 <ArrowLeft className="w-5 h-5" />
-              </button>
+              </motion.button>
             </div>
 
             {/* Reading Content */}
             <div className="max-w-3xl mx-auto px-4 sm:px-6 py-8 pb-32">
               {articleData.slice(0, articleStep).map((section, index) => (
-                <div 
-                  key={index}
+                <motion.div 
+                  key={index} 
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.5 }}
                 >
-                  <div className="bg-white dark:bg-slate-800 rounded-3xl p-6 sm:p-8 animate-fade-in-up shadow-sm border border-slate-100 dark:border-slate-700 mb-8 mt-2 relative overflow-hidden">
+                  <div className="bg-white dark:bg-slate-800 rounded-3xl p-6 sm:p-8 shadow-sm border border-slate-100 dark:border-slate-700 mb-8 mt-2 relative overflow-hidden">
                     <div className="absolute top-0 left-0 w-2 h-full bg-brand-500"></div>
                     <h3 className="text-2xl sm:text-3xl font-black text-slate-800 dark:text-slate-100 mb-6 leading-tight">{section.title}</h3>
                     <div className="space-y-4">
@@ -2355,13 +2574,15 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
                   <div className="w-full mb-10 flex justify-center min-h-[280px]">
                     <BigAdBanner />
                   </div>
-                </div>
+                </motion.div>
               ))}
 
               {/* Next/Finish Button */}
               <div className="flex justify-center mt-12 mb-10">
                 {articleStep < articleData.length ? (
-                  <button
+                  <motion.button
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
                     onClick={() => {
                        setArticleStep(prev => prev + 1);
                        window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
@@ -2369,25 +2590,31 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
                     className="bg-brand-600 hover:bg-brand-500 text-white font-black text-lg py-4 px-10 rounded-full shadow-xl shadow-brand-500/30 transition-all flex items-center gap-2"
                   >
                     READ NEXT PART <BookOpen className="w-5 h-5 ml-2" />
-                  </button>
+                  </motion.button>
                 ) : (
-                  <button
+                  <motion.button
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
                     onClick={() => goBackWithAd(() => setShowArticleView(false))}
                     className="bg-green-600 text-white font-black text-lg py-4 px-10 rounded-full shadow-xl shadow-green-500/30 flex items-center gap-2 transform-gpu"
                   >
                     FINISH READING <Medal className="w-5 h-5 ml-2" />
-                  </button>
+                  </motion.button>
                 )}
               </div>
             </div>
-          </div>
+          </motion.div>
         )}
-      
+      </AnimatePresence>
 
       {/* View Ads Pre-Ad View */}
-      {showVideoView && !showAdOverlay && (
-          <div
-            className="fixed inset-0 animate-fade-in z-[90] bg-slate-900/95 backdrop-blur-xl flex items-center justify-center p-4"
+      <AnimatePresence>
+        {showVideoView && !showAdOverlay && (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.9 }}
+            className="fixed inset-0 z-[90] bg-slate-900/95 backdrop-blur-xl flex items-center justify-center p-4"
           >
             <div className="bg-white dark:bg-slate-800 w-full max-w-lg rounded-3xl shadow-2xl overflow-hidden border border-slate-200 dark:border-slate-700 max-h-[90vh] flex flex-col">
                <div className="bg-slate-50 dark:bg-slate-900 px-8 py-6 flex justify-between items-center border-b border-slate-200 dark:border-slate-700 shrink-0">
@@ -2430,10 +2657,11 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
                         const isLocked = !isCompleted && currentStatus.count + 1 !== adInfo.id;
 
                         return (
-                          <button
+                          <motion.button
                             key={adInfo.id}
                             whileHover={isLocked || isCompleted ? {} : { scale: 1.03 }}
                             whileTap={isLocked || isCompleted ? {} : { scale: 0.97 }}
+                            transition={{ type: 'spring', stiffness: 400, damping: 25 }}
                             onClick={() => !isLocked && !isCompleted && startAd(videoType)}
                             disabled={isLocked || isCompleted}
                             className={`flex items-center justify-between w-full p-4 border rounded-2xl group transform-gpu ${
@@ -2455,20 +2683,24 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
                             }`}>
                                +{adInfo.pts}
                             </div>
-                          </button>
+                          </motion.button>
                         );
                      })}
                   </div>
                </div>
             </div>
-          </div>
+          </motion.div>
         )}
-      
+      </AnimatePresence>
 
       {/* Games View */}
-      {showGamesView && (
-          <div
-            className="fixed inset-0 animate-fade-in z-[90] bg-slate-900/95 backdrop-blur-xl flex items-center justify-center p-4"
+      <AnimatePresence>
+        {showGamesView && (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.9 }}
+            className="fixed inset-0 z-[90] bg-slate-900/95 backdrop-blur-xl flex items-center justify-center p-4"
           >
             <div className="bg-white dark:bg-slate-800 w-full max-w-lg rounded-3xl shadow-2xl overflow-hidden border border-slate-200 dark:border-slate-700 max-h-[90vh] flex flex-col">
               <div className="bg-slate-50 dark:bg-slate-900 px-8 py-6 flex justify-between items-center border-b border-slate-200 dark:border-slate-700 shrink-0">
@@ -2484,8 +2716,10 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
                   { name: 'Color Match', desc: 'Match colours and win big', icon: '🎨', color: 'from-pink-500 to-rose-600', pts: '10-30' },
                   { name: 'Word Master', desc: 'Find hidden words for coins', icon: '📝', color: 'from-green-500 to-emerald-600', pts: '5-25' },
                 ].map((game, i) => (
-                  <button
+                  <motion.button
                     key={i}
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
                     onClick={() => alert('Coming soon! This game will be available in a future update.')}
                     className="flex items-center justify-between w-full p-5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl shadow-sm hover:shadow-lg transition-all group"
                   >
@@ -2501,21 +2735,25 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
                     <div className="px-3 py-1.5 bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 rounded-full text-xs font-bold shrink-0">
                       {game.pts} Coins
                     </div>
-                  </button>
+                  </motion.button>
                 ))}
                 <div className="text-center pt-4">
                   <span className="text-xs text-slate-400 dark:text-slate-500 font-medium">More games coming soon! 🎮</span>
                 </div>
               </div>
             </div>
-          </div>
+          </motion.div>
         )}
-      
+      </AnimatePresence>
 
       {/* Fortune Wheel View */}
-      {showWheelView && (
-          <div
-            className="fixed inset-0 animate-fade-in z-[90] bg-slate-900/95 backdrop-blur-xl flex items-center justify-center p-4"
+      <AnimatePresence>
+        {showWheelView && (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.9 }}
+            className="fixed inset-0 z-[90] bg-slate-900/95 backdrop-blur-xl flex items-center justify-center p-4"
           >
             <div className="bg-white dark:bg-slate-800 w-full max-w-md rounded-3xl shadow-2xl overflow-hidden border border-slate-200 dark:border-slate-700 max-h-[95vh] flex flex-col">
               <div className="bg-slate-50 dark:bg-slate-900 px-8 py-5 flex justify-between items-center border-b border-slate-200 dark:border-slate-700 shrink-0">
@@ -2545,8 +2783,9 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
                     <div className="w-0 h-0 border-l-[20px] border-l-transparent border-r-[20px] border-r-transparent border-t-[40px] border-t-rose-600"></div>
                   </div>
 
-                  <div
+                  <motion.div
                     animate={isSpinning ? { rotate: [0, spinReward?.totalRotation || 1800] } : {}}
+                    transition={{ duration: 4.5, ease: [0.2, 0.8, 0.3, 1] }}
                     onAnimationComplete={() => {
                       if (isSpinning && spinReward) {
                         setIsSpinning(false);
@@ -2610,10 +2849,12 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
                         <span className="font-black text-amber-500 text-sm sm:text-base tracking-tighter">SPIN</span>
                       </div>
                     </div>
-                  </div>
+                  </motion.div>
                 </div>
 
-                <button
+                <motion.button
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
                   disabled={isSpinning || wheelStatus.count >= (globalSettings.fortuneWheelConfig?.dailyLimit || 10)}
                   onClick={() => {
                     const maxSpins = globalSettings.fortuneWheelConfig?.dailyLimit || 10;
@@ -2646,20 +2887,24 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
                   }`}
                 >
                   {isSpinning ? 'Spinning...' : wheelStatus.count >= (globalSettings.fortuneWheelConfig?.dailyLimit || 10) ? 'All Spins Used ✓' : `SPIN NOW (${(globalSettings.fortuneWheelConfig?.dailyLimit || 10) - wheelStatus.count} left)`}
-                </button>
+                </motion.button>
                 <div className="mt-6 min-h-[280px] flex items-center justify-center">
                   <BigAdBanner />
                 </div>
               </div>
             </div>
-          </div>
+          </motion.div>
         )}
-      
+      </AnimatePresence>
 
       {/* Scratch Card View */}
-      {showScratchView && (
-          <div
-            className="fixed inset-0 animate-fade-in z-[90] bg-slate-900/95 backdrop-blur-xl flex items-center justify-center p-4"
+      <AnimatePresence>
+        {showScratchView && (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.9 }}
+            className="fixed inset-0 z-[90] bg-slate-900/95 backdrop-blur-xl flex items-center justify-center p-4"
           >
             <div className="bg-white dark:bg-slate-800 w-full max-w-lg rounded-3xl shadow-2xl overflow-hidden border border-slate-200 dark:border-slate-700 max-h-[95vh] flex flex-col">
               <div className="bg-slate-50 dark:bg-slate-900 px-8 py-5 flex justify-between items-center border-b border-slate-200 dark:border-slate-700 shrink-0">
@@ -2687,7 +2932,7 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
                       const isLocked = !isScratched && !isNext;
 
                       return (
-                        <button
+                        <motion.button
                           key={i}
                           whileHover={isLocked || isScratched ? {} : { scale: 1.03 }}
                           whileTap={isLocked || isScratched ? {} : { scale: 0.97 }}
@@ -2714,11 +2959,11 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
                             <>
                               {/* Scratch cover overlay */}
                               <div className="absolute inset-0 bg-gradient-to-br from-amber-400 via-yellow-400 to-orange-400 flex flex-col items-center justify-center gap-2 group-hover:opacity-90 transition-opacity z-10">
-                                <div
+                                <motion.div
                                   className="text-4xl animate-spin-slow"
                                 >
                                   🎁
-                                </div>
+                                </motion.div>
                                 <span className="font-black text-white text-sm drop-shadow">SCRATCH HERE!</span>
                                 <span className="text-[10px] text-white/80 font-bold">Card {cardNum}</span>
                               </div>
@@ -2734,20 +2979,24 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
                               <span className="font-bold text-slate-400 text-sm">Card {cardNum}</span>
                             </>
                           )}
-                        </button>
+                        </motion.button>
                       );
                   })}
                 </div>
               </div>
             </div>
-          </div>
+          </motion.div>
         )}
-      
+      </AnimatePresence>
 
       {/* Active Scratch Card Action View */}
-      {activeScratchCard && (
-          <div
-            className="fixed inset-0 animate-fade-in z-[100] bg-slate-100 flex flex-col"
+      <AnimatePresence>
+        {activeScratchCard && (
+          <motion.div
+            initial={{ opacity: 0, x: 50 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: 50 }}
+            className="fixed inset-0 z-[100] bg-slate-100 flex flex-col"
           >
             {/* Header */}
             <div className="bg-[#1a362d] text-white px-4 py-4 flex items-center gap-4 shadow-md shrink-0">
@@ -2764,7 +3013,7 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
             <div className="flex-1 overflow-y-auto px-4 py-8 flex items-center justify-center flex-col gap-6">
 
               {/* Scratch Area */}
-              <button
+              <motion.button
                 whileHover={activeScratchCard.isRevealed ? {} : { scale: 1.02 }}
                 whileTap={activeScratchCard.isRevealed ? {} : { scale: 0.98 }}
                 onClick={async () => {
@@ -2816,8 +3065,12 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
                 </div>
 
                 {/* The Cover (animated away when revealed) */}
-                {!activeScratchCard.isRevealed && (
-                    <div
+                <AnimatePresence>
+                  {!activeScratchCard.isRevealed && (
+                    <motion.div
+                      initial={{ opacity: 1 }}
+                      exit={{ opacity: 0, scale: 1.1, filter: 'blur(10px)' }}
+                      transition={{ duration: 0.8 }}
                       className="absolute inset-0 z-10 bg-[#c53232] flex flex-col items-center justify-center cursor-pointer overflow-hidden"
                     >
                        {/* Text shadow/cut effect in center */}
@@ -2825,24 +3078,28 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
                           <span className="text-4xl font-black text-white/90 leading-none mb-2">SCRATCH</span>
                           <span className="text-4xl font-black text-white/90 leading-none">HERE!</span>
                        </div>
-                    </div>
+                    </motion.div>
                   )}
-                
-              </button>
+                </AnimatePresence>
+              </motion.button>
 
               <div className="mt-6 min-h-[280px] flex items-center justify-center">
                 <BigAdBanner />
               </div>
 
             </div>
-          </div>
+          </motion.div>
         )}
-      
+      </AnimatePresence>
 
       {/* Quiz Selection Modal */}
-      {showQuizSelection && (
-          <div
-            className="fixed inset-0 animate-fade-in z-[90] bg-slate-900/95 backdrop-blur-xl flex items-center justify-center p-4"
+      <AnimatePresence>
+        {showQuizSelection && (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.9 }}
+            className="fixed inset-0 z-[90] bg-slate-900/95 backdrop-blur-xl flex items-center justify-center p-4"
           >
             <div className="bg-white dark:bg-slate-800 w-full max-w-lg rounded-3xl shadow-2xl overflow-hidden border border-slate-200 dark:border-slate-700 max-h-[90vh] flex flex-col">
               <div className="bg-slate-50 dark:bg-slate-900 px-8 py-6 flex justify-between items-center border-b border-slate-200 dark:border-slate-700 shrink-0">
@@ -2865,8 +3122,10 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
                     { id: 'word', name: 'Word Quiz', icon: '📝', color: 'from-amber-500 to-orange-600', pts: '+20 Coins', desc: 'Vocabulary and word finding' },
                     { id: 'gk', name: 'Daily Trivia', icon: '🌍', color: 'from-emerald-500 to-teal-600', pts: '+50 Coins', desc: 'General knowledge challenges' }
                   ].map((quiz) => (
-                    <button
+                    <motion.button
                       key={quiz.id}
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.98 }}
                       onClick={() => {
                         setShowQuizSelection(false);
                         if (quiz.id === 'gk') {
@@ -2889,14 +3148,15 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
                       <div className="px-3 py-1.5 bg-brand-100 dark:bg-brand-900/30 text-brand-700 dark:text-brand-400 rounded-full text-xs font-bold shrink-0">
                         {quiz.pts}
                       </div>
-                    </button>
+                    </motion.button>
                   ))}
                 </div>
                 
                 <div className="text-center pt-6">
                   <p className="text-xs text-slate-400 dark:text-slate-500 font-medium">Daily Limit: {quizStatus.count}/10 Complete</p>
                   <div className="mt-2 w-full bg-slate-100 dark:bg-slate-800 rounded-full h-1.5 overflow-hidden">
-                    <div
+                    <motion.div 
+                      initial={{ width: 0 }}
                       animate={{ width: `${(quizStatus.count / 10) * 100}%` }}
                       className="h-full bg-brand-500"
                     />
@@ -2904,16 +3164,23 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
                 </div>
               </div>
             </div>
-          </div>
+          </motion.div>
         )}
-      
+      </AnimatePresence>
 
       {/* Quiz View */}
-      {showQuizView && quizQuestion && (
-          <div
-            className="fixed inset-0 animate-fade-in z-[100] bg-slate-900/90 backdrop-blur-md flex items-center justify-center p-0 sm:p-4"
+      <AnimatePresence>
+        {showQuizView && quizQuestion && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[100] bg-slate-900/90 backdrop-blur-md flex items-center justify-center p-0 sm:p-4"
           >
-            <div
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 20 }}
               className="bg-slate-100 dark:bg-slate-900 w-full max-w-md h-full sm:h-auto sm:max-h-[95vh] sm:rounded-3xl shadow-2xl flex flex-col overflow-hidden relative"
             >
               {/* Header */}
@@ -2968,7 +3235,7 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
                   }
 
                   return (
-                    <button
+                    <motion.button
                       key={idx}
                       whileHover={quizAnswered ? {} : { scale: 1.02 }}
                       whileTap={quizAnswered ? {} : { scale: 0.98 }}
@@ -2977,14 +3244,16 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
                       className={`w-full py-4 px-6 rounded-full text-center text-lg font-semibold transition-all ${optionStyle}`}
                     >
                       {option}
-                    </button>
+                    </motion.button>
                   );
                 })}
               </div>
 
               {/* Submit Button */}
               {!quizAnswered ? (
-                <button
+                <motion.button
+                  whileHover={{ scale: 1.03 }}
+                  whileTap={{ scale: 0.97 }}
                   disabled={quizSelected === null || isLoading}
                   onClick={async () => {
                     if (quizSelected === null) return;
@@ -3021,19 +3290,21 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
                   }`}
                 >
                   Submit
-                </button>
+                </motion.button>
               ) : (
                 <div className="w-full max-w-lg text-center space-y-3">
                   <p className={`text-xl font-black ${quizSelected === quizQuestion.answer ? 'text-green-600' : 'text-red-500'}`}>
                     {quizSelected === quizQuestion.answer ? '🎉 Correct! +20 Coins' : `❌ Wrong! Answer: ${quizQuestion.answer}`}
                   </p>
                   {quizStatus.count < 10 && (
-                    <button
+                    <motion.button
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.98 }}
                       onClick={() => startNewQuiz(quizType)}
                       className="w-full py-4 rounded-full text-lg font-black bg-gradient-to-r from-teal-500 to-emerald-500 text-white shadow-lg hover:from-teal-400 hover:to-emerald-400"
                     >
                       Next Question →
-                    </button>
+                    </motion.button>
                   )}
                 </div>
               )}
@@ -3059,15 +3330,19 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
                 <BigAdBanner />
               </div>
             </div>
-            </div>
-          </div>
+            </motion.div>
+          </motion.div>
         )}
-      
+      </AnimatePresence>
 
       {/* Daily Checkin Pre-Ad View */}
-      {showCheckinView && !showAdOverlay && (
-          <div
-            className="fixed inset-0 animate-fade-in z-[90] bg-slate-900/95 backdrop-blur-xl flex items-center justify-center p-4"
+      <AnimatePresence>
+        {showCheckinView && !showAdOverlay && (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.9 }}
+            className="fixed inset-0 z-[90] bg-slate-900/95 backdrop-blur-xl flex items-center justify-center p-4"
           >
             <div className="bg-white dark:bg-slate-800 w-full max-w-lg rounded-3xl shadow-2xl overflow-hidden border border-slate-200 dark:border-slate-700">
                <div className="bg-slate-50 dark:bg-slate-900 px-8 py-6 flex justify-between items-center border-b border-slate-200 dark:border-slate-700">
@@ -3087,7 +3362,10 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
 
                   <div className="grid grid-cols-2 gap-6">
                      {checkinStatus.count < 1 && (
-                        <button
+                        <motion.button
+                           whileHover={{ scale: 1.03 }}
+                           whileTap={{ scale: 0.97 }}
+                           transition={{ type: 'spring', stiffness: 400, damping: 25 }}
                            onClick={startAd}
                            className="flex flex-col items-center gap-4 p-6 bg-orange-50 dark:bg-orange-900/20 border-2 border-orange-200 dark:border-orange-800 rounded-2xl group shadow-sm transform-gpu"
                         >
@@ -3095,11 +3373,14 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
                               <Film className="w-8 h-8" />
                            </div>
                            <span className="font-bold text-orange-700 dark:text-orange-400">Ad 1</span>
-                        </button>
+                        </motion.button>
                      )}
 
                      {checkinStatus.count < 2 && (
-                        <button
+                        <motion.button
+                           whileHover={{ scale: 1.03 }}
+                           whileTap={{ scale: 0.97 }}
+                           transition={{ type: 'spring', stiffness: 400, damping: 25 }}
                            onClick={startAd}
                            className="flex flex-col items-center gap-4 p-6 bg-blue-50 dark:bg-blue-900/20 border-2 border-blue-200 dark:border-blue-800 rounded-2xl group shadow-sm transform-gpu"
                         >
@@ -3107,7 +3388,7 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
                               <Film className="w-8 h-8" />
                            </div>
                            <span className="font-bold text-blue-700 dark:text-blue-400">Ad 2</span>
-                        </button>
+                        </motion.button>
                      )}
 
                      {checkinStatus.count >= 2 && (
@@ -3118,16 +3399,20 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
                   </div>
                </div>
             </div>
-          </div>
+          </motion.div>
         )}
-      
+      </AnimatePresence>
 
       {/* Ad Overlay Removed - Using Real AdMob */}
 
       {/* Gen. Knowledge Quiz Modal */}
-      {showGkQuizView && gkQuizQuestions.length > 0 && (
-          <div
-            className="fixed inset-0 animate-fade-in z-[100] bg-slate-900/95 backdrop-blur-xl flex items-center justify-center p-4"
+      <AnimatePresence>
+        {showGkQuizView && gkQuizQuestions.length > 0 && (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.9 }}
+            className="fixed inset-0 z-[100] bg-slate-900/95 backdrop-blur-xl flex items-center justify-center p-4"
           >
             <div className="bg-white dark:bg-slate-800 w-full max-w-md rounded-3xl shadow-2xl overflow-hidden border border-slate-200 dark:border-slate-700 flex flex-col">
               {/* Header */}
@@ -3136,11 +3421,13 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
                   <Star className="w-6 h-6" /> Gen. Knowledge
                 </h3>
                 <div className="flex items-center gap-3">
-                  <div
+                  <motion.div 
+                    whileHover={{ scale: 1.03 }}
+                    whileTap={{ scale: 0.97 }}
                     className="text-white font-bold bg-black/20 px-3 py-1 rounded-full text-sm"
                   >
                     {currentGkIndex + 1} / 10
-                  </div>
+                  </motion.div>
                   <button onClick={() => goBackWithAd(() => setShowGkQuizView(false))} className="text-white/70 hover:text-white text-xl font-bold">✕</button>
                 </div>
               </div>
@@ -3208,9 +3495,9 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
                 </div>
               </div>
             </div>
-          </div>
+          </motion.div>
         )}
-      
+      </AnimatePresence>
 
       {/* Responsive Container */}
       <div className="w-full max-w-4xl mx-auto bg-white dark:bg-slate-900 md:rounded-3xl shadow-xl overflow-hidden border border-slate-200 dark:border-slate-800">
@@ -3218,7 +3505,10 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
         {/* Top Header - more compact height */}
         <div className="bg-[#f5f3ff] dark:bg-slate-900 text-slate-800 dark:text-white px-4 py-3 sm:px-6 sm:py-4 flex justify-center items-center gap-3 sm:gap-6 border-b border-purple-100 dark:border-slate-800">
             {/* Premium IP Indicator - Compact and Larger */}
-            <button
+            <motion.button
+              whileHover={{ scale: 1.03, y: -1 }}
+              whileTap={{ scale: 0.98 }}
+              transition={{ type: 'spring', stiffness: 400, damping: 25 }}
               onClick={() => { setShowPremiumIPView(true); setIpStep(1); }}
               className={`px-5 py-2 sm:px-6 sm:py-2.5 rounded-2xl flex items-center gap-2 border-2 shadow-sm transform-gpu ${
                 isPremium 
@@ -3230,14 +3520,17 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
               <span className="text-sm sm:text-base font-black uppercase tracking-tight">
                 Get IP
               </span>
-            </button>
-            <button
+            </motion.button>
+            <motion.button 
+              whileHover={{ scale: 1.03, y: -1 }}
+              whileTap={{ scale: 0.98 }}
+              transition={{ type: 'spring', stiffness: 400, damping: 25 }}
               onClick={() => setActiveEarningTab('wallet')}
               className="flex items-center gap-2 bg-gradient-to-r from-purple-600 to-indigo-600 px-5 py-2 sm:px-6 sm:py-2.5 rounded-2xl border-2 border-purple-500/30 shadow-md shadow-purple-500/20 transform-gpu text-white transition-colors"
             >
                <Wallet className="w-4 h-4 sm:w-5 sm:h-5 text-yellow-400 fill-current" />
                <span className="text-sm sm:text-base font-black uppercase tracking-tight">My Wallet</span>
-            </button>
+            </motion.button>
         </div>
 
 
@@ -3269,10 +3562,10 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
                    <p className="text-slate-500 text-[10px] font-bold">MIN. WITHDRAW: <span className="text-amber-400">1,000 ৳</span></p>
                  </div>
                  {withdrawSuccess && (
-                   <div
+                   <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
                      className="absolute bottom-4 right-4 bg-emerald-500 text-white text-[10px] font-bold px-3 py-1 rounded-full shadow-lg flex items-center gap-1">
                      <Check className="w-3 h-3" /> Requested!
-                   </div>
+                   </motion.div>
                  )}
                </div>
 
@@ -3305,7 +3598,9 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
                      <p className="text-xs text-slate-500 font-medium">1000 Coins = 50 ৳ Balance</p>
                   </div>
                </div>
-               <button
+               <motion.button
+                 whileHover={{ scale: 1.05 }}
+                 whileTap={{ scale: 0.95 }}
                  onClick={handleConvertCoins}
                  disabled={coins < 1000 || isLoading}
                  className={`px-6 py-3 rounded-2xl font-black text-sm shadow-lg transition-all ${
@@ -3315,7 +3610,7 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
                  }`}
                >
                  {isLoading ? 'Converting...' : 'Convert Now'}
-               </button>
+               </motion.button>
             </div>
 
 
@@ -3381,7 +3676,8 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
             </div>
 
             {/* Submit Button */}
-            <button
+            <motion.button
+              whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}
               onClick={handleWithdraw}
               disabled={withdrawLoading}
               className="w-full py-4 rounded-2xl bg-gradient-to-r from-brand-500 to-brand-700 text-white font-black text-base shadow-lg shadow-brand-500/30 transform-gpu disabled:opacity-70 disabled:cursor-not-allowed"
@@ -3389,7 +3685,7 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
               {withdrawLoading ? (
                 <span className="flex items-center justify-center gap-2"><span className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent" />Processing...</span>
               ) : 'Request Withdrawal'}
-            </button>
+            </motion.button>
 
             <p className="text-center text-xs text-slate-400">Withdrawals are processed within 1–3 business days. Secure and encrypted.</p>
           </div>
@@ -3399,12 +3695,14 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
         {activeEarningTab === 'history' && (
           <div className="max-w-lg mx-auto space-y-4">
             <div className="flex items-center gap-3 mb-2">
-               <button
+               <motion.button 
+                 whileHover={{ scale: 1.1 }}
+                 whileTap={{ scale: 0.9 }}
                  onClick={() => goBackWithAd(() => setActiveEarningTab('rewards'))} 
                  className="p-2 bg-slate-100 dark:bg-slate-800 rounded-full text-slate-500 transform-gpu"
                >
                   <ArrowLeft className="w-5 h-5" />
-               </button>
+               </motion.button>
                <h3 className="font-black text-slate-800 dark:text-white text-lg">Withdrawal History</h3>
             </div>
 
@@ -3644,7 +3942,10 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
 
           {/* Level Progress Overview Card */}
           <div className="max-w-5xl mx-auto">
-            <button
+            <motion.button
+              whileHover={{ scale: 1.01 }}
+              whileTap={{ scale: 0.99 }}
+              transition={{ type: 'spring', stiffness: 400, damping: 25 }}
               onClick={() => setShowLevelView(true)}
               className="w-full bg-gradient-to-r from-amber-500/10 to-orange-500/10 border-2 border-amber-400/20 rounded-2xl p-4 md:p-6 flex items-center gap-4 transform-gpu"
             >
@@ -3655,8 +3956,10 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
                 <p className="text-sm font-black text-slate-800 dark:text-slate-200">{levelInfo.label}</p>
                 <div className="flex items-center gap-2 mt-1">
                     <div className="flex-1 h-2 bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden">
-                      <div
+                      <motion.div 
+                        initial={{ width: 0 }}
                         animate={{ width: `${progressPercent}%` }}
+                        transition={{ type: 'spring', stiffness: 50, damping: 20 }}
                         className="h-full bg-gradient-to-r from-amber-400 to-orange-500 rounded-full" 
                       />
                     </div>
@@ -3666,7 +3969,7 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
                 </div>
               </div>
               <ChevronRight className="w-5 h-5 text-amber-500 shrink-0" />
-            </button>
+            </motion.button>
           </div>
 
           {/* My Rewards */}
@@ -3682,14 +3985,14 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
           </div>
 
           {/* Large Monster Ad 300x250 */}
-          <div className="w-full max-w-md animate-fade-in-up mx-auto border-2 border-slate-200 dark:border-slate-800 rounded-2xl p-8 flex flex-col items-center justify-center bg-white dark:bg-slate-900 shadow-inner relative overflow-hidden text-center gap-6">
+          <div className="w-full max-w-md mx-auto border-2 border-slate-200 dark:border-slate-800 rounded-2xl p-8 flex flex-col items-center justify-center bg-white dark:bg-slate-900 shadow-inner relative overflow-hidden text-center gap-6">
             <span className="absolute top-0 right-0 bg-slate-700 text-white text-[10px] px-3 py-1 font-bold rounded-bl-xl">Ad</span>
             <div className="relative">
-              <div
+              <motion.div
                 className="w-32 h-32 bg-rose-100 rounded-full flex items-center justify-center animate-float"
               >
                 <img src="https://img.icons8.com/color/144/monster.png" alt="Ad Character" className="w-24 h-24" />
-              </div>
+              </motion.div>
               <div className="absolute -top-2 -right-2 bg-blue-500 text-white px-3 py-1 rounded-full text-xs font-bold shadow-lg">
                 Nice job!
               </div>
@@ -3705,9 +4008,13 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
 
           {/* Custom Modals Down Here */}
           {/* Interstitial Ad / Rewarded Video Modal */}
-          {showInterstitialAd && (
-              <div
-                className="fixed inset-0 animate-fade-in z-[200] bg-black flex flex-col items-center justify-center p-4"
+          <AnimatePresence>
+            {showInterstitialAd && (
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                className="fixed inset-0 z-[200] bg-black flex flex-col items-center justify-center p-4"
               >
                 {/* Simulated close/timer area */}
                 <div className="absolute top-4 right-4 z-10 flex gap-2">
@@ -3729,22 +4036,30 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
                   <p className="text-slate-400 max-w-sm mx-auto">This is a simulated AdMob {currentAdInfo.type}. Keep viewing to receive your {currentAdInfo.coins} Coins reward.</p>
 
                   {currentAdInfo.time === 0 && (
-                    <button
+                    <motion.button
+                      initial={{ scale: 0.8, opacity: 0 }}
+                      animate={{ scale: 1, opacity: 1 }}
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
                       onClick={() => handleCustomAdReward(currentAdInfo.coins)}
                       className="mt-8 bg-gradient-to-r from-emerald-500 to-teal-500 text-white font-black py-4 px-8 rounded-full shadow-[0_10px_30px_rgba(16,185,129,0.3)] transform-gpu"
                     >
                       {isLoading ? 'Claiming...' : `Claim ${currentAdInfo.coins} Coins`}
-                    </button>
+                    </motion.button>
                   )}
                 </div>
-              </div>
+              </motion.div>
             )}
-          
+          </AnimatePresence>
 
           {/* Native Ad Modal */}
-          {showNativeAd && (
-              <div
-                className="fixed inset-0 animate-fade-in z-[200] bg-slate-900/90 backdrop-blur-md flex flex-col items-center justify-center p-4"
+          <AnimatePresence>
+            {showNativeAd && (
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                className="fixed inset-0 z-[200] bg-slate-900/90 backdrop-blur-md flex flex-col items-center justify-center p-4"
               >
                 <div className="relative bg-white dark:bg-slate-800 w-full max-w-sm p-4 rounded-xl shadow-2xl overflow-hidden border border-slate-200 dark:border-slate-700">
                   <span className="absolute top-0 right-0 bg-yellow-400 text-yellow-900 text-[9px] px-1.5 py-0.5 font-bold rounded-bl-lg">Ad</span>
@@ -3768,26 +4083,32 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
                       Please wait {currentAdInfo.time}s...
                     </div>
                   ) : (
-                    <button
+                    <motion.button
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.98 }}
                       disabled={isLoading} 
                       onClick={() => handleCustomAdReward(currentAdInfo.coins)}
                       className="w-full mt-4 py-3 bg-blue-600 text-white rounded-lg text-center font-bold text-sm transform-gpu shadow-lg"
                     >
                       {isLoading ? 'Claiming...' : `Install & Claim ${currentAdInfo.coins} Coins`}
-                    </button>
+                    </motion.button>
                   )}
                   {currentAdInfo.time === 0 && (
                      <button onClick={() => setShowNativeAd(false)} className="mt-2 w-full text-center text-[10px] bg-transparent text-slate-400 underline">Dismiss</button>
                   )}
                 </div>
-              </div>
+              </motion.div>
             )}
-          
+          </AnimatePresence>
 
           {/* Offerwall Ad Modal (For Surveys, Regs etc.) */}
-          {showOfferwallAd && (
-              <div
-                className="fixed inset-0 animate-fade-in z-[200] bg-slate-100 dark:bg-slate-900 flex flex-col"
+          <AnimatePresence>
+            {showOfferwallAd && (
+              <motion.div
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.95 }}
+                className="fixed inset-0 z-[200] bg-slate-100 dark:bg-slate-900 flex flex-col"
               >
                 {/* Header */}
                 <div className="bg-white dark:bg-slate-800 shadow-sm border-b border-slate-200 dark:border-slate-700 px-4 py-3 flex items-center gap-3">
@@ -3825,28 +4146,31 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
                         </div>
                      ) : (
                         <div className="flex flex-col gap-3">
-                          <button
+                          <motion.button
+                            whileHover={{ scale: 1.02, backgroundColor: "rgb(79 70 229)" }}
+                            whileTap={{ scale: 0.98 }}
                             disabled={isLoading} 
                             onClick={() => handleCustomAdReward(currentAdInfo.coins)}
                             className="bg-indigo-600 text-white font-bold py-3 px-6 rounded-xl shadow-lg shadow-indigo-500/30 w-full transform-gpu"
                           >
                             {isLoading ? 'Processing...' : `Complete Task (+${currentAdInfo.coins} Coins)`}
-                          </button>
+                          </motion.button>
                         </div>
                      )}
                   </div>
                 </div>
-              </div>
+              </motion.div>
             )}
-          
+          </AnimatePresence>
 
           </>
         )}
         </div>
       </div>
 
-
-      
+      <AnimatePresence>
+        {showAdVerificationModal && <AdVerificationModal />}
+      </AnimatePresence>
     </main>
   );
 };
