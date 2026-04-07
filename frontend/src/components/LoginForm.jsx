@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { API_BASE } from '../config';
-import { motion } from 'framer-motion';
 import { Lock, LogIn, AtSign, Eye, EyeOff } from 'lucide-react';
 
 const GOOGLE_CLIENT_ID = '683886612726-hpfnmmev12c8fbl7f4bbe37s03s48r23.apps.googleusercontent.com';
@@ -48,13 +47,11 @@ const GoogleButton = ({ onSuccess }) => {
   };
 
   return (
-    <motion.button
+    <button
       type="button"
-      whileHover={{ scale: 1.02, y: -1 }}
-      whileTap={{ scale: 0.98 }}
       onClick={handleGoogleLogin}
       disabled={loading}
-      className="w-full flex items-center justify-center gap-3 bg-white border-2 border-slate-200 hover:border-slate-300 hover:bg-slate-50 text-slate-700 py-3.5 px-4 rounded-2xl font-bold text-sm shadow-sm transition-all disabled:opacity-70"
+      className="w-full flex items-center justify-center gap-3 bg-white border-2 border-slate-200 hover:border-slate-300 hover:bg-slate-50 hover:-translate-y-0.5 active:scale-95 transition-transform text-slate-700 py-3.5 px-4 rounded-2xl font-bold text-sm shadow-sm disabled:opacity-70"
     >
       {loading ? (
         <div className="w-5 h-5 border-2 border-slate-400 border-t-brand-600 rounded-full animate-spin" />
@@ -67,7 +64,7 @@ const GoogleButton = ({ onSuccess }) => {
         </svg>
       )}
       {loading ? 'Signing in...' : 'Continue with Google'}
-    </motion.button>
+    </button>
   );
 };
 
@@ -189,16 +186,14 @@ const LoginForm = ({ onToggleForm, onLoginSuccess }) => {
           </div>
         </div>
 
-        <motion.button
-          whileHover={{ scale: 1.02 }}
-          whileTap={{ scale: 0.98 }}
+        <button
           type="submit"
           disabled={isLoading}
-          className="w-full flex items-center justify-center gap-2 bg-slate-900 hover:bg-slate-800 text-white py-3.5 px-4 rounded-xl font-medium shadow-lg shadow-slate-200 transition-colors disabled:opacity-70"
+          className="w-full flex items-center justify-center gap-2 bg-slate-900 hover:bg-slate-800 text-white py-3.5 px-4 rounded-xl font-medium shadow-lg shadow-slate-200 hover:scale-[1.02] active:scale-95 transition-transform disabled:opacity-70"
         >
           <LogIn className="w-5 h-5" />
           {isLoading ? 'Signing In...' : 'Sign In'}
-        </motion.button>
+        </button>
       </form>
 
       <div className="mt-6 text-center">

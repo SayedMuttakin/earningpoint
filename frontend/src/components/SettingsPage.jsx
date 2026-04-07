@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
 import {
   User,
   Lock,
@@ -17,10 +16,10 @@ import {
   ArrowLeft,
   Smartphone,
   CheckCircle2,
-  X,
-  RefreshCw
+  X
 } from 'lucide-react';
 import { API_BASE } from '../config';
+import PullToRefresh from './PullToRefresh';
 
 const SettingsPage = ({ 
   darkMode, 
@@ -142,7 +141,8 @@ const SettingsPage = ({
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-900 pb-32">
+    <PullToRefresh onRefresh={handleRefresh} refreshing={refreshing}>
+      <div className="min-h-screen bg-slate-50 dark:bg-slate-900 pb-32">
       <div className="sticky top-0 z-30 bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl border-b border-slate-200 dark:border-slate-800">
         <div className="max-w-4xl mx-auto px-4 h-16 sm:h-20 flex items-center justify-between">
           <div className="flex items-center gap-4">
@@ -154,15 +154,6 @@ const SettingsPage = ({
             </button>
             <h1 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white">Settings</h1>
           </div>
-          <div className="flex items-center gap-2">
-            <button
-              onClick={handleRefresh}
-              disabled={refreshing}
-              className="p-2 rounded-full bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors"
-              aria-label="Refresh settings"
-            >
-              <RefreshCw className={`w-4 h-4 text-slate-600 dark:text-slate-300 ${refreshing ? 'animate-spin' : ''}`} />
-            </button>
             <button
               onClick={onLogout}
               className="flex items-center gap-2 px-4 py-2 bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 rounded-xl font-bold text-sm hover:bg-red-100 dark:hover:bg-red-900/30 transition-colors"
@@ -170,15 +161,13 @@ const SettingsPage = ({
               <LogOut className="w-4 h-4" />
               <span>Logout</span>
             </button>
-          </div>
         </div>
       </div>
+    </div>
 
       <div className="max-w-4xl mx-auto px-4 pt-8">
-        <motion.div 
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="bg-white dark:bg-slate-800 rounded-3xl p-6 mb-8 border border-slate-200 dark:border-slate-700 shadow-sm flex items-center gap-4"
+        <div 
+          className="bg-white dark:bg-slate-800 rounded-3xl p-6 mb-8 border border-slate-200 dark:border-slate-700 shadow-sm flex items-center gap-4 animate-fade-in"
         >
           <div className="relative">
             <img 
@@ -194,7 +183,7 @@ const SettingsPage = ({
             <h2 className="text-xl font-bold text-slate-900 dark:text-white truncate">{user?.name || 'User'}</h2>
             <p className="text-slate-500 dark:text-slate-400 text-sm truncate">{user?.phoneOrEmail}</p>
           </div>
-        </motion.div>
+        </div>
 
         <div className="space-y-8">
           {sections.map((group) => (
@@ -269,21 +258,14 @@ const SettingsPage = ({
         </div>
       </div>
 
-      <AnimatePresence>
         {showProfileModal && (
           <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
-            <motion.div 
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
+            <div 
               onClick={() => setShowProfileModal(false)}
-              className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm"
+              className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm animate-fade-in"
             />
-            <motion.div 
-              initial={{ opacity: 0, scale: 0.9, y: 20 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.9, y: 20 }}
-              className="relative w-full max-w-lg bg-white dark:bg-slate-800 rounded-3xl shadow-2xl border border-slate-200 dark:border-slate-700 overflow-hidden"
+            <div 
+              className="relative w-full max-w-lg bg-white dark:bg-slate-800 rounded-3xl shadow-2xl border border-slate-200 dark:border-slate-700 overflow-hidden animate-fade-in-up"
             >
               <div className="p-6 border-b border-slate-100 dark:border-slate-700 flex items-center justify-between">
                 <h3 className="text-xl font-black text-slate-900 dark:text-white">Personal Information</h3>
@@ -325,11 +307,10 @@ const SettingsPage = ({
                   {updateLoading ? 'Saving...' : 'Save Changes'}
                 </button>
               </form>
-            </motion.div>
+            </div>
           </div>
         )}
-      </AnimatePresence>
-    </div>
+    </PullToRefresh>
   );
 };
 

@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { Home, Bell, DollarSign, ShoppingCart, User, Settings, LogOut, Menu, X, HelpCircle } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
 import { API_BASE } from '../config';
 
 const navItems = [
@@ -72,11 +71,8 @@ const Navbar = ({ onLogout, activeTab, setActiveTab }) => {
                       className={`relative px-4 py-2 rounded-lg text-sm font-bold transition-colors ${isActive ? 'text-brand-700 dark:text-brand-400' : 'text-black dark:text-slate-300 hover:text-brand-600'}`}
                     >
                       {isActive && (
-                        <motion.div
-                          layoutId="active-pill"
-                          className="absolute inset-0 bg-white dark:bg-slate-700 rounded-xl shadow-sm border border-brand-100/50 dark:border-slate-600"
-                          initial={false}
-                          transition={{ type: "spring", stiffness: 300, damping: 30 }}
+                        <div
+                          className="absolute inset-0 bg-white dark:bg-slate-700 rounded-xl shadow-sm border border-brand-100/50 dark:border-slate-600 animate-fade-in"
                         />
                       )}
                       <span className="relative z-10 flex items-center gap-2">
@@ -110,14 +106,9 @@ const Navbar = ({ onLogout, activeTab, setActiveTab }) => {
                 </button>
                 
                 {/* Dropdown Menu for Setting and Log out */}
-                <AnimatePresence>
                   {isMobileMenuOpen && (
-                    <motion.div 
-                      initial={{ opacity: 0, y: -10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, scale: 0.95 }}
-                      transition={{ duration: 0.2 }}
-                      className="absolute top-14 right-0 mt-2 w-48 bg-white dark:bg-slate-800 rounded-2xl shadow-xl border border-slate-100 dark:border-slate-700 py-2.5 z-50 overflow-hidden"
+                    <div 
+                      className="absolute top-14 right-0 mt-2 w-48 bg-white dark:bg-slate-800 rounded-2xl shadow-xl border border-slate-100 dark:border-slate-700 py-2.5 z-50 overflow-hidden animate-fade-in-up"
                     >
                       <button className="w-full text-left px-5 py-3 text-sm font-medium text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 hover:text-brand-600 flex items-center gap-3 transition-colors">
                         <Settings className="w-4.5 h-4.5" /> Setting
@@ -126,9 +117,8 @@ const Navbar = ({ onLogout, activeTab, setActiveTab }) => {
                       <button onClick={() => { setIsMobileMenuOpen(false); onLogout(); }} className="w-full text-left px-5 py-3 text-sm font-medium text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-900/20 flex items-center gap-3 transition-colors">
                         <LogOut className="w-4.5 h-4.5" /> Log out
                       </button>
-                    </motion.div>
+                    </div>
                   )}
-                </AnimatePresence>
               </div>
             </div>
             

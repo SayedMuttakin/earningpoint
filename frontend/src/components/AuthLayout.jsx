@@ -1,5 +1,4 @@
 import React from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
 
 const AuthLayout = ({ children, isLogin }) => {
   return (
@@ -26,15 +25,12 @@ const AuthLayout = ({ children, isLogin }) => {
           
           <div className="z-10 relative flex-1 flex items-center justify-center mt-12">
             {/* An animated SVG illustration */}
-            <motion.svg 
-              initial={{ opacity: 0, scale: 0.8 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ duration: 0.8 }}
-              className="w-full h-auto max-w-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round"
+            <svg 
+              className="w-full h-auto max-w-sm animate-fade-in-up" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round"
             >
               <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
               <circle cx="12" cy="11" r="3" fill="currentColor" fillOpacity="0.2"/>
-            </motion.svg>
+            </svg>
           </div>
 
           <div className="z-10 relative">
@@ -48,17 +44,12 @@ const AuthLayout = ({ children, isLogin }) => {
         {/* Right Side: Form Content */}
         <div className="lg:w-1/2 p-8 sm:p-12 flex items-center justify-center relative bg-white">
           <div className="w-full max-w-md">
-            <AnimatePresence mode="wait">
-              <motion.div
+              <div
                 key={isLogin ? 'login' : 'register'}
-                initial={{ opacity: 0, x: 20 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: -20 }}
-                transition={{ duration: 0.3, ease: 'easeOut' }}
+                className="animate-fade-in-up"
               >
                 {children}
-              </motion.div>
-            </AnimatePresence>
+              </div>
           </div>
         </div>
 

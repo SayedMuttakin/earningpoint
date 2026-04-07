@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import PullToRefresh from './PullToRefresh';
 import { ChevronLeft, Camera, CheckCircle, Upload, ArrowRight, ShieldCheck, User, Search, ChevronDown } from 'lucide-react';
 
 const VerificationPage = ({ onBack }) => {
@@ -9,6 +9,12 @@ const VerificationPage = ({ onBack }) => {
   const [isCountryOpen, setIsCountryOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [docType, setDocType] = useState(null);
+  const [refreshing, setRefreshing] = useState(false);
+
+  const handleRefresh = async () => {
+    setRefreshing(true);
+    setTimeout(() => setRefreshing(false), 500);
+  };
 
   useEffect(() => {
     fetch('https://restcountries.com/v3.1/all?fields=name,cca2')
@@ -54,7 +60,7 @@ const VerificationPage = ({ onBack }) => {
     switch(step) {
       case 1:
         return (
-          <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} className="flex flex-col h-full space-y-6">
+          <div className="flex flex-col h-full space-y-6 animate-fade-in-up">
             <div className="text-center mb-4">
               <div className="w-16 h-16 bg-brand-50 rounded-full flex items-center justify-center mx-auto mb-4 text-brand-600">
                 <GlobeIcon className="w-8 h-8" />
@@ -75,44 +81,39 @@ const VerificationPage = ({ onBack }) => {
                 <ChevronDown className={`w-5 h-5 text-slate-400 transition-transform ${isCountryOpen ? 'rotate-180' : ''}`} />
               </button>
 
-              <AnimatePresence>
-                {isCountryOpen && (
-                  <motion.div 
-                    initial={{ opacity: 0, y: -10 }} 
-                    animate={{ opacity: 1, y: 0 }} 
-                    exit={{ opacity: 0, scale: 0.95 }}
-                    className="absolute top-full left-0 right-0 mt-2 bg-white rounded-2xl border border-slate-200 shadow-xl z-50 overflow-hidden flex flex-col max-h-80"
-                  >
-                    <div className="p-3 border-b border-slate-100 flex items-center gap-2 sticky top-0 bg-white">
-                      <Search className="w-5 h-5 text-slate-400" />
-                      <input 
-                        type="text" 
-                        placeholder="Search countries..." 
-                        value={searchQuery}
-                        onChange={(e) => setSearchQuery(e.target.value)}
-                        className="w-full outline-none text-slate-700 placeholder-slate-400"
-                        autoFocus
-                      />
-                    </div>
-                    <div className="overflow-y-auto scbar-hide">
-                      {countries.filter(c => c.name.toLowerCase().includes(searchQuery.toLowerCase())).map(c => (
-                        <button
-                          key={c.code}
-                          onClick={() => { setCountry(c); setIsCountryOpen(false); setSearchQuery(''); }}
-                          className="w-full flex items-center gap-3 p-3 hover:bg-slate-50 transition-colors text-left border-b border-slate-50 last:border-0"
-                        >
-                          <img src={`https://flagcdn.com/w40/${c.code.toLowerCase()}.png`} width="24" className="rounded-sm shadow-sm" alt={c.name} />
-                          <span className={`text-[15px] ${country.code === c.code ? 'font-bold text-brand-700' : 'font-medium text-slate-700'}`}>{c.name}</span>
-                          {country.code === c.code && <CheckCircle className="w-5 h-5 text-brand-500 ml-auto" />}
-                        </button>
-                      ))}
-                      {countries.filter(c => c.name.toLowerCase().includes(searchQuery.toLowerCase())).length === 0 && (
-                        <div className="p-4 text-center text-slate-500 text-sm">No countries found</div>
-                      )}
-                    </div>
-                  </motion.div>
-                )}
-              </AnimatePresence>
+              {isCountryOpen && (
+                <div 
+                  className="absolute top-full left-0 right-0 mt-2 bg-white rounded-2xl border border-slate-200 shadow-xl z-50 overflow-hidden flex flex-col max-h-80 animate-fade-in-up"
+                >
+                  <div className="p-3 border-b border-slate-100 flex items-center gap-2 sticky top-0 bg-white">
+                    <Search className="w-5 h-5 text-slate-400" />
+                    <input 
+                      type="text" 
+                      placeholder="Search countries..." 
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      className="w-full outline-none text-slate-700 placeholder-slate-400"
+                      autoFocus
+                    />
+                  </div>
+                  <div className="overflow-y-auto scbar-hide">
+                    {countries.filter(c => c.name.toLowerCase().includes(searchQuery.toLowerCase())).map(c => (
+                      <button
+                        key={c.code}
+                        onClick={() => { setCountry(c); setIsCountryOpen(false); setSearchQuery(''); }}
+                        className="w-full flex items-center gap-3 p-3 hover:bg-slate-50 transition-colors text-left border-b border-slate-50 last:border-0"
+                      >
+                        <img src={`https://flagcdn.com/w40/${c.code.toLowerCase()}.png`} width="24" className="rounded-sm shadow-sm" alt={c.name} />
+                        <span className={`text-[15px] ${country.code === c.code ? 'font-bold text-brand-700' : 'font-medium text-slate-700'}`}>{c.name}</span>
+                        {country.code === c.code && <CheckCircle className="w-5 h-5 text-brand-500 ml-auto" />}
+                      </button>
+                    ))}
+                    {countries.filter(c => c.name.toLowerCase().includes(searchQuery.toLowerCase())).length === 0 && (
+                      <div className="p-4 text-center text-slate-500 text-sm">No countries found</div>
+                    )}
+                  </div>
+                </div>
+              )}
             </div>
             
             <div className="mt-auto pt-8">
@@ -123,11 +124,11 @@ const VerificationPage = ({ onBack }) => {
                 Continue <ArrowRight className="w-5 h-5" />
               </button>
             </div>
-          </motion.div>
+          </div>
         );
       case 2:
         return (
-          <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} className="flex flex-col h-full space-y-6">
+          <div className="flex flex-col h-full space-y-6 animate-fade-in-up">
             <div className="text-center mb-4">
               <div className="w-16 h-16 bg-brand-50 rounded-full flex items-center justify-center mx-auto mb-4 text-brand-600">
                 <FileTextIcon className="w-8 h-8" />
@@ -158,7 +159,7 @@ const VerificationPage = ({ onBack }) => {
                 Continue <ArrowRight className="w-5 h-5" />
               </button>
             </div>
-          </motion.div>
+          </div>
         );
       case 3:
         return (
@@ -199,7 +200,7 @@ const VerificationPage = ({ onBack }) => {
         );
       case 6:
         return (
-          <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="flex flex-col items-center justify-center h-full py-12 text-center space-y-6">
+          <div className="flex flex-col items-center justify-center h-full py-12 text-center space-y-6 animate-fade-in-up">
             <div className="w-24 h-24 bg-green-100 rounded-full flex items-center justify-center text-green-500 shadow-sm mb-4">
               <CheckCircle className="w-12 h-12" />
             </div>
@@ -210,7 +211,7 @@ const VerificationPage = ({ onBack }) => {
             <button onClick={onBack} className="w-full max-w-sm mt-8 bg-brand-600 hover:bg-brand-700 text-white font-bold py-3.5 rounded-xl transition-colors shadow-md active:scale-95 text-lg">
               Return to Profile
             </button>
-          </motion.div>
+          </div>
         );
       default:
         return null;
@@ -218,44 +219,42 @@ const VerificationPage = ({ onBack }) => {
   };
 
   return (
-    <div className="w-full min-h-screen bg-slate-50 flex flex-col relative pb-24">
-      {/* Header */}
-      <div className="sticky top-0 z-10 bg-white border-b border-slate-100 shadow-sm">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex items-center relative">
-          <button onClick={onBack} className="absolute left-4 sm:left-6 lg:left-8 w-10 h-10 rounded-full bg-slate-50 flex items-center justify-center hover:bg-slate-100 transition-colors">
-            <ChevronLeft className="w-6 h-6 text-slate-700" />
-          </button>
-          <h1 className="text-xl font-bold text-slate-900 mx-auto">Verify Identity</h1>
+    <PullToRefresh onRefresh={handleRefresh} refreshing={refreshing}>
+      <div className="w-full min-h-screen bg-slate-50 flex flex-col relative pb-24">
+        {/* Header */}
+        <div className="sticky top-0 z-10 bg-white border-b border-slate-100 shadow-sm">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex items-center relative">
+            <button onClick={onBack} className="absolute left-4 sm:left-6 lg:left-8 w-10 h-10 rounded-full bg-slate-50 flex items-center justify-center hover:bg-slate-100 transition-colors">
+              <ChevronLeft className="w-6 h-6 text-slate-700" />
+            </button>
+            <h1 className="text-xl font-bold text-slate-900 mx-auto">Verify Identity</h1>
+          </div>
         </div>
-      </div>
 
-      {/* Progress Bar */}
-      {step < 6 && (
-        <div className="w-full bg-slate-200 h-1.5">
-          <motion.div 
-            className="h-full bg-brand-500"
-            initial={{ width: 0 }}
-            animate={{ width: `${(step / 5) * 100}%` }}
-            transition={{ duration: 0.3 }}
-          />
-        </div>
-      )}
+        {/* Progress Bar */}
+        {step < 6 && (
+          <div className="w-full bg-slate-200 h-1.5">
+            <div 
+              className="h-full bg-brand-500 transition-all duration-300"
+              style={{ width: `${(step / 5) * 100}%` }}
+            />
+          </div>
+        )}
 
-      {/* Main Content Area */}
-      <div className="max-w-7xl mx-auto w-full px-5 sm:px-8 py-8 sm:py-12 flex-1 flex justify-center">
-        <div className="w-full max-w-xl flex flex-col h-full">
-          <AnimatePresence mode="wait">
+        {/* Main Content Area */}
+        <div className="max-w-7xl mx-auto w-full px-5 sm:px-8 py-8 sm:py-12 flex-1 flex justify-center">
+          <div className="w-full max-w-xl flex flex-col h-full">
             {renderStepContent()}
-          </AnimatePresence>
+          </div>
         </div>
       </div>
-    </div>
+    </PullToRefresh>
   );
 };
 
 // Reusable Subcomponent for Camera Capture Steps
 const CaptureStep = ({ title, description, image, onCapture, onNext, inputRef, captureMode, isSelfie }) => (
-  <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="flex flex-col h-full space-y-6">
+  <div className="flex flex-col h-full space-y-6 animate-fade-in-up">
     <div className="text-center mb-2">
       <div className="w-16 h-16 bg-brand-50 rounded-full flex items-center justify-center mx-auto mb-4 text-brand-600 shadow-sm">
         {isSelfie ? <User className="w-8 h-8" /> : <Camera className="w-8 h-8" />}
@@ -308,7 +307,7 @@ const CaptureStep = ({ title, description, image, onCapture, onNext, inputRef, c
         Confirm & Continue <ArrowRight className="w-5 h-5" />
       </button>
     </div>
-  </motion.div>
+  </div>
 );
 
 // Simple SVG Icons for generic use

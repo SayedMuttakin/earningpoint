@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { API_BASE } from '../config';
-import { motion, AnimatePresence } from 'framer-motion';
 import { Lock, UserPlus, AtSign, Globe, ChevronDown, Check, Search, Users, Eye, EyeOff } from 'lucide-react';
 import { countries } from '../utils/countries';
 
@@ -59,13 +58,11 @@ const GoogleButton = ({ onSuccess }) => {
   };
 
   return (
-    <motion.button
+    <button
       type="button"
-      whileHover={{ scale: 1.02, y: -1 }}
-      whileTap={{ scale: 0.98 }}
       onClick={handleGoogleLogin}
       disabled={loading}
-      className="w-full flex items-center justify-center gap-3 bg-white border-2 border-slate-200 hover:border-slate-300 hover:bg-slate-50 text-slate-700 py-3.5 px-4 rounded-2xl font-bold text-sm shadow-sm transition-all disabled:opacity-70"
+      className="w-full flex items-center justify-center gap-3 bg-white border-2 border-slate-200 hover:border-slate-300 hover:bg-slate-50 hover:-translate-y-0.5 active:scale-95 transition-transform text-slate-700 py-3.5 px-4 rounded-2xl font-bold text-sm shadow-sm disabled:opacity-70"
     >
       {loading ? (
         <div className="w-5 h-5 border-2 border-slate-400 border-t-brand-600 rounded-full animate-spin" />
@@ -78,7 +75,7 @@ const GoogleButton = ({ onSuccess }) => {
         </svg>
       )}
       {loading ? 'Signing in...' : 'Continue with Google'}
-    </motion.button>
+    </button>
   );
 };
 
@@ -296,13 +293,9 @@ const RegistrationForm = ({ onToggleForm, onRegisterSuccess }) => {
             <ChevronDown className={`w-5 h-5 text-slate-400 transition-transform duration-300 ${isCountryDropdownOpen ? 'rotate-180' : ''}`} />
           </button>
 
-          <AnimatePresence>
             {isCountryDropdownOpen && (
-              <motion.div
-                initial={{ opacity: 0, y: 10, scale: 0.95 }}
-                animate={{ opacity: 1, y: 0, scale: 1 }}
-                exit={{ opacity: 0, y: 10, scale: 0.95 }}
-                className="absolute z-50 left-0 right-0 mt-3 bg-white rounded-3xl shadow-2xl border-2 border-slate-100 overflow-hidden backdrop-blur-xl"
+              <div
+                className="absolute z-50 left-0 right-0 mt-3 bg-white rounded-3xl shadow-2xl border-2 border-slate-100 overflow-hidden backdrop-blur-xl animate-fade-in-up"
               >
                 <div className="p-3 border-b-2 border-slate-50 bg-slate-50/50">
                   <div className="relative">
@@ -353,9 +346,8 @@ const RegistrationForm = ({ onToggleForm, onRegisterSuccess }) => {
                     </div>
                   )}
                 </div>
-              </motion.div>
+              </div>
             )}
-          </AnimatePresence>
         </div>
 
         {/* Refer Code Field */}
@@ -386,16 +378,14 @@ const RegistrationForm = ({ onToggleForm, onRegisterSuccess }) => {
           )}
         </div>
 
-        <motion.button
-          whileHover={{ scale: 1.02, translateY: -2 }}
-          whileTap={{ scale: 0.98 }}
+        <button
           type="submit"
           disabled={isLoading}
-          className="w-full flex items-center justify-center gap-3 bg-brand-600 hover:bg-brand-700 text-white py-4 px-6 rounded-2xl font-bold text-lg shadow-xl shadow-brand-200/50 transition-all disabled:opacity-70 mt-2"
+          className="w-full flex items-center justify-center gap-3 bg-brand-600 hover:bg-brand-700 hover:-translate-y-0.5 active:scale-95 text-white py-4 px-6 rounded-2xl font-bold text-lg shadow-xl shadow-brand-200/50 transition-all disabled:opacity-70 mt-2"
         >
           <UserPlus className="w-6 h-6" />
           {isLoading ? 'CREATING ACCOUNT...' : 'CREATE ACCOUNT'}
-        </motion.button>
+        </button>
       </form>
 
       <div className="mt-6 text-center">

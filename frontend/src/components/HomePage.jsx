@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { BadgeCheck, Loader2, RefreshCw } from 'lucide-react';
+import { BadgeCheck, Loader2 } from 'lucide-react';
 import { API_BASE } from '../config';
+import PullToRefresh from './PullToRefresh';
 
 const PostAd = ({ index }) => {
   const isLarge = index > 1; // 1st is 320x50, 2nd and 3rd are 320x250
@@ -191,97 +192,87 @@ const HomePage = () => {
   }, []);
 
   return (
-    <div className="min-h-screen bg-slate-50 sm:bg-transparent flex flex-col">
-      {/* Headlines News Ticker */}
-      {!loading && !error && posts.length > 0 && (
-        <div className="bg-white text-slate-800 py-2.5 sticky top-[132px] sm:top-[140px] md:top-16 z-30 shadow-sm border-b border-slate-200">
-          <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center">
-            <div className="flex items-center gap-2 pr-4 border-r border-slate-200 shrink-0">
-              <span className="relative flex h-3 w-3">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-rose-400 opacity-75"></span>
-                <span className="relative inline-flex rounded-full h-3 w-3 bg-rose-500"></span>
-              </span>
-              <span className="font-black text-brand-600 uppercase tracking-widest text-xs hidden sm:inline-block">LATEST NEWS</span>
-              <span className="font-black text-brand-600 uppercase tracking-widest text-xs sm:hidden">LATEST</span>
+    <PullToRefresh onRefresh={handleRefresh} refreshing={refreshing}>
+      <div className="min-h-screen bg-slate-50 sm:bg-transparent flex flex-col">
+        {/* Headlines News Ticker */}
+        {!loading && !error && posts.length > 0 && (
+          <div className="bg-white text-slate-800 py-2.5 sticky top-[132px] sm:top-[140px] md:top-16 z-30 shadow-sm border-b border-slate-200">
+            <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center">
+              <div className="flex items-center gap-2 pr-4 border-r border-slate-200 shrink-0">
+                <span className="relative flex h-3 w-3">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-rose-400 opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-3 w-3 bg-rose-500"></span>
+                </span>
+                <span className="font-black text-brand-600 uppercase tracking-widest text-xs hidden sm:inline-block">LATEST NEWS</span>
+                <span className="font-black text-brand-600 uppercase tracking-widest text-xs sm:hidden">LATEST</span>
+              </div>
+              <div className="flex-1 overflow-hidden ml-4 relative h-8 flex items-center">
+                <motion.div
+                  animate={{ x: [0, "-50%"] }}
+                  transition={{
+                    repeat: Infinity,
+                    duration: 50, // Comfortable slow speed
+                    ease: "linear",
+                  }}
+                  className="flex whitespace-nowrap absolute left-0 will-change-transform"
+                >
+                  {/* Render posts twice for a seamless continuous loop */}
+                  {[...posts, ...posts].map((post, idx) => (
+                    <a
+                      key={`${post._id}-${idx}`}
+                      href={`#post-${post._id}`}
+                      onClick={(e) => {
+                        e.preventDefault();
+                        document.getElementById(`post-${post._id}`)?.scrollIntoView({ behavior: 'smooth' });
+                      }}
+                      className="mx-10 hover:text-brand-600 transition-colors inline-flex items-center gap-2 text-[15px] font-bold text-slate-700"
+                    >
+                      {idx > 0 && <span className="text-slate-300 font-black px-4">•</span>}
+                      {post.title || post.content.substring(0, 60) + "..."}
+                    </a>
+                  ))}
+                </motion.div>
+              </div>
             </div>
-            <div className="flex-1 overflow-hidden ml-4 relative h-8 flex items-center">
-              <motion.div
-                animate={{ x: [0, "-50%"] }}
-                transition={{
-                  repeat: Infinity,
-                  duration: 50, // Comfortable slow speed
-                  ease: "linear",
-                }}
-                className="flex whitespace-nowrap absolute left-0 will-change-transform"
-              >
-                {/* Render posts twice for a seamless continuous loop */}
-                {[...posts, ...posts].map((post, idx) => (
-                  <a
-                    key={`${post._id}-${idx}`}
-                    href={`#post-${post._id}`}
-                    onClick={(e) => {
-                      e.preventDefault();
-                      document.getElementById(`post-${post._id}`)?.scrollIntoView({ behavior: 'smooth' });
-                    }}
-                    className="mx-10 hover:text-brand-600 transition-colors inline-flex items-center gap-2 text-[15px] font-bold text-slate-700"
-                  >
-                    {idx > 0 && <span className="text-slate-300 font-black px-4">•</span>}
-                    {post.title || post.content.substring(0, 60) + "..."}
-                  </a>
-                ))}
-              </motion.div>
-            </div>
-            
-            {/* Refresh Button */}
-            <button
-              onClick={handleRefresh}
-              disabled={refreshing}
-              className="ml-4 p-1.5 rounded-full bg-slate-100 hover:bg-slate-200 active:scale-95 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-brand-500/30"
-              aria-label="Refresh latest updates"
-            >
-              <RefreshCw
-                className={`w-4 h-4 text-slate-600 ${refreshing ? 'animate-spin' : ''}`}
-              />
-            </button>
           </div>
-        </div>
-      )}
+        )}
 
-      {/* Main Column Feed */}
-      <main className="max-w-4xl mx-auto px-0 sm:px-6 lg:px-8 py-3 sm:py-8 w-full flex-1">
-        <div className="flex flex-col gap-3 sm:gap-6">
-          
-          <AnimatePresence mode="popLayout">
-            {loading ? (
-              <div className="flex flex-col items-center justify-center py-24 sm:py-32 gap-3">
-                <Loader2 className="w-8 h-8 text-blue-500 animate-spin" />
-                <span className="text-slate-400 font-medium text-sm">Loading feed...</span>
-              </div>
-            ) : error ? (
-              <div className="py-20 text-center px-4">
-                <div className="text-slate-500 text-sm">{error}. Please try again later.</div>
-              </div>
-            ) : posts.length > 0 ? (
-              posts.map((post) => (
-                <PostCard key={post._id} post={post} />
-              ))
-            ) : (
-              <div className="py-20 text-center text-slate-500">
-                No updates available yet.
+        {/* Main Column Feed */}
+        <main className="max-w-4xl mx-auto px-0 sm:px-6 lg:px-8 py-3 sm:py-8 w-full flex-1">
+          <div className="flex flex-col gap-3 sm:gap-6">
+            
+            <AnimatePresence mode="popLayout">
+              {loading ? (
+                <div className="flex flex-col items-center justify-center py-24 sm:py-32 gap-3">
+                  <Loader2 className="w-8 h-8 text-blue-500 animate-spin" />
+                  <span className="text-slate-400 font-medium text-sm">Loading feed...</span>
+                </div>
+              ) : error ? (
+                <div className="py-20 text-center px-4">
+                  <div className="text-slate-500 text-sm">{error}. Please try again later.</div>
+                </div>
+              ) : posts.length > 0 ? (
+                posts.map((post) => (
+                  <PostCard key={post._id} post={post} />
+                ))
+              ) : (
+                <div className="py-20 text-center text-slate-500">
+                  No updates available yet.
+                </div>
+              )}
+            </AnimatePresence>
+
+            {/* End of Feed */}
+            {!loading && !error && posts.length > 0 && (
+              <div className="py-12 text-center text-slate-400 text-[13px] font-semibold tracking-wide uppercase">
+                You Have Caught Up With All Updates!
               </div>
             )}
-          </AnimatePresence>
 
-          {/* End of Feed */}
-          {!loading && !error && posts.length > 0 && (
-            <div className="py-12 text-center text-slate-400 text-[13px] font-semibold tracking-wide uppercase">
-              You Have Caught Up With All Updates!
-            </div>
-          )}
-
-        </div>
-      </main>
-    </div>
+          </div>
+        </main>
+      </div>
+    </PullToRefresh>
   );
 };
 

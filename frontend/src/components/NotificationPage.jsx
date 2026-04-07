@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
 import {
   Bell,
   CheckCircle2,
@@ -9,10 +8,10 @@ import {
   Trash2,
   Clock,
   ArrowLeft,
-  Info,
-  RefreshCw
+  Info
 } from 'lucide-react';
 import { API_BASE } from '../config';
+import PullToRefresh from './PullToRefresh';
 
 const NotificationPage = ({ onBack }) => {
   const [notifications, setNotifications] = useState([]);
@@ -126,56 +125,43 @@ const NotificationPage = ({ onBack }) => {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-900 pb-32">
-      <div className="max-w-4xl mx-auto px-4 py-8 sm:py-12">
-        {/* Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6 mb-10">
-          <div className="flex items-center gap-5">
-            <button 
-              onClick={onBack}
-              className="p-3 bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700 text-slate-500 hover:text-indigo-600 transition-all shadow-sm group"
-            >
-              <ArrowLeft size={22} className="group-hover:-translate-x-1 transition-transform" />
-            </button>
-            <div>
-              <h1 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white flex items-center gap-3">
-                <Bell className="w-8 h-8 text-indigo-600" /> Notifications
-              </h1>
-              <p className="text-xs text-slate-500 font-bold uppercase tracking-widest mt-1">Your Platform Activity</p>
+    <PullToRefresh onRefresh={handleRefresh} refreshing={refreshing}>
+      <div className="min-h-screen bg-slate-50 dark:bg-slate-900 pb-32">
+        <div className="max-w-4xl mx-auto px-4 py-8 sm:py-12">
+          {/* Header */}
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6 mb-10">
+            <div className="flex items-center gap-5">
+              <button 
+                onClick={onBack}
+                className="p-3 bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700 text-slate-500 hover:text-indigo-600 transition-all shadow-sm group"
+              >
+                <ArrowLeft size={22} className="group-hover:-translate-x-1 transition-transform" />
+              </button>
+              <div>
+                <h1 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white flex items-center gap-3">
+                  <Bell className="w-8 h-8 text-indigo-600" /> Notifications
+                </h1>
+                <p className="text-xs text-slate-500 font-bold uppercase tracking-widest mt-1">Your Platform Activity</p>
+              </div>
+            </div>
+            
+            <div className="flex items-center gap-3">
+              {notifications.length > 0 && (
+                <button
+                  onClick={markAllAsRead}
+                  className="text-sm font-black bg-indigo-600 text-white px-6 py-3 rounded-2xl flex items-center justify-center gap-2 hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-600/20 active:scale-95"
+                >
+                  <CheckCircle2 size={18} /> Mark all read
+                </button>
+              )}
             </div>
           </div>
-          
-          <div className="flex items-center gap-3">
-            {/* Refresh Button */}
-            <button
-              onClick={handleRefresh}
-              disabled={refreshing}
-              className="p-2.5 rounded-full bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 active:scale-95 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-indigo-500/30"
-              aria-label="Refresh notifications"
-            >
-              <RefreshCw
-                className={`w-4 h-4 text-slate-600 dark:text-slate-300 ${refreshing ? 'animate-spin' : ''}`}
-              />
-            </button>
-            
-            {notifications.length > 0 && (
-              <button
-                onClick={markAllAsRead}
-                className="text-sm font-black bg-indigo-600 text-white px-6 py-3 rounded-2xl flex items-center justify-center gap-2 hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-600/20 active:scale-95"
-              >
-                <CheckCircle2 size={18} /> Mark all read
-              </button>
-            )}
-          </div>
-        </div>
 
         {/* Notification List */}
-        <AnimatePresence mode="popLayout">
+        <div className="animate-fade-in">
           {notifications.length === 0 ? (
-            <motion.div 
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              className="text-center py-24 bg-white dark:bg-slate-800 rounded-[3rem] border border-slate-100 dark:border-slate-700 shadow-xl overflow-hidden relative"
+            <div 
+              className="text-center py-24 bg-white dark:bg-slate-800 rounded-[3rem] border border-slate-100 dark:border-slate-700 shadow-xl overflow-hidden relative animate-fade-in-up"
             >
               <div className="absolute -top-10 -left-10 w-40 h-40 bg-indigo-600/5 rounded-full blur-3xl opacity-50" />
               <div className="absolute -bottom-10 -right-10 w-40 h-40 bg-blue-500/5 rounded-full blur-3xl opacity-50" />
@@ -189,29 +175,24 @@ const NotificationPage = ({ onBack }) => {
                   Stay tuned! When you earn coins, complete tasks, or receive updates, they'll appear here beautifully.
                 </p>
               </div>
-            </motion.div>
+              </div>
           ) : (
             <div className="space-y-4 sm:space-y-6">
               {notifications.map((n, idx) => (
-                <motion.div
+                <div
                   key={n._id}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, scale: 0.95 }}
-                  transition={{ delay: idx * 0.05 }}
-                  className={`group relative p-5 sm:p-6 rounded-[2.5rem] border transition-all flex gap-4 sm:gap-6 ${
+                  className={`group relative p-5 sm:p-6 rounded-[2.5rem] border transition-all flex gap-4 sm:gap-6 animate-fade-in-up ${
                     n.isRead 
                       ? 'bg-white/50 dark:bg-slate-800/50 border-slate-100 dark:border-slate-700 opacity-80' 
                       : 'bg-white dark:bg-slate-800 border-indigo-600/10 dark:border-indigo-600/20 shadow-xl shadow-indigo-600/5 ring-1 ring-indigo-600/5'
                   }`}
+                  style={{ animationDelay: `${idx * 0.05}s` }}
                 >
                   {!n.isRead && (
                     <div className="absolute top-6 right-6 w-3 h-3 bg-indigo-600 rounded-full shadow-[0_0_15px_rgba(79,70,229,0.5)]">
-                      <motion.div 
-                        animate={{ scale: [1, 2, 1], opacity: [0.5, 0, 0.5] }}
-                        transition={{ duration: 2, repeat: Infinity }}
-                        className="absolute inset-0 bg-indigo-600 rounded-full"
-                      />
+                    <div 
+                      className="absolute inset-0 bg-indigo-600 rounded-full animate-pulse"
+                    />
                     </div>
                   )}
                   
@@ -248,11 +229,11 @@ const NotificationPage = ({ onBack }) => {
                   >
                     <Trash2 size={20} />
                   </button>
-                </motion.div>
+                </div>
               ))}
             </div>
           )}
-        </AnimatePresence>
+        </div>
 
         {/* Footer Info */}
         <div className="mt-16 text-center pb-12">
@@ -260,9 +241,10 @@ const NotificationPage = ({ onBack }) => {
           <p className="text-[11px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-[0.3em]">
              Zenvio Notifications Center
           </p>
+          </div>
         </div>
       </div>
-    </div>
+    </PullToRefresh>
   );
 };
 

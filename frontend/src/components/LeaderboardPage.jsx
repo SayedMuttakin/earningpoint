@@ -1,6 +1,6 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { ChevronLeft, Crown, Zap } from 'lucide-react';
-import { motion } from 'framer-motion';
+import PullToRefresh from './PullToRefresh';
 
 const MOCK_DATA = [
   { id: 1, name: 'Jordyn Kenter', score: 96239, avatar: 'https://i.pravatar.cc/150?u=12', rank: 1 },
@@ -15,14 +15,21 @@ const MOCK_DATA = [
 ];
 
 const LeaderboardPage = ({ onBack }) => {
+  const [refreshing, setRefreshing] = useState(false);
   const top3 = MOCK_DATA.slice(0, 3);
   const rest = MOCK_DATA.slice(3);
+
+  const handleRefresh = () => {
+    setRefreshing(true);
+    setTimeout(() => setRefreshing(false), 1500);
+  };
 
   // Reorder for podium: 2nd, 1st, 3rd
   const podiumData = [top3[1], top3[0], top3[2]];
 
   return (
-    <div className="w-full min-h-screen bg-slate-50 flex flex-col pb-24 font-sans">
+    <PullToRefresh onRefresh={handleRefresh} refreshing={refreshing}>
+      <div className="w-full min-h-screen bg-slate-50 flex flex-col pb-24 font-sans">
       <div className="sticky top-0 z-10 bg-white border-b border-slate-100 shadow-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex items-center">
           <button onClick={onBack} className="w-10 h-10 rounded-full bg-slate-50 flex items-center justify-center hover:bg-slate-100 transition-colors mr-4">
@@ -66,10 +73,7 @@ const LeaderboardPage = ({ onBack }) => {
                   }
 
                   return (
-                    <motion.div 
-                      initial={{ opacity: 0, y: 50 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: index * 0.15 }}
+                    <div 
                       key={user.id} 
                       className={`relative flex flex-col items-center justify-end w-28 sm:w-32 lg:w-40 rounded-t-2xl lg:rounded-t-3xl border ${bgClass} pb-4 px-2 hover:-translate-y-2 transition-transform duration-300 ${heightClass}`}
                     >
@@ -95,7 +99,7 @@ const LeaderboardPage = ({ onBack }) => {
                           <span className="text-xs sm:text-sm lg:text-base">{user.score.toLocaleString()}</span>
                         </div>
                       </div>
-                    </motion.div>
+                    </div>
                   );
                 })}
               </div>
@@ -104,11 +108,8 @@ const LeaderboardPage = ({ onBack }) => {
 
           {/* Right Column: List Section for Desktop, stacked on Mobile */}
           <div className="w-full lg:w-1/2 order-2">
-            <motion.div 
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: 0.5 }}
-              className="bg-white rounded-3xl shadow-md border border-slate-100 overflow-hidden"
+            <div 
+              className="bg-white rounded-3xl shadow-md border border-slate-100 overflow-hidden animate-fade-in-up"
             >
               <div className="px-5 lg:px-8 py-4 lg:py-6 border-b border-slate-50 bg-slate-50/50 flex items-center justify-between">
                 <p className="text-sm lg:text-base font-bold text-slate-600 uppercase tracking-widest">Global Top Earners</p>
@@ -139,12 +140,13 @@ const LeaderboardPage = ({ onBack }) => {
                   </div>
                 ))}
               </div>
-            </motion.div>
+            </div>
           </div>
           
         </div>
       </div>
-    </div>
+      </div>
+    </PullToRefresh>
   );
 };
 

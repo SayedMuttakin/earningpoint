@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { API_BASE } from '../config';
 import { ChevronLeft, Trash2, AlertTriangle, Eye, EyeOff } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
+import PullToRefresh from './PullToRefresh';
 
 const DeleteAccountPage = ({ onBack, onLogout }) => {
   const [password, setPassword] = useState('');
@@ -9,6 +9,12 @@ const DeleteAccountPage = ({ onBack, onLogout }) => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
   const [step, setStep] = useState('warning'); // 'warning' | 'confirm'
+  const [refreshing, setRefreshing] = useState(false);
+
+  const handleRefresh = async () => {
+    setRefreshing(true);
+    setTimeout(() => setRefreshing(false), 500);
+  };
 
   const handleDelete = async (e) => {
     e.preventDefault();
@@ -43,26 +49,23 @@ const DeleteAccountPage = ({ onBack, onLogout }) => {
   };
 
   return (
-    <div className="w-full min-h-screen bg-slate-50 dark:bg-slate-900 flex flex-col pb-24">
-      <div className="sticky top-0 z-10 bg-white dark:bg-slate-800 border-b border-slate-100 dark:border-slate-700 shadow-sm">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex items-center">
-          <button onClick={onBack} className="w-10 h-10 rounded-full bg-slate-50 dark:bg-slate-700 flex items-center justify-center hover:bg-slate-100 dark:hover:bg-slate-600 transition-colors mr-4">
-            <ChevronLeft className="w-6 h-6 text-slate-700 dark:text-slate-200" />
-          </button>
-          <h1 className="text-xl font-bold text-slate-900 dark:text-white">Delete Account</h1>
+    <PullToRefresh onRefresh={handleRefresh} refreshing={refreshing}>
+      <div className="w-full min-h-screen bg-slate-50 dark:bg-slate-900 flex flex-col pb-24">
+        <div className="sticky top-0 z-10 bg-white dark:bg-slate-800 border-b border-slate-100 dark:border-slate-700 shadow-sm">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex items-center">
+            <button onClick={onBack} className="w-10 h-10 rounded-full bg-slate-50 dark:bg-slate-700 flex items-center justify-center hover:bg-slate-100 dark:hover:bg-slate-600 transition-colors mr-4">
+              <ChevronLeft className="w-6 h-6 text-slate-700 dark:text-slate-200" />
+            </button>
+            <h1 className="text-xl font-bold text-slate-900 dark:text-white">Delete Account</h1>
+          </div>
         </div>
-      </div>
 
-      <div className="max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-8 flex justify-center">
-        <div className="w-full max-w-xl">
-          <AnimatePresence mode="wait">
+        <div className="max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-8 flex justify-center">
+          <div className="w-full max-w-xl">
             {step === 'warning' && (
-              <motion.div
+              <div
                 key="warning"
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -20 }}
-                className="bg-white dark:bg-slate-800 rounded-3xl p-6 sm:p-10 shadow-sm border border-slate-200 dark:border-slate-700 text-center"
+                className="bg-white dark:bg-slate-800 rounded-3xl p-6 sm:p-10 shadow-sm border border-slate-200 dark:border-slate-700 text-center animate-fade-in-up"
               >
                 <div className="w-20 h-20 bg-red-50 dark:bg-red-900/30 rounded-full flex items-center justify-center mx-auto mb-6">
                   <AlertTriangle className="w-10 h-10 text-red-500" />
@@ -108,16 +111,13 @@ const DeleteAccountPage = ({ onBack, onLogout }) => {
                     Continue
                   </button>
                 </div>
-              </motion.div>
+              </div>
             )}
 
             {step === 'confirm' && (
-              <motion.div
+              <div
                 key="confirm"
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -20 }}
-                className="bg-white dark:bg-slate-800 rounded-3xl p-6 sm:p-10 shadow-sm border border-slate-200 dark:border-slate-700"
+                className="bg-white dark:bg-slate-800 rounded-3xl p-6 sm:p-10 shadow-sm border border-slate-200 dark:border-slate-700 animate-fade-in-up"
               >
                 <div className="w-16 h-16 bg-red-50 dark:bg-red-900/30 rounded-2xl flex items-center justify-center mb-6">
                   <Trash2 className="w-8 h-8 text-red-500" />
@@ -167,12 +167,12 @@ const DeleteAccountPage = ({ onBack, onLogout }) => {
                     </button>
                   </div>
                 </form>
-              </motion.div>
+              </div>
             )}
-          </AnimatePresence>
+          </div>
         </div>
       </div>
-    </div>
+    </PullToRefresh>
   );
 };
 

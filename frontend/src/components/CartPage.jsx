@@ -1,6 +1,5 @@
-import React, { useState } from 'react';
-import { motion } from 'framer-motion';
-import { ShoppingCart, Flame, RefreshCw } from 'lucide-react';
+import { ShoppingCart, Flame } from 'lucide-react';
+import PullToRefresh from './PullToRefresh';
 
 const STORE_PRODUCTS = [
   {
@@ -50,20 +49,13 @@ const CartPage = ({ onBuyNow }) => {
   };
 
   return (
-    <div className="max-w-[1200px] mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-12 bg-[#F9FAFB] min-h-screen">
-      {/* Header */}
-      <div className="text-center mb-8 relative">
-        <div className="flex items-center justify-center gap-2">
-          <h1 className="text-2xl sm:text-3xl font-black text-slate-900 mb-2">Zenvio Store</h1>
-          <button
-            onClick={handleRefresh}
-            disabled={refreshing}
-            className="ml-2 p-1.5 rounded-full bg-slate-100 hover:bg-slate-200 active:scale-95 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-brand-500/30"
-            aria-label="Refresh"
-          >
-            <RefreshCw className={`w-4 h-4 text-slate-600 ${refreshing ? 'animate-spin' : ''}`} />
-          </button>
-        </div>
+    <PullToRefresh onRefresh={handleRefresh} refreshing={refreshing}>
+      <div className="max-w-[1200px] mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-12 bg-[#F9FAFB] min-h-screen">
+        {/* Header */}
+        <div className="text-center mb-8 relative">
+          <div className="flex items-center justify-center gap-2">
+            <h1 className="text-2xl sm:text-3xl font-black text-slate-900 mb-2">Zenvio Store</h1>
+          </div>
         <p className="text-sm sm:text-base text-slate-500 max-w-lg mx-auto">
           Purchase exclusive memberships, tools, and merchandise directly using your earning balance or cash on delivery.
         </p>
@@ -74,12 +66,10 @@ const CartPage = ({ onBuyNow }) => {
         {STORE_PRODUCTS.map((product, index) => {
           const savings = product.originalPrice ? product.originalPrice - product.price : 0;
           return (
-            <motion.div
+            <div
               key={product.id}
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ duration: 0.3, delay: index * 0.1 }}
-              className="group bg-white rounded-[20px] shadow-sm hover:shadow-lg transition-all duration-300 flex flex-col overflow-hidden relative border border-slate-100"
+              className="group bg-white rounded-[20px] shadow-sm hover:shadow-lg transition-all duration-300 flex flex-col overflow-hidden relative border border-slate-100 animate-fade-in-up"
+              style={{ animationDelay: `${index * 0.1}s` }}
             >
               {/* Image Section */}
               <div className="relative h-40 sm:h-52 w-full flex items-center justify-center overflow-hidden border-b border-slate-50">
@@ -125,11 +115,12 @@ const CartPage = ({ onBuyNow }) => {
                   </button>
                 </div>
               </div>
-            </motion.div>
+            </div>
           );
         })}
       </div>
-    </div>
+      </div>
+    </PullToRefresh>
   );
 };
 

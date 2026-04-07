@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
 import { AdMobService } from '../utils/admob';
 import { API_BASE } from '../config';
 import {
@@ -29,6 +28,7 @@ const gkQuizDB = [
 
 
 import { countries } from '../utils/countries';
+import PullToRefresh from './PullToRefresh';
 
 const ipPackages = [
   { id: 'month-1', name: '1 Month', price: 600, freeInfo: '7 Days free', label: '1 Month (+7 Days free)' },
@@ -1320,16 +1320,6 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
               <span className="text-white font-black text-sm">৳{balance.toFixed(2)}</span>
               <span className="text-white/40 text-xs font-medium">|</span>
               <span className="text-amber-300 text-xs font-bold">{coins} Coins</span>
-              <button
-                onClick={handleRefresh}
-                disabled={refreshing}
-                className="ml-1 p-1 rounded-full bg-white/10 hover:bg-white/20 active:scale-95 transition-all duration-200 focus:outline-none focus:ring-1 focus:ring-white/30"
-                aria-label="Refresh balance"
-              >
-                <RefreshCw
-                  className={`w-3 h-3 text-white ${refreshing ? 'animate-spin' : ''}`}
-                />
-              </button>
             </div>
           </div>
 
@@ -1501,7 +1491,8 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
   const progressPercent = levelInfo.isMax ? 100 : Math.min(100, Math.max(0, ((levelInfo.current - (levelInfo.prev || 0)) / (levelInfo.target - (levelInfo.prev || 0))) * 100));
 
   return (
-    <main className="min-h-screen bg-slate-50 dark:bg-slate-950 transition-colors duration-500 pb-24 md:pb-8">
+    <PullToRefresh onRefresh={handleRefresh} refreshing={refreshing}>
+      <main className="min-h-screen bg-slate-50 dark:bg-slate-950 transition-colors duration-500 pb-24 md:pb-8">
       {/* Toast Notification */}
       {toast.visible && (
           <div
@@ -3868,7 +3859,8 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
 
 
       
-    </main>
+      </main>
+    </PullToRefresh>
   );
 };
 

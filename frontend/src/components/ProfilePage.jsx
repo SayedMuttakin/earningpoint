@@ -1,6 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { API_BASE } from '../config';
-import { motion } from 'framer-motion';
 import {
   Settings,
   History,
@@ -14,9 +13,9 @@ import {
   Moon,
   ChevronRight,
   Camera,
-  Trophy,
-  RefreshCw
+  Trophy
 } from 'lucide-react';
+import PullToRefresh from './PullToRefresh';
 
 const ProfilePage = ({ onVerifyClick, onLanguageClick, onPasswordClick, onReferralsClick, onLeaderboardClick, onTermsClick, onDeleteClick, darkMode, onToggleDarkMode }) => {
   const [profilePic, setProfilePic] = useState('https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=facearea&facepad=2&w=256&h=256&q=80');
@@ -97,25 +96,18 @@ const ProfilePage = ({ onVerifyClick, onLanguageClick, onPasswordClick, onReferr
   );
 
   return (
-    <div className="w-full bg-slate-50 dark:bg-slate-900 min-h-screen pb-24">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 sm:pt-12">
-        {/* Header */}
-        <div className="flex items-center justify-between pb-6 sm:pb-10 mb-6 sm:mb-10 text-center relative border-b border-slate-100 dark:border-slate-700">
-          <h1 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white absolute left-1/2 -translate-x-1/2">Profile</h1>
-          <div className="w-full flex justify-end gap-2">
-            <button
-              onClick={handleRefresh}
-              disabled={refreshing}
-              className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-slate-50 dark:bg-slate-800 flex items-center justify-center hover:bg-slate-100 dark:hover:bg-slate-700 transition-transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-brand-500/30"
-              aria-label="Refresh profile"
-            >
-              <RefreshCw className={`w-5 h-5 sm:w-6 sm:h-6 text-slate-700 dark:text-slate-300 ${refreshing ? 'animate-spin' : ''}`} />
-            </button>
-            <button className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-slate-50 dark:bg-slate-800 flex items-center justify-center hover:bg-slate-100 dark:hover:bg-slate-700 transition-transform hover:scale-105">
-              <Settings className="w-5 h-5 sm:w-6 sm:h-6 text-slate-700 dark:text-slate-300" />
-            </button>
+    <PullToRefresh onRefresh={handleRefresh} refreshing={refreshing}>
+      <div className="w-full bg-slate-50 dark:bg-slate-900 min-h-screen pb-24">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 sm:pt-12">
+          {/* Header */}
+          <div className="flex items-center justify-between pb-6 sm:pb-10 mb-6 sm:mb-10 text-center relative border-b border-slate-100 dark:border-slate-700">
+            <h1 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white absolute left-1/2 -translate-x-1/2">Profile</h1>
+            <div className="w-full flex justify-end gap-2">
+              <button className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-slate-50 dark:bg-slate-800 flex items-center justify-center hover:bg-slate-100 dark:hover:bg-slate-700 transition-transform hover:scale-105">
+                <Settings className="w-5 h-5 sm:w-6 sm:h-6 text-slate-700 dark:text-slate-300" />
+              </button>
+            </div>
           </div>
-        </div>
 
         {/* Responsive Grid Layout */}
         <div className="grid grid-cols-1 md:grid-cols-12 gap-y-6 md:gap-x-6 lg:gap-x-8">
@@ -190,7 +182,8 @@ const ProfilePage = ({ onVerifyClick, onLanguageClick, onPasswordClick, onReferr
           </div>
         </div>
       </div>
-    </div>
+      </div>
+    </PullToRefresh>
   );
 };
 

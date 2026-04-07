@@ -1,9 +1,15 @@
 import React, { useState } from 'react';
-import { motion } from 'framer-motion';
+import PullToRefresh from './PullToRefresh';
 import { ArrowLeft, Wallet, CreditCard, ShieldCheck } from 'lucide-react';
 
 const CheckoutPage = ({ product, onBack, onSuccess }) => {
   const [paymentMethod, setPaymentMethod] = useState('cod');
+  const [refreshing, setRefreshing] = useState(false);
+
+  const handleRefresh = async () => {
+    setRefreshing(true);
+    setTimeout(() => setRefreshing(false), 500);
+  };
   
   // Mock auto-filled user data
   const [formData, setFormData] = useState({
@@ -33,7 +39,8 @@ const CheckoutPage = ({ product, onBack, onSuccess }) => {
   }
 
   return (
-    <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
+    <PullToRefresh onRefresh={handleRefresh} refreshing={refreshing}>
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
       {/* Back Button */}
       <button 
         onClick={onBack}
@@ -193,8 +200,9 @@ const CheckoutPage = ({ product, onBack, onSuccess }) => {
             </p>
           </div>
         </div>
+        </div>
       </div>
-    </div>
+    </PullToRefresh>
   );
 };
 
