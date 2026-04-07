@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { AdMobService } from '../utils/admob';
 import { API_BASE } from '../config';
-import SectionIntroOverlay from './SectionIntroOverlay';
 import { 
   Check, 
   ArrowLeft, 
