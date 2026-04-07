@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { AdMobService } from '../utils/admob';
 import { API_BASE } from '../config';
+import MultiAdViewPage from './MultiAdViewPage';
 import { 
   Check, 
   ArrowLeft, 
@@ -872,6 +873,11 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
     setShowIntroScreen(true);
   };
 
+  const openMultiAdView = (config) => {
+    setMultiAdConfig(config);
+    setShowMultiAdView(true);
+  };
+
   const closeSectionIntro = (callback) => {
     setShowIntroScreen(false);
     setTimeout(callback, 300);
@@ -1192,19 +1198,16 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
       {showIntroScreen && introItem && <OptionIntroScreen />}
       
       {showMultiAdView && multiAdConfig && (
-        <div className="fixed inset-0 z-[9999] bg-slate-900 flex flex-col">
-          <div className="bg-white dark:bg-slate-900 w-full h-full flex flex-col overflow-hidden">
-            <div className="bg-slate-50 dark:bg-slate-900 pt-safe px-6 py-5 flex justify-between items-center border-b border-slate-200 dark:border-slate-800 shrink-0">
-              <h3 className="text-lg font-bold text-slate-800 dark:text-white">{multiAdConfig.name}</h3>
-              <button onClick={() => goBackWithAd(() => setShowMultiAdView(false))} className="p-2 text-slate-400">
-                <ArrowLeft className="w-6 h-6" />
-              </button>
-            </div>
-            <div className="flex-1 overflow-y-auto p-4 space-y-3">
-              <BigAdBanner />
-            </div>
-          </div>
-        </div>
+        <MultiAdViewPage
+          config={multiAdConfig}
+          onClose={() => setShowMultiAdView(false)}
+          onCoinsEarned={(amount, label, data) => {
+            if (data?.balance !== undefined) setBalance(data.balance);
+            if (data?.coins !== undefined) setCoins(data.coins);
+            else setCoins(prev => prev + amount);
+            showToast(`🎉 +${amount} Coins from ${label}!`, 'success');
+          }}
+        />
       )}
 
       {showQuizView && quizQuestion && (
