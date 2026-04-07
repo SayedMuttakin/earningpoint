@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
 import { Plus, Trash2, Image as ImageIcon, X, Send, AlertCircle, CheckCircle } from 'lucide-react';
 
 const Posts = ({ authHeaders, ADMIN_API }) => {
@@ -136,10 +135,8 @@ const Posts = ({ authHeaders, ADMIN_API }) => {
       </div>
 
       {isAdding && (
-        <motion.div
-          initial={{ opacity: 0, scale: 0.95 }}
-          animate={{ opacity: 1, scale: 1 }}
-          className="bg-slate-900 border border-slate-800 rounded-[2.5rem] p-6 sm:p-8 shadow-2xl max-w-3xl mx-auto relative overflow-hidden"
+        <div
+          className="bg-slate-900 border border-slate-800 rounded-[2.5rem] p-6 sm:p-8 shadow-2xl max-w-3xl mx-auto relative overflow-hidden animate-fade-in"
         >
           <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-600/5 rounded-full blur-3xl" />
           
@@ -206,36 +203,30 @@ const Posts = ({ authHeaders, ADMIN_API }) => {
                   </button>
                 )}
               </div>
-              {imagePreview && (
-                <motion.div 
-                  initial={{ opacity: 0, scale: 0.9 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  className="mt-6 relative rounded-[2rem] overflow-hidden border-2 border-slate-800 group shadow-2xl max-h-[300px]"
-                >
+                {imagePreview && (
+                  <div 
+                    className="mt-6 relative rounded-[2rem] overflow-hidden border-2 border-slate-800 group shadow-2xl max-h-[300px] animate-fade-in"
+                  >
                   <img src={imagePreview} alt="Preview" className="w-full h-full object-cover" />
                   <div className="absolute inset-0 bg-gradient-to-t from-slate-950/60 to-transparent pointer-events-none" />
-                </motion.div>
-              )}
+                  </div>
+                )}
             </div>
 
             {error && (
-              <motion.div 
-                initial={{ opacity: 0, x: -10 }}
-                animate={{ opacity: 1, x: 0 }}
-                className="p-4 bg-rose-500/10 border border-rose-500/20 rounded-2xl text-rose-500 text-sm font-bold flex items-center gap-3"
+              <div 
+                className="p-4 bg-rose-500/10 border border-rose-500/20 rounded-2xl text-rose-500 text-sm font-bold flex items-center gap-3 animate-fade-in"
               >
                 <AlertCircle className="w-5 h-5 shrink-0" /> {error}
-              </motion.div>
+              </div>
             )}
             
             {success && (
-              <motion.div 
-                initial={{ opacity: 0, x: -10 }}
-                animate={{ opacity: 1, x: 0 }}
-                className="p-4 bg-emerald-500/10 border border-emerald-500/20 rounded-2xl text-emerald-500 text-sm font-bold flex items-center gap-3"
+              <div 
+                className="p-4 bg-emerald-500/10 border border-emerald-500/20 rounded-2xl text-emerald-500 text-sm font-bold flex items-center gap-3 animate-fade-in"
               >
                 <CheckCircle className="w-5 h-5 shrink-0" /> {success}
-              </motion.div>
+              </div>
             )}
 
             <button
@@ -246,7 +237,7 @@ const Posts = ({ authHeaders, ADMIN_API }) => {
               Publish Update
             </button>
           </form>
-        </motion.div>
+        </div>
       )}
 
       {/* Post List */}
@@ -257,13 +248,10 @@ const Posts = ({ authHeaders, ADMIN_API }) => {
           ))
         ) : (
           posts.map(post => (
-            <motion.div
-              key={post._id}
-              layout
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              className="bg-slate-900 border border-slate-800 rounded-[2.5rem] overflow-hidden group hover:border-indigo-500/50 hover:shadow-2xl hover:shadow-indigo-600/10 transition-all duration-500 flex flex-col h-full"
-            >
+              <div
+                key={post._id}
+                className="bg-slate-900 border border-slate-800 rounded-[2.5rem] overflow-hidden group hover:border-indigo-500/50 hover:shadow-2xl hover:shadow-indigo-600/10 transition-all duration-500 flex flex-col h-full animate-fade-in"
+              >
               {post.image && (
                 <div className="h-48 overflow-hidden relative">
                   <img src={post.image} alt="Post" className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
@@ -313,23 +301,21 @@ const Posts = ({ authHeaders, ADMIN_API }) => {
                   </button>
                 </div>
               </div>
-            </motion.div>
+            </div>
           ))
         )}
       </div>
 
       {!loading && posts.length === 0 && (
-        <motion.div 
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          className="py-32 text-center bg-slate-900/30 border-2 border-dashed border-slate-800 rounded-[3rem]"
-        >
+          <div 
+            className="py-32 text-center bg-slate-900/30 border-2 border-dashed border-slate-800 rounded-[3rem] animate-fade-in"
+          >
           <div className="w-20 h-20 bg-slate-800 rounded-3xl flex items-center justify-center mx-auto mb-6 text-slate-600">
             <ImageIcon className="w-10 h-10" />
           </div>
           <h3 className="text-xl font-black text-white mb-2">No posts discovered</h3>
           <p className="text-slate-500 font-medium max-w-xs mx-auto">Start by creating your first announcement to the platform users.</p>
-        </motion.div>
+        </div>
       )}
     </div>
   );

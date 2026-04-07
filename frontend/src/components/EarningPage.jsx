@@ -1387,11 +1387,11 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
           </div>
 
           <div
-            className="relative z-10 px-4 flex-1 flex flex-col"
+            className="relative z-10 px-4 mt-6 pb-12"
           >
             <button
               onClick={handlePlay}
-              className={`w-full py-3 rounded-2xl bg-gradient-to-r ${bgClass} text-white font-black text-lg shadow-xl shadow-blue-500/20 flex items-center justify-center gap-3 relative overflow-hidden`}
+              className={`w-full py-4 rounded-2xl bg-gradient-to-r ${bgClass} text-white font-black text-lg shadow-xl shadow-blue-500/20 flex items-center justify-center gap-3 relative overflow-hidden`}
             >
               {/* Shine effect */}
               <div
@@ -1401,7 +1401,7 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
                 {animType === 'premium' ? 'Get' : animType === 'refer' ? 'Invite' : animType === 'article' ? 'Read' : '▶ Play'} {item.name}
               </span>
             </button>
-            <div className="mt-2 flex-1 flex items-center justify-center min-h-0">
+            <div className="mt-8 flex flex-col items-center">
               <BigAdBanner />
             </div>
           </div>
@@ -1503,11 +1503,7 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
 
       {/* Option Intro Screen — OUTSIDE PullToRefresh so it covers Navbar */}
       {showIntroScreen && introItem && <OptionIntroScreen />}
-
-    <PullToRefresh onRefresh={handleRefresh} refreshing={refreshing}>
-      <main className="min-h-screen bg-slate-50 dark:bg-slate-950 transition-colors duration-500 pb-24 md:pb-8">
-
-
+      
       {/* ═══════ Multi-Ad Sub-View Overlay (5 ads per option) ═══════ */}
       {showMultiAdView && multiAdConfig && (() => {
           const currentCount = getMultiAdCount(multiAdConfig.key);
@@ -1521,16 +1517,14 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
 
           const handleMultiAdSlotClick = async (slot) => {
             const slotId = typeof slot === 'object' ? (slot.id || slot._id) : slot;
-            // Find index of slot in adSlots to enforce sequence
             const currentIndexInSlots = adSlots.findIndex(s => (s.id || s._id) === slotId);
             const cnt = getMultiAdCount(multiAdConfig.key);
             
-            if (cnt > currentIndexInSlots) return; // Already claimed
-            if (cnt !== currentIndexInSlots) return; // Must do in order
+            if (cnt > currentIndexInSlots) return; 
+            if (cnt !== currentIndexInSlots) return;
 
             const triggerReward = async () => {
               AdMobService.showRewarded(() => {
-                console.log(`[DEBUG-ADMOB] Multi-ad triggerReward for ${multiAdConfig.name}, slot ${slotId}`);
                 setIsLoading(true);
                 (async () => {
                   try {
@@ -1558,18 +1552,16 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
                 })();
               });
             };
-
-            // Verification removed. Directly trigger reward.
             triggerReward();
           };
 
           return (
             <div
-              className="fixed inset-0 animate-fade-in z-[95] bg-slate-900/95 backdrop-blur-xl flex items-center justify-center p-4"
+              className="fixed inset-0 animate-fade-in z-[9999] bg-slate-900 flex flex-col"
             >
-              <div className="bg-white dark:bg-slate-800 w-full max-w-lg rounded-3xl shadow-2xl overflow-hidden border border-slate-200 dark:border-slate-700 max-h-[90vh] flex flex-col">
+              <div className="bg-white dark:bg-slate-900 w-full h-full flex flex-col overflow-hidden">
                 {/* Header */}
-                <div className="bg-slate-50 dark:bg-slate-900 px-6 py-5 flex justify-between items-center border-b border-slate-200 dark:border-slate-700 shrink-0">
+                <div className="bg-slate-50 dark:bg-slate-900 pt-safe px-6 py-5 flex justify-between items-center border-b border-slate-200 dark:border-slate-800 shrink-0">
                   <div className="flex items-center gap-3">
                     <img src={multiAdConfig.logo} alt={multiAdConfig.name} className="w-10 h-10 rounded-xl object-contain bg-white p-1 shadow-sm" />
                     <div>
@@ -1577,13 +1569,13 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
                       <p className="text-xs text-amber-600 dark:text-amber-400 font-bold">+{multiAdConfig.coins} Coins per ad</p>
                     </div>
                   </div>
-                  <button onClick={() => goBackWithAd(() => setShowMultiAdView(false))} className="text-slate-400 hover:text-slate-600 dark:hover:text-white transition-colors">
+                  <button onClick={() => goBackWithAd(() => setShowMultiAdView(false))} className="p-2 text-slate-400 hover:text-slate-600 dark:hover:text-white transition-colors">
                     <ArrowLeft className="w-6 h-6 hover:-translate-x-1 transition-transform" />
                   </button>
                 </div>
 
                 {/* Content */}
-                <div className="p-6 sm:p-8 overflow-y-auto space-y-4">
+                <div className="flex-1 overflow-y-auto p-4 space-y-3 pb-safe-offset-10">
                   <div className="text-center space-y-2 mb-4">
                     <p className="text-slate-500 dark:text-slate-400 font-medium text-sm">
                       Watch 5 ads daily to earn <span className="text-amber-600 dark:text-amber-400 font-bold">{multiAdConfig.coins * 5} Coins</span>!
@@ -1609,7 +1601,7 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
                           key={slot.id}
                           onClick={() => handleMultiAdSlotClick(slot.id)}
                           disabled={isLocked || isCompleted || isLoading}
-                          className={`flex items-center justify-between w-full p-4 border-2 rounded-2xl group transform-gpu ${
+                          className={`flex items-center justify-between w-full p-4 border-2 rounded-2xl group transition-all ${
                             isCompleted ? 'bg-emerald-50 dark:bg-emerald-900/20 border-emerald-200 dark:border-emerald-800' :
                             isNext ? 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 shadow-md cursor-pointer' :
                             'bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700 opacity-40 cursor-not-allowed'
@@ -1632,16 +1624,9 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
                                 'text-slate-400 dark:text-slate-500'
                               }`}>{slot.label}</h4>
                               <p className="text-[11px] text-slate-400 dark:text-slate-500">
-                                {isCompleted ? '✓ Claimed' : isNext ? 'Tap to watch & earn' : 'Locked — watch previous ad first'}
+                                {isCompleted ? '✓ Claimed' : isNext ? 'Tap to watch & earn' : 'Locked'}
                               </p>
                             </div>
-                          </div>
-                          <div className={`px-4 py-2 rounded-full font-bold text-sm shrink-0 ${
-                            isCompleted ? 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400' :
-                            isNext ? `bg-gradient-to-r ${multiAdConfig.color} text-white shadow-sm` :
-                            'bg-slate-100 dark:bg-slate-700 text-slate-400'
-                          }`}>
-                            {isCompleted ? '✓' : `+${multiAdConfig.coins}`}
                           </div>
                         </button>
                       );
@@ -1650,28 +1635,113 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
 
                   {/* All done message */}
                   {currentCount >= 5 && (
-                    <div
-                      className="bg-emerald-50 dark:bg-emerald-900/20 border-2 border-emerald-200 dark:border-emerald-800 rounded-2xl p-4 text-center"
-                    >
-                      <p className="text-emerald-600 dark:text-emerald-400 font-bold">🎉 All 5 ads completed!</p>
-                      <p className="text-xs text-emerald-500 dark:text-emerald-500 mt-1">Come back tomorrow for more!</p>
+                    <div className="bg-emerald-50 dark:bg-emerald-900/20 border-2 border-emerald-200 dark:border-emerald-800 rounded-2xl p-4 text-center">
+                      <p className="text-emerald-600 dark:text-emerald-400 font-bold">All 5 ads completed!</p>
                     </div>
                   )}
 
-                  {/* Ad placeholder */}
-                  <div className="w-full border border-slate-100 dark:border-slate-800 rounded-xl p-3 flex items-center justify-center bg-slate-50 dark:bg-slate-800/50 relative overflow-hidden mt-4">
-                    <span className="absolute top-0 right-0 bg-slate-600 text-white text-[8px] px-1.5 py-0.5 font-bold rounded-bl-lg">Ad</span>
-                    <div className="flex items-center gap-4">
-                      <span className="text-blue-500 font-bold text-sm">Nice job!</span>
-                      <div className="h-6 w-px bg-slate-200 dark:bg-slate-700"></div>
-                      <span className="text-slate-500 dark:text-slate-400 text-xs font-medium">This is a 468x60 test ad.</span>
-                    </div>
+                  <div className="flex flex-col items-center pt-4 pb-8">
+                    <BigAdBanner />
                   </div>
                 </div>
               </div>
             </div>
           );
         })()}
+
+      {/* Quiz View */}
+      {showQuizView && quizQuestion && (
+          <div
+            className="fixed inset-0 animate-fade-in z-[9999] bg-slate-900 flex flex-col"
+          >
+            <div className="bg-slate-100 dark:bg-slate-950 w-full h-full flex flex-col overflow-hidden relative">
+              {/* Header */}
+              <div className="bg-[#1a362d] text-white pt-safe px-4 py-4 flex items-center justify-between shadow-md shrink-0">
+                <div className="flex items-center gap-4">
+                  <button onClick={() => goBackWithAd(() => { setShowQuizView(false); setQuizTimerActive(false); })} className="p-1 hover:bg-white/10 rounded-lg transition-colors">
+                    <ArrowLeft className="w-6 h-6" />
+                  </button>
+                  <h3 className="text-xl font-medium">{quizType === 'math' ? 'Math Quiz' : 'Quiz'}</h3>
+                </div>
+                <div className="relative w-12 h-12">
+                  <svg className="w-12 h-12 -rotate-90" viewBox="0 0 48 48">
+                    <circle cx="24" cy="24" r="20" fill="none" stroke="rgba(255,255,255,0.2)" strokeWidth="3" />
+                    <circle cx="24" cy="24" r="20" fill="none" stroke="white" strokeWidth="3"
+                      strokeDasharray={`${(quizTimer / 30) * 125.66} 125.66`}
+                      strokeLinecap="round"
+                    />
+                  </svg>
+                  <span className="absolute inset-0 flex items-center justify-center text-sm font-bold">{quizTimer}</span>
+                </div>
+              </div>
+
+              {/* Body */}
+              <div className="flex-1 overflow-y-auto px-4 py-4 flex flex-col items-center gap-4">
+                <div className="w-full max-w-lg bg-gradient-to-br from-[#2d8a5e] to-[#1a6b42] rounded-2xl p-8 shadow-lg">
+                  <p className="text-white text-center text-3xl font-black leading-tight">{quizQuestion.question}</p>
+                </div>
+
+                <div className="w-full max-w-lg space-y-3">
+                  {quizQuestion.options.map((option, idx) => {
+                    const isCorrect = option === quizQuestion.answer;
+                    const isSelected = quizSelected === option;
+                    let optionStyle = 'bg-white dark:bg-slate-800 border-2 border-[#2d8a5e]/30 text-slate-800 dark:text-white';
+                    if (quizAnswered) {
+                      if (isCorrect) optionStyle = 'bg-green-100 dark:bg-green-900/40 border-green-500 text-green-800 dark:text-green-300';
+                      else if (isSelected) optionStyle = 'bg-red-100 dark:bg-red-900/40 border-red-500 text-red-800 dark:text-red-300';
+                    } else if (isSelected) optionStyle = 'border-[#2d8a5e] bg-[#2d8a5e]/10';
+                    return (
+                      <button key={idx} disabled={quizAnswered} onClick={() => setQuizSelected(option)}
+                        className={`w-full py-4 px-6 rounded-full text-center text-lg font-semibold transition-all ${optionStyle}`}>
+                        {option}
+                      </button>
+                    );
+                  })}
+                </div>
+
+                {!quizAnswered ? (
+                  <button disabled={quizSelected === null || isLoading}
+                    onClick={async () => {
+                      if (quizSelected === null) return;
+                      setQuizAnswered(true); setQuizTimerActive(false);
+                      if (quizSelected === quizQuestion.answer) {
+                        setQuizScore(prev => prev + 1);
+                        AdMobService.showInterstitial(async () => {
+                          try {
+                            const token = localStorage.getItem('token');
+                            const response = await fetch(`${API_BASE}/api/earning/quiz-claim`, { method: 'POST', headers: { Authorization: `Bearer ${token}` } });
+                            const data = await response.json();
+                            if (response.ok) { setBalance(data.balance); setCoins(data.coins); setQuizStatus({ count: data.count }); }
+                          } catch (err) {}
+                        });
+                      }
+                    }}
+                    className={`w-full max-w-lg py-4 rounded-full text-lg font-black ${quizSelected === null ? 'bg-slate-300 dark:bg-slate-700 text-slate-500' : 'bg-gradient-to-r from-amber-400 to-orange-400 text-white'}`}>
+                    Submit
+                  </button>
+                ) : (
+                  <div className="w-full max-w-lg text-center space-y-3">
+                    <p className={`text-xl font-black ${quizSelected === quizQuestion.answer ? 'text-green-600' : 'text-red-500'}`}>
+                      {quizSelected === quizQuestion.answer ? '🎉 Correct!' : `❌ Wrong! Answer: ${quizQuestion.answer}`}
+                    </p>
+                    <button onClick={() => startNewQuiz(quizType)} className="w-full py-4 rounded-full text-lg font-black bg-gradient-to-r from-teal-500 to-emerald-500 text-white">
+                      Next Question →
+                    </button>
+                  </div>
+                )}
+
+                <div className="flex flex-col items-center pt-4 pb-8">
+                   <BigAdBanner />
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+    <PullToRefresh onRefresh={handleRefresh} refreshing={refreshing}>
+      <main className="min-h-screen bg-slate-50 dark:bg-slate-950 transition-colors duration-500 pb-24 md:pb-8">
+
+
       
 
       {showStatusView && (
@@ -2921,158 +2991,6 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
         )}
       
 
-      {/* Quiz View */}
-      {showQuizView && quizQuestion && (
-          <div
-            className="fixed inset-0 animate-fade-in z-[100] bg-slate-900/90 backdrop-blur-md flex items-center justify-center p-0 sm:p-4"
-          >
-            <div
-              className="bg-slate-100 dark:bg-slate-900 w-full max-w-md h-full sm:h-auto sm:max-h-[95vh] sm:rounded-3xl shadow-2xl flex flex-col overflow-hidden relative"
-            >
-              {/* Header */}
-              <div className="bg-[#1a362d] text-white px-4 py-4 flex items-center justify-between shadow-md shrink-0">
-              <div className="flex items-center gap-4">
-                <button
-                  onClick={() => goBackWithAd(() => { setShowQuizView(false); setQuizTimerActive(false); })}
-                  className="p-1 hover:bg-white/10 rounded-lg transition-colors"
-                >
-                  <ArrowLeft className="w-6 h-6" />
-                </button>
-                <h3 className="text-xl font-medium">{quizType === 'math' ? 'Math Quiz' : quizType === 'binary' ? 'Binary Quiz' : quizType === 'word' ? 'Word Quiz' : 'Trivia Quiz'}</h3>
-              </div>
-              {/* Timer Circle */}
-              <div className="relative w-12 h-12">
-                <svg className="w-12 h-12 -rotate-90" viewBox="0 0 48 48">
-                  <circle cx="24" cy="24" r="20" fill="none" stroke="rgba(255,255,255,0.2)" strokeWidth="3" />
-                  <circle cx="24" cy="24" r="20" fill="none" stroke="white" strokeWidth="3"
-                    strokeDasharray={`${(quizTimer / 30) * 125.66} 125.66`}
-                    strokeLinecap="round"
-                  />
-                </svg>
-                <span className="absolute inset-0 flex items-center justify-center text-sm font-bold">{quizTimer}</span>
-              </div>
-            </div>
-
-            {/* Body */}
-            <div className="flex-1 overflow-y-auto px-4 py-6 flex flex-col items-center gap-5">
-
-              {/* Question Card */}
-              <div className="w-full max-w-lg bg-gradient-to-br from-[#2d8a5e] to-[#1a6b42] rounded-2xl p-8 shadow-lg">
-                <p className="text-white text-center text-3xl sm:text-4xl font-black leading-tight">
-                  {quizQuestion.question}
-                </p>
-              </div>
-
-              {/* Answer Options */}
-              <div className="w-full max-w-lg space-y-3">
-                {quizQuestion.options.map((option, idx) => {
-                  const isCorrect = option === quizQuestion.answer;
-                  const isSelected = quizSelected === option;
-                  let optionStyle = 'bg-white dark:bg-slate-800 border-2 border-[#2d8a5e]/30 text-slate-800 dark:text-white hover:border-[#2d8a5e]';
-
-                  if (quizAnswered) {
-                    if (isCorrect) {
-                      optionStyle = 'bg-green-100 dark:bg-green-900/40 border-2 border-green-500 text-green-800 dark:text-green-300';
-                    } else if (isSelected && !isCorrect) {
-                      optionStyle = 'bg-red-100 dark:bg-red-900/40 border-2 border-red-500 text-red-800 dark:text-red-300';
-                    }
-                  } else if (isSelected) {
-                    optionStyle = 'bg-[#2d8a5e]/10 border-2 border-[#2d8a5e] text-[#2d8a5e] dark:text-emerald-300 shadow-md';
-                  }
-
-                  return (
-                    <button
-                      key={idx}
-                      disabled={quizAnswered}
-                      onClick={() => setQuizSelected(option)}
-                      className={`w-full py-4 px-6 rounded-full text-center text-lg font-semibold transition-all ${optionStyle}`}
-                    >
-                      {option}
-                    </button>
-                  );
-                })}
-              </div>
-
-              {/* Submit Button */}
-              {!quizAnswered ? (
-                <button
-                  disabled={quizSelected === null || isLoading}
-                  onClick={async () => {
-                    if (quizSelected === null) return;
-                    setQuizAnswered(true);
-                    setQuizTimerActive(false);
-                    const correct = quizSelected === quizQuestion.answer;
-                    if (correct) {
-                      setQuizScore(prev => prev + 1);
-                      // Claim reward from backend — with mandatory Ad trigger
-                      AdMobService.showInterstitial(async () => {
-                        try {
-                          const token = localStorage.getItem('token');
-                          const response = await fetch(`${API_BASE}/api/earning/quiz-claim`, {
-                            method: 'POST',
-                            headers: { Authorization: `Bearer ${token}` },
-                          });
-                          const data = await response.json();
-                          if (response.ok) {
-                            setBalance(data.balance);
-                            if (data.coins !== undefined) setCoins(data.coins);
-                            if (data.lifetimeCoins !== undefined) setLifetimeCoins(data.lifetimeCoins);
-                            setQuizStatus({ lastQuizDate: data.lastQuizDate, count: data.count });
-                          }
-                        } catch (err) {
-                          console.error('Quiz claim error:', err);
-                        }
-                      });
-                    }
-                  }}
-                  className={`w-full max-w-lg py-4 rounded-full text-lg font-black shadow-lg ${
-                    quizSelected === null
-                      ? 'bg-slate-300 dark:bg-slate-700 text-slate-500 cursor-not-allowed'
-                      : 'bg-gradient-to-r from-amber-400 to-orange-400 text-white hover:from-amber-500 hover:to-orange-500'
-                  }`}
-                >
-                  Submit
-                </button>
-              ) : (
-                <div className="w-full max-w-lg text-center space-y-3">
-                  <p className={`text-xl font-black ${quizSelected === quizQuestion.answer ? 'text-green-600' : 'text-red-500'}`}>
-                    {quizSelected === quizQuestion.answer ? '🎉 Correct! +20 Coins' : `❌ Wrong! Answer: ${quizQuestion.answer}`}
-                  </p>
-                  {quizStatus.count < 10 && (
-                    <button
-                      onClick={() => startNewQuiz(quizType)}
-                      className="w-full py-4 rounded-full text-lg font-black bg-gradient-to-r from-teal-500 to-emerald-500 text-white shadow-lg hover:from-teal-400 hover:to-emerald-400"
-                    >
-                      Next Question →
-                    </button>
-                  )}
-                </div>
-              )}
-
-              {/* Bottom Controls */}
-              <div className="w-full max-w-lg flex items-center justify-between mt-4">
-                <button
-                  onClick={() => { goBackWithAd(() => { setShowQuizView(false); setQuizTimerActive(false); }); }}
-                  className="px-6 py-3 rounded-full border-2 border-red-400 text-red-500 font-bold hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
-                >
-                  Leave Game
-                </button>
-                <div className="px-6 py-3 rounded-full bg-[#2d8a5e] text-white font-bold">
-                  Score: {quizScore}
-                </div>
-              </div>
-
-              {/* Progress */}
-              <p className="text-sm text-slate-500 dark:text-slate-400 font-medium mt-4 text-center pb-8 sm:pb-0">
-                {quizStatus.count}/10 quizzes completed today
-              </p>
-              <div className="w-full flex justify-center min-h-[280px]">
-                <BigAdBanner />
-              </div>
-            </div>
-            </div>
-          </div>
-        )}
       
 
       {/* Daily Checkin Pre-Ad View */}
