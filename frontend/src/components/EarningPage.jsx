@@ -1,45 +1,47 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { AdMobService } from '../utils/admob';
 import { API_BASE } from '../config';
-import { 
-  Check, 
-  ArrowLeft, 
-  ChevronRight, 
-  Clock, 
-  Medal, 
-  Wallet, 
-  Shield, 
-  Globe, 
-  Gift, 
-  Flame, 
-  Film, 
-  X, 
-  Crown, 
+import {
+  Check,
+  ArrowLeft,
+  ChevronRight,
+  Clock,
+  Medal,
+  Wallet,
+  Shield,
+  Globe,
+  Gift,
+  Flame,
+  Film,
+  X,
+  Crown,
   AlertCircle,
   History,
   TrendingUp,
   Star,
-  Calculator, 
-  Binary, 
-  Type, 
+  Calculator,
+  Binary,
+  Type,
   HelpCircle,
   Users,
   CalendarCheck,
-  Newspaper, 
-  Video, 
-  Aperture, 
+  Newspaper,
+  Video,
+  Aperture,
   Search,
-  ChevronDown, 
-  ChevronUp, 
-  Menu, 
-  Home, 
-  Bell, 
-  User, 
-  Settings, 
+  ChevronDown,
+  ChevronUp,
+  Menu,
+  Home,
+  Bell,
+  User,
+  Settings,
   LogOut,
-  Radio, 
+  Radio,
   Tv,
-  RefreshCw
+  RefreshCw,
+  MonitorPlay,
+  Gamepad2
 } from 'lucide-react';
 
 const gkQuizDB = [
@@ -60,6 +62,7 @@ const gkQuizDB = [
 
 import { countries } from '../utils/countries';
 import PullToRefresh from './PullToRefresh';
+import SectionIntroOverlay from './SectionIntroOverlay';
 
 const ipPackages = [
   { id: 'month-1', name: '1 Month', price: 600, freeInfo: '7 Days free', label: '1 Month (+7 Days free)' },
@@ -181,6 +184,8 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
   const [showArticleView, setShowArticleView] = React.useState(false);
   const [articleStep, setArticleStep] = React.useState(1);
 
+  // Custom Ad Simulators (Level 3-5)
+  const [showInterstitialAd, setShowInterstitialAd] = React.useState(false);
   const [showNativeAd, setShowNativeAd] = React.useState(false);
   const [showOfferwallAd, setShowOfferwallAd] = React.useState(false);
   const [currentAdInfo, setCurrentAdInfo] = React.useState({ name: '', type: '', coins: 0, time: 0 });
@@ -859,50 +864,12 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
     });
   };
 
-  const OptionIntroScreen = () => {
-    const [moreOpen, setMoreOpen] = React.useState(false);
-    const item = introItem;
-    if (!item) return null;
-
-    const bgClass = item.color || 'from-blue-500 to-indigo-600';
-
-    const handlePlay = () => {
-      setShowIntroScreen(false);
-      setTimeout(() => {
-        if (item.action) item.action();
-      }, 100);
-    };
-
-    return (
-      <div className="fixed inset-0 z-[9998] bg-slate-950 flex flex-col">
-        <div className={`absolute inset-0 bg-gradient-to-br ${bgClass} opacity-20`} />
-        <div className="relative z-50 flex items-center justify-between px-4 py-3">
-          <button onClick={() => goBackWithAd(() => setShowIntroScreen(false))} className="w-9 h-9 rounded-full bg-white/10 flex items-center justify-center text-white">
-            <ArrowLeft className="w-5 h-5" />
-          </button>
-          <h1 className="text-white font-black text-base tracking-tight">{item.name}</h1>
-          <div className="relative">
-            <button onClick={() => setMoreOpen(!moreOpen)} className="w-9 h-9 rounded-full bg-white/10 flex items-center justify-center text-white">
-              <Menu className="w-5 h-5" />
-            </button>
-          </div>
-        </div>
-        <div className="relative z-10 flex justify-center mt-1 mb-2">
-          <div className="flex items-center gap-2 bg-white/10 backdrop-blur-md border border-white/20 rounded-full px-4 py-1">
-            <span className="text-amber-400">💰</span>
-            <span className="text-white font-black text-sm">৳{balance.toFixed(2)}</span>
-          </div>
-        </div>
-        <div className="relative z-10 px-4 mt-6 pb-12">
-          <button onClick={handlePlay} className={`w-full py-4 rounded-2xl bg-gradient-to-r ${bgClass} text-white font-black text-lg shadow-xl flex items-center justify-center gap-3`}>
-            ▶ Play {item.name}
-          </button>
-          <div className="mt-8 flex flex-col items-center">
-            <BigAdBanner />
-          </div>
-        </div>
-      </div>
-    );
+  const handleSectionIntroContinue = () => {
+    if (!introItem) return;
+    setShowIntroScreen(false);
+    setTimeout(() => {
+      if (introItem.action) introItem.action();
+    }, 100);
   };
 
   const getLevelInfo = (pts) => {
@@ -916,6 +883,86 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
   const levelInfo = getLevelInfo(lifetimeCoins);
   const progressPercent = levelInfo.isMax ? 100 : Math.min(100, Math.max(0, ((levelInfo.current - (levelInfo.prev || 0)) / (levelInfo.target - (levelInfo.prev || 0))) * 100));
 
+  // Earning Options Data
+  const mainOptions = [
+    { id: 1, name: 'Daily Checkin', icon: <CalendarCheck className="w-8 h-8 md:w-10 md:h-10" />, coins: 20, color: 'from-orange-400 to-red-500', category: 'Daily Reward', entryFee: 0, duration: 'Instant reward', prizeText: '20 coins', bonusText: 'No fee', description: 'Check in every day to collect regular rewards and boost your earnings.', action: () => setShowCheckinView(true) },
+    { id: 10, name: 'Refer & Earn', icon: <Users className="w-8 h-8 md:w-10 md:h-10" />, coins: 500, color: 'from-indigo-400 to-purple-500', category: 'Referral', entryFee: 0, duration: 'Instant', prizeText: '500 bonus', bonusText: 'Invite friends', description: 'Invite friends and earn a bonus when they join and stay active.', action: onReferralsClick },
+  ];
+
+  const popularOptions = [
+    { id: 1, name: 'Super Spin', icon: <Aperture className="w-8 h-8 md:w-10 md:h-10" />, coins: 100, color: 'from-purple-500 to-indigo-600', category: 'Games', entryFee: 0, duration: 'One spin', prizeText: '100 coins', description: 'Spin the wheel to win daily rewards and exciting bonus points.', action: () => setShowWheelView(true) },
+    { id: 2, name: 'Daily Quiz', icon: <HelpCircle className="w-8 h-8 md:w-10 md:h-10" />, logo: 'https://img.icons8.com/color/96/quiz.png', coins: 50, color: 'from-amber-500 to-orange-600', category: 'Quizzes', entryFee: 20, duration: '30 sec/question', prizeText: '50 coins', description: 'Try the daily quiz for fast coin earnings and brain training.', instructions: 'Answer each question quickly to earn coins for every correct choice.', action: () => setShowQuizSelection(true) },
+    { id: 3, name: 'Mega Video', icon: <Film className="w-8 h-8 md:w-10 md:h-10" />, logo: 'https://img.icons8.com/color/96/video.png', coins: 75, color: 'from-rose-500 to-red-600', category: 'Videos', entryFee: 0, duration: '5 ads', prizeText: '+75 coins', description: 'Watch 5 short videos to earn coins. The reward appears after each ad.', instructions: 'Press play and watch the 5 video ads to collect your coin reward.', action: () => setShowVideoView(true) },
+    { id: 4, name: 'Invite Friends', icon: <Users className="w-8 h-8 md:w-10 md:h-10" />, coins: 1000, color: 'from-emerald-500 to-teal-600', category: 'Referral', entryFee: 0, duration: 'Instant', prizeText: '1000 coins', description: 'Invite your friends and get higher referral bonuses for each sign-up.', action: onReferralsClick },
+  ];
+
+  const quizOptions = [
+    { id: 1, name: 'Math Quiz', icon: <Calculator className="w-7 h-7" />, logo: 'https://img.icons8.com/color/96/math.png', coins: 20, color: 'from-blue-500 to-indigo-600', category: 'Quizzes', entryFee: 20, duration: '30 sec/question', prizeText: '10 coins / correct', description: 'Solve math questions quickly and earn coins for correct answers.', instructions: 'Answer each question fast. Every correct answer earns coins.', action: () => launchQuiz('math') },
+    { id: 2, name: 'Binary Guess', icon: <Binary className="w-7 h-7" />, logo: 'https://img.icons8.com/color/96/binary-code.png', coins: 30, color: 'from-purple-500 to-pink-600', category: 'Quizzes', entryFee: 20, duration: '30 sec/question', prizeText: '15 coins / correct', description: 'Guess binary values and score bonus rewards.', instructions: 'Choose the right binary answer before time runs out.', action: () => launchQuiz('binary') },
+    { id: 3, name: 'Word Master', icon: <Type className="w-7 h-7" />, logo: 'https://img.icons8.com/color/96/word.png', coins: 25, color: 'from-emerald-500 to-teal-600', category: 'Quizzes', entryFee: 20, duration: '30 sec/question', prizeText: '12 coins / correct', description: 'Test your vocabulary in this word challenge.', instructions: 'Pick the correct word and earn coins for every right answer.', action: () => launchQuiz('word') },
+    { id: 4, name: 'Gen. Knowledge', icon: <HelpCircle className="w-7 h-7" />, logo: 'https://img.icons8.com/color/96/question-mark.png', coins: 40, color: 'from-amber-500 to-orange-600', category: 'Quizzes', entryFee: 20, duration: '30 sec/question', prizeText: '15 coins / correct', description: 'Answer general knowledge questions to earn extra coins.', instructions: 'Think fast and answer correctly to grow your coins.', action: () => launchQuiz('gk') },
+  ];
+
+  const rewardOptions = [
+    { id: 1, name: 'Wallet', icon: <Wallet className="w-7 h-7" />, color: 'from-blue-500 to-indigo-600', description: 'Open your wallet to see your available points and withdraw options.', action: () => setActiveEarningTab('wallet') },
+    { id: 2, name: 'History', icon: <History className="w-7 h-7" />, color: 'from-purple-500 to-pink-600', description: 'View your earning activity history and track every reward.', action: () => setActiveEarningTab('history') },
+    { id: 3, name: 'Tutorial', icon: <HelpCircle className="w-7 h-7" />, color: 'from-emerald-500 to-teal-600', description: 'Read quick tips on how to earn more coins in the app.', action: () => setActiveEarningTab('tutorial') },
+  ];
+
+  // OptionCard sub-component — shows intro screen first
+  const OptionCard = ({ item, isLarge = false, count = null, maxCount = null, skipIntro = false }) => {
+    const isCompleted = count !== null && count >= maxCount;
+    
+    // Determine if this item should skip the intro screen
+    const shouldSkip = skipIntro || !item?.action;
+
+    const handleClick = () => {
+      if (shouldSkip) {
+        if (item?.action) item.action();
+        return;
+      }
+      setIntroItem(item);
+      setShowIntroScreen(true);
+    };
+
+    return (
+      <button
+        key={item.id}
+        onClick={handleClick}
+        className="flex flex-col items-center group w-full transition-transform duration-150 active:scale-95 hover:scale-105"
+        style={{ transform: 'translateZ(0)' }}
+      >
+        <div className={`w-14 h-14 md:w-${isLarge ? '20' : '16'} md:h-${isLarge ? '20' : '16'} rounded-2xl bg-gradient-to-br ${item.color || 'from-blue-500 to-indigo-600'} flex items-center justify-center shadow-lg relative`}>
+          {typeof item.icon === 'string' ? (
+            <img src={item.icon} alt={item.name} className="w-7 h-7 md:w-10 md:h-10 object-contain drop-shadow-md" />
+          ) : React.isValidElement(item.icon) ? (
+            <div className="text-white drop-shadow-md">{React.cloneElement(item.icon, { className: `w-7 h-7 md:w-${isLarge ? '10' : '8'} md:h-${isLarge ? '10' : '8'}` })}</div>
+          ) : item.logo ? (
+            <img src={item.logo} alt={item.name} className="w-8 h-8 md:w-11 md:h-11 object-contain drop-shadow-md" />
+          ) : (
+            <div className="w-8 h-8 md:w-10 md:h-10 bg-white/20 rounded-lg" />
+          )}
+          
+          {count !== null && (
+            <div className="absolute -top-1.5 -right-1.5 bg-white dark:bg-slate-800 rounded-full px-1.5 py-0.5 shadow-sm border border-slate-100 dark:border-slate-700 min-w-[20px] flex items-center justify-center">
+              <span className={`text-[9px] font-black ${isCompleted ? 'text-emerald-500' : 'text-slate-600 dark:text-slate-300'}`}>
+                {count}/{maxCount}
+              </span>
+            </div>
+          )}
+        </div>
+        <span className="mt-2.5 text-[10px] md:text-xs font-black text-slate-700 dark:text-slate-300 text-center leading-tight">
+          {item.name}
+        </span>
+        {item.coins && (
+          <span className="text-[10px] font-bold text-emerald-500 mt-0.5">
+            +{item.coins} Coins
+          </span>
+        )}
+      </button>
+    );
+  };
+
   return (
     <>
       {toast.visible && (
@@ -924,7 +971,14 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
           </div>
         )}
 
-      {showIntroScreen && introItem && <OptionIntroScreen />}
+      {showIntroScreen && introItem && (
+        <SectionIntroOverlay
+          item={introItem}
+          balance={balance}
+          onClose={() => goBackWithAd(() => setShowIntroScreen(false))}
+          onContinue={handleSectionIntroContinue}
+        />
+      )}
       
       {showMultiAdView && multiAdConfig && (
         <div className="fixed inset-0 z-[9999] bg-slate-900 flex flex-col">
