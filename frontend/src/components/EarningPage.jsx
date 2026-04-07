@@ -151,6 +151,7 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
 
   const [showScratchView, setShowScratchView] = React.useState(false);
   const [scratchStatus, setScratchStatus] = React.useState({ lastScratchDate: null, count: 0 });
+  const [activeScratchCard, setActiveScratchCard] = React.useState(null);
 
   const [showGamesView, setShowGamesView] = React.useState(false);
 
