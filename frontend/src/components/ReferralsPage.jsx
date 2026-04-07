@@ -5,6 +5,7 @@ import PullToRefresh from './PullToRefresh';
 
 const ReferralsPage = ({ onBack }) => {
   const [refreshing, setRefreshing] = useState(false);
+  const [copied, setCopied] = useState(false);
   const [referralData, setReferralData] = useState({
     referralCode: 'Loading...',
     friendsInvited: 0,

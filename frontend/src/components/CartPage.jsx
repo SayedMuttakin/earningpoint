@@ -1,3 +1,4 @@
+import React, { useState } from 'react';
 import { ShoppingCart, Flame } from 'lucide-react';
 import PullToRefresh from './PullToRefresh';
 

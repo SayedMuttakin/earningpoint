@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
 import { BadgeCheck, Loader2 } from 'lucide-react';
 import { API_BASE } from '../config';
 import PullToRefresh from './PullToRefresh';
@@ -90,12 +89,9 @@ const PostCard = ({ post }) => {
   };
 
   return (
-    <motion.article
+    <article
       id={`post-${post._id}`}
-      initial={{ opacity: 0, y: 15 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0 }}
-      className="bg-white scroll-mt-24 sm:rounded-2xl border-y sm:border border-slate-100 overflow-hidden shadow-sm"
+      className="bg-white scroll-mt-24 sm:rounded-2xl border-y sm:border border-slate-100 overflow-hidden shadow-sm animate-fade-in"
     >
       {/* Post Header */}
       <div className="p-4 flex items-center gap-2">
@@ -156,7 +152,7 @@ const PostCard = ({ post }) => {
       )}
       
       {/* Footer / Interaction - Hidden as requested previously */}
-    </motion.article>
+    </article>
   );
 };
 
@@ -207,14 +203,9 @@ const HomePage = () => {
                 <span className="font-black text-brand-600 uppercase tracking-widest text-xs sm:hidden">LATEST</span>
               </div>
               <div className="flex-1 overflow-hidden ml-4 relative h-8 flex items-center">
-                <motion.div
-                  animate={{ x: [0, "-50%"] }}
-                  transition={{
-                    repeat: Infinity,
-                    duration: 50, // Comfortable slow speed
-                    ease: "linear",
-                  }}
-                  className="flex whitespace-nowrap absolute left-0 will-change-transform"
+                <div
+                  className="flex whitespace-nowrap absolute left-0 will-change-transform animate-marquee"
+                  style={{ animation: 'marquee 50s linear infinite' }}
                 >
                   {/* Render posts twice for a seamless continuous loop */}
                   {[...posts, ...posts].map((post, idx) => (
@@ -231,7 +222,7 @@ const HomePage = () => {
                       {post.title || post.content.substring(0, 60) + "..."}
                     </a>
                   ))}
-                </motion.div>
+                </div>
               </div>
             </div>
           </div>
@@ -241,7 +232,7 @@ const HomePage = () => {
         <main className="max-w-4xl mx-auto px-0 sm:px-6 lg:px-8 py-3 sm:py-8 w-full flex-1">
           <div className="flex flex-col gap-3 sm:gap-6">
             
-            <AnimatePresence mode="popLayout">
+            <>
               {loading ? (
                 <div className="flex flex-col items-center justify-center py-24 sm:py-32 gap-3">
                   <Loader2 className="w-8 h-8 text-blue-500 animate-spin" />
@@ -260,7 +251,7 @@ const HomePage = () => {
                   No updates available yet.
                 </div>
               )}
-            </AnimatePresence>
+            </>
 
             {/* End of Feed */}
             {!loading && !error && posts.length > 0 && (

@@ -1256,7 +1256,7 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
 
     return (
       <div
-          className="fixed inset-0 animate-fade-in z-[200] overflow-hidden"
+          className="fixed inset-0 animate-fade-in z-[200] overflow-hidden flex flex-col"
           style={{ background: 'linear-gradient(135deg, #0a0f1e 0%, #111827 100%)' }}
         >
           {/* Gradient overlay based on item color */}
@@ -1342,15 +1342,15 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
 
           {/* Central Animated Logo */}
           <div
-            className="relative z-10 flex items-center justify-center mb-4"
-            style={{ minHeight: 120 }}
+            className="relative z-10 flex items-center justify-center mb-2"
+            style={{ minHeight: 100 }}
           >
             <CenterAnimation />
           </div>
 
           {/* Duration & Prize info */}
           <div
-            className="relative z-10 mx-4 space-y-2 mb-4"
+            className="relative z-10 mx-4 space-y-2 mb-2"
           >
             {/* Duration info - Show for time-based items */}
             {['quiz', 'video', 'game', 'scratch'].includes(animType) && (
@@ -1387,9 +1387,8 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
             )}
           </div>
 
-          {/* Play Button */}
           <div
-            className="relative z-10 px-4"
+            className="relative z-10 px-4 flex-1 flex flex-col"
           >
             <button
               onClick={handlePlay}
@@ -1403,7 +1402,7 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
                 {animType === 'premium' ? 'Get' : animType === 'refer' ? 'Invite' : animType === 'article' ? 'Read' : '▶ Play'} {item.name}
               </span>
             </button>
-            <div className="mt-2 min-h-[280px] flex items-center justify-center">
+            <div className="mt-2 flex-1 flex items-center justify-center min-h-0">
               <BigAdBanner />
             </div>
           </div>
