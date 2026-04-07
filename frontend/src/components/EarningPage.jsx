@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { AdMobService } from '../utils/admob';
 import { API_BASE } from '../config';
+import SectionIntroOverlay from './SectionIntroOverlay';
 import { 
   Check, 
   ArrowLeft, 
@@ -27,6 +28,7 @@ import {
   CalendarCheck,
   Newspaper, 
   Video, 
+  BookOpen,
   Aperture, 
   Search,
   ChevronDown, 
@@ -39,7 +41,9 @@ import {
   LogOut,
   Radio, 
   Tv,
-  RefreshCw
+  RefreshCw,
+  Gamepad2,
+  MonitorPlay
 } from 'lucide-react';
 
 const gkQuizDB = [
@@ -135,6 +139,9 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
   const [withdrawLoading, setWithdrawLoading] = React.useState(false);
   
   const [showCheckinView, setShowCheckinView] = React.useState(false);
+  const [showAdOverlay, setShowAdOverlay] = React.useState(false);
+  const [adCountdown, setAdCountdown] = React.useState(40);
+  const [canCloseAd, setCanCloseAd] = React.useState(false);
   const [checkinStatus, setCheckinStatus] = React.useState({ lastCheckin: null, count: 0 });
   const [isLoading, setIsLoading] = React.useState(false);
   const [adType, setAdType] = React.useState('daily');
@@ -175,12 +182,39 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
   const [gkQuizQuestions, setGkQuizQuestions] = React.useState([]);
   const [currentGkIndex, setCurrentGkIndex] = React.useState(0);
   const [gkQuizScore, setGkQuizScore] = React.useState(0);
+
+  // Featured options shown at top (Daily Checkin, Refer)
+  const mainOptions = [
+    {
+      id: 'feat-checkin',
+      name: 'Daily Checkin',
+      icon: <CalendarCheck className="w-6 h-6" />,
+      coins: 5,
+      color: 'from-emerald-400 to-teal-400',
+      action: () => setShowCheckinView(true)
+    },
+    {
+      id: 'feat-refer',
+      name: 'Refer & Earn',
+      icon: <Users className="w-6 h-6" />,
+      coins: 50,
+      color: 'from-amber-400 to-orange-500',
+      action: () => { if (typeof onReferralsClick === 'function') onReferralsClick(); else if (typeof setActiveTab === 'function') setActiveTab('referrals'); }
+    }
+  ];
+
+  const rewardOptions = [
+    { id: 'reward-wallet', name: 'Wallet', icon: <Wallet className="w-7 h-7" />, color: 'from-blue-500 to-indigo-600', action: () => setActiveEarningTab('wallet') },
+    { id: 'reward-history', name: 'History', icon: <History className="w-7 h-7" />, color: 'from-purple-500 to-pink-600', action: () => setActiveEarningTab('history') },
+    { id: 'reward-tutorial', name: 'Tutorial', icon: <BookOpen className="w-7 h-7" />, color: 'from-emerald-500 to-teal-600', action: () => setActiveEarningTab('tutorial') },
+  ];
   const [gkSelected, setGkSelected] = React.useState(null);
   const [gkAnswered, setGkAnswered] = React.useState(false);
 
   const [showArticleView, setShowArticleView] = React.useState(false);
   const [articleStep, setArticleStep] = React.useState(1);
 
+  const [showInterstitialAd, setShowInterstitialAd] = React.useState(false);
   const [showNativeAd, setShowNativeAd] = React.useState(false);
   const [showOfferwallAd, setShowOfferwallAd] = React.useState(false);
   const [currentAdInfo, setCurrentAdInfo] = React.useState({ name: '', type: '', coins: 0, time: 0 });
@@ -232,9 +266,8 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
     fetchGlobalSettings();
   }, []);
 
-  const [showStatusView, setShowStatusView] = React.useState(false);
-  const [statusViewType, setStatusViewType] = React.useState('');
-  const [statusViewTitle, setStatusViewTitle] = React.useState('');
+  const [showIntroScreen, setShowIntroScreen] = React.useState(false);
+  const [introSection, setIntroSection] = React.useState(null);
 
   const [showMultiAdView, setShowMultiAdView] = React.useState(false);
   const [multiAdConfig, setMultiAdConfig] = React.useState(null);
@@ -264,7 +297,6 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
   const [ipSubmitting, setIpSubmitting] = React.useState(false);
   const [showUpgradeOptions, setShowUpgradeOptions] = React.useState(false);
 
-  const [showIntroScreen, setShowIntroScreen] = React.useState(false);
   const [introItem, setIntroItem] = React.useState(null);
 
   const fetchBalance = async () => {
@@ -836,6 +868,16 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
     }
   };
 
+  const showSectionIntro = (section) => {
+    setIntroSection(section);
+    setShowIntroScreen(true);
+  };
+
+  const closeSectionIntro = (callback) => {
+    setShowIntroScreen(false);
+    setTimeout(callback, 300);
+  };
+
   React.useEffect(() => {
     let adTmr;
     if (showNativeAd && currentAdInfo.time > 0) {
@@ -859,6 +901,58 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
     });
   };
 
+  const OptionCard = ({ item, isLarge = false, count = null, maxCount = null, skipIntro = false }) => {
+    const isCompleted = count !== null && count >= maxCount;
+    const itemsToSkipIntro = ['Premium IP', 'Refer & Earn', 'Wallet', 'History', 'Tutorial', 'Invite Friends', 'Daily Quiz', 'Math Quiz', 'Binary Quiz', 'Word Quiz', 'Gen. Knowledge', 'Meta'];
+    const shouldSkip = skipIntro || itemsToSkipIntro.includes(item?.name);
+
+    const handleClick = () => {
+      if (shouldSkip || !item.action) {
+        if (item.action) item.action();
+        return;
+      }
+      setIntroItem(item);
+      setShowIntroScreen(true);
+    };
+
+    return (
+      <button
+        key={item.id}
+        onClick={handleClick}
+        className="flex flex-col items-center group w-full transition-transform duration-150 active:scale-95 hover:scale-105"
+        style={{ transform: 'translateZ(0)' }}
+      >
+        <div className={`w-14 h-14 md:w-${isLarge ? '20' : '16'} md:h-${isLarge ? '20' : '16'} rounded-2xl bg-gradient-to-br ${item.color || 'from-blue-500 to-indigo-600'} flex items-center justify-center shadow-lg relative`}>
+          {typeof item.icon === 'string' ? (
+            <img src={item.icon} alt={item.name} className="w-7 h-7 md:w-10 md:h-10 object-contain drop-shadow-md" />
+          ) : React.isValidElement(item.icon) ? (
+            <div className="text-white drop-shadow-md">{React.cloneElement(item.icon, { className: `w-7 h-7 md:w-${isLarge ? '10' : '8'} md:h-${isLarge ? '10' : '8'}` })}</div>
+          ) : item.logo ? (
+            <img src={item.logo} alt={item.name} className="w-8 h-8 md:w-11 md:h-11 object-contain drop-shadow-md" />
+          ) : (
+            <div className="w-8 h-8 md:w-10 md:h-10 bg-white/20 rounded-lg" />
+          )}
+
+          {count !== null && (
+            <div className="absolute -top-1.5 -right-1.5 bg-white dark:bg-slate-800 rounded-full px-1.5 py-0.5 shadow-sm border border-slate-100 dark:border-slate-700 min-w-[20px] flex items-center justify-center">
+              <span className={`text-[9px] font-black ${isCompleted ? 'text-emerald-500' : 'text-slate-600 dark:text-slate-300'}`}>
+                {count}/{maxCount}
+              </span>
+            </div>
+          )}
+        </div>
+        <span className="mt-2.5 text-[10px] md:text-xs font-black text-slate-700 dark:text-slate-300 text-center leading-tight">
+          {item.name}
+        </span>
+        {item.coins && (
+          <span className="text-[10px] font-bold text-emerald-500 mt-0.5">
+            +{item.coins} Coins
+          </span>
+        )}
+      </button>
+    );
+  };
+
   const OptionIntroScreen = () => {
     const [moreOpen, setMoreOpen] = React.useState(false);
     const item = introItem;
@@ -866,44 +960,216 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
 
     const bgClass = item.color || 'from-blue-500 to-indigo-600';
 
+    // Determine animation type from item name
+    const getAnimType = (name = '') => {
+      const n = name.toLowerCase();
+      if (n.includes('video') || n.includes('film') || n.includes('mega')) return 'video';
+      if (n.includes('spin') || n.includes('wheel') || n.includes('fortune')) return 'spin';
+      if (n.includes('scratch')) return 'scratch';
+      if (n.includes('checkin') || n.includes('daily')) return 'checkin';
+      if (n.includes('quiz') || n.includes('math') || n.includes('binary') || n.includes('word') || n.includes('knowledge')) return 'quiz';
+      if (n.includes('refer') || n.includes('invite') || n.includes('friend')) return 'refer';
+      if (n.includes('article') || n.includes('read')) return 'article';
+      if (n.includes('premium') || n.includes('ip')) return 'premium';
+      if (n.includes('game') || n.includes('play')) return 'game';
+      return 'generic';
+    };
+    const animType = getAnimType(item.name);
+
+    // Duration label per type
+    const durationLabel = {
+      video: '30s (per video)',
+      spin: '1 Spin',
+      scratch: '1 Scratch',
+      checkin: 'Daily',
+      quiz: '30s (per question)',
+      refer: 'Per Invite',
+      article: '60s (per article)',
+      premium: 'Monthly',
+      game: 'Per Game',
+      generic: 'Per Complete',
+    }[animType] || 'Per Complete';
+
+    // Emoji icon per type for the big glow circle
+    const centerEmoji = {
+      video: '🎬',
+      spin: '🎡',
+      scratch: '🃏',
+      checkin: '📅',
+      quiz: '🧠',
+      refer: '👥',
+      article: '📰',
+      premium: '💎',
+      game: '🎮',
+      generic: '🎯',
+    }[animType] || '🎯';
+
     const handlePlay = () => {
       setShowIntroScreen(false);
-      setTimeout(() => {
-        if (item.action) item.action();
-      }, 100);
+      setTimeout(() => { if (item.action) item.action(); }, 100);
     };
 
     return (
-      <div className="fixed inset-0 z-[9998] bg-slate-950 flex flex-col">
-        <div className={`absolute inset-0 bg-gradient-to-br ${bgClass} opacity-20`} />
-        <div className="relative z-50 flex items-center justify-between px-4 py-3">
-          <button onClick={() => goBackWithAd(() => setShowIntroScreen(false))} className="w-9 h-9 rounded-full bg-white/10 flex items-center justify-center text-white">
+      <div className="fixed inset-0 z-[9998] flex flex-col overflow-hidden" style={{ background: 'linear-gradient(160deg, #0d1117 0%, #161b27 60%, #0d1117 100%)' }}>
+        {/* Colour tint overlay matching item colour */}
+        <div className={`absolute inset-0 bg-gradient-to-br ${bgClass} opacity-15 pointer-events-none`} />
+
+        {/* Floating ambient dots */}
+        {[...Array(8)].map((_, i) => (
+          <div
+            key={i}
+            className="absolute rounded-full opacity-10 animate-pulse"
+            style={{
+              width: `${8 + i * 4}px`,
+              height: `${8 + i * 4}px`,
+              background: 'white',
+              left: `${(i * 13) % 100}%`,
+              top: `${(i * 17 + 10) % 85}%`,
+              animationDelay: `${i * 0.7}s`,
+              animationDuration: `${2 + i * 0.5}s`,
+            }}
+          />
+        ))}
+
+        {/* ── Top Bar ── */}
+        <div className="relative z-50 flex items-center justify-between px-4 pt-safe py-3">
+          <button
+            onClick={() => goBackWithAd(() => setShowIntroScreen(false))}
+            className="w-10 h-10 rounded-full bg-white/10 border border-white/10 flex items-center justify-center text-white active:scale-95 transition-transform"
+          >
             <ArrowLeft className="w-5 h-5" />
           </button>
+
           <h1 className="text-white font-black text-base tracking-tight">{item.name}</h1>
+
           <div className="relative">
-            <button onClick={() => setMoreOpen(!moreOpen)} className="w-9 h-9 rounded-full bg-white/10 flex items-center justify-center text-white">
+            <button
+              onClick={() => setMoreOpen(!moreOpen)}
+              className="w-10 h-10 rounded-full bg-white/10 border border-white/10 flex items-center justify-center text-white active:scale-95 transition-transform"
+            >
               <Menu className="w-5 h-5" />
             </button>
+            {moreOpen && (
+              <div className="absolute right-0 top-12 bg-slate-800/95 backdrop-blur-xl border border-slate-700 rounded-2xl shadow-2xl py-2 w-44 z-50">
+                {[
+                  { name: 'Home', icon: '🏠', action: () => { setShowIntroScreen(false); setActiveTab('Home'); } },
+                  { name: 'Notification', icon: '🔔', action: () => { setShowIntroScreen(false); setActiveTab('Notification'); } },
+                  { name: 'Profile', icon: '👤', action: () => { setShowIntroScreen(false); setActiveTab('Profile'); } },
+                ].map((link, i) => (
+                  <button
+                    key={i}
+                    onClick={() => { setMoreOpen(false); link.action(); }}
+                    className="w-full text-left px-4 py-2.5 text-sm font-medium text-slate-300 hover:text-white hover:bg-white/10 flex items-center gap-3 transition-colors"
+                  >
+                    <span>{link.icon}</span>{link.name}
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
         </div>
-        <div className="relative z-10 flex justify-center mt-1 mb-2">
-          <div className="flex items-center gap-2 bg-white/10 backdrop-blur-md border border-white/20 rounded-full px-4 py-1">
-            <span className="text-amber-400">💰</span>
+
+        {/* ── Balance Chip ── */}
+        <div className="relative z-10 flex justify-center mt-1 mb-4">
+          <div className="flex items-center gap-2 bg-white/10 backdrop-blur-md border border-white/15 rounded-full px-5 py-1.5">
+            <span className="text-amber-400 text-base">💰</span>
             <span className="text-white font-black text-sm">৳{balance.toFixed(2)}</span>
+            <span className="text-white/30 text-xs">|</span>
+            <span className="text-amber-300 text-xs font-bold">{coins} Coins</span>
           </div>
         </div>
-        <div className="relative z-10 px-4 mt-6 pb-12">
-          <button onClick={handlePlay} className={`w-full py-4 rounded-2xl bg-gradient-to-r ${bgClass} text-white font-black text-lg shadow-xl flex items-center justify-center gap-3`}>
-            ▶ Play {item.name}
+
+        {/* ── Activity Identity Card ── */}
+        <div className="relative z-10 mx-4 mb-4 flex items-center gap-3 bg-white/8 border border-white/10 rounded-2xl px-4 py-2.5 backdrop-blur-sm">
+          {/* Icon */}
+          <div className={`w-11 h-11 rounded-xl bg-gradient-to-br ${bgClass} flex items-center justify-center shadow-lg flex-shrink-0`}>
+            {typeof item.icon !== 'string' && React.isValidElement(item.icon)
+              ? <div className="text-white">{React.cloneElement(item.icon, { className: 'w-6 h-6' })}</div>
+              : typeof item.icon === 'string' && item.icon.startsWith('http')
+                ? <img src={item.icon} alt={item.name} className="w-7 h-7 object-contain" />
+                : <span className="text-2xl">{centerEmoji}</span>
+            }
+          </div>
+          <div>
+            <div className="text-white font-black text-sm leading-none">{item.name}</div>
+            <div className="text-white/50 text-[10px] font-medium mt-0.5">Earning Activity</div>
+          </div>
+        </div>
+
+        {/* ── Large Themed Center Icon ── */}
+        <div className="relative z-10 flex items-center justify-center mb-6" style={{ minHeight: 160 }}>
+          {/* Outer glow ring 1 */}
+          <div className={`absolute w-40 h-40 rounded-full bg-gradient-to-br ${bgClass} opacity-10 animate-ping`} style={{ animationDuration: '3s' }} />
+          {/* Outer ring 2 */}
+          <div className={`absolute w-32 h-32 rounded-full bg-gradient-to-br ${bgClass} opacity-15`} />
+          {/* Main icon circle */}
+          <div className={`relative w-24 h-24 rounded-3xl bg-gradient-to-br ${bgClass} flex items-center justify-center shadow-2xl border-2 border-white/20`}>
+            {typeof item.icon !== 'string' && React.isValidElement(item.icon)
+              ? <div className="text-white drop-shadow-xl">{React.cloneElement(item.icon, { className: 'w-12 h-12' })}</div>
+              : typeof item.icon === 'string' && item.icon.startsWith('http')
+                ? <img src={item.icon} alt={item.name} className="w-14 h-14 object-contain drop-shadow-xl" />
+                : <span className="text-5xl drop-shadow-xl">{centerEmoji}</span>
+            }
+          </div>
+        </div>
+
+        {/* ── Info Cards ── */}
+        <div className="relative z-10 mx-4 space-y-2 mb-4">
+          {/* Duration */}
+          <div className="flex items-center gap-3 bg-white/8 border border-white/10 rounded-2xl px-4 py-3">
+            <div className="w-9 h-9 rounded-xl bg-blue-500/20 flex items-center justify-center flex-shrink-0">
+              <span className="text-xl">⏱️</span>
+            </div>
+            <div>
+              <div className="text-white font-black text-sm leading-none">
+                Duration: <span className="text-blue-400">{durationLabel.split(' ')[0]}</span>
+              </div>
+              <div className="text-white/50 text-[10px] font-medium mt-0.5">
+                {durationLabel.includes('(') ? durationLabel.substring(durationLabel.indexOf('(')) : ''}
+              </div>
+            </div>
+          </div>
+
+          {/* Prize */}
+          {item.coins != null && (
+            <div className="flex items-center gap-3 bg-white/8 border border-white/10 rounded-2xl px-4 py-3">
+              <div className="w-9 h-9 rounded-xl bg-amber-500/20 flex items-center justify-center flex-shrink-0">
+                <span className="text-xl">🪙</span>
+              </div>
+              <div>
+                <div className="text-white font-black text-sm leading-none">
+                  Prize: <span className="text-amber-400">{item.coins} coins</span>
+                </div>
+                <div className="text-white/50 text-[10px] font-medium mt-0.5">
+                  {animType === 'quiz' ? '(per answer)' : animType === 'video' ? '(per video)' : animType === 'refer' ? '(per invite)' : '(upon completion)'}
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* ── Play Button ── */}
+        <div className="relative z-10 px-4 pb-4">
+          <button
+            onClick={handlePlay}
+            className={`w-full py-4 rounded-2xl bg-gradient-to-r ${bgClass} text-white font-black text-lg shadow-xl relative overflow-hidden active:scale-95 transition-transform`}
+          >
+            {/* Shine sweep */}
+            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/15 to-transparent -translate-x-full animate-[shimmer_2.5s_ease-in-out_infinite]" />
+            <span className="relative z-10">
+              ▶ {animType === 'article' ? 'Read' : animType === 'refer' ? 'Invite' : animType === 'premium' ? 'Get' : 'Play'} {item.name}
+            </span>
           </button>
-          <div className="mt-8 flex flex-col items-center">
+
+          {/* Ad Banner */}
+          <div className="mt-4 flex flex-col items-center">
             <BigAdBanner />
           </div>
         </div>
       </div>
     );
   };
+
 
   const getLevelInfo = (pts) => {
     if (pts < 1500) return { level: 1, current: pts, target: 1500, label: 'Level 1' };
@@ -1807,7 +2073,7 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
 
           {/* Featured Row: Daily Checkin + Refer */}
           <div className="grid grid-cols-2 gap-4 max-w-sm mx-auto px-2">
-            {mainOptions.map((item) => (
+            {(mainOptions || []).map((item) => (
               <OptionCard key={'feat-' + item.id} item={item} />
             ))}
           </div>
@@ -1828,11 +2094,11 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
               </div>
               <div className="grid grid-cols-3 sm:grid-cols-5 gap-4 md:gap-6 justify-items-center">
                 {[
-                  { id: 'l1-article', name: 'Articles', icon: <Newspaper className="w-7 h-7" />, coins: 15, color: 'from-blue-400 to-indigo-500', action: () => setShowArticleView(true) },
-                  { id: 'l1-videos', name: 'Videos', icon: <Video className="w-7 h-7" />, coins: 25, color: 'from-purple-400 to-pink-500', action: () => { setVideoType('video'); setShowVideoView(true); }, count: videoStatus.count, maxCount: 5 },
-                  { id: 'l1-games', name: 'Games', icon: <Gamepad2 className="w-7 h-7" />, coins: 50, color: 'from-emerald-400 to-teal-500', action: () => setShowGamesView(true) },
-                  { id: 'l1-wheel', name: 'Fortune Wheel', icon: <Aperture className="w-7 h-7" />, coins: null, color: 'from-amber-400 to-orange-500', action: () => setShowWheelView(true) },
-                  { id: 'l1-ads', name: 'View Ads', icon: <MonitorPlay className="w-7 h-7" />, coins: 10, color: 'from-sky-400 to-cyan-500', action: () => { setVideoType('view_ads'); setShowVideoView(true); }, count: viewAdsStatus.count, maxCount: 5 },
+                  { id: 'l1-article', name: 'Articles', icon: <Newspaper className="w-7 h-7" />, coins: 15, color: 'from-blue-400 to-indigo-500', action: () => showSectionIntro({ title: 'Articles', icon: Newspaper, color: 'from-blue-400 to-indigo-500', description: 'Read interesting articles to earn coins', reward: 15, rewardLabel: 'Coins', onEnter: () => setShowArticleView(true) }) },
+                  { id: 'l1-videos', name: 'Videos', icon: <Video className="w-7 h-7" />, coins: 25, color: 'from-purple-400 to-pink-500', action: () => showSectionIntro({ title: 'Videos', icon: Video, color: 'from-purple-400 to-pink-500', description: 'Watch exciting videos and earn coins', reward: 25, rewardLabel: 'Coins per Video', onEnter: () => { setVideoType('video'); setShowVideoView(true); } }), count: videoStatus.count, maxCount: 5 },
+                  { id: 'l1-games', name: 'Games', icon: <Gamepad2 className="w-7 h-7" />, coins: 50, color: 'from-emerald-400 to-teal-500', action: () => showSectionIntro({ title: 'Games', icon: Gamepad2, color: 'from-emerald-400 to-teal-500', description: 'Play fun games and earn coins', reward: 50, rewardLabel: 'Coins', onEnter: () => setShowGamesView(true) }) },
+                  { id: 'l1-wheel', name: 'Fortune Wheel', icon: <Aperture className="w-7 h-7" />, coins: null, color: 'from-amber-400 to-orange-500', action: () => showSectionIntro({ title: 'Fortune Wheel', icon: Aperture, color: 'from-amber-400 to-orange-500', description: 'Spin the wheel and try your luck', reward: null, rewardLabel: 'Daily Spin', onEnter: () => setShowWheelView(true) }) },
+                  { id: 'l1-ads', name: 'View Ads', icon: <MonitorPlay className="w-7 h-7" />, coins: 10, color: 'from-sky-400 to-cyan-500', action: () => showSectionIntro({ title: 'View Ads', icon: MonitorPlay, color: 'from-sky-400 to-cyan-500', description: 'Watch ads and earn instant coins', reward: 10, rewardLabel: 'Coins per Ad', onEnter: () => { setVideoType('view_ads'); setShowVideoView(true); } }), count: viewAdsStatus.count, maxCount: 5 },
                 ].map(item => <OptionCard key={item.id} item={item} count={item.count} maxCount={item.maxCount} />)}
               </div>
             </div>
@@ -2188,8 +2454,13 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
         </div>
       </div>
 
+      {/* Section Intro Overlay */}
+      <SectionIntroOverlay
+        isOpen={showIntroScreen}
+        onClose={() => setShowIntroScreen(false)}
+        section={introSection}
+      />
 
-      
       </main>
     </PullToRefresh>
     </>
