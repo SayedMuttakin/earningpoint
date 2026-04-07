@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { AdMobService } from '../utils/admob';
 import { API_BASE } from '../config';
 import MultiAdViewPage from './MultiAdViewPage';
@@ -137,8 +138,72 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
   const [withdrawPhone, setWithdrawPhone] = React.useState('');
   const [withdrawMethod, setWithdrawMethod] = React.useState('');
   const [withdrawLoading, setWithdrawLoading] = React.useState(false);
-  
+  const [withdrawSuccess, setWithdrawSuccess] = React.useState(false);
+
+  const blurPhone = (phone = '') => {
+    if (!phone || phone.length < 6) return phone;
+    return phone.slice(0, 3) + '****' + phone.slice(-3);
+  };
+
+  const demoWithdrawHistory = [
+    { id: 1, name: 'Sayed Muttakin', phone: '01711234567', amount: 1500, method: 'bKash', date: '2025-03-28', status: 'completed' },
+    { id: 2, name: 'Rahim Uddin', phone: '01819876543', amount: 2000, method: 'Nagad', date: '2025-03-25', status: 'completed' },
+    { id: 3, name: 'Karim Hossain', phone: '01612345678', amount: 1000, method: 'Rocket', date: '2025-03-22', status: 'pending' },
+  ];
+
+  const handleWithdraw = async () => {
+    if (!withdrawAmount || parseFloat(withdrawAmount) < 1000) {
+      showToast('Minimum withdrawal amount is ৳1,000', 'error');
+      return;
+    }
+    if (!withdrawPhone || withdrawPhone.length < 11) {
+      showToast('Please enter a valid phone number', 'error');
+      return;
+    }
+    if (!withdrawMethod) {
+      showToast('Please select a payment method', 'error');
+      return;
+    }
+    if (balance < parseFloat(withdrawAmount)) {
+      showToast('Insufficient balance', 'error');
+      return;
+    }
+    setWithdrawLoading(true);
+    try {
+      const token = localStorage.getItem('token');
+      const res = await fetch(`${API_BASE}/api/earning/withdraw`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ amount: parseFloat(withdrawAmount), phone: withdrawPhone, method: withdrawMethod }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setWithdrawSuccess(true);
+        setBalance(data.balance ?? balance);
+        showToast('Withdrawal request submitted successfully!', 'success');
+        setWithdrawAmount('');
+        setWithdrawPhone('');
+        setWithdrawMethod('');
+        setTimeout(() => setWithdrawSuccess(false), 5000);
+      } else {
+        showToast(data.message || 'Withdrawal failed. Try again.', 'error');
+      }
+    } catch (_) {
+      showToast('Network error. Please try again.', 'error');
+    } finally {
+      setWithdrawLoading(false);
+    }
+  };
+
+  const withdrawMethods = [
+    { id: 'bkash', name: 'bKash', logo: 'https://img.icons8.com/color/96/bkash.png', available: true },
+    { id: 'nagad', name: 'Nagad', logo: 'https://img.icons8.com/color/96/nagad.png', available: true },
+    { id: 'rocket', name: 'Rocket', logo: 'https://img.icons8.com/color/96/rocket.png', available: true },
+    { id: 'upay', name: 'Upay', logo: 'https://img.icons8.com/color/96/money-transfer.png', available: false },
+  ];
+
   const [showCheckinView, setShowCheckinView] = React.useState(false);
+
   const [showAdOverlay, setShowAdOverlay] = React.useState(false);
   const [adCountdown, setAdCountdown] = React.useState(40);
   const [canCloseAd, setCanCloseAd] = React.useState(false);
@@ -177,6 +242,7 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
   const [premiumExpiryDate, setPremiumExpiryDate] = React.useState(null);
   const [premiumCountry, setPremiumCountry] = React.useState('');
   const [premiumPackageName, setPremiumPackageName] = React.useState('');
+  const [searchCountry, setSearchCountry] = React.useState('');
 
   const [showGkQuizView, setShowGkQuizView] = React.useState(false);
   const [gkQuizQuestions, setGkQuizQuestions] = React.useState([]);
@@ -287,8 +353,8 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
   };
 
   const [showPremiumIPView, setShowPremiumIPView] = React.useState(false);
-  const [isPremium, setIsPremium] = React.useState(true);
-  const [selectedPackage, setSelectedPackage] = React.useState('month-1');
+  const [isPremium, setIsPremium] = React.useState(false);
+  const [selectedPackage, setSelectedPackage] = React.useState(null);
   const [ipStep, setIpStep] = React.useState(1);
   const [selectedCountry, setSelectedCountry] = React.useState('');
   const [isCountryDropdownOpen, setIsCountryDropdownOpen] = React.useState(false);
@@ -296,6 +362,32 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
   const [transactionId, setTransactionId] = React.useState('');
   const [ipSubmitting, setIpSubmitting] = React.useState(false);
   const [showUpgradeOptions, setShowUpgradeOptions] = React.useState(false);
+
+  React.useEffect(() => {
+    let timer;
+    if (isPremium && premiumExpiryDate) {
+      const updateTimer = () => {
+        const now = new Date().getTime();
+        const expiry = new Date(premiumExpiryDate).getTime();
+        const difference = expiry - now;
+        if (difference > 0) {
+          setTimeLeft({
+            days: Math.floor(difference / (1000 * 60 * 60 * 24)),
+            hours: Math.floor((difference / (1000 * 60 * 60)) % 24),
+            minutes: Math.floor((difference / 1000 / 60) % 60),
+            seconds: Math.floor((difference / 1000) % 60),
+          });
+        } else {
+          setIsPremium(false);
+          setTimeLeft({ days: 0, hours: 0, minutes: 0, seconds: 0 });
+        }
+      };
+      updateTimer();
+      timer = setInterval(updateTimer, 1000);
+    }
+    return () => clearInterval(timer);
+  }, [isPremium, premiumExpiryDate]);
+
 
   const [introItem, setIntroItem] = React.useState(null);
 
@@ -808,6 +900,48 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
       await AdMobService.showNativeSimulatedAd();
     } else {
       setShowOfferwallAd(true);
+    }
+  };
+
+  const handlePremiumSubmit = async () => {
+    if (!selectedPackage || !selectedCountry || !paymentMethod || !transactionId) {
+      showToast('Please fill all required fields!', 'error');
+      return;
+    }
+    const pkg = ipPackages.find(p => p.id === selectedPackage);
+    const amount = pkg?.price || 0;
+    
+    setIpSubmitting(true);
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`${API_BASE}/api/earning/premium-order`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({
+          packageId: selectedPackage,
+          packageName: pkg?.name,
+          country: selectedCountry,
+          paymentMethod,
+          transactionId,
+          amount
+        })
+      });
+      const data = await response.json();
+      if (response.ok) {
+        showToast(data.message || 'Order submitted successfully!', 'success');
+        setShowPremiumIPView(false);
+        setIpStep(1);
+        setSelectedPackage(null);
+        setSelectedCountry('');
+        setPaymentMethod('');
+        setTransactionId('');
+      } else {
+        showToast(data.message || 'Submission failed.', 'error');
+      }
+    } catch (err) {
+      showToast('Network error.', 'error');
+    } finally {
+      setIpSubmitting(false);
     }
   };
 
@@ -2457,6 +2591,304 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
       </div>
 
       </main>
+
+      {/* ══════ PREMIUM IP VIEW OVERLAY ══════ */}
+      {showPremiumIPView && createPortal(
+        <div className="fixed inset-0 z-[99999] bg-gradient-to-br from-[#070B14] via-[#0B101D] to-[#0A1838] flex flex-col animate-fade-in overflow-hidden">
+          
+          {/* Background decoration flares */}
+          <div className="absolute top-0 left-0 right-0 h-96 bg-[#FACC15] opacity-[0.03] blur-[100px] pointer-events-none rounded-full transform -translate-y-1/2"></div>
+          
+          {/* Header area with back button */}
+          <div className="p-4 shrink-0 flex items-center border-b border-white/5 relative z-10 bg-black/10 backdrop-blur-md">
+            <button
+              onClick={() => {
+                if (ipStep === 3 || ipStep === 4 || (ipStep === 2 && isPremium)) {
+                  setIpStep(ipStep - 1);
+                } else {
+                  setShowPremiumIPView(false);
+                  setIpStep(1);
+                }
+              }}
+              className="w-10 h-10 flex items-center justify-start text-slate-300 active:scale-95 transition-transform"
+            >
+              <ArrowLeft className="w-6 h-6" />
+            </button>
+            <h2 className="text-[#FACC15] font-bold ml-1 text-lg tracking-wide flex-1">Get IP</h2>
+          </div>
+
+          <div className="flex-1 overflow-y-auto px-5 py-6 scrollbar-hide flex flex-col relative z-10">
+             <div className="flex-1 space-y-6">
+             {/* If Premium Active Timer View (Step 1 when Premium) */}
+             {isPremium && ipStep === 1 ? (
+               <div className="flex flex-col items-center justify-center pt-6">
+                  <Crown className="w-16 h-16 text-[#FACC15] fill-[#FACC15] mb-4 drop-shadow-[0_0_15px_rgba(250,204,21,0.4)]" />
+                  <h2 className="text-2xl font-black text-white mb-2 tracking-tight">Active IP</h2>
+                  <p className="text-slate-400 text-sm mb-6 text-center">
+                     You currently have an active premium IP.
+                  </p>
+                  
+                  <div className="flex gap-4 p-5 bg-[#151A23] rounded-2xl border border-white/5 text-center w-full mb-8 shadow-xl">
+                     <div className="flex-1">
+                        <div className="text-2xl font-black text-white">{timeLeft.days}</div>
+                        <div className="text-[10px] uppercase text-slate-500 mt-1 font-bold tracking-wider">Days</div>
+                     </div>
+                     <div className="flex-1 border-l border-slate-800">
+                        <div className="text-2xl font-black text-white">{timeLeft.hours}</div>
+                        <div className="text-[10px] uppercase text-slate-500 mt-1 font-bold tracking-wider">Hours</div>
+                     </div>
+                     <div className="flex-1 border-l border-slate-800">
+                        <div className="text-2xl font-black text-white">{timeLeft.minutes}</div>
+                        <div className="text-[10px] uppercase text-slate-500 mt-1 font-bold tracking-wider">Mins</div>
+                     </div>
+                  </div>
+
+                  <button
+                     onClick={() => setIpStep(2)}
+                     className="px-8 py-4 bg-gradient-to-r from-[#FACC15] to-[#EAB308] text-slate-900 rounded-xl font-black active:scale-95 w-full uppercase tracking-wider shadow-[0_5px_20px_rgba(250,204,21,0.3)]"
+                  >
+                     Extend Membership
+                  </button>
+               </div>
+             ) : null}
+
+             {/* Package Selection (Step 1 or Step 2) */}
+             {(!isPremium && ipStep === 1) || (isPremium && ipStep === 2) ? (
+                <div className="flex flex-col items-center">
+                   <Crown className="w-12 h-12 text-[#FACC15] fill-[#FACC15] mb-3 drop-shadow-[0_0_15px_rgba(250,204,21,0.4)]" />
+                   <h2 className="text-2xl font-black text-white mb-1 tracking-tight">Get IP</h2>
+                   <p className="text-slate-400 text-xs mb-6 text-center px-4 leading-relaxed">
+                      Upgrade to Premium IP to enjoy more<br/>features
+                   </p>
+                   
+                   <div className="w-full space-y-3 mb-8 px-2 max-w-[280px]">
+                      <div className="flex items-center gap-3 text-slate-300">
+                         <Globe className="w-4 h-4 text-[#FACC15]" />
+                         <span className="text-xs font-bold opacity-90">All Global Services</span>
+                      </div>
+                      <div className="flex items-center gap-3 text-slate-300">
+                         <Shield className="w-4 h-4 text-[#FACC15]" />
+                         <span className="text-xs font-bold opacity-90">Super fast Connections</span>
+                      </div>
+                      <div className="flex items-center gap-3 text-slate-300">
+                         <Globe className="w-4 h-4 text-[#FACC15]" />
+                         <span className="text-xs font-bold opacity-90">All 30+ country Server for VIP</span>
+                      </div>
+                   </div>
+                   
+                   <div className="w-full space-y-3">
+                      {((globalSettings.premiumIpPackages && globalSettings.premiumIpPackages.length > 0) ? globalSettings.premiumIpPackages : [
+                         {id: '1', duration: '1 Month', price: 700, freeBonus: '+7 Days free', promoTag: ''},
+                         {id: '2', duration: '3 Month', price: 1300, freeBonus: '+15 Days free', promoTag: 'POPULAR'},
+                         {id: '3', duration: '6 Month', price: 2200, freeBonus: '+1 Month free', promoTag: 'BEST VALUE'},
+                         {id: '4', duration: '1 Year', price: 4200, freeBonus: '+2 Month free', promoTag: 'PRO'}
+                      ]).map(pkg => {
+                         const displayBonus = pkg.freeBonus || (pkg.duration.includes('1 Month') ? '+7 Days free' : pkg.duration.includes('3 Month') ? '+15 Days free' : pkg.duration.includes('6 Month') ? '+1 Month free' : pkg.duration.includes('1 Year') ? '+2 Month free' : '');
+                         
+                         return (
+                         <button
+                            key={pkg.id}
+                            onClick={() => setSelectedPackage(pkg.id)}
+                            className={`w-full relative px-3 py-3 rounded-2xl border flex items-center justify-between transition-all overflow-hidden ${
+                               selectedPackage === pkg.id ? 'border-[#FACC15] bg-[#FACC15]/10 shadow-[0_0_15px_rgba(250,204,21,0.15)]' : 'border-white/10 bg-[#151A23]'
+                            }`}
+                         >
+                            <div className="flex items-center gap-1.5 md:gap-2 z-10 w-full overflow-hidden">
+                               <span className={`font-black text-[15px] sm:text-lg whitespace-nowrap ${selectedPackage === pkg.id ? 'text-[#FACC15]' : 'text-white'}`}>৳{pkg.price}/-</span>
+                               <span className="text-white/20 h-4 w-px bg-white/20"></span>
+                               <span className={`font-bold text-[11px] sm:text-sm tracking-wide whitespace-nowrap ${selectedPackage === pkg.id ? 'text-white' : 'text-slate-300'}`}>{pkg.duration}</span>
+                               <span className="text-white/20 h-4 w-px bg-white/20"></span>
+                               {displayBonus && (
+                                  <span className="text-emerald-400 text-[9px] md:text-[10px] font-bold uppercase tracking-wider bg-emerald-400/10 px-1 py-0.5 rounded border border-emerald-400/20 whitespace-nowrap truncate">
+                                     {displayBonus}
+                                  </span>
+                               )}
+                            </div>
+                            
+                            <div className="flex flex-col items-end justify-center z-10 flex-shrink-0 ml-1">
+                               <div className={`w-4 h-4 sm:w-5 sm:h-5 rounded-full border-2 flex items-center justify-center ${selectedPackage === pkg.id ? 'border-[#FACC15]' : 'border-slate-500'}`}>
+                                  {selectedPackage === pkg.id && <div className="w-2 h-2 sm:w-2.5 sm:h-2.5 rounded-full bg-[#FACC15] drop-shadow-[0_0_5px_rgba(250,204,21,0.8)]" />}
+                               </div>
+                            </div>
+                            
+                            {/* Subtle background glow for selected package */}
+                            {selectedPackage === pkg.id && (
+                               <div className="absolute right-0 top-0 bottom-0 w-24 bg-gradient-to-l from-[#FACC15]/10 to-transparent"></div>
+                            )}
+                         </button>
+                      )})}
+                   </div>
+                </div>
+             ) : null}
+
+             {/* Country Selection (Step 2 or 3) */}
+             {((!isPremium && ipStep === 2) || (isPremium && ipStep === 3)) ? (
+               <div className="flex flex-col items-center pt-4">
+                  <h2 className="text-xl font-black text-white mb-2">Select Country</h2>
+                  <p className="text-slate-400 text-xs mb-8 text-center">Choose the origin of your new IP</p>
+                  
+                  <div className="w-full relative">
+                     <div 
+                        className="bg-[#121A2B] border-2 border-slate-800 rounded-2xl p-4 flex items-center justify-between cursor-pointer active:scale-[0.98] transition-transform"
+                        onClick={() => setIsCountryDropdownOpen(!isCountryDropdownOpen)}
+                     >
+                        {selectedCountry ? (
+                           <div className="flex items-center gap-3">
+                              <span className="text-2xl">{countries.find(c => c.name === selectedCountry)?.emoji}</span>
+                              <span className="text-white font-bold">{selectedCountry}</span>
+                           </div>
+                        ) : (
+                           <span className="text-slate-400 font-bold">Tap to select country...</span>
+                        )}
+                        <ChevronDown className={`w-5 h-5 text-slate-400 transition-transform ${isCountryDropdownOpen ? 'rotate-180' : ''}`} />
+                     </div>
+
+                     {isCountryDropdownOpen && (
+                        <div className="absolute top-full left-0 right-0 mt-3 bg-[#121A2B] border-2 border-slate-800 rounded-2xl shadow-2xl z-50 overflow-hidden flex flex-col max-h-[350px]">
+                           <div className="p-3 border-b border-slate-800 shrink-0">
+                              <div className="bg-slate-900 rounded-xl flex items-center px-4 py-2">
+                                 <Search className="w-4 h-4 text-slate-500 mr-3" />
+                                 <input 
+                                    type="text" 
+                                    placeholder="Search country..." 
+                                    className="bg-transparent border-none outline-none text-white text-sm w-full h-8"
+                                    value={searchCountry}
+                                    onChange={(e) => setSearchCountry(e.target.value)}
+                                 />
+                              </div>
+                           </div>
+                           <div className="overflow-y-auto flex-1 p-2 scrollbar-none">
+                              {countries.filter(c => c.name.toLowerCase().includes(searchCountry.toLowerCase())).map((c) => (
+                                 <button
+                                    key={c.code}
+                                    onClick={() => { setSelectedCountry(c.name); setIsCountryDropdownOpen(false); }}
+                                    className={`w-full flex items-center gap-4 p-3 rounded-xl text-left transition-colors ${selectedCountry === c.name ? 'bg-blue-600/20 text-white' : 'text-slate-300 hover:bg-slate-800/50'}`}
+                                 >
+                                    <span className="text-3xl">{c.emoji}</span>
+                                    <span className="font-bold">{c.name}</span>
+                                 </button>
+                              ))}
+                           </div>
+                        </div>
+                     )}
+                  </div>
+               </div>
+             ) : null}
+
+             {/* Payment Selection (Step 3 or 4) */}
+             {((!isPremium && ipStep === 3) || (isPremium && ipStep === 4)) ? (
+               <div className="flex flex-col animate-fade-in pt-4">
+                  <h2 className="text-xl font-black text-[#FACC15] mb-2 text-center drop-shadow-[0_0_10px_rgba(250,204,21,0.2)]">Payment Methods</h2>
+                  <p className="text-slate-300 font-bold mb-8 text-center bg-[#FACC15]/10 py-2 rounded-xl border border-[#FACC15]/20 max-w-[200px] mx-auto shadow-[0_0_15px_rgba(250,204,21,0.05)]">
+                     Amount: <span className="text-[#FACC15] text-lg">৳{globalSettings.premiumIpPackages?.find(p => p.id === selectedPackage)?.price || (selectedPackage === '1' ? 700 : 0)}</span>
+                  </p>
+                  
+                  <div className="grid grid-cols-2 gap-3 mb-8">
+                     {[
+                        { id: 'bkash', name: 'bKash', logo: 'https://img.icons8.com/color/96/bkash.png', available: true, number: globalSettings.bkashNumber },
+                        { id: 'nagad', name: 'Nagad', logo: 'https://img.icons8.com/color/96/nagad.png', available: true, number: globalSettings.nagadNumber },
+                        { id: 'rocket', name: 'Rocket', logo: 'https://img.icons8.com/color/96/rocket.png', available: true, number: globalSettings.rocketNumber },
+                        { id: 'bank', name: 'Bank Transfer', logo: 'https://img.icons8.com/color/96/bank-building.png', available: false },
+                        { id: 'card', name: 'Mobile Card', logo: 'https://img.icons8.com/color/96/bank-cards.png', available: false },
+                        { id: 'visa', name: 'Visa', logo: 'https://img.icons8.com/color/96/visa.png', available: false },
+                     ].map((method) => (
+                        <button
+                           key={method.id}
+                           disabled={!method.available}
+                           onClick={() => setPaymentMethod(method.id)}
+                           className={`relative p-4 rounded-2xl border flex flex-col items-center justify-center gap-3 transition-all ${
+                              paymentMethod === method.id 
+                              ? 'border-[#FACC15] bg-[#FACC15]/10 shadow-[0_0_15px_rgba(250,204,21,0.15)]' 
+                              : 'border-white/10 bg-[#151A23]'
+                           } ${!method.available ? 'opacity-40 grayscale cursor-not-allowed' : ''}`}
+                        >
+                           <img src={method.logo} alt={method.name} className={`w-10 h-10 object-contain transition-transform ${paymentMethod === method.id ? 'scale-110 drop-shadow-[0_0_8px_rgba(250,204,21,0.4)]' : 'drop-shadow'}`} />
+                           <span className={`text-xs font-bold ${paymentMethod === method.id ? 'text-[#FACC15]' : 'text-white'}`}>{method.name}</span>
+                           {!method.available && <span className="absolute inset-0 m-auto h-fit w-fit px-1.5 py-0.5 bg-slate-900/90 rounded text-[9px] font-black text-rose-400 uppercase tracking-widest text-center shadow-lg">Unavailable</span>}
+                        </button>
+                     ))}
+                  </div>
+
+                  {paymentMethod && (
+                     <div className="bg-[#151A23] rounded-2xl p-5 border border-white/10 animate-slide-up shadow-xl relative overflow-hidden">
+                        <div className="absolute top-0 right-0 w-32 h-32 bg-[#FACC15]/5 rounded-full blur-[40px]"></div>
+                        
+                        <p className="text-slate-300 text-sm mb-3 font-bold text-center relative z-10">1. Send exact amount to this number:</p>
+                        <div className="flex items-center justify-between bg-black/30 rounded-xl p-3 border border-white/5 mb-6 group transition-colors relative z-10">
+                           <span className="font-mono text-[#FACC15] font-black tracking-widest text-lg ml-2 drop-shadow-[0_0_5px_rgba(250,204,21,0.3)]">
+                              {paymentMethod === 'bkash' && globalSettings.bkashNumber}
+                              {paymentMethod === 'nagad' && globalSettings.nagadNumber}
+                              {paymentMethod === 'rocket' && globalSettings.rocketNumber}
+                           </span>
+                           <button onClick={(e) => {
+                              navigator.clipboard.writeText(
+                                 paymentMethod === 'bkash' ? globalSettings.bkashNumber : 
+                                 paymentMethod === 'nagad' ? globalSettings.nagadNumber : globalSettings.rocketNumber
+                              );
+                              const btn = e.target;
+                              const oldText = btn.innerText;
+                              btn.innerText = 'Copied!';
+                              setTimeout(() => btn.innerText = oldText, 2000);
+                           }} className="text-xs bg-[#FACC15]/10 text-[#FACC15] px-4 py-2 rounded-lg font-black uppercase tracking-wider hover:bg-[#FACC15]/20 border border-[#FACC15]/20 transition-colors">Copy</button>
+                        </div>
+                        
+                        <p className="text-slate-300 text-sm mb-3 font-bold text-center mt-2 relative z-10">2. Enter your Transaction ID:</p>
+                        <div className="space-y-2 relative z-10">
+                           <input
+                              type="text"
+                              value={transactionId}
+                              onChange={(e) => setTransactionId(e.target.value)}
+                              placeholder="e.g. TRXR123456789"
+                              className="w-full bg-black/30 border border-white/10 focus:border-[#FACC15]/50 focus:bg-[#FACC15]/5 focus:shadow-[0_0_15px_rgba(250,204,21,0.1)] rounded-xl px-4 py-4 text-[#FACC15] font-mono text-sm outline-none transition-all text-center font-bold tracking-wider uppercase placeholder:text-slate-600 placeholder:normal-case"
+                           />
+                        </div>
+                     </div>
+                  )}
+               </div>
+             ) : null}
+
+             </div>
+
+             {/* Action Buttons Container (Appended correctly beneath content) */}
+             {(!isPremium || ipStep > 1) && (
+                <div className="w-full pt-4 mt-auto">
+                   {((!isPremium && ipStep === 1) || (isPremium && ipStep === 2)) && (
+                      <button
+                         disabled={!selectedPackage}
+                         onClick={() => setIpStep(isPremium ? 3 : 2)}
+                         className="w-full py-4 rounded-xl bg-gradient-to-r from-[#FACC15] to-[#EAB308] text-slate-900 font-black shadow-[0_5px_20px_rgba(250,204,21,0.3)] active:scale-95 transition-transform disabled:opacity-50 disabled:shadow-none tracking-wider text-sm"
+                      >
+                         GET IP NOW
+                      </button>
+                   )}
+                   {((!isPremium && ipStep === 2) || (isPremium && ipStep === 3)) && (
+                      <button
+                         disabled={!selectedCountry}
+                         onClick={() => setIpStep(isPremium ? 4 : 3)}
+                         className="w-full py-4 rounded-xl bg-gradient-to-r from-[#FACC15] to-[#EAB308] text-slate-900 font-black shadow-[0_5px_20px_rgba(250,204,21,0.3)] active:scale-95 transition-transform disabled:opacity-50 disabled:shadow-none tracking-wider text-sm"
+                      >
+                         CONTINUE TO PAYMENT
+                      </button>
+                   )}
+                   {((!isPremium && ipStep === 3) || (isPremium && ipStep === 4)) && (
+                      <button
+                         disabled={!paymentMethod || !transactionId || ipSubmitting}
+                         onClick={handlePremiumSubmit}
+                         className="w-full flex items-center justify-center py-4 rounded-xl bg-gradient-to-r from-[#FACC15] to-[#EAB308] text-slate-900 font-black shadow-[0_5px_20px_rgba(250,204,21,0.3)] active:scale-95 transition-transform disabled:opacity-50 disabled:shadow-none tracking-wider text-sm gap-2"
+                      >
+                         {ipSubmitting ? <span className="animate-pulse">PROCESSING...</span> : (
+                           <>
+                             CONFIRM ORDER <Check strokeWidth={3} className="w-5 h-5" />
+                           </>
+                         )}
+                      </button>
+                   )}
+                </div>
+             )}
+          </div>
+        </div>
+      , document.body)}
+
     </PullToRefresh>
     </>
   );

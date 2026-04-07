@@ -123,14 +123,6 @@ const LoginForm = ({ onToggleForm, onLoginSuccess }) => {
         <p className="text-slate-500">Please enter your details to sign in.</p>
       </div>
 
-      {/* Google Sign-In Button */}
-      <GoogleButton onSuccess={onLoginSuccess} />
-
-      <div className="flex items-center gap-3 my-5">
-        <div className="flex-1 h-px bg-slate-200" />
-        <span className="text-xs text-slate-400 font-bold tracking-widest uppercase">or</span>
-        <div className="flex-1 h-px bg-slate-200" />
-      </div>
 
       <form onSubmit={handleSubmit} className="space-y-5">
         {error && (
@@ -195,6 +187,15 @@ const LoginForm = ({ onToggleForm, onLoginSuccess }) => {
           {isLoading ? 'Signing In...' : 'Sign In'}
         </button>
       </form>
+
+      <div className="flex items-center gap-3 my-5">
+        <div className="flex-1 h-px bg-slate-200" />
+        <span className="text-xs text-slate-400 font-bold tracking-widest uppercase">or</span>
+        <div className="flex-1 h-px bg-slate-200" />
+      </div>
+
+      {/* Google Sign-In Button */}
+      <GoogleButton onSuccess={onLoginSuccess} />
 
       <div className="mt-6 text-center">
         <p className="text-slate-600">

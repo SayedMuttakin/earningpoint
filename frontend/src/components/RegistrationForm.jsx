@@ -188,14 +188,6 @@ const RegistrationForm = ({ onToggleForm, onRegisterSuccess }) => {
         <p className="text-slate-500 font-medium">Join us today to get started.</p>
       </div>
 
-      {/* Google Button */}
-      <GoogleButton onSuccess={onRegisterSuccess} />
-
-      <div className="flex items-center gap-3 my-5">
-        <div className="flex-1 h-px bg-slate-200" />
-        <span className="text-xs text-slate-400 font-bold tracking-widest uppercase">or</span>
-        <div className="flex-1 h-px bg-slate-200" />
-      </div>
 
       <form onSubmit={handleSubmit} className="space-y-4">
         {error && (
@@ -387,6 +379,15 @@ const RegistrationForm = ({ onToggleForm, onRegisterSuccess }) => {
           {isLoading ? 'CREATING ACCOUNT...' : 'CREATE ACCOUNT'}
         </button>
       </form>
+
+      <div className="flex items-center gap-3 my-5">
+        <div className="flex-1 h-px bg-slate-200" />
+        <span className="text-xs text-slate-400 font-bold tracking-widest uppercase">or</span>
+        <div className="flex-1 h-px bg-slate-200" />
+      </div>
+
+      {/* Google Button */}
+      <GoogleButton onSuccess={onRegisterSuccess} />
 
       <div className="mt-6 text-center">
         <p className="text-slate-600">
