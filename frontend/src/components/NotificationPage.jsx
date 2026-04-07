@@ -115,21 +115,20 @@ const NotificationPage = ({ onBack }) => {
   if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
-        <motion.div 
-          animate={{ rotate: 360 }} 
-          transition={{ repeat: Infinity, duration: 1, ease: "linear" }} 
-          className="w-10 h-10 border-4 border-[#8B5CF6] border-t-transparent rounded-full shadow-lg" 
+        <div 
+          className="w-10 h-10 border-4 border-[#8B5CF6] border-t-transparent rounded-full shadow-lg animate-spin" 
         />
       </div>
     );
   }
 
   return (
-    <PullToRefresh onRefresh={handleRefresh} refreshing={refreshing}>
-      <div className="min-h-screen bg-slate-50 dark:bg-slate-900 pb-32">
-        <div className="max-w-4xl mx-auto px-4 py-8 sm:py-12">
-          {/* Header */}
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6 mb-10">
+    <div className="fixed inset-0 z-[9999] bg-slate-50 dark:bg-slate-900 flex flex-col">
+      <PullToRefresh onRefresh={handleRefresh} refreshing={refreshing}>
+        <div className="w-full h-full pb-32">
+          <div className="max-w-4xl mx-auto pt-safe px-4 py-8 sm:py-12">
+            {/* Header */}
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6 mb-10">
             <div className="flex items-center gap-5">
               <button 
                 onClick={onBack}
@@ -241,10 +240,11 @@ const NotificationPage = ({ onBack }) => {
           <p className="text-[11px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-[0.3em]">
              Zenvio Notifications Center
           </p>
-          </div>
+        </div>
         </div>
       </div>
     </PullToRefresh>
+  </div>
   );
 };
 

@@ -1,16 +1,47 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { AdMobService } from '../utils/admob';
 import { API_BASE } from '../config';
-import {
-  Medal, Globe, Film, Gamepad2,
-  LifeBuoy, Gift, MonitorPlay, Users,
-  Calculator, Binary, Type, HelpCircle,
-  Wallet, History as HistoryIcon, BookOpen, ArrowLeft,
-  Crown, Shield, Check, CalendarCheck, Newspaper, Video, Aperture, Search,
-  TrendingUp, Star, ChevronRight, ChevronDown, ChevronUp, Menu, Home, Bell, User, Settings, LogOut,
-  Clock, AlertCircle, X, ShieldCheck, Zap, Radio, Tv,
+import { 
+  Check, 
+  ArrowLeft, 
+  ChevronRight, 
+  Clock, 
+  Medal, 
+  Wallet, 
+  Shield, 
+  Globe, 
+  Gift, 
+  Flame, 
+  Film, 
+  X, 
+  Crown, 
+  AlertCircle,
+  History,
+  TrendingUp,
+  Star,
+  Calculator, 
+  Binary, 
+  Type, 
+  HelpCircle,
+  Users,
+  CalendarCheck,
+  Newspaper, 
+  Video, 
+  Aperture, 
+  Search,
+  ChevronDown, 
+  ChevronUp, 
+  Menu, 
+  Home, 
+  Bell, 
+  User, 
+  Settings, 
+  LogOut,
+  Radio, 
+  Tv,
   RefreshCw
 } from 'lucide-react';
+
 const gkQuizDB = [
   { id: 1, image: 'https://upload.wikimedia.org/wikipedia/commons/b/b4/Lionel-Messi-Argentina-2022-FIFA-World-Cup_%28cropped%29.jpg', answer: 'Lionel Messi', options: ['Lionel Messi', 'Cristiano Ronaldo', 'Neymar Jr', 'Angel Di Maria'] },
   { id: 2, image: 'https://upload.wikimedia.org/wikipedia/commons/8/8c/Cristiano_Ronaldo_2018.jpg', answer: 'Cristiano Ronaldo', options: ['Lionel Messi', 'Cristiano Ronaldo', 'Gareth Bale', 'Karim Benzema'] },
@@ -42,7 +73,6 @@ const BigAdBanner = () => {
   return (
     <div className="w-full flex justify-center mt-2">
       <div className="w-[320px] h-[250px] bg-slate-50 dark:bg-slate-800/50 border-2 border-slate-200 dark:border-slate-700 relative rounded-2xl flex flex-col items-center justify-center overflow-hidden shadow-sm">
-        {/* AdMob Branding/UI mimic */}
         <div className="absolute top-0 left-0 right-0 h-7 bg-slate-100 dark:bg-slate-800 flex items-center px-4 justify-between border-b border-slate-200 dark:border-slate-700">
           <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest flex items-center gap-1.5">
             <Shield className="w-3 h-3" /> Sponsored
@@ -56,7 +86,7 @@ const BigAdBanner = () => {
         </div>
 
         <div className="flex flex-col items-center text-center p-6 pt-10 space-y-4">
-          <div className="w-20 h-20 bg-white dark:bg-slate-900 rounded-3xl shadow-md flex items-center justify-center ring-4 ring-blue-500/10 transition-transform">
+          <div className="w-20 h-20 bg-white dark:bg-slate-900 rounded-3xl shadow-md flex items-center justify-center ring-4 ring-blue-500/10">
              <img src="https://img.icons8.com/fluency/96/google-logo.png" alt="Ad Mascot" className="w-12 h-12" />
           </div>
           
@@ -68,14 +98,13 @@ const BigAdBanner = () => {
           </div>
 
           <button
-            className="px-8 py-2.5 rounded-full bg-blue-500 text-white text-xs font-black shadow-lg shadow-blue-500/30 transform-gpu"
+            className="px-8 py-2.5 rounded-full bg-blue-500 text-white text-xs font-black shadow-lg shadow-blue-500/30"
           >
             AD UNIT ACTIVE
           </button>
         </div>
 
-        {/* Ad Attribution */}
-        <div className="absolute bottom-2 right-4 flex items-center gap-1.5 opacity-30 group-hover:opacity-60 transition-opacity">
+        <div className="absolute bottom-2 right-4 flex items-center gap-1.5 opacity-30">
            <span className="text-[9px] font-black text-slate-400 tracking-tighter">Ads by Google</span>
            <img src="https://img.icons8.com/color/48/google-logo.png" className="w-3.5 h-3.5 grayscale" />
         </div>
@@ -90,11 +119,9 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
   const [lifetimeCoins, setLifetimeCoins] = React.useState(0);
   const [showCoinsDetails, setShowCoinsDetails] = React.useState(false);
   const [showLevelView, setShowLevelView] = React.useState(false);
-  const [isHovered, setIsHovered] = React.useState(false);
   const [activeEarningTab, setActiveEarningTab] = React.useState('rewards');
   const isAdLoading = useRef(false);
 
-  // Toast State
   const [toast, setToast] = React.useState({ visible: false, message: '', type: 'success' });
   const [refreshing, setRefreshing] = React.useState(false);
   const showToast = (message, type = 'success') => {
@@ -102,43 +129,31 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
     setTimeout(() => setToast(prev => ({ ...prev, visible: false })), 4000);
   };
 
-  // Withdraw States
   const [withdrawAmount, setWithdrawAmount] = React.useState('');
   const [withdrawPhone, setWithdrawPhone] = React.useState('');
   const [withdrawMethod, setWithdrawMethod] = React.useState('');
   const [withdrawLoading, setWithdrawLoading] = React.useState(false);
-  const [withdrawSuccess, setWithdrawSuccess] = React.useState(false);
   
-  // Daily Checkin States
   const [showCheckinView, setShowCheckinView] = React.useState(false);
-  const [showAdOverlay, setShowAdOverlay] = React.useState(false);
-  const [adCountdown, setAdCountdown] = React.useState(40);
-  const [canCloseAd, setCanCloseAd] = React.useState(false);
   const [checkinStatus, setCheckinStatus] = React.useState({ lastCheckin: null, count: 0 });
   const [isLoading, setIsLoading] = React.useState(false);
-  const [adType, setAdType] = React.useState('daily'); // 'daily' or 'video'
+  const [adType, setAdType] = React.useState('daily');
 
-  // Video Ads States
   const [showVideoView, setShowVideoView] = React.useState(false);
   const [videoStatus, setVideoStatus] = React.useState({ lastVideoDate: null, count: 0 });
   const [viewAdsStatus, setViewAdsStatus] = React.useState({ lastAdDate: null, count: 0 });
-  const [videoType, setVideoType] = React.useState('video'); // 'video' or 'view_ads'
+  const [videoType, setVideoType] = React.useState('video');
 
-  // Fortune Wheel States
   const [showWheelView, setShowWheelView] = React.useState(false);
   const [wheelStatus, setWheelStatus] = React.useState({ lastSpinDate: null, count: 0 });
   const [isSpinning, setIsSpinning] = React.useState(false);
   const [spinReward, setSpinReward] = React.useState(null);
 
-  // Scratch Card States
   const [showScratchView, setShowScratchView] = React.useState(false);
   const [scratchStatus, setScratchStatus] = React.useState({ lastScratchDate: null, count: 0 });
-  const [activeScratchCard, setActiveScratchCard] = React.useState(null); // { i, cardNum, hiddenMessage, isRevealed }
 
-  // Games State
   const [showGamesView, setShowGamesView] = React.useState(false);
 
-  // Quiz States
   const [showQuizSelection, setShowQuizSelection] = React.useState(false);
   const [showQuizView, setShowQuizView] = React.useState(false);
   const [quizType, setQuizType] = React.useState('math');
@@ -150,13 +165,11 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
   const [quizTimer, setQuizTimer] = React.useState(30);
   const [quizTimerActive, setQuizTimerActive] = React.useState(false);
 
-  // Premium Countdown State
   const [timeLeft, setTimeLeft] = React.useState({ days: 0, hours: 0, minutes: 0, seconds: 0 });
   const [premiumExpiryDate, setPremiumExpiryDate] = React.useState(null);
   const [premiumCountry, setPremiumCountry] = React.useState('');
   const [premiumPackageName, setPremiumPackageName] = React.useState('');
 
-  // GK Quiz States
   const [showGkQuizView, setShowGkQuizView] = React.useState(false);
   const [gkQuizQuestions, setGkQuizQuestions] = React.useState([]);
   const [currentGkIndex, setCurrentGkIndex] = React.useState(0);
@@ -164,17 +177,13 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
   const [gkSelected, setGkSelected] = React.useState(null);
   const [gkAnswered, setGkAnswered] = React.useState(false);
 
-  // Article States
   const [showArticleView, setShowArticleView] = React.useState(false);
   const [articleStep, setArticleStep] = React.useState(1);
 
-  // Custom Ad Simulators (Level 3-5)
-  const [showInterstitialAd, setShowInterstitialAd] = React.useState(false);
   const [showNativeAd, setShowNativeAd] = React.useState(false);
   const [showOfferwallAd, setShowOfferwallAd] = React.useState(false);
   const [currentAdInfo, setCurrentAdInfo] = React.useState({ name: '', type: '', coins: 0, time: 0 });
 
-  // Global Settings State
   const [globalSettings, setGlobalSettings] = React.useState({
     premiumIpPrice: 600,
     premiumIpDuration: '30 Days',
@@ -196,13 +205,10 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
     }
   });
 
-
-
   const fetchGlobalSettings = async () => {
     try {
       const res = await fetch(`${API_BASE}/api/earning/settings`);
       const data = await res.json();
-      // Backend returns fields directly (no success/settings wrapper)
       if (res.ok && data) {
         setGlobalSettings(prev => ({
           ...prev,
@@ -215,11 +221,6 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
           nativeAdsConfig: data.nativeAdsConfig || prev.nativeAdsConfig,
           fortuneWheelConfig: data.fortuneWheelConfig || prev.fortuneWheelConfig
         }));
-        
-        // Set default selected package if available
-        if (data.premiumIpPackages && data.premiumIpPackages.length > 0) {
-          setSelectedPackage(data.premiumIpPackages[0].id);
-        }
       }
     } catch (error) {
       console.error('Error fetching global settings:', error);
@@ -230,22 +231,13 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
     fetchGlobalSettings();
   }, []);
 
-  // Status Sub-View State (Upcoming / Unavailable)
   const [showStatusView, setShowStatusView] = React.useState(false);
-  const [statusViewType, setStatusViewType] = React.useState(''); // 'upcoming' or 'unavailable'
+  const [statusViewType, setStatusViewType] = React.useState('');
   const [statusViewTitle, setStatusViewTitle] = React.useState('');
 
-  const handleStatusClick = (title, type) => {
-    setStatusViewTitle(title);
-    setStatusViewType(type);
-    setShowStatusView(true);
-  };
-
-  // Multi-Ad Sub-View State (Level 3 & Level 4 options — 5 ads each)
   const [showMultiAdView, setShowMultiAdView] = React.useState(false);
-  const [multiAdConfig, setMultiAdConfig] = React.useState(null); // { key, name, adType, coins, logo, color, ads[] }
+  const [multiAdConfig, setMultiAdConfig] = React.useState(null);
 
-  // Helper: get today's count for a multi-ad option key from localStorage
   const getMultiAdCount = (key) => {
     const today = new Date().toDateString();
     const stored = JSON.parse(localStorage.getItem(`multi_ad_${key}`) || '{"date":"","count":0}');
@@ -253,7 +245,6 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
     return stored.count;
   };
 
-  // Helper: increment today's count for a multi-ad option key
   const incrementMultiAdCount = (key) => {
     const today = new Date().toDateString();
     const newCount = getMultiAdCount(key) + 1;
@@ -261,45 +252,19 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
     return newCount;
   };
 
-  // Open the multi-ad sub-view
-  const openMultiAdView = (config) => {
-    setMultiAdConfig(config);
-    setShowMultiAdView(true);
-  };
-
-  // Premium IP States
   const [showPremiumIPView, setShowPremiumIPView] = React.useState(false);
-  const [isPremium, setIsPremium] = React.useState(true); // Default to true for testing as requested
+  const [isPremium, setIsPremium] = React.useState(true);
   const [selectedPackage, setSelectedPackage] = React.useState('month-1');
   const [ipStep, setIpStep] = React.useState(1);
   const [selectedCountry, setSelectedCountry] = React.useState('');
   const [isCountryDropdownOpen, setIsCountryDropdownOpen] = React.useState(false);
   const [paymentMethod, setPaymentMethod] = React.useState('');
   const [transactionId, setTransactionId] = React.useState('');
-  const [countrySearchQuery, setCountrySearchQuery] = React.useState('');
-  // Address fields
-  const [division, setDivision] = React.useState('');
-  const [district, setDistrict] = React.useState('');
-  const [thana, setThana] = React.useState('');
-  const [village, setVillage] = React.useState('');
-  const [postalCode, setPostalCode] = React.useState('');
   const [ipSubmitting, setIpSubmitting] = React.useState(false);
   const [showUpgradeOptions, setShowUpgradeOptions] = React.useState(false);
 
-  // Option Intro Screen State
   const [showIntroScreen, setShowIntroScreen] = React.useState(false);
   const [introItem, setIntroItem] = React.useState(null);
-
-  // EarningPage definition
-
-  const filteredCountries = countries.filter(c => c.name.toLowerCase().includes(countrySearchQuery.toLowerCase()));
-
-  const paymentMethods = [
-    { id: 'bkash', name: 'bKash', color: 'bg-white', textColor: 'text-white', logo: 'https://freelogopng.com/images/all_img/1656234782bkash-app-logo.png' },
-    { id: 'nagad', name: 'Nagad', color: 'bg-white', textColor: 'text-white', logo: 'https://freelogopng.com/images/all_img/1679248787Nagad-Logo.png' },
-    { id: 'rocket', name: 'Rocket', color: 'bg-white', textColor: 'text-white', logo: 'https://freelogopng.com/images/all_img/1656234841rocket-logo-png.png' },
-    { id: 'card', name: 'Card', color: 'bg-slate-700', textColor: 'text-slate-400', disabled: true },
-  ];
 
   const fetchBalance = async () => {
     try {
@@ -364,14 +329,12 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
     try {
       const token = localStorage.getItem('token');
       if (!token) return;
-      // Fetch Video Status
       const videoResp = await fetch(`${API_BASE}/api/earning/video-status?type=video`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       const videoData = await videoResp.json();
       if (videoResp.ok) setVideoStatus({ lastVideoDate: videoData.lastAd, count: videoData.count });
 
-      // Fetch View Ads Status
       const viewAdsResp = await fetch(`${API_BASE}/api/earning/video-status?type=view_ads`, {
         headers: { Authorization: `Bearer ${token}` },
       });
@@ -421,17 +384,12 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
     fetchWheelStatus();
     fetchScratchStatus();
     fetchQuizStatus();
-
-    // Show banner on enter
     AdMobService.showBanner();
-
-    // Hide banner on leave
     return () => {
       AdMobService.hideBanner();
     };
   }, []);
 
-  // Premium IP Countdown Timer (High Precision D:H:M:S)
   useEffect(() => {
     if (premiumExpiryDate) {
       const updateTimer = () => {
@@ -462,24 +420,8 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
     }
   }, [premiumExpiryDate]);
 
-  // Legacy Mock Ad Timer Removed
-
-  const handleDailyCheckinClick = () => {
-    const now = new Date();
-    const TWO_HOURS = 2 * 60 * 60 * 1000;
-    
-    if (checkinStatus.lastCheckin && (now - new Date(checkinStatus.lastCheckin) < TWO_HOURS) && checkinStatus.count >= 2) {
-      alert("Please wait 2 hours between checkin sessions!");
-      return;
-    }
-    
-    setShowCheckinView(true);
-  };
-
-  // Show interstitial ad before closing a section (back button)
   const goBackWithAd = (closeFn) => {
     if (isAdLoading.current) return;
-    
     isAdLoading.current = true;
     AdMobService.showInterstitial(() => {
       isAdLoading.current = false;
@@ -488,11 +430,8 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
   };
 
   const startAd = (type) => {
-    // If called from onClick={startAd}, type is an event, so default to 'daily'
     const activeType = typeof type === 'string' ? type : 'daily';
     setAdType(activeType);
-
-    // Map internal type to AdMob placement key
     let placement = 'rewarded';
     if (activeType === 'daily') placement = 'rewarded_daily';
     if (activeType === 'video') placement = 'rewarded_videos';
@@ -500,8 +439,6 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
 
     if (isLoading) return;
     setIsLoading(true);
-
-    console.log(`[DEBUG-ADMOB] User clicked startAd for: ${activeType} (Placement: ${placement})`);
 
     const onError = (msg) => {
       setIsLoading(false);
@@ -513,7 +450,6 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
     };
 
     AdMobService.showRewarded((rewardItem) => {
-      console.log(`[DEBUG-ADMOB] showRewarded callback triggered for: ${activeType}`);
       claimReward(activeType);
     }, placement, onError, onDismiss).catch(err => {
       onError("Something went wrong");
@@ -522,8 +458,6 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
 
   const claimReward = async (typeOverride, onSuccess) => {
     const activeType = typeOverride || adType;
-    console.log(`[DEBUG-ADMOB] Attempting to claim reward for: ${activeType}`);
-    
     try {
       const token = localStorage.getItem('token');
       if (!token) {
@@ -547,7 +481,6 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
       const data = await response.json();
       
       if (response.ok) {
-        console.log(`[DEBUG-ADMOB] Claim successful:`, data.message);
         setBalance(data.balance);
         if (data.coins !== undefined) setCoins(data.coins);
         else if (data.points !== undefined) setCoins(data.points);
@@ -563,30 +496,19 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
           showToast(`🎉 Congratulations! You earned 25 Coins!`, "success");
         } else if (activeType === 'daily') {
           setCheckinStatus({ lastCheckin: data.lastCheckin, count: data.count });
-          if (data.count === 2) {
-            showToast("🎉 Congratulations! You earned 50 Coins! Checkin complete! Come back in 2 hours.", "success");
-            setShowCheckinView(false);
-          } else {
-            showToast("🎉 Congratulations! You earned 50 Coins!", "success");
-          }
-        } else {
-          showToast(data.message || "🎉 Congratulations! Reward claimed successfully!", "success");
+          showToast("🎉 Congratulations! You earned 50 Coins!", "success");
         }
-        
         if (onSuccess) onSuccess();
       } else {
-        console.error(`[DEBUG-ADMOB] Claim failed:`, data.message);
         showToast(data.message || "Failed to claim reward.", "error");
       }
     } catch (err) {
-      console.error(`[DEBUG-ADMOB] Error in claimReward:`, err);
       showToast("Network error. Please check your connection.", "error");
     } finally {
       setIsLoading(false);
     }
   };
 
-  // Article Content Data
   const articleData = [
     {
       title: "গফুর মিয়ার গল্প",
@@ -602,7 +524,7 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
     },
     {
       title: "💡 নতুন আইডিয়া—“মুরগি ব্যাংক”",
-      content: "কিন্তু গফুর মিয়া হাল ছাড়ার লোক না।\nসে আবার নতুন প্ল্যান করল—\n—“মুরগি ব্যাংক খুলবো!”\nগ্রামের লোকজন বলল,\n—“এটা আবার কী জিনিস?”\nগফুর মিয়া বলল,\n—“আপনারা টাকা না রেখে মুরগি জমা রাখবেন। মাস শেষে সুদ হিসেবে ডিম পাবেন!”\nএই আইডিয়া শুনে গ্রামের মানুষ একটু সিরিয়াস হয়ে গেল।\nকারণ—ডিম তো প্রতিদিন দরকার!\nতাই অনেকেই তার “মুরগি ব্যাংক”-এ মুরগি জমা রাখতে শুরু করল।"
+      content: "কিন্তু গফুর মিয়া হাল ছাড়ার লোক না।\nসে আবার নতুন প্ল্যান করল—\n—“মুরগি ব্যাংক খুলবো!”\nগ্রামের লোকজন বলল,\n—“এটা আবার কী জিনিস?”\nগফুর মিয়া বলল,\n—“আপনারা টাকা না রেখে মুরগি জমা রাখবেন। মাস শেষে সুদ হিসেবে ডিম পাবেন!”\nএই আইডিয়া শুনে গ্রামের মানুষ একটু সিরিয়াস হয়ে গেল।\nকারণ—ডিম তো প্রতিদিন দরকার!\nতাই অনেকেই তার “মুরগি ব্যাংক”-এ মুরগি জমা রাখতে শুরু করল."
     },
     {
       title: "🥚 বিপদ শুরু",
@@ -621,35 +543,6 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
       content: "👉 আইডিয়া যতই পাগলামি হোক, বিশ্বাস আর মার্কেটিং থাকলে সেটাও ব্যবসা হয়ে যেতে পারে!\n👉 আর গ্রামের মানুষও কম না—একবার ঠকলে দ্বিতীয়বার সাবধান 😄"
     }
   ];
-
-  const handleArticlesClick = () => {
-    setArticleStep(1);
-    setShowArticleView(true);
-  };
-
-  const handleVideosClick = () => {
-    if (videoStatus.count >= 5) {
-      alert("You have already watched all 5 video ads for today. Come back tomorrow!");
-      return;
-    }
-    setShowVideoView(true);
-  };
-
-  const handleGamesClick = () => {
-    setShowGamesView(true);
-  };
-
-  const handleWheelClick = () => {
-    setShowWheelView(true);
-  };
-
-  const handleScratchClick = () => {
-    setShowScratchView(true);
-  };
-
-  const handleIPClick = () => {
-    setShowPremiumIPView(true);
-  };
 
   const fetchQuizStatus = async () => {
     try {
@@ -772,14 +665,6 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
     setQuizTimerActive(true);
   };
 
-  const handleQuizClick = () => {
-    if (quizStatus.count >= 10) {
-      alert('You have completed all 10 quizzes for today. Come back tomorrow!');
-      return;
-    }
-    setShowQuizSelection(true);
-  };
-
   const startGkQuiz = () => {
     const lastPlayed = localStorage.getItem('gk_last_played');
     const today = new Date().toDateString();
@@ -815,9 +700,7 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
         setGkAnswered(false);
       } else {
         const finalScore = correct ? gkQuizScore + 1 : gkQuizScore;
-        
         if (finalScore >= 5) {
-          // Trigger Verified Action for Daily GK Reward
           handleVerifiedAdAction("Daily GK Reward", async () => {
             try {
               const token = localStorage.getItem('token');
@@ -829,7 +712,6 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
               if (response.ok) {
                 setBalance(data.balance);
                 if (data.coins !== undefined) setCoins(data.coins);
-                if (data.lifetimeCoins !== undefined) setLifetimeCoins(data.lifetimeCoins);
                 showToast(`🎉 Daily GK completed! You won ${data.reward} Coins!`, "success");
               } else {
                 showToast(data.message || 'Failed to claim GK reward.', "error");
@@ -859,7 +741,6 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
     setShowQuizView(true);
   };
 
-  // Quiz Timer
   React.useEffect(() => {
     let timer;
     if (quizTimerActive && quizTimer > 0 && !quizAnswered) {
@@ -875,15 +756,10 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
     return () => clearInterval(timer);
   }, [quizTimer, quizTimerActive, quizAnswered]);
 
-  // ==========================================
-  // Custom Ad Handlers for Levels 3, 4, 5
-  // ==========================================
   const handleAdOptionClick = async (adName, adType, coins) => {
     if (isLoading) return;
     setCurrentAdInfo({ name: adName, type: adType, coins, time: 0 });
     
-    console.log(`[DEBUG-ADMOB] handleAdOptionClick: ${adName} (${adType})`);
-
     if (adType === 'Rewarded Video' || adType === 'Rewarded Interstitial') {
       setIsLoading(true);
       await AdMobService.showRewarded(() => handleCustomAdReward(coins, adName), 'rewarded');
@@ -894,12 +770,11 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
       setIsLoading(true);
       await AdMobService.showInterstitial(() => handleCustomAdReward(coins, adName));
     } else if (adType === 'Native Ad') {
-      // Simulate Native Ad by showing a large banner for 5 seconds
       setShowNativeAd(true);
       setCurrentAdInfo({ name: adName, type: adType, coins, time: 5 });
       await AdMobService.showNativeSimulatedAd();
     } else {
-      setShowOfferwallAd(true); // default fallback for 'Offerwall' or Reg tasks
+      setShowOfferwallAd(true);
     }
   };
 
@@ -908,7 +783,6 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
       alert('You need at least 1000 coins to convert to balance.');
       return;
     }
-    
     setIsLoading(true);
     try {
       const token = localStorage.getItem('token');
@@ -934,7 +808,6 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
   };
 
   const handleCustomAdReward = async (pts, adName) => {
-    console.log(`[DEBUG-ADMOB] handleCustomAdReward for ${adName} with ${pts} points`);
     setIsLoading(true);
     try {
       const token = localStorage.getItem('token');
@@ -942,42 +815,32 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
         setIsLoading(false);
         return;
       }
-      
       const response = await fetch(`${API_BASE}/api/earning/task-claim`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
         body: JSON.stringify({ points: pts, name: adName })
       });
-      
       const data = await response.json();
       if (response.ok) {
-        console.log(`[DEBUG-ADMOB] Custom reward successful:`, data.message);
         setBalance(data.balance);
         if (data.coins !== undefined) setCoins(data.coins);
-        if (data.lifetimeCoins !== undefined) setLifetimeCoins(data.lifetimeCoins);
         showToast(`🎉 You earned ${pts} Coins from ${adName}!`, "success");
-        
-        // The calling context can add success logic here
       } else {
-        console.error(`[DEBUG-ADMOB] Custom reward failed:`, data.message);
         showToast(data.message || 'Failed to claim coins.', "error");
       }
     } catch (err) {
-      console.error(`[DEBUG-ADMOB] Error in handleCustomAdReward:`, err);
       showToast('Network error.', "error");
     } finally {
       setIsLoading(false);
     }
   };
 
-  // Timer for Native Ad simulation
   React.useEffect(() => {
     let adTmr;
     if (showNativeAd && currentAdInfo.time > 0) {
       adTmr = setInterval(() => {
         setCurrentAdInfo(prev => {
           if (prev.time - 1 === 0) {
-            // Native Ad finished
             AdMobService.hideNativeSimulatedAd();
             setShowNativeAd(false);
             handleCustomAdReward(prev.coins, prev.name);
@@ -989,71 +852,7 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
     return () => clearInterval(adTmr);
   }, [showNativeAd, currentAdInfo.time]);
 
-
-  // ==========================================
-  // Main Earning View Component
-  // ==========================================
-
-  // OptionCard sub-component — shows intro screen first
-  const OptionCard = ({ item, isLarge = false, count = null, maxCount = null, skipIntro = false }) => {
-    const isCompleted = count !== null && count >= maxCount;
-    
-    // Determine if this item should skip the intro screen
-    const itemsToSkipIntro = ['Premium IP', 'Refer & Earn', 'Wallet', 'History', 'Tutorial', 'Invite Friends', 'Daily Quiz', 'Math Quiz', 'Binary Quiz', 'Word Quiz', 'Gen. Knowledge', 'Meta'];
-    const shouldSkip = skipIntro || itemsToSkipIntro.includes(item?.name);
-
-    const handleClick = () => {
-      if (shouldSkip || !item.action) {
-        if (item.action) item.action();
-        return;
-      }
-      setIntroItem(item);
-      setShowIntroScreen(true);
-    };
-
-    return (
-      <button
-        key={item.id}
-        onClick={handleClick}
-        className="flex flex-col items-center group w-full transition-transform duration-150 active:scale-95 hover:scale-105"
-        style={{ transform: 'translateZ(0)' }}
-      >
-        <div className={`w-14 h-14 md:w-${isLarge ? '20' : '16'} md:h-${isLarge ? '20' : '16'} rounded-2xl bg-gradient-to-br ${item.color || 'from-blue-500 to-indigo-600'} flex items-center justify-center shadow-lg relative`}>
-          {typeof item.icon === 'string' ? (
-            <img src={item.icon} alt={item.name} className="w-7 h-7 md:w-10 md:h-10 object-contain drop-shadow-md" />
-          ) : React.isValidElement(item.icon) ? (
-            <div className="text-white drop-shadow-md">{React.cloneElement(item.icon, { className: `w-7 h-7 md:w-${isLarge ? '10' : '8'} md:h-${isLarge ? '10' : '8'}` })}</div>
-          ) : item.logo ? (
-            <img src={item.logo} alt={item.name} className="w-8 h-8 md:w-11 md:h-11 object-contain drop-shadow-md" />
-          ) : (
-            <div className="w-8 h-8 md:w-10 md:h-10 bg-white/20 rounded-lg" />
-          )}
-          
-          {count !== null && (
-            <div className="absolute -top-1.5 -right-1.5 bg-white dark:bg-slate-800 rounded-full px-1.5 py-0.5 shadow-sm border border-slate-100 dark:border-slate-700 min-w-[20px] flex items-center justify-center">
-              <span className={`text-[9px] font-black ${isCompleted ? 'text-emerald-500' : 'text-slate-600 dark:text-slate-300'}`}>
-                {count}/{maxCount}
-              </span>
-            </div>
-          )}
-        </div>
-        <span className="mt-2.5 text-[10px] md:text-xs font-black text-slate-700 dark:text-slate-300 text-center leading-tight">
-          {item.name}
-        </span>
-        {item.coins && (
-          <span className="text-[10px] font-bold text-emerald-500 mt-0.5">
-            +{item.coins} Coins
-          </span>
-        )}
-      </button>
-    );
-  };
-
-  // ==========================================
-  // Option Intro Screen (animated detail page)
-  // ==========================================
   const handleVerifiedAdAction = (title, onVerified) => {
-    // Verification removed. Directly show interstitial ad and call onVerified.
     AdMobService.showInterstitial(() => {
       if (onVerified) onVerified();
     });
@@ -1064,187 +863,6 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
     const item = introItem;
     if (!item) return null;
 
-    // Determine which animation to use based on option type
-    const getAnimationType = (name) => {
-      const n = (name || '').toLowerCase();
-      if (n.includes('quiz') || n.includes('math') || n.includes('binary') || n.includes('word') || n.includes('knowledge')) return 'quiz';
-      if (n.includes('spin') || n.includes('wheel')) return 'spin';
-      if (n.includes('video') || n.includes('film')) return 'video';
-      if (n.includes('scratch')) return 'scratch';
-      if (n.includes('checkin') || n.includes('daily')) return 'checkin';
-      if (n.includes('refer') || n.includes('invite') || n.includes('friend')) return 'refer';
-      if (n.includes('article') || n.includes('read')) return 'article';
-      if (n.includes('premium') || n.includes('ip')) return 'premium';
-      if (n.includes('game') || n.includes('play')) return 'game';
-      return 'generic';
-    };
-
-    const animType = getAnimationType(item.name);
-
-    // Floating particles (memoized to prevent jitter on re-renders)
-    const FloatingDots = React.memo(() => {
-      const dots = React.useMemo(() => [...Array(12)].map((_, i) => ({
-        size: Math.random() * 8 + 3,
-        left: `${Math.random() * 100}%`,
-        top: `${Math.random() * 100}%`,
-        delay: Math.random() * 5
-      })), []);
-
-      return (
-        <>
-          {dots.map((dot, i) => (
-            <div
-              key={i}
-              className="absolute rounded-full opacity-20 animate-float"
-              style={{
-                width: dot.size,
-                height: dot.size,
-                background: 'white',
-                left: dot.left,
-                top: dot.top,
-              }}
-            />
-          ))}
-        </>
-      );
-    });
-
-    // Central animation based on type
-    const CenterAnimation = () => {
-      // Helper to render the actual option's icon/logo very large
-      const renderBigIcon = () => (
-        <div className={`w-28 h-28 rounded-3xl bg-gradient-to-br ${bgClass} shadow-2xl backdrop-blur-sm flex items-center justify-center relative z-10 border border-white/20`}>
-          {typeof item.logo === 'string' && item.logo.startsWith('http') ? (
-             <img src={item.logo} alt={item.name} className="w-14 h-14 object-contain drop-shadow-xl" />
-          ) : (
-             <div className="w-14 h-14 text-white flex items-center justify-center drop-shadow-xl">
-               {item.icon ? React.cloneElement(item.icon, { className: "w-full h-full text-white drop-shadow-md" }) : <span className="text-4xl text-white">🎯</span>}
-             </div>
-          )}
-        </div>
-      );
-
-      const bigIcon = renderBigIcon();
-
-      if (animType === 'quiz') return (
-        <div className="relative flex items-center justify-center">
-          <div className="animate-scale-pulse"  >
-            {bigIcon}
-          </div>
-          {/* orbiting dots */}
-          {[0, 1, 2].map(i => (
-            <div
-              key={i}
-              className="absolute w-4 h-4 rounded-full bg-white/60 animate-float"
-              style={{ transformOrigin: `${70 + i * 10}px center`, originX: `${70 + i * 10}px` }}
-            />
-          ))}
-          {/* question marks floating */}
-          {['?', '!', '?'].map((sym, i) => (
-            <div
-              key={i}
-              className="absolute text-white/60 font-black text-2xl z-20 animate-float"
-              style={{ top: `${[5, 75, 25][i]}%`, left: `${[0, 85, 95][i]}%` }}
-            >{sym}</div>
-          ))}
-        </div>
-      );
-
-      if (animType === 'spin') return (
-        <div className="relative flex items-center justify-center">
-          <div className="animate-spin-slow"  >
-            <div className="w-48 h-48 rounded-full border-4 border-dashed border-white/20 absolute -inset-6" />
-            {bigIcon}
-          </div>
-        </div>
-      );
-
-      if (animType === 'video') return (
-        <div className="relative flex items-center justify-center">
-          <div className="animate-scale-pulse"  >
-            {bigIcon}
-          </div>
-          {/* pulse rings */}
-          {[1, 2, 3].map(i => (
-            <div
-              key={i}
-              className="absolute rounded-full border-2 border-white/20 animate-float"
-              style={{ width: 36 * i * 1.5, height: 36 * i * 1.5 }}
-            />
-          ))}
-        </div>
-      );
-
-      if (animType === 'checkin') return (
-        <div className="relative flex items-center justify-center">
-          <div className="animate-scale-pulse"  >
-            {bigIcon}
-          </div>
-          <div
-            className="absolute -top-4 -right-4 text-4xl z-20 bg-emerald-500 rounded-full w-12 h-12 flex items-center justify-center shadow-lg border-2 border-white/20 animate-scale-pulse"
-          ><span className="text-white drop-shadow-md pb-1">✓</span></div>
-        </div>
-      );
-
-      if (animType === 'scratch') return (
-        <div className="relative flex items-center justify-center">
-          <div className="animate-scale-pulse"  >
-            {bigIcon}
-          </div>
-          {/* scratch sparkles */}
-          {['✨', '⭐', '💫'].map((s, i) => (
-            <div
-              key={i}
-              className="absolute text-2xl z-20 animate-float"
-              style={{ top: ['10%', '60%', '20%'][i], left: ['90%', '-10%', '80%'][i] }}
-            >{s}</div>
-          ))}
-        </div>
-      );
-
-      if (animType === 'refer') return (
-        <div className="relative flex items-center justify-center">
-          <div className="animate-scale-pulse"  >
-            {bigIcon}
-          </div>
-          {/* connection lines pulse */}
-          {[-1, 0, 1].map(i => (
-            <div
-              key={i}
-              className="absolute w-10 h-10 rounded-full bg-indigo-500 flex items-center justify-center text-xl z-20 shadow-lg border border-white/20 animate-float"
-              style={{ left: `${30 + i * 40}%`, top: i === 0 ? '-20%' : '100%' }}
-            ><span className="text-white pb-1">👤</span></div>
-          ))}
-        </div>
-      );
-
-      if (animType === 'premium') return (
-        <div className="relative flex items-center justify-center">
-          <div className="animate-float"  >
-            {bigIcon}
-          </div>
-          {/* sparkles */}
-          {['✨', '⭐', '💎'].map((s, i) => (
-            <div
-              key={i}
-              className="absolute text-2xl z-20 animate-float"
-              style={{ top: ['5%', '85%', '15%'][i], left: ['-5%', '80%', '95%'][i] }}
-            >{s}</div>
-          ))}
-        </div>
-      );
-
-      // Generic / article / game
-      return (
-        <div className="relative flex items-center justify-center">
-          <div className="animate-scale-pulse"  >
-            {bigIcon}
-          </div>
-        </div>
-      );
-    };
-
-    // Extract gradient colors from item.color for background
     const bgClass = item.color || 'from-blue-500 to-indigo-600';
 
     const handlePlay = () => {
@@ -1255,226 +873,35 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
     };
 
     return (
-      <div
-          className="fixed inset-0 animate-fade-in z-[9998] overflow-hidden flex flex-col"
-          style={{ background: 'linear-gradient(135deg, #0a0f1e 0%, #111827 100%)' }}
-        >
-          {/* Gradient overlay based on item color */}
-          <div className={`absolute inset-0 bg-gradient-to-br ${bgClass} opacity-20`} />
-          <FloatingDots />
-
-          <div className="relative z-50 flex items-center justify-between px-4 py-3">
-            <button
-              onClick={() => goBackWithAd(() => setShowIntroScreen(false))}
-              className="w-9 h-9 rounded-full bg-white/10 flex items-center justify-center text-white hover:bg-white/20 transition-colors"
-            >
-              <ArrowLeft className="w-5 h-5" />
+      <div className="fixed inset-0 z-[9998] bg-slate-950 flex flex-col">
+        <div className={`absolute inset-0 bg-gradient-to-br ${bgClass} opacity-20`} />
+        <div className="relative z-50 flex items-center justify-between px-4 py-3">
+          <button onClick={() => goBackWithAd(() => setShowIntroScreen(false))} className="w-9 h-9 rounded-full bg-white/10 flex items-center justify-center text-white">
+            <ArrowLeft className="w-5 h-5" />
+          </button>
+          <h1 className="text-white font-black text-base tracking-tight">{item.name}</h1>
+          <div className="relative">
+            <button onClick={() => setMoreOpen(!moreOpen)} className="w-9 h-9 rounded-full bg-white/10 flex items-center justify-center text-white">
+              <Menu className="w-5 h-5" />
             </button>
-
-            <h1
-              className="text-white font-black text-base tracking-tight"
-            >
-              {item.name}
-            </h1>
-
-            {/* Menu dropdown */}
-            <div className="relative">
-              <button
-                onClick={() => setMoreOpen(!moreOpen)}
-                className="w-9 h-9 rounded-full bg-white/10 flex items-center justify-center text-white hover:bg-white/20 transition-colors"
-              >
-                <Menu className="w-5 h-5" />
-              </button>
-              {moreOpen && (
-                <div
-                  className="absolute right-0 top-11 bg-slate-800 border border-slate-700 rounded-2xl shadow-2xl py-2 w-44 z-50 overflow-hidden"
-                >
-                  {[
-                    { name: 'Home', icon: <Home className="w-4 h-4" />, action: () => { setShowIntroScreen(false); setActiveTab('Home'); } },
-                    { name: 'Notification', icon: <Bell className="w-4 h-4" />, action: () => { setShowIntroScreen(false); setActiveTab('Notification'); } },
-                    { name: 'Wallet', icon: <Wallet className="w-4 h-4" />, action: () => { setShowIntroScreen(false); setActiveEarningTab('wallet'); } },
-                    { name: 'History', icon: <HistoryIcon className="w-4 h-4" />, action: () => { setShowIntroScreen(false); setActiveEarningTab('history'); } },
-                    { name: 'Profile', icon: <User className="w-4 h-4" />, action: () => { setShowIntroScreen(false); setActiveTab('Profile'); } },
-                  ].map((link, i) => (
-                    <button
-                      key={i}
-                      onClick={() => { setMoreOpen(false); link.action(); }}
-                      className="w-full text-left px-4 py-2.5 text-sm font-medium text-slate-300 hover:text-white hover:bg-white/10 flex items-center gap-3 transition-colors"
-                    >
-                      {link.icon}
-                      {link.name}
-                    </button>
-                  ))}
-                </div>
-              )}
-            </div>
-          </div>
-
-          {/* Balance chip */}
-          <div
-            className="relative z-10 flex justify-center mt-1 mb-2"
-          >
-            <div className="flex items-center gap-2 bg-white/10 backdrop-blur-md border border-white/20 rounded-full px-4 py-1">
-              <span className="text-amber-400">💰</span>
-              <span className="text-white font-black text-sm">৳{balance.toFixed(2)}</span>
-              <span className="text-white/40 text-xs font-medium">|</span>
-              <span className="text-amber-300 text-xs font-bold">{coins} Coins</span>
-            </div>
-          </div>
-
-          {/* Option logo + name block */}
-          <div
-            className="relative z-10 flex items-center gap-3 mx-4 mb-4 bg-white/8 backdrop-blur-sm border border-white/10 rounded-2xl px-4 py-2"
-          >
-            <div className={`w-10 h-10 rounded-xl bg-gradient-to-br ${bgClass} flex items-center justify-center shadow-lg flex-shrink-0`}>
-              {typeof item.logo === 'string' && item.logo.startsWith('http') ? (
-                <img src={item.logo} alt={item.name} className="w-6 h-6 object-contain" />
-              ) : (
-                <span className="text-white scale-90">{item.icon}</span>
-              )}
-            </div>
-            <div>
-              <div className="text-white font-black text-sm leading-none">{item.name}</div>
-              <div className="text-white/50 text-[10px] font-medium mt-0.5">Earning Activity</div>
-            </div>
-          </div>
-
-          {/* Central Animated Logo */}
-          <div
-            className="relative z-10 flex items-center justify-center mb-2"
-            style={{ minHeight: 100 }}
-          >
-            <CenterAnimation />
-          </div>
-
-          {/* Duration & Prize info */}
-          <div
-            className="relative z-10 mx-4 space-y-2 mb-2"
-          >
-            {/* Duration info - Show for time-based items */}
-            {['quiz', 'video', 'game', 'scratch'].includes(animType) && (
-              <div className="flex items-center gap-3 bg-white/8 border border-white/10 rounded-2xl px-4 py-3">
-                <div className="w-9 h-9 rounded-xl bg-blue-500/20 flex items-center justify-center flex-shrink-0">
-                  <span className="text-xl">⏱️</span>
-                </div>
-                <div>
-                  <div className="text-white font-black text-sm leading-none">
-                    Duration: <span className="text-blue-400">30s</span>
-                  </div>
-                  <div className="text-white/50 text-[10px] font-medium mt-0.5">
-                    {animType === 'quiz' ? '(per question)' : animType === 'video' ? '(per video)' : '(per complete)'}
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {/* Prize info */}
-            {item.coins != null && (
-              <div className="flex items-center gap-3 bg-white/8 border border-white/10 rounded-2xl px-4 py-3">
-                <div className="w-9 h-9 rounded-xl bg-amber-500/20 flex items-center justify-center flex-shrink-0">
-                  <span className="text-xl">🪙</span>
-                </div>
-                <div>
-                  <div className="text-white font-black text-sm leading-none">
-                    Prize: <span className="text-amber-400">{item.coins} coins</span>
-                  </div>
-                  <div className="text-white/50 text-[10px] font-medium mt-0.5">
-                    {animType === 'quiz' ? '(per answer)' : animType === 'video' ? '(per video)' : animType === 'refer' ? '(per invite)' : '(upon completion)'}
-                  </div>
-                </div>
-              </div>
-            )}
-          </div>
-
-          <div
-            className="relative z-10 px-4 mt-6 pb-12"
-          >
-            <button
-              onClick={handlePlay}
-              className={`w-full py-4 rounded-2xl bg-gradient-to-r ${bgClass} text-white font-black text-lg shadow-xl shadow-blue-500/20 flex items-center justify-center gap-3 relative overflow-hidden`}
-            >
-              {/* Shine effect */}
-              <div
-                className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent animate-float"
-              />
-              <span className="relative z-10">
-                {animType === 'premium' ? 'Get' : animType === 'refer' ? 'Invite' : animType === 'article' ? 'Read' : '▶ Play'} {item.name}
-              </span>
-            </button>
-            <div className="mt-8 flex flex-col items-center">
-              <BigAdBanner />
-            </div>
           </div>
         </div>
-      
+        <div className="relative z-10 flex justify-center mt-1 mb-2">
+          <div className="flex items-center gap-2 bg-white/10 backdrop-blur-md border border-white/20 rounded-full px-4 py-1">
+            <span className="text-amber-400">💰</span>
+            <span className="text-white font-black text-sm">৳{balance.toFixed(2)}</span>
+          </div>
+        </div>
+        <div className="relative z-10 px-4 mt-6 pb-12">
+          <button onClick={handlePlay} className={`w-full py-4 rounded-2xl bg-gradient-to-r ${bgClass} text-white font-black text-lg shadow-xl flex items-center justify-center gap-3`}>
+            ▶ Play {item.name}
+          </button>
+          <div className="mt-8 flex flex-col items-center">
+            <BigAdBanner />
+          </div>
+        </div>
+      </div>
     );
-  };
-
-  // Earning Options Data
-  const mainOptions = [
-    { id: 1, name: 'Daily Checkin', icon: <CalendarCheck className="w-8 h-8 md:w-10 md:h-10" />, coins: 20, color: 'from-orange-400 to-red-500', action: () => setShowCheckinView(true) },
-    { id: 10, name: 'Refer & Earn', icon: <Users className="w-8 h-8 md:w-10 md:h-10" />, coins: 500, color: 'from-indigo-400 to-purple-500', action: onReferralsClick },
-  ];
-
-  const popularOptions = [
-    { id: 1, name: 'Super Spin', icon: <Aperture className="w-8 h-8 md:w-10 md:h-10" />, coins: 100, color: 'from-purple-500 to-indigo-600', action: () => setShowWheelView(true) },
-    { id: 2, name: 'Daily Quiz', icon: <HelpCircle className="w-8 h-8 md:w-10 md:h-10" />, coins: 50, color: 'from-amber-500 to-orange-600', action: () => setShowQuizSelection(true) },
-    { id: 3, name: 'Mega Video', icon: <Film className="w-8 h-8 md:w-10 md:h-10" />, coins: 75, color: 'from-rose-500 to-red-600', action: () => setShowVideoView(true) },
-    { id: 4, name: 'Invite Friends', icon: <Users className="w-8 h-8 md:w-10 md:h-10" />, coins: 1000, color: 'from-emerald-500 to-teal-600', action: onReferralsClick },
-  ];
-
-  const quizOptions = [
-    { id: 1, name: 'Math Quiz', icon: <Calculator className="w-7 h-7" />, coins: 20, color: 'from-blue-500 to-indigo-600', action: () => launchQuiz('math') },
-    { id: 2, name: 'Binary Guess', icon: <Binary className="w-7 h-7" />, coins: 30, color: 'from-purple-500 to-pink-600', action: () => launchQuiz('binary') },
-    { id: 3, name: 'Word Master', icon: <Type className="w-7 h-7" />, coins: 25, color: 'from-emerald-500 to-teal-600', action: () => launchQuiz('word') },
-    { id: 4, name: 'Gen. Knowledge', icon: <HelpCircle className="w-7 h-7" />, coins: 40, color: 'from-amber-500 to-orange-600', action: () => launchQuiz('gk') },
-  ];
-
-  const rewardOptions = [
-    { id: 1, name: 'Wallet', icon: <Wallet className="w-7 h-7" />, color: 'from-blue-500 to-indigo-600', action: () => setActiveEarningTab('wallet') },
-    { id: 2, name: 'History', icon: <HistoryIcon className="w-7 h-7" />, color: 'from-purple-500 to-pink-600', action: () => setActiveEarningTab('history') },
-    { id: 3, name: 'Tutorial', icon: <BookOpen className="w-7 h-7" />, color: 'from-emerald-500 to-teal-600', action: () => setActiveEarningTab('tutorial') },
-  ];
-
-  // Demo withdrawal history data
-  const demoWithdrawHistory = [
-    { id: 1, name: 'Rahim Uddin', phone: '01712345678', amount: 2000, method: 'bKash', date: '2025-03-25', status: 'completed' },
-    { id: 2, name: 'Karim Ahmed', phone: '01819876543', amount: 1500, method: 'Nagad', date: '2025-03-24', status: 'completed' },
-    { id: 3, name: 'Sumaiya Begum', phone: '01611223344', amount: 3000, method: 'Rocket', date: '2025-03-23', status: 'pending' },
-    { id: 4, name: 'Farhan Hossain', phone: '01755667788', amount: 1000, method: 'bKash', date: '2025-03-22', status: 'completed' },
-    { id: 5, name: 'Nasrin Akter', phone: '01833445566', amount: 2500, method: 'Nagad', date: '2025-03-21', status: 'completed' },
-    { id: 6, name: 'Mizanur Rahman', phone: '01977889900', amount: 1000, method: 'bKash', date: '2025-03-20', status: 'pending' },
-  ];
-
-  const blurPhone = (phone) => {
-    if (!phone || phone.length < 6) return phone;
-    const visible = phone.slice(0, Math.ceil(phone.length / 2));
-    const hidden = phone.slice(Math.ceil(phone.length / 2));
-    return visible + hidden.replace(/./g, '●');
-  };
-
-  const withdrawMethods = [
-    { id: 'bkash', name: 'bKash', logo: 'https://freelogopng.com/images/all_img/1656234782bkash-app-logo.png', available: true },
-    { id: 'nagad', name: 'Nagad', logo: 'https://freelogopng.com/images/all_img/1679248787Nagad-Logo.png', available: true },
-    { id: 'rocket', name: 'Rocket', logo: 'https://freelogopng.com/images/all_img/1656234841rocket-logo-png.png', available: true },
-    { id: 'bank', name: 'Bank Card', logo: null, available: true },
-  ];
-
-  const handleWithdraw = async () => {
-    if (!withdrawMethod) { alert('Please select a payment method.'); return; }
-    const amt = parseFloat(withdrawAmount);
-    if (!amt || amt < 1000) { alert('Minimum withdrawal is 1000 ৳'); return; }
-    if (amt > balance) { alert('Insufficient balance.'); return; }
-    if (!withdrawPhone || withdrawPhone.length < 10) { alert('Please enter a valid phone number.'); return; }
-    setWithdrawLoading(true);
-    // Simulate API call
-    await new Promise(r => setTimeout(r, 1500));
-    setWithdrawLoading(false);
-    // Call the premium success screen instead of showing the inline success message
-    setActiveTab('PaymentSuccess');
-    setWithdrawAmount('');
-    setWithdrawPhone('');
-    setWithdrawMethod('');
   };
 
   const getLevelInfo = (pts) => {
@@ -1490,249 +917,210 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
 
   return (
     <>
-      {/* Toast Notification - Always on top */}
       {toast.visible && (
-          <div
-            className={`fixed top-4 left-1/2 -translate-x-1/2 z-[9999] px-6 py-3 rounded-full flex items-center gap-3 shadow-2xl backdrop-blur-md font-bold text-sm min-w-max max-w-[90vw] text-center ${
-              toast.type === 'error' ? 'bg-red-500/90 text-white border border-red-400' : 'bg-emerald-500/90 text-white border border-emerald-400'
-            }`}
-          >
+          <div className={`fixed top-4 left-1/2 -translate-x-1/2 z-[9999] px-6 py-3 rounded-full flex items-center gap-3 shadow-2xl font-bold text-sm ${toast.type === 'error' ? 'bg-red-500 text-white' : 'bg-emerald-500 text-white'}`}>
             {toast.type === 'error' ? '✖' : '🎉'} {toast.message}
           </div>
         )}
 
-      {/* Option Intro Screen — OUTSIDE PullToRefresh so it covers Navbar */}
       {showIntroScreen && introItem && <OptionIntroScreen />}
       
-      {/* ═══════ Multi-Ad Sub-View Overlay (5 ads per option) ═══════ */}
-      {showMultiAdView && multiAdConfig && (() => {
-          const currentCount = getMultiAdCount(multiAdConfig.key);
-          const adSlots = (multiAdConfig.ads || [
-            { id: 1, name: `${multiAdConfig.name} Ad 1`, icon: '🎬', coins: multiAdConfig.coins },
-            { id: 2, name: `${multiAdConfig.name} Ad 2`, icon: '📺', coins: multiAdConfig.coins },
-            { id: 3, name: `${multiAdConfig.name} Ad 3`, icon: '🎥', coins: multiAdConfig.coins },
-            { id: 4, name: `${multiAdConfig.name} Ad 4`, icon: '📡', coins: multiAdConfig.coins },
-            { id: 5, name: `${multiAdConfig.name} Ad 5`, icon: '🎯', coins: multiAdConfig.coins },
-          ]).filter(a => a.isActive !== false);
+      {showMultiAdView && multiAdConfig && (
+        <div className="fixed inset-0 z-[9999] bg-slate-900 flex flex-col">
+          <div className="bg-white dark:bg-slate-900 w-full h-full flex flex-col overflow-hidden">
+            <div className="bg-slate-50 dark:bg-slate-900 pt-safe px-6 py-5 flex justify-between items-center border-b border-slate-200 dark:border-slate-800 shrink-0">
+              <h3 className="text-lg font-bold text-slate-800 dark:text-white">{multiAdConfig.name}</h3>
+              <button onClick={() => goBackWithAd(() => setShowMultiAdView(false))} className="p-2 text-slate-400">
+                <ArrowLeft className="w-6 h-6" />
+              </button>
+            </div>
+            <div className="flex-1 overflow-y-auto p-4 space-y-3">
+              <BigAdBanner />
+            </div>
+          </div>
+        </div>
+      )}
 
-          const handleMultiAdSlotClick = async (slot) => {
-            const slotId = typeof slot === 'object' ? (slot.id || slot._id) : slot;
-            const currentIndexInSlots = adSlots.findIndex(s => (s.id || s._id) === slotId);
-            const cnt = getMultiAdCount(multiAdConfig.key);
-            
-            if (cnt > currentIndexInSlots) return; 
-            if (cnt !== currentIndexInSlots) return;
-
-            const triggerReward = async () => {
-              AdMobService.showRewarded(() => {
-                setIsLoading(true);
-                (async () => {
-                  try {
-                    const token = localStorage.getItem('token');
-                    if (!token) return;
-                    const response = await fetch(`${API_BASE}/api/earning/task-claim`, {
-                      method: 'POST',
-                      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-                      body: JSON.stringify({ points: (slot.coins || multiAdConfig.coins), name: (slot.name || multiAdConfig.name) })
-                    });
-                    const data = await response.json();
-                    if (response.ok) {
-                      setBalance(data.balance);
-                      if (data.coins !== undefined) setCoins(data.coins);
-                      incrementMultiAdCount(multiAdConfig.key);
-                      showToast(`Claimed ${slot.coins || multiAdConfig.coins} Coins!`, 'success');
-                    } else {
-                      showToast(data.message || "Failed to claim reward", "error");
-                    }
-                  } catch (e) {
-                    showToast("Network error", "error");
-                  } finally {
-                    setIsLoading(false);
-                  }
-                })();
-              });
-            };
-            triggerReward();
-          };
-
-          return (
-            <div
-              className="fixed inset-0 animate-fade-in z-[9999] bg-slate-900 flex flex-col"
-            >
-              <div className="bg-white dark:bg-slate-900 w-full h-full flex flex-col overflow-hidden">
-                {/* Header */}
-                <div className="bg-slate-50 dark:bg-slate-900 pt-safe px-6 py-5 flex justify-between items-center border-b border-slate-200 dark:border-slate-800 shrink-0">
-                  <div className="flex items-center gap-3">
-                    <img src={multiAdConfig.logo} alt={multiAdConfig.name} className="w-10 h-10 rounded-xl object-contain bg-white p-1 shadow-sm" />
-                    <div>
-                      <h3 className="text-lg font-bold text-slate-800 dark:text-white">{multiAdConfig.name}</h3>
-                      <p className="text-xs text-amber-600 dark:text-amber-400 font-bold">+{multiAdConfig.coins} Coins per ad</p>
-                    </div>
-                  </div>
-                  <button onClick={() => goBackWithAd(() => setShowMultiAdView(false))} className="p-2 text-slate-400 hover:text-slate-600 dark:hover:text-white transition-colors">
-                    <ArrowLeft className="w-6 h-6 hover:-translate-x-1 transition-transform" />
-                  </button>
-                </div>
-
-                {/* Content */}
-                <div className="flex-1 overflow-y-auto p-4 space-y-3 pb-safe-offset-10">
-                  <div className="text-center space-y-2 mb-4">
-                    <p className="text-slate-500 dark:text-slate-400 font-medium text-sm">
-                      Watch 5 ads daily to earn <span className="text-amber-600 dark:text-amber-400 font-bold">{multiAdConfig.coins * 5} Coins</span>!
-                    </p>
-                    <div className="flex items-center justify-center gap-2">
-                      {[0, 1, 2, 3, 4].map(i => (
-                        <div key={i} className={`w-3 h-3 rounded-full transition-all ${currentCount > i ? `bg-gradient-to-br ${multiAdConfig.color}` : 'bg-slate-300 dark:bg-slate-700'}`}></div>
-                      ))}
-                    </div>
-                    <p className="text-xs text-slate-400">{currentCount}/5 ads watched today</p>
-                  </div>
-
-                  {/* Ad Slots */}
-                  <div className="space-y-3">
-                    {adSlots.map((slot) => {
-                      const cnt = getMultiAdCount(multiAdConfig.key);
-                      const isCompleted = cnt >= slot.id;
-                      const isNext = cnt + 1 === slot.id;
-                      const isLocked = !isCompleted && !isNext;
-
-                      return (
-                        <button
-                          key={slot.id}
-                          onClick={() => handleMultiAdSlotClick(slot.id)}
-                          disabled={isLocked || isCompleted || isLoading}
-                          className={`flex items-center justify-between w-full p-4 border-2 rounded-2xl group transition-all ${
-                            isCompleted ? 'bg-emerald-50 dark:bg-emerald-900/20 border-emerald-200 dark:border-emerald-800' :
-                            isNext ? 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 shadow-md cursor-pointer' :
-                            'bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700 opacity-40 cursor-not-allowed'
-                          }`}
-                        >
-                          <div className="flex items-center gap-4 text-left">
-                            <div className={`w-12 h-12 rounded-xl flex items-center justify-center text-2xl shrink-0 ${
-                              isCompleted ? 'bg-emerald-100 dark:bg-emerald-900/40' :
-                              isNext ? `bg-gradient-to-br ${multiAdConfig.color} shadow-lg` :
-                              'bg-slate-100 dark:bg-slate-700'
-                            }`}>
-                              {isCompleted ? <Check className="w-6 h-6 text-emerald-500" /> : (
-                                <span className={isNext ? '' : 'grayscale opacity-50'}>{slot.icon}</span>
-                              )}
-                            </div>
-                            <div>
-                              <h4 className={`font-bold text-sm ${
-                                isCompleted ? 'text-emerald-700 dark:text-emerald-400' :
-                                isNext ? 'text-slate-800 dark:text-slate-200' :
-                                'text-slate-400 dark:text-slate-500'
-                              }`}>{slot.label}</h4>
-                              <p className="text-[11px] text-slate-400 dark:text-slate-500">
-                                {isCompleted ? '✓ Claimed' : isNext ? 'Tap to watch & earn' : 'Locked'}
-                              </p>
-                            </div>
-                          </div>
-                        </button>
-                      );
-                    })}
-                  </div>
-
-                  {/* All done message */}
-                  {currentCount >= 5 && (
-                    <div className="bg-emerald-50 dark:bg-emerald-900/20 border-2 border-emerald-200 dark:border-emerald-800 rounded-2xl p-4 text-center">
-                      <p className="text-emerald-600 dark:text-emerald-400 font-bold">All 5 ads completed!</p>
-                    </div>
-                  )}
-
-                  <div className="flex flex-col items-center pt-4 pb-8">
-                    <BigAdBanner />
-                  </div>
-                </div>
+      {showQuizView && quizQuestion && (
+          <div className="fixed inset-[auto_0_auto_0] top-0 z-[9999] bg-slate-50 dark:bg-slate-950 flex flex-col rounded-b-3xl shadow-2xl pb-6 max-h-[96vh] overflow-y-auto">
+            <div className="bg-[#1a362d] text-white pt-safe px-6 py-5 flex justify-between items-center shadow-lg shrink-0">
+              <button onClick={() => goBackWithAd(() => { setShowQuizView(false); setQuizTimerActive(false); })} className="p-2 hover:bg-white/10 rounded-lg shrink-0">
+                <ArrowLeft className="w-6 h-6" />
+              </button>
+              <h3 className="text-lg font-bold truncate mx-4 capitalize">{quizType.replace('-', ' ')} Quiz</h3>
+              <div className="relative w-12 h-12 shrink-0">
+                <svg className="w-12 h-12 -rotate-90" viewBox="0 0 48 48">
+                  <circle cx="24" cy="24" r="20" fill="none" stroke="rgba(255,255,255,0.2)" strokeWidth="3" />
+                  <circle cx="24" cy="24" r="20" fill="none" stroke="white" strokeWidth="3"
+                    strokeDasharray={`${(quizTimer / 30) * 125.66} 125.66`}
+                    strokeLinecap="round"
+                    className="transition-all duration-1000 ease-linear"
+                  />
+                </svg>
+                <span className="absolute inset-0 flex items-center justify-center text-sm font-black">{quizTimer}</span>
               </div>
             </div>
-          );
-        })()}
 
-      {/* Quiz View */}
-      {showQuizView && quizQuestion && (
-          <div
-            className="fixed inset-0 animate-fade-in z-[9999] bg-slate-900 flex flex-col"
-          >
-            <div className="bg-slate-100 dark:bg-slate-950 w-full h-full flex flex-col overflow-hidden relative">
-              {/* Header */}
-              <div className="bg-[#1a362d] text-white pt-safe px-4 py-4 flex items-center justify-between shadow-md shrink-0">
-                <div className="flex items-center gap-4">
-                  <button onClick={() => goBackWithAd(() => { setShowQuizView(false); setQuizTimerActive(false); })} className="p-1 hover:bg-white/10 rounded-lg transition-colors">
-                    <ArrowLeft className="w-6 h-6" />
-                  </button>
-                  <h3 className="text-xl font-medium">{quizType === 'math' ? 'Math Quiz' : 'Quiz'}</h3>
-                </div>
-                <div className="relative w-12 h-12">
-                  <svg className="w-12 h-12 -rotate-90" viewBox="0 0 48 48">
-                    <circle cx="24" cy="24" r="20" fill="none" stroke="rgba(255,255,255,0.2)" strokeWidth="3" />
-                    <circle cx="24" cy="24" r="20" fill="none" stroke="white" strokeWidth="3"
-                      strokeDasharray={`${(quizTimer / 30) * 125.66} 125.66`}
-                      strokeLinecap="round"
-                    />
-                  </svg>
-                  <span className="absolute inset-0 flex items-center justify-center text-sm font-bold">{quizTimer}</span>
+            <div className="flex-1 overflow-y-auto p-6 flex flex-col items-center gap-8">
+              <div className="w-full max-w-lg bg-gradient-to-br from-[#2d8a5e] to-[#1a6b42] rounded-3xl p-10 shadow-2xl relative overflow-hidden">
+                <div className="absolute top-0 right-0 w-32 h-32 bg-white/5 rounded-full -mr-16 -mt-16 blur-2xl" />
+                <p className="text-white text-center text-3xl font-black leading-tight drop-shadow-sm relative z-10">{quizQuestion.question}</p>
+              </div>
+
+              <div className="w-full max-w-lg space-y-4">
+                {quizQuestion.options.map((option, idx) => {
+                  const isSelected = quizSelected === option;
+                  return (
+                    <button 
+                      key={idx} 
+                      disabled={quizAnswered} 
+                      onClick={() => setQuizSelected(option)}
+                      className={`w-full py-5 px-8 rounded-2xl text-center text-xl font-black transition-all border-4 transform-gpu active:scale-95 ${
+                        isSelected 
+                          ? 'border-emerald-500 bg-emerald-500 text-white shadow-lg shadow-emerald-500/20' 
+                          : 'bg-white dark:bg-slate-800 border-slate-100 dark:border-slate-700 text-slate-700 dark:text-slate-200 hover:border-emerald-200 dark:hover:border-emerald-900/50'
+                      }`}
+                    >
+                      {option}
+                    </button>
+                  );
+                })}
+              </div>
+
+              <div className="mt-auto w-full max-w-lg">
+                <div className="bg-slate-100 dark:bg-slate-800 p-4 rounded-2xl text-center border border-slate-200 dark:border-slate-700">
+                  <p className="text-slate-500 dark:text-slate-400 font-bold uppercase tracking-widest text-[10px] mb-1">Session Progress</p>
+                  <p className="text-xl font-black text-slate-800 dark:text-white">{quizStatus.count} / 10 Games Complete</p>
                 </div>
               </div>
 
-              {/* Body */}
-              <div className="flex-1 overflow-y-auto px-4 py-4 flex flex-col items-center gap-4">
-                <div className="w-full max-w-lg bg-gradient-to-br from-[#2d8a5e] to-[#1a6b42] rounded-2xl p-8 shadow-lg">
-                  <p className="text-white text-center text-3xl font-black leading-tight">{quizQuestion.question}</p>
+              <div className="mt-8 flex justify-center">
+                <BigAdBanner />
+              </div>
+            </div>
+          </div>
+        )}
+
+      {showWheelView && (
+          <div className="fixed inset-0 z-[9999] bg-slate-50 dark:bg-slate-950 flex flex-col">
+            <div className="bg-slate-50 dark:bg-slate-950 pt-safe px-6 py-5 flex justify-between items-center border-b border-slate-200 dark:border-slate-800 shrink-0">
+              <h3 className="text-xl font-bold text-slate-800 dark:text-white">Fortune Wheel</h3>
+              <button onClick={() => goBackWithAd(() => setShowWheelView(false))} className="p-2 text-slate-400">
+                <ArrowLeft className="w-6 h-6" />
+              </button>
+            </div>
+            
+            <div className="flex-1 overflow-y-auto p-6 flex flex-col items-center gap-8 relative">
+              <div className="text-center space-y-1">
+                <p className="text-slate-500 dark:text-slate-400 font-medium text-sm">Spin the wheel to win Coins!</p>
+                <div className="flex items-center justify-center gap-2">
+                  {Array.from({ length: 10 }).map((_, i) => (
+                    <div key={i} className={`w-2.5 h-2.5 rounded-full ${wheelStatus.count > i ? 'bg-teal-500' : 'bg-slate-300 dark:bg-slate-700'}`}></div>
+                  ))}
+                </div>
+                <p className="text-xs text-slate-400">{wheelStatus.count}/10 spins used today</p>
+              </div>
+
+              {/* Wheel Container */}
+              <div className="relative w-full max-w-[320px] aspect-square transform-gpu">
+                {/* Pointer */}
+                <div className="absolute -top-4 left-1/2 -translate-x-1/2 z-20 drop-shadow-2xl">
+                  <div className="w-0 h-0 border-l-[15px] border-l-transparent border-r-[15px] border-r-transparent border-t-[30px] border-t-rose-600"></div>
                 </div>
 
-                <div className="w-full max-w-lg space-y-3">
-                  {quizQuestion.options.map((option, idx) => {
-                    const isCorrect = option === quizQuestion.answer;
-                    const isSelected = quizSelected === option;
-                    let optionStyle = 'bg-white dark:bg-slate-800 border-2 border-[#2d8a5e]/30 text-slate-800 dark:text-white';
-                    if (quizAnswered) {
-                      if (isCorrect) optionStyle = 'bg-green-100 dark:bg-green-900/40 border-green-500 text-green-800 dark:text-green-300';
-                      else if (isSelected) optionStyle = 'bg-red-100 dark:bg-red-900/40 border-red-500 text-red-800 dark:text-red-300';
-                    } else if (isSelected) optionStyle = 'border-[#2d8a5e] bg-[#2d8a5e]/10';
+                <div
+                  className="w-full h-full rounded-full border-[10px] border-amber-400 dark:border-amber-500 shadow-2xl relative transition-transform duration-5000 ease-out flex items-center justify-center overflow-hidden"
+                  style={{ 
+                    transform: isSpinning ? `rotate(${spinReward?.totalRotation || 0}deg)` : 'rotate(0deg)',
+                    background: `conic-gradient(${(globalSettings.fortuneWheelConfig?.coins || [10, 20, 30, 40, 50, 60, 70, 80, 90, 100]).map((_, i, arr) => {
+                      const colors = ['#ef4444', '#f97316', '#eab308', '#22c55e', '#06b6d4', '#3b82f6', '#8b5cf6', '#ec4899', '#f43f5e', '#14b8a6'];
+                      const size = 360 / arr.length;
+                      return `${colors[i % colors.length]} ${i * size}deg ${(i + 1) * size}deg`;
+                    }).join(', ')})` 
+                  }}
+                >
+                  {(globalSettings.fortuneWheelConfig?.coins || [10, 20, 30, 40, 50, 60, 70, 80, 90, 100]).map((pts, i, arr) => {
+                    const segmentSize = 360 / arr.length;
+                    const rotation = i * segmentSize + (segmentSize / 2);
                     return (
-                      <button key={idx} disabled={quizAnswered} onClick={() => setQuizSelected(option)}
-                        className={`w-full py-4 px-6 rounded-full text-center text-lg font-semibold transition-all ${optionStyle}`}>
-                        {option}
-                      </button>
+                      <div
+                        key={i}
+                        className="absolute font-black text-white text-base drop-shadow-md"
+                        style={{
+                          transform: `rotate(${rotation}deg) translateY(-100px) rotate(-${rotation}deg)`
+                        }}
+                      >
+                        {pts}
+                      </div>
                     );
                   })}
-                </div>
-
-                {!quizAnswered ? (
-                  <button disabled={quizSelected === null || isLoading}
-                    onClick={async () => {
-                      if (quizSelected === null) return;
-                      setQuizAnswered(true); setQuizTimerActive(false);
-                      if (quizSelected === quizQuestion.answer) {
-                        setQuizScore(prev => prev + 1);
-                        AdMobService.showInterstitial(async () => {
-                          try {
-                            const token = localStorage.getItem('token');
-                            const response = await fetch(`${API_BASE}/api/earning/quiz-claim`, { method: 'POST', headers: { Authorization: `Bearer ${token}` } });
-                            const data = await response.json();
-                            if (response.ok) { setBalance(data.balance); setCoins(data.coins); setQuizStatus({ count: data.count }); }
-                          } catch (err) {}
-                        });
-                      }
-                    }}
-                    className={`w-full max-w-lg py-4 rounded-full text-lg font-black ${quizSelected === null ? 'bg-slate-300 dark:bg-slate-700 text-slate-500' : 'bg-gradient-to-r from-amber-400 to-orange-400 text-white'}`}>
-                    Submit
-                  </button>
-                ) : (
-                  <div className="w-full max-w-lg text-center space-y-3">
-                    <p className={`text-xl font-black ${quizSelected === quizQuestion.answer ? 'text-green-600' : 'text-red-500'}`}>
-                      {quizSelected === quizQuestion.answer ? '🎉 Correct!' : `❌ Wrong! Answer: ${quizQuestion.answer}`}
-                    </p>
-                    <button onClick={() => startNewQuiz(quizType)} className="w-full py-4 rounded-full text-lg font-black bg-gradient-to-r from-teal-500 to-emerald-500 text-white">
-                      Next Question →
-                    </button>
+                  
+                  {/* Center hub */}
+                  <div className="absolute w-16 h-16 bg-white dark:bg-slate-900 rounded-full shadow-xl border-4 border-amber-400 z-10 flex items-center justify-center">
+                    <div className="w-2 h-2 bg-slate-800 rounded-full" />
                   </div>
-                )}
-
-                <div className="flex flex-col items-center pt-4 pb-8">
-                   <BigAdBanner />
                 </div>
+              </div>
+
+              <button
+                disabled={isSpinning || wheelStatus.count >= (globalSettings.fortuneWheelConfig?.dailyLimit || 10)}
+                onClick={() => {
+                  const maxSpins = globalSettings.fortuneWheelConfig?.dailyLimit || 10;
+                  if (wheelStatus.count >= maxSpins) {
+                    showToast(`You have used all ${maxSpins} spins today. Come back tomorrow!`, 'info');
+                    return;
+                  }
+                  
+                  const startSpinAction = () => {
+                    const segments = globalSettings.fortuneWheelConfig?.coins || [10, 20, 30, 40, 50, 60, 70, 80, 90, 100];
+                    const randomIdx = Math.floor(Math.random() * segments.length);
+                    const segmentSize = 360 / segments.length;
+                    const segmentAngle = randomIdx * segmentSize + (segmentSize / 2);
+                    const landAngle = (360 - segmentAngle + 360) % 360;
+                    const totalRotation = 3600 + landAngle; 
+                    setSpinReward({ coins: segments[randomIdx], totalRotation });
+                    setIsSpinning(true);
+                    
+                    // Delay for animation
+                    setTimeout(async () => {
+                        setIsSpinning(false);
+                        const reward = segments[randomIdx];
+                        try {
+                          const token = localStorage.getItem('token');
+                          const response = await fetch(`${API_BASE}/api/earning/spin-claim`, {
+                            method: 'POST',
+                            headers: {
+                              'Content-Type': 'application/json',
+                              Authorization: `Bearer ${token}`,
+                            },
+                            body: JSON.stringify({ coins: reward }),
+                          });
+                          const data = await response.json();
+                          if (response.ok) {
+                            setBalance(data.balance);
+                            if (data.coins !== undefined) setCoins(data.coins);
+                            setWheelStatus({ lastSpinDate: data.lastSpinDate, count: data.count });
+                            showToast(`🎉 Congratulations! You won ${reward} Coins!`, "success");
+                          } else {
+                            showToast(data.message || 'Failed to claim spin.', "error");
+                          }
+                        } catch (err) {
+                          showToast('Network error.', "error");
+                        }
+                    }, 5200);
+                  };
+
+                  AdMobService.showInterstitial(() => {
+                    startSpinAction();
+                  });
+                }}
+                className="w-full max-w-sm bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 text-white font-black py-4 rounded-2xl transition-all shadow-xl shadow-amber-500/20 active:scale-95 disabled:opacity-50 disabled:grayscale uppercase tracking-widest text-lg"
+              >
+                {isSpinning ? 'Spinning...' : 'Spin Now!'}
+              </button>
+
+              <div className="mt-8 flex justify-center">
+                <BigAdBanner />
               </div>
             </div>
           </div>
@@ -1740,1089 +1128,121 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
 
     <PullToRefresh onRefresh={handleRefresh} refreshing={refreshing}>
       <main className="min-h-screen bg-slate-50 dark:bg-slate-950 transition-colors duration-500 pb-24 md:pb-8">
-
-
       
 
-      {showStatusView && (
-          <div
-            className="fixed inset-0 animate-fade-in z-[150] bg-slate-950/90 backdrop-blur-md flex items-center justify-center p-4 shadow-2xl"
-          >
-            <div
-              className="bg-white dark:bg-slate-900 w-full max-w-sm rounded-[2.5rem] shadow-2xl overflow-hidden relative border border-slate-200 dark:border-slate-800 flex flex-col items-center p-8 text-center"
-            >
-              <button 
-                onClick={() => setShowStatusView(false)}
-                className="absolute top-6 right-6 p-2 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors"
-                aria-label="Close"
-              >
-                <X className="w-5 h-5" />
-              </button>
-
-              <div className={`w-20 h-20 rounded-3xl flex items-center justify-center mb-6 shadow-lg ${
-                statusViewType === 'upcoming' 
-                  ? 'bg-gradient-to-br from-indigo-500 to-blue-600 shadow-blue-500/20' 
-                  : 'bg-gradient-to-br from-rose-500 to-pink-600 shadow-rose-500/20'
-              }`}>
-                {statusViewType === 'upcoming' ? (
-                  <Clock className="w-10 h-10 text-white animate-pulse" />
-                ) : (
-                  <AlertCircle className="w-10 h-10 text-white" />
-                )}
-              </div>
-
-              <h2 className="text-2xl font-black text-slate-800 dark:text-slate-100 mb-2">
-                {statusViewTitle}
-              </h2>
-              
-              <p className="text-slate-500 dark:text-slate-400 text-sm font-medium leading-relaxed mb-8 px-4">
-                {statusViewType === 'upcoming' 
-                  ? "This feature is coming soon! Our team is working hard to bring you more ways to earn. Stay tuned!" 
-                  : "This task is currently unavailable for your region or level. We are refreshing the offers, please check back later!"}
-              </p>
-
-              <button
-                onClick={() => setShowStatusView(false)}
-                className={`w-full py-4 rounded-2xl font-black text-sm uppercase tracking-widest transition-all shadow-lg mb-8 ${
-                  statusViewType === 'upcoming'
-                    ? 'bg-indigo-600 hover:bg-indigo-700 text-white shadow-indigo-600/20'
-                    : 'bg-slate-800 dark:bg-slate-100 text-white dark:text-slate-900 shadow-slate-900/20'
-                }`}
-              >
-                Continue Earning
-              </button>
-
-              <div className="w-full mt-auto">
-                  <div className="flex flex-col items-center mt-6 min-h-[280px]">
-                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2 flex items-center gap-1.5 justify-center">
-                       <Shield className="w-3 h-3" /> Sponsored Task
-                    </span>
-                    <BigAdBanner />
-                 </div>
-              </div>
-            </div>
-          </div>
-        )}
-      
-
-      {showCoinsDetails && (
-          <div
-            className="fixed inset-0 animate-fade-in z-[120] bg-[#050B14]/95 backdrop-blur-md flex items-center justify-center p-4"
-          >
-            <div
-              className="bg-[#0F172A] w-full max-w-[360px] rounded-[2rem] shadow-2xl border border-slate-800 flex flex-col items-center relative overflow-hidden p-8"
-            >
-              {/* Back Button */}
-              <button 
-                onClick={() => setShowCoinsDetails(false)}
-                className="absolute top-5 left-5 text-slate-400 hover:text-white transition-colors z-20"
-              >
-                <ArrowLeft className="w-6 h-6" />
-              </button>
-
-              <div className="w-16 h-16 bg-amber-500/20 flex items-center justify-center rounded-full mb-4 mt-4 shadow-[0_0_30px_rgba(245,158,11,0.3)]">
-                <Medal className="w-8 h-8 text-amber-400" />
-              </div>
-              
-              <h2 className="text-2xl font-black text-white mb-1">Your Coins</h2>
-              <p className="text-amber-400 text-3xl font-black mb-6 drop-shadow-md">
-                {coins.toLocaleString()}
-              </p>
-
-              <div className="w-full bg-slate-800/50 rounded-2xl p-4 border border-slate-700/50 mb-6">
-                 <div className="flex items-center justify-between mb-3 border-b border-slate-700/50 pb-3">
-                    <span className="text-sm font-medium text-slate-300">Conversion Rate</span>
-                    <span className="text-sm font-bold text-white bg-slate-700 px-2 py-1 rounded-md">1000 Coins = 50 ৳</span>
-                 </div>
-                 <div className="flex items-center justify-between">
-                    <span className="text-sm font-medium text-slate-300">Minimum Convert</span>
-                    <div className="flex items-center gap-1 text-amber-400 text-sm font-bold">
-                       1000 Coins
-                    </div>
-                 </div>
-              </div>
-
-              <p className="text-xs text-slate-400 text-center leading-relaxed mb-6">
-                Earn coins through various tasks and convert them manually to your balance whenever you reach 1000 coins!
-              </p>
-
-              <button
-                disabled={isLoading || coins < 1000}
-                onClick={handleConvertCoins}
-                className={`w-full py-4 rounded-full font-black text-sm uppercase tracking-wide flex items-center justify-center gap-2 transform-gpu ${
-                  coins >= 1000
-                  ? "bg-gradient-to-r from-amber-500 to-orange-400 text-white shadow-lg shadow-amber-500/20 cursor-pointer"
-                  : "bg-slate-700 text-slate-500 cursor-not-allowed"
-                }`}
-              >
-                {isLoading ? 'Processing...' : coins >= 1000 ? 'Convert to Balance' : 'Need 1000 Coins'}
-              </button>
-            </div>
-          </div>
-        )}
-      
-
-      {showLevelView && (
-          <div
-            className="fixed inset-0 animate-fade-in z-[120] bg-[#050B14]/95 backdrop-blur-md flex items-center justify-center p-4 overflow-y-auto"
-          >
-            <div
-              className="bg-[#0F172A] w-full max-w-[400px] rounded-[2.5rem] shadow-2xl border border-slate-800 flex flex-col items-center relative overflow-hidden p-6 pb-8 my-auto"
-            >
-              {/* Back Button */}
-              <button 
-                onClick={() => setShowLevelView(false)}
-                className="absolute top-5 left-5 text-slate-400 hover:text-white transition-colors z-20"
-              >
-                <ArrowLeft className="w-6 h-6" />
-              </button>
-
-              {/* Level Badge */}
-              <div
-                className="w-20 h-20 rounded-full bg-gradient-to-br from-amber-400 to-orange-600 shadow-xl shadow-orange-500/30 flex items-center justify-center border-4 border-amber-300/30 mt-6 mb-3 animate-float"
-              >
-                <span className="font-black text-white text-3xl">{levelInfo.level}</span>
-              </div>
-              <h2 className="text-2xl font-black text-white">{levelInfo.label}</h2>
-              <p className="text-sm text-slate-400 font-medium mb-6">
-                {lifetimeCoins.toLocaleString()} lifetime coins collected
-              </p>
-              
-              {/* Current Level Progress */}
-              <div className="w-full bg-slate-800/60 rounded-2xl p-4 border border-slate-700/50 mb-5">
-                <div className="flex justify-between items-center mb-2">
-                  <span className="text-xs font-bold text-amber-400 uppercase tracking-widest">
-                    {levelInfo.isMax ? 'Max Level Reached!' : `Progress to Level ${levelInfo.level + 1}`}
-                  </span>
-                  <span className="text-xs text-slate-400 font-bold">
-                    {levelInfo.isMax ? '✓' : `${Math.round(progressPercent)}%`}
-                  </span>
-                </div>
-                <div className="h-3 w-full bg-slate-900 rounded-full overflow-hidden">
-                  <div
-                    className="h-full bg-gradient-to-r from-amber-400 to-orange-500 rounded-full"
-                    style={{ width: `${progressPercent}%` }}
-                  />
-                </div>
-                {!levelInfo.isMax && (
-                  <p className="text-[11px] text-slate-500 mt-2 text-center">
-                    {(levelInfo.target - levelInfo.current).toLocaleString()} coins to level up
-                  </p>
-                )}
-              </div>
-
-              {/* All Levels */}
-              <div className="w-full space-y-2">
-                {[
-                  { lv: 1, from: 0, to: 1500 },
-                  { lv: 2, from: 1500, to: 3500 },
-                  { lv: 3, from: 3500, to: 6000 },
-                  { lv: 4, from: 6000, to: 10000 },
-                  { lv: 5, from: 10000, to: null },
-                ].map((tier) => {
-                  const isActive = levelInfo.level === tier.lv;
-                  const isCompleted = levelInfo.level > tier.lv;
-                  return (
-                    <div key={tier.lv} className={`flex items-center gap-3 p-3 rounded-xl transition-all ${
-                      isActive ? 'bg-amber-500/10 border border-amber-500/30' 
-                      : isCompleted ? 'bg-slate-800/40 border border-slate-700/30' 
-                      : 'bg-slate-800/20 border border-slate-800/50'}
-                    `}>
-                      <div className={`w-9 h-9 rounded-full flex items-center justify-center font-black text-sm ${
-                        isActive ? 'bg-gradient-to-br from-amber-400 to-orange-500 text-white shadow-md shadow-orange-500/20'
-                        : isCompleted ? 'bg-emerald-500/20 text-emerald-400'
-                        : 'bg-slate-700/50 text-slate-500'}
-                      `}>
-                        {isCompleted ? <Check className="w-4 h-4" /> : tier.lv}
-                      </div>
-                      <div className="flex-1">
-                        <p className={`text-sm font-bold ${
-                          isActive ? 'text-amber-400' : isCompleted ? 'text-emerald-400' : 'text-slate-500'
-                        }`}>
-                          Level {tier.lv} {tier.to === null && '(Max)'}
-                        </p>
-                        <p className="text-[11px] text-slate-500 font-medium">
-                          {tier.to !== null ? `${tier.from.toLocaleString()} — ${tier.to.toLocaleString()} Coins` : `${tier.from.toLocaleString()}+ Coins`}
-                        </p>
-                      </div>
-                      {isActive && (
-                        <span className="text-[10px] font-black text-amber-400 bg-amber-500/10 px-2 py-1 rounded-full border border-amber-500/20">CURRENT</span>
-                      )}
-                      {isCompleted && (
-                        <span className="text-[10px] font-black text-emerald-400">DONE</span>
-                      )}
-                    </div>
-                  );
-                })}
-              </div>
-
-              <button
-                onClick={() => goBackWithAd(() => setShowLevelView(false))}
-                className="mt-8 w-full py-4 rounded-full bg-gradient-to-r from-amber-400 to-orange-500 text-white font-black shadow-lg shadow-orange-500/20 transform-gpu text-sm uppercase tracking-wide"
-              >
-                Continue Earning
-              </button>
-            </div>
-          </div>
-        )}
-      
-
-      {showPremiumIPView && (
-          <div
-            className="fixed inset-0 animate-fade-in z-[120] bg-[#050B14]/95 backdrop-blur-md flex items-center justify-center p-4 overflow-y-auto"
-          >
-            <div
-              className="bg-[#0F172A] w-full max-w-[400px] sm:max-w-[420px] rounded-[2.5rem] shadow-2xl border border-slate-800 flex flex-col relative overflow-hidden min-h-[480px] my-auto pb-4"
-            >
-              {/* Back Button */}
-              <button 
-                onClick={() => {
-                  if (showUpgradeOptions) {
-                    setShowUpgradeOptions(false);
-                  } else if (ipStep > 1 && ipStep < 5) {
-                    setIpStep(ipStep - 1);
-                  } else {
-                    goBackWithAd(() => setShowPremiumIPView(false));
-                    setIpStep(1);
-                  }
-                }}
-                className="absolute top-6 left-6 text-slate-400 hover:text-white transition-colors z-20 p-2 rounded-full"
-              >
-                <ArrowLeft className="w-5 h-5" />
-              </button>
-
-              <div className="flex-1 overflow-y-auto px-5 pt-12 custom-scrollbar flex flex-col items-center w-full">
-                {isPremium && premiumExpiryDate && new Date(premiumExpiryDate) > new Date() && !showUpgradeOptions && (
-                    <div
-                      key="active-status"
-                      className="w-full flex flex-col items-center pt-2"
-                    >
-                      <div className="w-20 h-20 rounded-full bg-yellow-400/10 border border-yellow-400/20 flex items-center justify-center mb-6 relative">
-                        <div className="absolute inset-0 rounded-full bg-yellow-400/5 animate-ping" />
-                        <Crown className="w-10 h-10 text-yellow-500 fill-current" />
-                      </div>
-
-                      <h2 className="text-2xl font-black text-white mb-1 tracking-tight">Active Plan</h2>
-                      <p className="text-yellow-500 font-bold text-xs uppercase tracking-[0.2em] mb-6">{premiumPackageName || 'Premium Subscriber'}</p>
-
-                      {premiumCountry && (
-                        <div className="flex items-center gap-2 px-4 py-2 bg-emerald-500/10 border border-emerald-500/20 rounded-2xl mb-8">
-                          <Globe className="w-4 h-4 text-emerald-500" />
-                          <span className="text-emerald-500 text-xs font-bold uppercase tracking-wider">Server: {premiumCountry}</span>
-                        </div>
-                      )}
-
-                      {/* Countdown Grid (High Precision) */}
-                      <div className="grid grid-cols-4 gap-3 w-full mb-8">
-                        {[
-                          { label: 'Days', value: timeLeft.days, color: 'from-blue-500 to-indigo-600' },
-                          { label: 'Hours', value: timeLeft.hours, color: 'from-purple-500 to-fuchsia-600' },
-                          { label: 'Mins', value: timeLeft.minutes, color: 'from-rose-500 to-pink-600' },
-                          { label: 'Secs', value: timeLeft.seconds, color: 'from-amber-500 to-orange-600' }
-                        ].map((item, idx) => (
-                          <div key={idx} className="flex flex-col items-center">
-                            <div className="w-full aspect-square bg-[#1E293B] rounded-2xl border border-white/10 flex flex-col items-center justify-center mb-2 shadow-[inset_0_2px_10px_rgba(0,0,0,0.3)] relative overflow-hidden group">
-                              <div className={`absolute inset-0 bg-gradient-to-br ${item.color} opacity-0 group-hover:opacity-5 transition-opacity`} />
-                              <span className="text-2xl font-black text-white tabular-nums tracking-tighter">
-                                {String(item.value).padStart(2, '0')}
-                              </span>
-                            </div>
-                            <span className="text-[9px] text-slate-500 font-black uppercase tracking-widest">{item.label}</span>
-                          </div>
-                        ))}
-                      </div>
-
-                      <button
-                        onClick={() => setShowUpgradeOptions(true)}
-                        className="w-full py-4 bg-gradient-to-r from-yellow-400 to-amber-500 text-[#0F172A] font-black rounded-[1.5rem] shadow-xl transform-gpu text-sm uppercase tracking-widest"
-                      >
-                        Extend Subscription
-                      </button>
-                    </div>
-                  )}
-
-                  {(!(isPremium && premiumExpiryDate && new Date(premiumExpiryDate) > new Date()) || showUpgradeOptions) && ipStep === 1 && (
-                    <div 
-                      key="step1"
-                      className="w-full flex flex-col items-center" animate-fade-in-up
-                    >
-                      {/* Crown Icon */}
-                      <div
-                        className="mb-2 text-yellow-400 mt-1 animate-float"
-                      >
-                         <Crown className="w-12 h-12 fill-current" strokeWidth={1} />
-                      </div>
-
-                      <h2 className="text-xl font-black text-white mb-1 tracking-tight">Get IP</h2>
-                      <p className="text-slate-400 text-[11px] font-medium leading-relaxed max-w-[240px] text-center mb-4">
-                        Upgrade to Premium IP to enjoy more features
-                      </p>
-
-                      {/* Features List */}
-                      <div className="w-full max-w-[260px] space-y-2 mb-4">
-                        {[
-                          { icon: Globe, text: "All Global Services" },
-                          { icon: Shield, text: "Super fast Connections" },
-                          { icon: Globe, text: "All 30+ country Server for VIP" },
-                        ].map((feat, i) => (
-                          <div key={i} className="flex items-center gap-3 text-slate-300">
-                            <feat.icon className="w-4 h-4 text-slate-400 shrink-0" strokeWidth={1.5} />
-                            <span className="text-[11px] font-bold tracking-wide">{feat.text}</span>
-                          </div>
-                        ))}
-                      </div>
-
-                      {/* Free Trial Section */}
-                      <div className="text-center mb-3">
-                        <h3 className="text-white font-black text-base tracking-tight">{globalSettings.premiumIpDuration} <span className="text-blue-500">Premium IP</span></h3>
-                        <p className="text-[10px] text-slate-500 mt-0.5 font-medium">
-                          No commitment & Cancel Anytime
-                        </p>
-                      </div>
-
-                      {/* Dynamic Packages Mapping */}
-                      <div className="w-full space-y-3 mb-8">
-                        {(globalSettings.premiumIpPackages && globalSettings.premiumIpPackages.length > 0
-                          ? globalSettings.premiumIpPackages
-                          : ipPackages).map((pkg) => (
-                            <button
-                              key={pkg.id}
-                              onClick={() => setSelectedPackage(pkg.id)}
-                              className={`w-full flex items-center justify-between p-3 rounded-2xl border relative overflow-hidden transform-gpu will-change-transform ${
-                                selectedPackage === pkg.id 
-                                  ? 'bg-slate-800/80 border-blue-500 shadow-lg shadow-blue-500/10' 
-                                  : 'bg-slate-800/40 border-slate-700'
-                              }`}
-                              style={{ backfaceVisibility: 'hidden' }}
-                            >
-                              <div className="flex items-center gap-3 ml-1 z-0 w-full overflow-hidden">
-                                <span className="font-black text-base text-yellow-400 tracking-tight shrink-0">
-                                  ৳ {pkg.price}/-
-                                </span>
-                                <div className="h-4 w-[1px] bg-slate-700 shrink-0 mx-1" />
-                                <span className="text-[12px] text-white font-bold shrink-0">
-                                  {pkg.duration || pkg.name}
-                                </span>
-                                {(pkg.freeDays > 0 || pkg.freeInfo) && (
-                                  <div className="flex items-center gap-2">
-                                     <div className="h-4 w-[1px] bg-slate-700 shrink-0 mx-1" />
-                                     <span className="text-[10px] text-emerald-400 font-bold uppercase tracking-tight truncate">
-                                       +{pkg.freeDays || pkg.freeInfo} Free
-                                     </span>
-                                  </div>
-                                )}
-                              </div>
-
-                              {/* Radio Button & Off Tag */}
-                              <div className="flex items-center gap-2 mr-1 shrink-0 z-10 scale-90">
-                                {pkg.offTag && (
-                                  <span className="bg-red-500 text-[8px] font-black px-1.5 py-0.5 rounded-full text-white uppercase tracking-tighter">
-                                    {pkg.offTag}
-                                  </span>
-                                )}
-                                {pkg.bestValue && (
-                                  <span className="bg-amber-500 text-[8px] font-black px-1.5 py-0.5 rounded-full text-white uppercase tracking-tighter">
-                                    SAVE
-                                  </span>
-                                )}
-                                <div className={`w-5 h-5 rounded-full border-[2px] items-center justify-center flex transition-all ${
-                                  selectedPackage === pkg.id ? 'border-blue-500 bg-transparent' : 'border-slate-600'
-                                }`}>
-                                  {selectedPackage === pkg.id && <div className="w-2.5 h-2.5 bg-blue-500 rounded-full" />}
-                                </div>
-                              </div>
-                            </button>
-                          ))}
-                      </div>
-
-                      {/* Upgrade Button */}
-                      <button
-                        onClick={() => setIpStep(2)}
-                        className="w-full py-3 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-500 text-white font-black text-sm shadow-lg shadow-blue-500/20 mb-4 tracking-wide"
-                      >
-                        GET IP NOW
-                      </button>
-
-                      <div className="flex w-full items-center justify-between px-4 pb-2">
-                        <button className="text-[12px] font-medium text-blue-500 hover:text-blue-400 underline underline-offset-4 transition-colors">Terms of Conditions</button>
-                        <button className="text-[12px] font-medium text-blue-500 hover:text-blue-400 underline underline-offset-4 transition-colors">Privacy Policy</button>
-                      </div>
-                    </div>
-                  )}
-
-                  {ipStep === 2 && (
-                    <div 
-                      key="step2"
-                      className="w-full flex flex-col items-center" animate-fade-in-up
-                    >
-                      <h3 className="text-white font-black text-2xl mb-2 text-center mt-4 tracking-tight">Select Country</h3>
-                      <p className="text-slate-400 text-sm mb-6 text-center max-w-[240px]">Choose the server location for your IP</p>
-                      
-                      {/* Country Custom Dropdown */}
-                      <div className="w-full mb-6 relative">
-                        <label className="text-slate-500 text-[10px] font-bold uppercase tracking-widest block ml-1 mb-2 text-center">Choose Server Location</label>
-                        <div className="relative">
-                          <button
-                            onClick={() => setIsCountryDropdownOpen(!isCountryDropdownOpen)}
-                            className="w-full bg-[#161F36] border-2 border-slate-700/50 rounded-2xl py-4 px-5 text-white flex items-center justify-between transform-gpu shadow-inner"
-                            style={{ backfaceVisibility: 'hidden' }}
-                          >
-                            <div className="flex items-center gap-3">
-                                {selectedCountry ? (
-                                  <div className="flex items-center gap-3">
-                                    <div className="w-8 h-6 rounded-md overflow-hidden border border-slate-700/50 shadow-sm flex-shrink-0">
-                                      <img 
-                                        src={`https://flagcdn.com/w80/${countries.find(c => c.id === selectedCountry)?.iso}.png`} 
-                                        alt={countries.find(c => c.id === selectedCountry)?.name}
-                                        className="w-full h-full object-cover"
-                                      />
-                                    </div>
-                                    <span className="font-bold text-sm tracking-wide">{countries.find(c => c.id === selectedCountry)?.name}</span>
-                                  </div>
-                                ) : (
-                                  <span className="text-slate-500 font-bold text-sm">Select Server Country...</span>
-                                )}
-                            </div>
-                            {isCountryDropdownOpen ? <ChevronUp className="w-5 h-5 text-blue-400" /> : <ChevronDown className="w-5 h-5 text-slate-500" />}
-                          </button>
-
-                          {isCountryDropdownOpen && (
-                              <div
-                                className="absolute top-full left-0 right-0 z-50 mt-1 bg-[#1A2542] border-2 border-slate-700 rounded-2xl shadow-[0_10px_40px_rgba(0,0,0,0.5)] overflow-hidden py-2"
-                              >
-                                <div className="max-h-[240px] overflow-y-auto custom-scrollbar">
-                                  {countries.map((country) => (
-                                    <button
-                                      key={country.id}
-                                      onClick={() => {
-                                        setSelectedCountry(country.id);
-                                        setIsCountryDropdownOpen(false);
-                                      }}
-                                      className={`w-full px-5 py-3 flex items-center gap-4 transition-colors hover:bg-white/5 ${
-                                        selectedCountry === country.id ? 'bg-blue-600/20 text-blue-400' : 'text-slate-300'
-                                      }`}
-                                    >
-                                      <div className="w-7 h-5 rounded-sm overflow-hidden border border-slate-600/50 shadow-sm flex-shrink-0">
-                                        <img 
-                                          src={`https://flagcdn.com/w40/${country.iso}.png`} 
-                                          alt={country.name}
-                                          className="w-full h-full object-cover"
-                                        />
-                                      </div>
-                                      <span className="font-bold text-sm">{country.name}</span>
-                                      {selectedCountry === country.id && <Check className="w-4 h-4 ml-auto text-blue-400" />}
-                                    </button>
-                                  ))}
-                                </div>
-                              </div>
-                            )}
-                          
-                        </div>
-                      </div>
-
-                      <button
-                        disabled={!selectedCountry}
-                        onClick={() => setIpStep(3)}
-                        className={`w-full py-4 rounded-full font-bold text-[16px] shadow-lg transition-all ${
-                          selectedCountry
-                            ? 'bg-gradient-to-r from-indigo-500 to-cyan-400 text-white shadow-blue-500/20'
-                            : 'bg-slate-800 text-slate-500 cursor-not-allowed'
-                        }`}
-                      >
-                        Continue
-                      </button>
-                    </div>
-                  )}
-
-                  {ipStep === 3 && (
-                    <div 
-                      key="step3"
-                      className="w-full flex flex-col items-center" animate-fade-in-up
-                    >
-                      <h3 className="text-white font-black text-2xl mb-2 text-center mt-4 tracking-tight">Payment Method</h3>
-                      <p className="text-slate-400 text-sm mb-8 text-center max-w-[240px]">Choose how you want to pay</p>
-
-                      <div className="grid grid-cols-2 gap-4 mb-8 w-full">
-                        {paymentMethods.map((method) => (
-                          <button
-                            key={method.id}
-                            disabled={method.disabled}
-                            onClick={() => setPaymentMethod(method.id)}
-                            className={`flex flex-col items-center justify-center p-6 rounded-[1.5rem] border-2 transition-all relative ${
-                              method.disabled ? 'opacity-50 grayscale cursor-not-allowed' : ''
-                            } ${
-                              paymentMethod === method.id 
-                                ? 'bg-blue-600/10 border-blue-500 shadow-lg shadow-blue-500/10' 
-                                : 'bg-[#161F36] border-slate-700/50 hover:bg-[#1A2542] hover:border-slate-600'
-                            }`}
-                          >
-                            <div className={`w-14 h-14 rounded-2xl ${method.color} mb-3 flex items-center justify-center font-black ${method.textColor} text-[10px] shadow-sm bg-white overflow-hidden p-1.5`}>
-                              {method.logo ? (
-                                <img src={method.logo} alt={method.name} className="w-full h-full object-contain" />
-                              ) : (
-                                method.name.substring(0,2).toUpperCase()
-                              )}
-                            </div>
-                            <span className="text-white font-bold text-sm tracking-wide">{method.name}</span>
-                            {method.disabled && (
-                              <span className="absolute top-3 right-3 bg-slate-800 border border-slate-700 text-[8px] font-black px-1.5 py-0.5 rounded uppercase tracking-tighter text-slate-400 drop-shadow-sm">N/A</span>
-                            )}
-                          </button>
-                        ))}
-                      </div>
-
-                      <button
-                        disabled={!paymentMethod}
-                        onClick={() => setIpStep(4)}
-                        className={`w-full py-4 rounded-full font-bold text-[16px] transition-all ${
-                          paymentMethod ? 'bg-gradient-to-r from-indigo-500 to-cyan-400 text-white shadow-lg shadow-blue-500/20' : 'bg-slate-800 text-slate-500 cursor-not-allowed'
-                        }`}
-                      >
-                        Proceed to Pay
-                      </button>
-                    </div>
-                  )}
-
-                  {ipStep === 4 && (
-                    <div 
-                      key="step4"
-                      className="w-full flex flex-col items-center" animate-fade-in-up
-                    >
-                      <h2 className="text-white font-black text-2xl mb-2 text-center mt-4 tracking-tight uppercase tracking-widest">{paymentMethod} Payment</h2>
-                      <p className="text-slate-400 text-sm mb-8 text-center max-w-[320px]">
-                        Send <span className="text-white font-bold select-all whitespace-nowrap">৳ {
-                          globalSettings.premiumIpPackages.find(p => p.id === selectedPackage)?.price || globalSettings.premiumIpPrice
-                        }/-</span> to the number below and submit the transaction ID.
-                      </p>
-
-                      <div className="w-full bg-[#161F36]/50 border-2 border-slate-700/50 rounded-[2rem] p-8 flex flex-col items-center justify-center mb-8 shadow-inner group transition-all hover:border-blue-500/30">
-                        <p className="text-slate-500 text-[10px] font-bold uppercase tracking-widest mb-2 opacity-60">Our {paymentMethod} Number</p>
-                        <p className="text-white text-3xl font-black tracking-tight select-all whitespace-nowrap">
-                          {paymentMethod === 'bkash' ? globalSettings.bkashNumber : 
-                           paymentMethod === 'nagad' ? globalSettings.nagadNumber : 
-                           globalSettings.rocketNumber}
-                        </p>
-                        <p className="text-blue-400 text-[10px] font-bold mt-2 tracking-widest uppercase opacity-80">(Personal)</p>
-                      </div>
-
-                      <div className="space-y-4 mb-8 w-full">
-                        <div>
-                          <label className="text-slate-400 text-[10px] font-bold uppercase tracking-widest mb-2 block ml-2">Transaction ID</label>
-                          <input 
-                            type="text"
-                            placeholder="Enter Tran-ID here"
-                            value={transactionId}
-                            onChange={(e) => setTransactionId(e.target.value)}
-                            className="w-full bg-[#161F36] border-2 border-slate-700/50 focus:border-blue-500 rounded-2xl p-4 text-white font-bold placeholder:text-slate-600 transition-all outline-none tracking-widest"
-                          />
-                        </div>
-                      </div>
-
-                      <button
-                        disabled={!transactionId || ipSubmitting}
-                        onClick={async () => {
-                          if (!transactionId || ipSubmitting) return;
-                          setIpSubmitting(true);
-                          try {
-                            const token = localStorage.getItem('token');
-                            const currentPkg = globalSettings.premiumIpPackages.find(p => p.id === selectedPackage) || {
-                              id: selectedPackage,
-                              duration: globalSettings.premiumIpDuration,
-                              price: globalSettings.premiumIpPrice
-                            };
-                            const res = await fetch(`${API_BASE}/earning/premium-order`, {
-                              method: 'POST',
-                              headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-                              body: JSON.stringify({
-                                packageId: currentPkg.id,
-                                packageName: `${currentPkg.duration} Premium IP`,
-                                amount: currentPkg.price,
-                                country: selectedCountry,
-                                division: '', district: '', thana: '', village: '', postalCode: '',
-                                paymentMethod,
-                                transactionId,
-                              }),
-                            });
-                            if (res.ok) {
-                              setIpStep(5);
-                            } else {
-                              const data = await res.json();
-                              alert(data.message || 'Submission failed. Try again.');
-                            }
-                          } catch (e) {
-                            alert('Network error. Please try again.');
-                          } finally {
-                            setIpSubmitting(false);
-                          }
-                        }}
-                        className={`w-full py-4 rounded-full font-bold text-[16px] transition-all ${
-                          transactionId && !ipSubmitting ? 'bg-gradient-to-r from-emerald-500 to-teal-400 text-white shadow-lg shadow-emerald-500/20' : 'bg-slate-800 text-slate-500 cursor-not-allowed'
-                        }`}
-                      >
-                        {ipSubmitting ? 'Submitting...' : 'Submit Transaction'}
-                      </button>
-                    </div>
-                  )}
-
-                  {ipStep === 5 && (
-                    <div 
-                      key="step5"
-                      className="w-full flex flex-col items-center text-center py-8 mt-12"
-                    >
-                      <div className="w-24 h-24 bg-emerald-500/20 rounded-full flex items-center justify-center mb-8 shadow-[0_0_40px_rgba(16,185,129,0.3)]">
-                        <Check className="w-12 h-12 text-emerald-400" strokeWidth={3} />
-                      </div>
-                      <h3 className="text-white font-black text-3xl mb-4 tracking-tight">Success!</h3>
-                      <p className="text-slate-400 text-sm font-medium leading-relaxed max-w-[280px] mb-12">
-                        Your payment is under review. Please wait <b>1 hour</b>. Our admin will provide your IP soon.
-                      </p>
-                      
-                      <button
-                        onClick={() => goBackWithAd(() => setShowQuizView(false))}
-                        className="flex-1 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 font-bold py-4 rounded-2xl border border-slate-200 dark:border-slate-700 transform-gpu"
-                      >
-                        CLOSE
-                      </button>
-                      <button
-                        onClick={startNextQuizRound}
-                        className="flex-1 bg-blue-600 text-white font-bold py-4 rounded-2xl shadow-lg shadow-blue-500/30 transform-gpu"
-                      >
-                        RETRY
-                      </button>
-                      <button
-                        onClick={() => {
-                          setShowPremiumIPView(false);
-                          setIpStep(1);
-                        }}
-                        className="px-12 py-4 rounded-full bg-[#161F36] text-white font-bold text-[16px] border border-slate-700 hover:bg-[#1A2542] transition-colors shadow-xl"
-                      >
-                        Done
-                      </button>
-                    </div>
-                  )}
-                
-              </div>
-            </div>
-          </div>
-        )}
-      
-
-      {/* Article Reading View Overlay */}
-      {showArticleView && (
-          <div
-            className="fixed inset-0 animate-fade-in z-[110] bg-slate-50 dark:bg-slate-900 overflow-y-auto"
-          >
-            {/* Header */}
-            <div className="sticky top-0 z-10 bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl border-b border-slate-200 dark:border-slate-800 px-4 py-4 sm:px-6 flex items-center justify-between shadow-sm">
-              <h2 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white truncate pr-4">গফুর মিয়ার স্মার্ট মুরগি ২.০</h2>
-              <button
-                onClick={() => goBackWithAd(() => setShowArticleView(false))}
-                className="bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-300 w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 transform-gpu"
-              >
-                <ArrowLeft className="w-5 h-5" />
-              </button>
-            </div>
-
-            {/* Reading Content */}
-            <div className="max-w-3xl mx-auto px-4 sm:px-6 py-8 pb-32">
-              {articleData.slice(0, articleStep).map((section, index) => (
-                <div 
-                  key={index}
-                >
-                  <div className="bg-white dark:bg-slate-800 rounded-3xl p-6 sm:p-8 animate-fade-in-up shadow-sm border border-slate-100 dark:border-slate-700 mb-8 mt-2 relative overflow-hidden">
-                    <div className="absolute top-0 left-0 w-2 h-full bg-brand-500"></div>
-                    <h3 className="text-2xl sm:text-3xl font-black text-slate-800 dark:text-slate-100 mb-6 leading-tight">{section.title}</h3>
-                    <div className="space-y-4">
-                      {section.content.split('\n').map((para, i) => (
-                        <p key={i} className="text-lg sm:text-xl text-slate-700 dark:text-slate-300 leading-relaxed font-medium">
-                          {para}
-                        </p>
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* Banner Ad After Each Section */}
-                  <div className="w-full mb-10 flex justify-center min-h-[280px]">
-                    <BigAdBanner />
-                  </div>
-                </div>
-              ))}
-
-              {/* Next/Finish Button */}
-              <div className="flex justify-center mt-12 mb-10">
-                {articleStep < articleData.length ? (
-                  <button
-                    onClick={() => {
-                       setArticleStep(prev => prev + 1);
-                       window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
-                    }}
-                    className="bg-brand-600 hover:bg-brand-500 text-white font-black text-lg py-4 px-10 rounded-full shadow-xl shadow-brand-500/30 transition-all flex items-center gap-2"
-                  >
-                    READ NEXT PART <BookOpen className="w-5 h-5 ml-2" />
-                  </button>
-                ) : (
-                  <button
-                    onClick={() => goBackWithAd(() => setShowArticleView(false))}
-                    className="bg-green-600 text-white font-black text-lg py-4 px-10 rounded-full shadow-xl shadow-green-500/30 flex items-center gap-2 transform-gpu"
-                  >
-                    FINISH READING <Medal className="w-5 h-5 ml-2" />
-                  </button>
-                )}
-              </div>
-            </div>
-          </div>
-        )}
-      
-
-      {/* View Ads Pre-Ad View */}
-      {showVideoView && !showAdOverlay && (
-          <div
-            className="fixed inset-0 animate-fade-in z-[90] bg-slate-900/95 backdrop-blur-xl flex items-center justify-center p-4"
-          >
-            <div className="bg-white dark:bg-slate-800 w-full max-w-lg rounded-3xl shadow-2xl overflow-hidden border border-slate-200 dark:border-slate-700 max-h-[90vh] flex flex-col">
-               <div className="bg-slate-50 dark:bg-slate-900 px-8 py-6 flex justify-between items-center border-b border-slate-200 dark:border-slate-700 shrink-0">
-                  <h3 className="text-xl font-bold text-slate-800 dark:text-white">{videoType === 'video' ? 'Videos' : 'View Ads'}</h3>
-                  <button onClick={() => goBackWithAd(() => setShowVideoView(false))} className="text-slate-400 hover:text-slate-600 dark:hover:text-white transition-colors">
-                     <ArrowLeft className="w-6 h-6 hover:-translate-x-1 transition-transform" />
-                  </button>
-               </div>
-               <div className="p-6 sm:p-8 overflow-y-auto space-y-4">
-                  <div className="text-center space-y-2 mb-6">
-                     <p className="text-slate-500 dark:text-slate-400 font-medium">
-                        {videoType === 'video' 
-                          ? 'Watch 5 videos daily to earn 125 Coins!' 
-                          : 'Watch 5 video ads daily to earn 50 Coins!'}
-                     </p>
-                     <div className="flex items-center justify-center gap-2">
-                        {[0, 1, 2, 3, 4].map(i => {
-                          const currentStatus = videoType === 'video' ? videoStatus : viewAdsStatus;
-                          return <div key={i} className={`w-3 h-3 rounded-full ${currentStatus.count > i ? (videoType === 'video' ? 'bg-purple-500' : 'bg-sky-500') : 'bg-slate-300 dark:bg-slate-700'}`}></div>
-                        })}
-                     </div>
-                  </div>
-
-                  <div className="space-y-4">
-                     {(videoType === 'video' ? [
-                       { id: 1, type: 'Admob Video Ads', pts: 25, logo: 'https://img.icons8.com/color/96/google-ads.png' },
-                       { id: 2, type: 'Startapp Video Ads', pts: 25, logo: 'https://img.icons8.com/fluency/96/play-button-circled.png' },
-                       { id: 3, type: 'Unity Video Ads', pts: 25, logo: 'https://img.icons8.com/ios-filled/100/unity.png' },
-                       { id: 4, type: 'Facebook Video Ads', pts: 25, logo: 'https://img.icons8.com/fluency/96/facebook-new.png' },
-                       { id: 5, type: 'Admob Interstitial', pts: 25, logo: 'https://img.icons8.com/color/96/google-ads.png' }
-                     ] : [
-                       { id: 1, type: 'Sponsored Ad 1', pts: 10, logo: 'https://img.icons8.com/fluency/96/ad-blocker.png' },
-                       { id: 2, type: 'Sponsored Ad 2', pts: 10, logo: 'https://img.icons8.com/color/96/marketing.png' },
-                       { id: 3, type: 'Partner Ad 1', pts: 10, logo: 'https://img.icons8.com/color/96/popular-topic.png' },
-                       { id: 4, type: 'Partner Ad 2', pts: 10, logo: 'https://img.icons8.com/fluency/96/campaign.png' },
-                       { id: 5, type: 'Premium Ad', pts: 10, logo: 'https://img.icons8.com/color/96/best-seller.png' }
-                     ]).map((adInfo) => {
-                        const currentStatus = videoType === 'video' ? videoStatus : viewAdsStatus;
-                        const isCompleted = currentStatus.count >= adInfo.id;
-                        const isLocked = !isCompleted && currentStatus.count + 1 !== adInfo.id;
-
-                        return (
-                          <button
-                            key={adInfo.id}
-                            onClick={() => !isLocked && !isCompleted && startAd(videoType)}
-                            disabled={isLocked || isCompleted}
-                            className={`flex items-center justify-between w-full p-4 border rounded-2xl group transform-gpu ${
-                              isCompleted ? 'bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700 opacity-60' :
-                              isLocked ? 'bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700 opacity-40 cursor-not-allowed' :
-                              'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 shadow-sm cursor-pointer'
-                            }`}
-                          >
-                            <div className="flex items-center gap-4 text-left">
-                               <img src={adInfo.logo} alt={adInfo.type} className="w-12 h-12 rounded-xl object-contain bg-white p-1 shadow-sm shrink-0" />
-                               <div>
-                                  <h4 className="font-bold text-slate-800 dark:text-slate-200">{adInfo.type}</h4>
-                                  <p className="text-xs text-slate-500 dark:text-slate-400">Watch the video and earn {adInfo.pts} Coins</p>
-                               </div>
-                            </div>
-                            <div className={`px-4 py-2 rounded-full font-bold text-sm shrink-0 ${
-                              isCompleted ? 'bg-slate-200 dark:bg-slate-700 text-slate-500' :
-                              'bg-emerald-600 text-white shadow-sm shadow-emerald-600/20'
-                            }`}>
-                               +{adInfo.pts}
-                            </div>
-                          </button>
-                        );
-                     })}
-                  </div>
-               </div>
-            </div>
-          </div>
-        )}
-      
-
-      {/* Games View */}
       {showGamesView && (
-          <div
-            className="fixed inset-0 animate-fade-in z-[90] bg-slate-900/95 backdrop-blur-xl flex items-center justify-center p-4"
-          >
-            <div className="bg-white dark:bg-slate-800 w-full max-w-lg rounded-3xl shadow-2xl overflow-hidden border border-slate-200 dark:border-slate-700 max-h-[90vh] flex flex-col">
-              <div className="bg-slate-50 dark:bg-slate-900 px-8 py-6 flex justify-between items-center border-b border-slate-200 dark:border-slate-700 shrink-0">
-                <h3 className="text-xl font-bold text-slate-800 dark:text-white">Games</h3>
-                <button onClick={() => goBackWithAd(() => setShowGamesView(false))} className="text-slate-400 hover:text-slate-600 dark:hover:text-white transition-colors">
-                  <ArrowLeft className="w-6 h-6 hover:-translate-x-1 transition-transform" />
-                </button>
-              </div>
-              <div className="p-6 sm:p-8 overflow-y-auto space-y-4">
-                <p className="text-center text-slate-500 dark:text-slate-400 font-medium mb-4">Play games and earn bonus Coins!</p>
-                {[
-                  { name: 'Puzzle Quest', desc: 'Solve puzzles to earn rewards', icon: '🧩', color: 'from-blue-500 to-indigo-600', pts: '5-50' },
-                  { name: 'Color Match', desc: 'Match colours and win big', icon: '🎨', color: 'from-pink-500 to-rose-600', pts: '10-30' },
-                  { name: 'Word Master', desc: 'Find hidden words for coins', icon: '📝', color: 'from-green-500 to-emerald-600', pts: '5-25' },
-                ].map((game, i) => (
-                  <button
-                    key={i}
-                    onClick={() => alert('Coming soon! This game will be available in a future update.')}
-                    className="flex items-center justify-between w-full p-5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl shadow-sm hover:shadow-lg transition-all group"
-                  >
-                    <div className="flex items-center gap-4 text-left">
-                      <div className={`w-14 h-14 bg-gradient-to-br ${game.color} flex items-center justify-center rounded-2xl text-3xl shadow-lg group-hover:scale-110 transition-transform shrink-0`}>
-                        {game.icon}
-                      </div>
-                      <div>
-                        <h4 className="font-bold text-slate-800 dark:text-slate-100 text-lg">{game.name}</h4>
-                        <p className="text-xs text-slate-500 dark:text-slate-400">{game.desc}</p>
-                      </div>
-                    </div>
-                    <div className="px-3 py-1.5 bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 rounded-full text-xs font-bold shrink-0">
-                      {game.pts} Coins
-                    </div>
-                  </button>
-                ))}
-                <div className="text-center pt-4">
-                  <span className="text-xs text-slate-400 dark:text-slate-500 font-medium">More games coming soon! 🎮</span>
-                </div>
-              </div>
+          <div className="fixed inset-0 z-[9999] bg-slate-50 dark:bg-slate-950 flex flex-col">
+            <div className="bg-slate-50 dark:bg-slate-950 pt-safe px-6 py-5 flex justify-between items-center border-b border-slate-200 dark:border-slate-800 shrink-0">
+              <h3 className="text-xl font-bold text-slate-800 dark:text-white">Games</h3>
+              <button onClick={() => goBackWithAd(() => setShowGamesView(false))} className="p-2 text-slate-400">
+                <ArrowLeft className="w-6 h-6" />
+              </button>
             </div>
-          </div>
-        )}
-      
-
-      {/* Fortune Wheel View */}
-      {showWheelView && (
-          <div
-            className="fixed inset-0 animate-fade-in z-[90] bg-slate-900/95 backdrop-blur-xl flex items-center justify-center p-4"
-          >
-            <div className="bg-white dark:bg-slate-800 w-full max-w-md rounded-3xl shadow-2xl overflow-hidden border border-slate-200 dark:border-slate-700 max-h-[95vh] flex flex-col">
-              <div className="bg-slate-50 dark:bg-slate-900 px-8 py-5 flex justify-between items-center border-b border-slate-200 dark:border-slate-700 shrink-0">
-                <h3 className="text-xl font-bold text-slate-800 dark:text-white">Fortune Wheel</h3>
-                <button onClick={() => goBackWithAd(() => setShowWheelView(false))} className="text-slate-400 hover:text-slate-600 dark:hover:text-white transition-colors">
-                  <ArrowLeft className="w-6 h-6 hover:-translate-x-1 transition-transform" />
-                </button>
-              </div>
-              <div className="p-6 overflow-y-auto flex flex-col items-center space-y-6">
-                <div className="text-center space-y-1">
-                  <p className="text-slate-500 dark:text-slate-400 font-medium text-sm">Spin the wheel to win Coins!</p>
-                  <div className="flex items-center justify-center gap-2">
-                    {Array.from({ length: 10 }).map((_, i) => (
-                      <div key={i} className={`w-2.5 h-2.5 rounded-full ${wheelStatus.count > i ? 'bg-teal-500' : 'bg-slate-300 dark:bg-slate-700'}`}></div>
-                    ))}
-                  </div>
-                  <p className="text-xs text-slate-400">{wheelStatus.count}/10 spins used today</p>
-                </div>
-
-                {/* Wheel Container */}
-                <div className="relative w-80 h-80 sm:w-[400px] sm:h-[400px] aspect-square">
-                  {/* Outer Ring Decoration */}
-                  <div className="absolute inset-[-10px] rounded-full border-[10px] border-amber-500/20 shadow-2xl"></div>
-                  
-                  {/* Pointer */}
-                  <div className="absolute -top-6 left-1/2 -translate-x-1/2 z-20 drop-shadow-2xl">
-                    <div className="w-0 h-0 border-l-[20px] border-l-transparent border-r-[20px] border-r-transparent border-t-[40px] border-t-rose-600"></div>
-                  </div>
-
-                  <div
-                    onAnimationComplete={() => {
-                      if (isSpinning && spinReward) {
-                        setIsSpinning(false);
-                        const reward = spinReward.coins;
-                        (async () => {
-                          try {
-                            const token = localStorage.getItem('token');
-                            const response = await fetch(`${API_BASE}/api/earning/spin-claim`, {
-                              method: 'POST',
-                              headers: {
-                                'Content-Type': 'application/json',
-                                Authorization: `Bearer ${token}`,
-                              },
-                              body: JSON.stringify({ coins: reward }),
-                            });
-                            const data = await response.json();
-                            if (response.ok) {
-                              setBalance(data.balance);
-                              if (data.coins !== undefined) setCoins(data.coins);
-                              else if (data.points !== undefined) setCoins(data.points);
-                              if (data.lifetimeCoins !== undefined) setLifetimeCoins(data.lifetimeCoins);
-                              else if (data.lifetimePoints !== undefined) setLifetimeCoins(data.lifetimePoints);
-                              setWheelStatus({ lastSpinDate: data.lastSpinDate, count: data.count });
-                              showToast(`🎉 Congratulations! You won ${reward} Coins!`, "success");
-                            } else {
-                              showToast(data.message || 'Failed to claim spin.', "error");
-                            }
-                          } catch (err) {
-                            showToast('Network error.', "error");
-                          }
-                        })();
-                      }
-                    }}
-                    className="w-full h-full rounded-full border-[12px] border-amber-400 dark:border-amber-500 shadow-[0_0_50px_rgba(245,158,11,0.3)] overflow-hidden relative"
-                    style={{ background: `conic-gradient(${(globalSettings.fortuneWheelConfig?.coins || [10, 20, 30, 40, 50, 60, 70, 80, 90, 100]).map((_, i, arr) => {
-                        const colors = ['#ef4444', '#f97316', '#eab308', '#22c55e', '#06b6d4', '#3b82f6', '#8b5cf6', '#ec4899', '#f43f5e', '#14b8a6'];
-                        const size = 360 / arr.length;
-                        return `${colors[i % colors.length]} ${i * size}deg ${(i + 1) * size}deg`;
-                      }).join(', ')})` }}
-                  >
-                    {(globalSettings.fortuneWheelConfig?.coins || [10, 20, 30, 40, 50, 60, 70, 80, 90, 100]).map((pts, i, arr) => {
-                      const segmentSize = 360 / arr.length;
-                      const rotation = i * segmentSize + (segmentSize / 2);
-                      return (
-                        <div
-                          key={i}
-                          className="absolute font-black text-white text-base sm:text-lg drop-shadow-[0_2px_2px_rgba(0,0,0,0.5)]"
-                          style={{
-                            top: '50%', left: '50%',
-                            transform: `rotate(${rotation}deg) translateY(-120px) rotate(-${rotation}deg)`,
-                            transformOrigin: '0 0',
-                            marginTop: '-8px', marginLeft: '-15px'
-                          }}
-                        >
-                          {pts}
-                        </div>
-                      );
-                    })}
-                    <div className="absolute inset-0 flex items-center justify-center">
-                      <div className="w-20 h-20 sm:w-24 sm:h-24 bg-white dark:bg-slate-900 rounded-full shadow-2xl flex items-center justify-center border-[6px] border-amber-400 z-10">
-                        <span className="font-black text-amber-500 text-sm sm:text-base tracking-tighter">SPIN</span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
+            <div className="flex-1 overflow-y-auto p-6 space-y-4">
+              <p className="text-center text-slate-500 dark:text-slate-400 font-medium mb-4">Play games and earn bonus Coins!</p>
+              {[
+                { name: 'Puzzle Quest', desc: 'Solve puzzles to earn rewards', icon: '🧩', color: 'from-blue-500 to-indigo-600', pts: '5-50' },
+                { name: 'Color Match', desc: 'Match colours and win big', icon: '🎨', color: 'from-pink-500 to-rose-600', pts: '10-30' },
+                { name: 'Word Master', desc: 'Find hidden words for coins', icon: '📝', color: 'from-green-500 to-emerald-600', pts: '5-25' },
+              ].map((game, i) => (
                 <button
-                  disabled={isSpinning || wheelStatus.count >= (globalSettings.fortuneWheelConfig?.dailyLimit || 10)}
-                  onClick={() => {
-                    const maxSpins = globalSettings.fortuneWheelConfig?.dailyLimit || 10;
-                    if (wheelStatus.count >= maxSpins) {
-                      showToast(`You have used all ${maxSpins} spins today. Come back tomorrow!`, 'info');
-                      return;
-                    }
-                    
-                    const startSpin = () => {
-                      const segments = globalSettings.fortuneWheelConfig?.coins || [10, 20, 30, 40, 50, 60, 70, 80, 90, 100];
-                      const randomIdx = Math.floor(Math.random() * segments.length);
-                      const segmentSize = 360 / segments.length;
-                      const segmentAngle = randomIdx * segmentSize + (segmentSize / 2);
-                      const landAngle = (360 - segmentAngle + 360) % 360;
-                      const totalRotation = 1800 + landAngle + (Math.random() * (segmentSize * 0.8) - (segmentSize * 0.4));
-                      setSpinReward({ coins: segments[randomIdx], totalRotation });
-                      setIsSpinning(true);
-                      window.lastSpinResult = segments[randomIdx]; // For ad-after-completion logic
-                    };
-
-                    // Click -> Ad -> Spin
-                    AdMobService.showInterstitial(() => {
-                      startSpin();
-                    });
-                  }}
-                  className={`w-full py-4 rounded-2xl font-black text-lg transition-all shadow-lg ${
-                    isSpinning ? 'bg-slate-300 dark:bg-slate-700 text-slate-500 cursor-wait' :
-                    wheelStatus.count >= (globalSettings.fortuneWheelConfig?.dailyLimit || 10) ? 'bg-slate-200 dark:bg-slate-700 text-slate-400 cursor-not-allowed' :
-                    'bg-gradient-to-r from-teal-500 to-emerald-500 text-white hover:from-teal-400 hover:to-emerald-400 shadow-teal-500/30'
-                  }`}
+                  key={i}
+                  onClick={() => alert('Coming soon! This game will be available in a future update.')}
+                  className="flex items-center justify-between w-full p-5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl shadow-sm hover:shadow-lg transition-all group"
                 >
-                  {isSpinning ? 'Spinning...' : wheelStatus.count >= (globalSettings.fortuneWheelConfig?.dailyLimit || 10) ? 'All Spins Used ✓' : `SPIN NOW (${(globalSettings.fortuneWheelConfig?.dailyLimit || 10) - wheelStatus.count} left)`}
+                  <div className="flex items-center gap-4 text-left">
+                    <div className={`w-14 h-14 bg-gradient-to-br ${game.color} flex items-center justify-center rounded-2xl text-3xl shadow-lg group-hover:scale-110 transition-transform shrink-0`}>
+                      {game.icon}
+                    </div>
+                    <div>
+                      <h4 className="font-bold text-slate-800 dark:text-slate-100 text-lg">{game.name}</h4>
+                      <p className="text-xs text-slate-500 dark:text-slate-400">{game.desc}</p>
+                    </div>
+                  </div>
+                  <div className="px-3 py-1.5 bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 rounded-full text-xs font-bold shrink-0">
+                    {game.pts} Coins
+                  </div>
                 </button>
-                <div className="mt-6 min-h-[280px] flex items-center justify-center">
-                  <BigAdBanner />
-                </div>
+              ))}
+              <div className="text-center pt-4">
+                <span className="text-xs text-slate-400 dark:text-slate-500 font-medium">More games coming soon! 🎮</span>
               </div>
             </div>
           </div>
         )}
       
+
 
       {/* Scratch Card View */}
-      {showScratchView && (
-          <div
-            className="fixed inset-0 animate-fade-in z-[90] bg-slate-900/95 backdrop-blur-xl flex items-center justify-center p-4"
-          >
-            <div className="bg-white dark:bg-slate-800 w-full max-w-lg rounded-3xl shadow-2xl overflow-hidden border border-slate-200 dark:border-slate-700 max-h-[95vh] flex flex-col">
-              <div className="bg-slate-50 dark:bg-slate-900 px-8 py-5 flex justify-between items-center border-b border-slate-200 dark:border-slate-700 shrink-0">
-                <h3 className="text-xl font-bold text-slate-800 dark:text-white">Scratch Cards</h3>
-                <button onClick={() => goBackWithAd(() => setShowScratchView(false))} className="text-slate-400 hover:text-slate-600 dark:hover:text-white transition-colors">
-                  <ArrowLeft className="w-6 h-6 hover:-translate-x-1 transition-transform" />
-                </button>
+            {showScratchView && (
+          <div className="fixed inset-0 z-[9999] bg-slate-50 dark:bg-slate-950 flex flex-col">
+            <div className="bg-slate-50 dark:bg-slate-950 pt-safe px-6 py-5 flex justify-between items-center border-b border-slate-200 dark:border-slate-800 shrink-0">
+              <h3 className="text-xl font-bold text-slate-800 dark:text-white">Scratch Cards</h3>
+              <button onClick={() => goBackWithAd(() => setShowScratchView(false))} className="p-2 text-slate-400">
+                <ArrowLeft className="w-6 h-6" />
+              </button>
+            </div>
+            <div className="flex-1 overflow-y-auto p-6 space-y-5">
+              <div className="text-center space-y-1 mb-2">
+                <p className="text-slate-500 dark:text-slate-400 font-medium text-sm">Scratch to reveal your reward! 20 Coins each.</p>
+                <div className="flex items-center justify-center gap-2">
+                  {Array.from({ length: 10 }).map((_, i) => (
+                    <div key={i} className={`w-2.5 h-2.5 rounded-full ${scratchStatus.count > i ? 'bg-green-500' : 'bg-slate-300 dark:bg-slate-700'}`}></div>
+                  ))}
+                </div>
+                <p className="text-xs text-slate-400">{scratchStatus.count}/10 scratched today</p>
               </div>
-              <div className="p-6 sm:p-8 overflow-y-auto space-y-5">
-                <div className="text-center space-y-1 mb-2">
-                  <p className="text-slate-500 dark:text-slate-400 font-medium text-sm">Scratch to reveal your reward! 20 Coins each.</p>
-                  <div className="flex items-center justify-center gap-2">
-                    {Array.from({ length: 10 }).map((_, i) => (
-                      <div key={i} className={`w-2.5 h-2.5 rounded-full ${scratchStatus.count > i ? 'bg-green-500' : 'bg-slate-300 dark:bg-slate-700'}`}></div>
-                    ))}
-                  </div>
-                  <p className="text-xs text-slate-400">{scratchStatus.count}/10 scratched today</p>
-                </div>
 
-                <div className="grid grid-cols-2 gap-4">
-                  {Array.from({ length: 10 }).map((_, i) => {
-                    const cardNum = i + 1;
-                      const isScratched = scratchStatus.count >= cardNum;
-                      const isNext = scratchStatus.count + 1 === cardNum;
-                      const isLocked = !isScratched && !isNext;
+              <div className="grid grid-cols-2 gap-4">
+                {Array.from({ length: 10 }).map((_, i) => {
+                  const cardNum = i + 1;
+                  const isScratched = scratchStatus.count >= cardNum;
+                  const isNext = scratchStatus.count + 1 === cardNum;
+                  const isLocked = !isScratched && !isNext;
 
-                      return (
-                        <button
-                          key={i}
-                          disabled={isLocked || isScratched || isLoading}
-                          onClick={() => {
-                            if (isLocked || isScratched) return;
-                            setActiveScratchCard({ index: i, cardNum, isRevealed: false });
-                          }}
-                          className={`relative flex flex-col items-center justify-center gap-2 p-5 rounded-2xl border-2 transition-all overflow-hidden min-h-[140px] ${
-                            isScratched
-                              ? 'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800'
-                              : isNext
-                              ? 'bg-gradient-to-br from-amber-50 to-yellow-50 dark:from-amber-900/20 dark:to-yellow-900/20 border-amber-300 dark:border-amber-700 shadow-md hover:shadow-xl cursor-pointer group'
-                              : 'bg-slate-100 dark:bg-slate-800/60 border-slate-200 dark:border-slate-700 opacity-50 cursor-not-allowed'
-                          }`}
-                        >
-                          {isScratched ? (
-                            <>
-                              <span className="text-4xl mb-2 grayscale opacity-50">🎁</span>
-                              <span className="font-bold text-slate-400 dark:text-slate-500 text-sm">Card {cardNum}</span>
-                              <span className="absolute bottom-2 text-[10px] text-green-500 font-bold uppercase tracking-wider bg-green-500/10 px-2 py-0.5 rounded-full">Claimed!</span>
-                            </>
-                          ) : isNext ? (
-                            <>
-                              {/* Scratch cover overlay */}
-                              <div className="absolute inset-0 bg-gradient-to-br from-amber-400 via-yellow-400 to-orange-400 flex flex-col items-center justify-center gap-2 group-hover:opacity-90 transition-opacity z-10">
-                                <div
-                                  className="text-4xl animate-spin-slow"
-                                >
-                                  🎁
-                                </div>
-                                <span className="font-black text-white text-sm drop-shadow">SCRATCH HERE!</span>
-                                <span className="text-[10px] text-white/80 font-bold">Card {cardNum}</span>
-                              </div>
-                              {/* Hidden text underneath */}
-                              <span className="text-3xl">🎁</span>
-                              <span className="font-bold text-amber-700 text-sm">Reward!</span>
-                            </>
-                          ) : (
-                            <>
-                              <div className="w-12 h-12 bg-slate-300 dark:bg-slate-700 rounded-xl flex items-center justify-center">
-                                <Gift className="w-6 h-6 text-slate-500" />
-                              </div>
-                              <span className="font-bold text-slate-400 text-sm">Card {cardNum}</span>
-                            </>
-                          )}
-                        </button>
-                      );
-                  })}
-                </div>
+                  return (
+                    <button
+                      key={i}
+                      disabled={isLocked || isScratched || isLoading}
+                      onClick={() => {
+                        if (isLocked || isScratched) return;
+                        setActiveScratchCard({ index: i, cardNum, isRevealed: false });
+                      }}
+                      className={`relative flex flex-col items-center justify-center gap-2 p-5 rounded-2xl border-2 transition-all overflow-hidden min-h-[140px] ${
+                        isScratched
+                          ? 'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800'
+                          : isNext
+                          ? 'bg-gradient-to-br from-amber-50 to-yellow-50 dark:from-amber-900/20 dark:to-yellow-900/20 border-amber-300 dark:border-amber-700 shadow-md hover:shadow-xl cursor-pointer group'
+                          : 'bg-slate-100 dark:bg-slate-800/60 border-slate-200 dark:border-slate-700 opacity-50 cursor-not-allowed'
+                      }`}
+                    >
+                      {isScratched ? (
+                        <>
+                          <span className="text-4xl mb-2 grayscale opacity-50">🎁</span>
+                          <span className="font-bold text-slate-400 dark:text-slate-500 text-sm">Card {cardNum}</span>
+                          <span className="absolute bottom-2 text-[10px] text-green-500 font-bold uppercase tracking-wider bg-green-500/10 px-2 py-0.5 rounded-full">Claimed!</span>
+                        </>
+                      ) : isNext ? (
+                        <>
+                          <div className="absolute inset-0 bg-gradient-to-br from-amber-400 via-yellow-400 to-orange-400 flex flex-col items-center justify-center gap-2 group-hover:opacity-90 transition-opacity z-10">
+                            <div className="text-4xl animate-float">🎁</div>
+                            <span className="font-black text-white text-sm drop-shadow">SCRATCH HERE!</span>
+                            <span className="text-[10px] text-white/80 font-bold">Card {cardNum}</span>
+                          </div>
+                          <span className="text-3xl">🎁</span>
+                          <span className="font-bold text-amber-700 text-sm">Reward!</span>
+                        </>
+                      ) : (
+                        <>
+                          <div className="w-12 h-12 bg-slate-300 dark:bg-slate-700 rounded-xl flex items-center justify-center">
+                            <Gift className="w-6 h-6 text-slate-500" />
+                          </div>
+                          <span className="font-bold text-slate-400 text-sm">Card {cardNum}</span>
+                        </>
+                      )}
+                    </button>
+                  );
+                })}
               </div>
             </div>
           </div>
@@ -2835,7 +1255,7 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
             className="fixed inset-0 animate-fade-in z-[100] bg-slate-100 flex flex-col"
           >
             {/* Header */}
-            <div className="bg-[#1a362d] text-white px-4 py-4 flex items-center gap-4 shadow-md shrink-0">
+            <div className="bg-[#1a362d] text-white pt-safe px-4 py-4 flex items-center gap-4 shadow-md shrink-0">
               <button
                 onClick={() => goBackWithAd(() => setActiveScratchCard(null))}
                 className="p-1 hover:bg-white/10 rounded-lg transition-colors"
@@ -2846,7 +1266,7 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
             </div>
 
             {/* Body */}
-            <div className="flex-1 overflow-y-auto px-4 py-8 flex items-center justify-center flex-col gap-6">
+            <div className="flex-1 overflow-y-auto px-4 py-8 flex flex-col items-center gap-6">
 
               {/* Scratch Area */}
               <button
@@ -2924,11 +1344,9 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
 
       {/* Quiz Selection Modal */}
       {showQuizSelection && (
-          <div
-            className="fixed inset-0 animate-fade-in z-[90] bg-slate-900/95 backdrop-blur-xl flex items-center justify-center p-4"
-          >
-            <div className="bg-white dark:bg-slate-800 w-full max-w-lg rounded-3xl shadow-2xl overflow-hidden border border-slate-200 dark:border-slate-700 max-h-[90vh] flex flex-col">
-              <div className="bg-slate-50 dark:bg-slate-900 px-8 py-6 flex justify-between items-center border-b border-slate-200 dark:border-slate-700 shrink-0">
+          <div className="fixed inset-0 animate-fade-in z-[9999] bg-slate-900/60 backdrop-blur-sm flex items-start justify-center cursor-pointer" onClick={() => setShowQuizSelection(false)}>
+            <div className="bg-white dark:bg-slate-800 w-full max-w-lg flex flex-col overflow-y-auto rounded-b-3xl shadow-2xl max-h-screen cursor-auto pb-6" onClick={e => e.stopPropagation()}>
+              <div className="bg-slate-50 dark:bg-slate-900 pt-safe px-8 py-6 flex justify-between items-center border-b border-slate-200 dark:border-slate-700 shrink-0">
                 <h3 className="text-xl font-bold text-slate-800 dark:text-white">Choose a Quiz</h3>
                 <button 
                   onClick={() => setShowQuizSelection(false)} 
@@ -2995,11 +1413,9 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
 
       {/* Daily Checkin Pre-Ad View */}
       {showCheckinView && !showAdOverlay && (
-          <div
-            className="fixed inset-0 animate-fade-in z-[90] bg-slate-900/95 backdrop-blur-xl flex items-center justify-center p-4"
-          >
-            <div className="bg-white dark:bg-slate-800 w-full max-w-lg rounded-3xl shadow-2xl overflow-hidden border border-slate-200 dark:border-slate-700">
-               <div className="bg-slate-50 dark:bg-slate-900 px-8 py-6 flex justify-between items-center border-b border-slate-200 dark:border-slate-700">
+          <div className="fixed inset-0 animate-fade-in z-[9999] bg-slate-900/60 backdrop-blur-sm flex items-start justify-center cursor-pointer" onClick={() => setShowCheckinView(false)}>
+            <div className="bg-white dark:bg-slate-800 w-full max-w-lg flex flex-col overflow-y-auto rounded-b-3xl shadow-2xl max-h-screen cursor-auto pb-6" onClick={e => e.stopPropagation()}>
+               <div className="bg-slate-50 dark:bg-slate-900 pt-safe px-8 py-6 flex justify-between items-center border-b border-slate-200 dark:border-slate-700 shrink-0">
                   <h3 className="text-xl font-bold text-slate-800 dark:text-white">Daily Checkin</h3>
                   <button onClick={() => goBackWithAd(() => setShowCheckinView(false))} className="text-slate-400 hover:text-slate-600 dark:hover:text-white transition-colors">
                      <ArrowLeft className="w-6 h-6 hover:-translate-x-1 transition-transform" />
@@ -3053,88 +1469,85 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
 
       {/* Ad Overlay Removed - Using Real AdMob */}
 
-      {/* Gen. Knowledge Quiz Modal */}
-      {showGkQuizView && gkQuizQuestions.length > 0 && (
-          <div
-            className="fixed inset-0 animate-fade-in z-[100] bg-slate-900/95 backdrop-blur-xl flex items-center justify-center p-4"
-          >
-            <div className="bg-white dark:bg-slate-800 w-full max-w-md rounded-3xl shadow-2xl overflow-hidden border border-slate-200 dark:border-slate-700 flex flex-col">
-              {/* Header */}
-              <div className="bg-gradient-to-r from-amber-500 to-orange-600 px-6 py-4 flex justify-between items-center">
-                <h3 className="text-xl font-bold text-white flex items-center gap-2">
-                  <Star className="w-6 h-6" /> Gen. Knowledge
-                </h3>
-                <div className="flex items-center gap-3">
-                  <div
-                    className="text-white font-bold bg-black/20 px-3 py-1 rounded-full text-sm"
-                  >
-                    {currentGkIndex + 1} / 10
-                  </div>
-                  <button onClick={() => goBackWithAd(() => setShowGkQuizView(false))} className="text-white/70 hover:text-white text-xl font-bold">✕</button>
+            {showGkQuizView && gkQuizQuestions.length > 0 && (
+          <div className="fixed inset-[auto_0_auto_0] top-0 z-[9999] bg-slate-50 dark:bg-slate-950 flex flex-col rounded-b-3xl shadow-2xl pb-6 max-h-[96vh] overflow-y-auto">
+            <div className="bg-gradient-to-r from-amber-500 to-orange-600 pt-safe px-6 py-4 flex justify-between items-center shadow-lg shrink-0">
+              <h3 className="text-xl font-bold text-white flex items-center gap-2">
+                <Star className="w-6 h-6" /> Gen. Knowledge
+              </h3>
+              <div className="flex items-center gap-3">
+                <div className="text-white font-bold bg-black/20 px-3 py-1 rounded-full text-sm">
+                  {currentGkIndex + 1} / 10
+                </div>
+                <button onClick={() => goBackWithAd(() => setShowGkQuizView(false))} className="text-white p-1">
+                  <ArrowLeft className="w-6 h-6" />
+                </button>
+              </div>
+            </div>
+
+            <div className="h-1.5 bg-amber-100 dark:bg-amber-900/30">
+              <div
+                className="h-full bg-amber-500 transition-all duration-500"
+                style={{ width: `${((currentGkIndex + 1) / 10) * 100}%` }}
+              />
+            </div>
+
+            <div className="flex-1 overflow-y-auto p-6 flex flex-col gap-6">
+              <p className="text-center text-slate-500 dark:text-slate-400 font-semibold text-lg">
+                Who is this athlete? 🏆
+              </p>
+
+              <div className="flex justify-center">
+                <div className="w-56 h-56 rounded-3xl overflow-hidden shadow-2xl border-4 border-white dark:border-slate-800 ring-8 ring-amber-500/10">
+                  <img
+                    src={gkQuizQuestions[currentGkIndex].image}
+                    alt="Athlete"
+                    className="w-full h-full object-cover object-top"
+                    onError={(e) => {
+                      e.target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(gkQuizQuestions[currentGkIndex].answer)}&size=300&background=f59e0b&color=fff&bold=true`;
+                    }}
+                  />
                 </div>
               </div>
 
-              {/* Progress Bar */}
-              <div className="h-1.5 bg-amber-100 dark:bg-amber-900/30">
-                <div
-                  className="h-full bg-amber-500 transition-all duration-500"
-                  style={{ width: `${((currentGkIndex + 1) / 10) * 100}%` }}
-                />
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {gkQuizQuestions[currentGkIndex].options.map((option, idx) => {
+                  const isCorrect = gkAnswered && option === gkQuizQuestions[currentGkIndex].answer;
+                  const isWrong = gkAnswered && gkSelected === option && option !== gkQuizQuestions[currentGkIndex].answer;
+
+                  let btnClass = "w-full px-6 py-4 rounded-2xl font-black text-base transition-all border-2 text-center ";
+                  if (!gkAnswered) {
+                    btnClass += "bg-white border-slate-200 hover:border-amber-400 text-slate-700 dark:bg-slate-800 dark:border-slate-700 dark:text-slate-200";
+                  } else if (isCorrect) {
+                    btnClass += "bg-emerald-500 border-emerald-400 text-white scale-[1.02] shadow-emerald-500/20 shadow-lg";
+                  } else if (isWrong) {
+                    btnClass += "bg-rose-500 border-rose-400 text-white";
+                  } else {
+                    btnClass += "bg-slate-100 border-transparent text-slate-400 dark:bg-slate-800 dark:border-slate-700 opacity-40";
+                  }
+
+                  return (
+                    <button
+                      key={idx}
+                      onClick={() => handleGkAnswer(option)}
+                      disabled={gkAnswered}
+                      className={btnClass}
+                    >
+                      {option}
+                    </button>
+                  );
+                })}
               </div>
 
-              <div className="p-6 flex flex-col gap-5">
-                <p className="text-center text-slate-500 dark:text-slate-400 font-semibold text-sm">
-                  Who is this athlete? 🏆
-                </p>
-
-                {/* Athlete Image */}
-                <div className="flex justify-center">
-                  <div className="w-44 h-44 rounded-2xl overflow-hidden shadow-xl border-4 border-white dark:border-slate-600 ring-4 ring-amber-200 dark:ring-amber-800">
-                    <img
-                      src={gkQuizQuestions[currentGkIndex].image}
-                      alt="Athlete"
-                      className="w-full h-full object-cover object-top"
-                      onError={(e) => {
-                        e.target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(gkQuizQuestions[currentGkIndex].answer)}&size=200&background=f59e0b&color=fff&bold=true`;
-                      }}
-                    />
-                  </div>
+              <div className="mt-auto pt-8">
+                <div className="bg-slate-100 dark:bg-slate-800 p-4 rounded-2xl text-center">
+                  <p className="text-slate-500 dark:text-slate-400 font-bold uppercase tracking-widest text-[10px] mb-1">Current Progress</p>
+                  <p className="text-xl font-black text-slate-900 dark:text-white">Score: {gkQuizScore} / {currentGkIndex} correct</p>
+                  <p className="text-xs text-slate-400 font-medium mt-1">Need 5+ correct answers to earn 40 Coins</p>
                 </div>
-
-                {/* Options */}
-                <div className="grid grid-cols-2 gap-3">
-                  {gkQuizQuestions[currentGkIndex].options.map((option, idx) => {
-                    const isCorrect = gkAnswered && option === gkQuizQuestions[currentGkIndex].answer;
-                    const isWrong = gkAnswered && gkSelected === option && option !== gkQuizQuestions[currentGkIndex].answer;
-
-                    let btnClass = "px-4 py-3 rounded-xl font-bold text-sm transition-all border-2 text-center ";
-                    if (!gkAnswered) {
-                      btnClass += "bg-slate-50 border-slate-200 hover:border-amber-400 hover:bg-amber-50 text-slate-700 dark:bg-slate-700/50 dark:border-slate-600 dark:hover:border-amber-500 dark:text-slate-200";
-                    } else if (isCorrect) {
-                      btnClass += "bg-green-100 border-green-500 text-green-800 dark:bg-green-900/50 dark:border-green-400 dark:text-green-100 scale-[1.03] shadow-sm";
-                    } else if (isWrong) {
-                      btnClass += "bg-red-100 border-red-400 text-red-700 dark:bg-red-900/40 dark:border-red-400 dark:text-red-200";
-                    } else {
-                      btnClass += "bg-slate-50 border-slate-200 text-slate-400 dark:bg-slate-800 dark:border-slate-700 opacity-60";
-                    }
-
-                    return (
-                      <button
-                        key={idx}
-                        onClick={() => handleGkAnswer(option)}
-                        disabled={gkAnswered}
-                        className={btnClass}
-                      >
-                        {option}
-                      </button>
-                    );
-                  })}
-                </div>
-
-                {/* Score footer */}
-                <div className="text-center text-xs text-slate-400 font-medium">
-                  Score: {gkQuizScore} / {currentGkIndex} correct &nbsp;•&nbsp; Need 5+ to earn 40 Coins
-                </div>
+              </div>
+              <div className="mt-8 flex justify-center">
+                <BigAdBanner />
               </div>
             </div>
           </div>
