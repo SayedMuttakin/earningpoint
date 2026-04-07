@@ -2453,13 +2453,6 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
         </div>
       </div>
 
-      {/* Section Intro Overlay */}
-      <SectionIntroOverlay
-        isOpen={showIntroScreen}
-        onClose={() => setShowIntroScreen(false)}
-        section={introSection}
-      />
-
       </main>
     </PullToRefresh>
     </>
