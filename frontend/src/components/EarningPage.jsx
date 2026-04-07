@@ -1256,15 +1256,14 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
 
     return (
       <div
-          className="fixed inset-0 animate-fade-in z-[200] overflow-hidden flex flex-col"
+          className="fixed inset-0 animate-fade-in z-[9998] overflow-hidden flex flex-col"
           style={{ background: 'linear-gradient(135deg, #0a0f1e 0%, #111827 100%)' }}
         >
           {/* Gradient overlay based on item color */}
           <div className={`absolute inset-0 bg-gradient-to-br ${bgClass} opacity-20`} />
           <FloatingDots />
 
-          {/* Header */}
-          <div className="relative z-50 flex items-center justify-between px-4 py-2 pt-safe">
+          <div className="relative z-50 flex items-center justify-between px-4 py-3">
             <button
               onClick={() => goBackWithAd(() => setShowIntroScreen(false))}
               className="w-9 h-9 rounded-full bg-white/10 flex items-center justify-center text-white hover:bg-white/20 transition-colors"
@@ -1490,23 +1489,24 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
   const progressPercent = levelInfo.isMax ? 100 : Math.min(100, Math.max(0, ((levelInfo.current - (levelInfo.prev || 0)) / (levelInfo.target - (levelInfo.prev || 0))) * 100));
 
   return (
-    <PullToRefresh onRefresh={handleRefresh} refreshing={refreshing}>
-      <main className="min-h-screen bg-slate-50 dark:bg-slate-950 transition-colors duration-500 pb-24 md:pb-8">
-      {/* Toast Notification */}
+    <>
+      {/* Toast Notification - Always on top */}
       {toast.visible && (
           <div
-            className={`fixed top-4 left-1/2 -translate-x-1/2 z-[999] px-6 py-3 rounded-full flex items-center gap-3 shadow-2xl backdrop-blur-md font-bold text-sm min-w-max max-w-[90vw] text-center ${
+            className={`fixed top-4 left-1/2 -translate-x-1/2 z-[9999] px-6 py-3 rounded-full flex items-center gap-3 shadow-2xl backdrop-blur-md font-bold text-sm min-w-max max-w-[90vw] text-center ${
               toast.type === 'error' ? 'bg-red-500/90 text-white border border-red-400' : 'bg-emerald-500/90 text-white border border-emerald-400'
             }`}
           >
             {toast.type === 'error' ? '✖' : '🎉'} {toast.message}
           </div>
         )}
-      
 
-      {/* Option Intro Screen — full screen overlay */}
+      {/* Option Intro Screen — OUTSIDE PullToRefresh so it covers Navbar */}
       {showIntroScreen && introItem && <OptionIntroScreen />}
-      
+
+    <PullToRefresh onRefresh={handleRefresh} refreshing={refreshing}>
+      <main className="min-h-screen bg-slate-50 dark:bg-slate-950 transition-colors duration-500 pb-24 md:pb-8">
+
 
       {/* ═══════ Multi-Ad Sub-View Overlay (5 ads per option) ═══════ */}
       {showMultiAdView && multiAdConfig && (() => {
@@ -3860,6 +3860,7 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
       
       </main>
     </PullToRefresh>
+    </>
   );
 };
 
