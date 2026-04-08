@@ -1814,16 +1814,16 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
 
       
 
-      {/* Daily Checkin Pre-Ad View */}
+      {/* Daily Checkin Full Screen View */}
       {showCheckinView && !showAdOverlay && (
-          <div className="fixed inset-[auto_0_auto_0] top-0 z-[9999] bg-white dark:bg-slate-800 flex flex-col rounded-b-3xl shadow-2xl pb-6 max-h-[96vh] overflow-y-auto">
-               <div className="bg-slate-50 dark:bg-slate-900 pt-safe px-8 py-6 flex justify-between items-center border-b border-slate-200 dark:border-slate-700 shrink-0">
+          <div className="fixed inset-0 z-[9999] bg-slate-50 dark:bg-slate-950 flex flex-col">
+               <div className="bg-slate-50 dark:bg-slate-950 pt-safe px-6 py-5 flex justify-between items-center border-b border-slate-200 dark:border-slate-800 shrink-0">
                   <h3 className="text-xl font-bold text-slate-800 dark:text-white">Daily Checkin</h3>
                   <button onClick={() => goBackWithAd(() => setShowCheckinView(false))} className="text-slate-400 hover:text-slate-600 dark:hover:text-white transition-colors">
                      <ArrowLeft className="w-6 h-6 hover:-translate-x-1 transition-transform" />
                   </button>
                </div>
-               <div className="p-8 space-y-8">
+               <div className="flex-1 overflow-y-auto p-8 space-y-8">
                   <div className="text-center space-y-2">
                      <p className="text-slate-500 dark:text-slate-400 font-medium">Watch 2 ads every 2 hours to earn Coins!</p>
                      <div className="flex items-center justify-center gap-2">
