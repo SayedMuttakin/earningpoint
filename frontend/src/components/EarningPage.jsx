@@ -2230,11 +2230,11 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
               </div>
               <div className="grid grid-cols-3 sm:grid-cols-5 gap-4 md:gap-6 justify-items-center">
                 {[
-                  { id: 'l1-article', name: 'Articles', icon: <Newspaper className="w-7 h-7" />, coins: 15, color: 'from-blue-400 to-indigo-500', action: () => setShowArticleView(true) },
-                  { id: 'l1-videos', name: 'Videos', icon: <Video className="w-7 h-7" />, coins: 25, color: 'from-purple-400 to-pink-500', action: () => { setVideoType('video'); setShowVideoView(true); }, count: videoStatus.count, maxCount: 5 },
+                  { id: 'l1-article', name: 'Articles', icon: <Newspaper className="w-7 h-7" />, coins: 15, color: 'from-blue-400 to-indigo-500', action: () => openMultiAdView({ key: 'articles', name: 'Articles', adType: 'native', coins: 15, logo: 'https://img.icons8.com/color/96/news.png', color: 'from-blue-400 to-indigo-500' }), count: getMultiAdCount('articles'), maxCount: 5 },
+                  { id: 'l1-videos', name: 'Videos', icon: <Video className="w-7 h-7" />, coins: 25, color: 'from-purple-400 to-pink-500', action: () => openMultiAdView({ key: 'videos', name: 'Videos', adType: 'rewarded', coins: 25, logo: 'https://img.icons8.com/color/96/youtube-play.png', color: 'from-purple-400 to-pink-500' }), count: getMultiAdCount('videos'), maxCount: 5 },
                   { id: 'l1-games', name: 'Games', icon: <Gamepad2 className="w-7 h-7" />, coins: 50, color: 'from-emerald-400 to-teal-500', action: () => setShowGamesView(true) },
                   { id: 'l1-wheel', name: 'Fortune Wheel', icon: <Aperture className="w-7 h-7" />, coins: null, color: 'from-amber-400 to-orange-500', action: () => setShowWheelView(true) },
-                  { id: 'l1-ads', name: 'View Ads', icon: <MonitorPlay className="w-7 h-7" />, coins: 10, color: 'from-sky-400 to-cyan-500', action: () => { setVideoType('view_ads'); setShowVideoView(true); }, count: viewAdsStatus.count, maxCount: 5 },
+                  { id: 'l1-ads', name: 'View Ads', icon: <MonitorPlay className="w-7 h-7" />, coins: 10, color: 'from-sky-400 to-cyan-500', action: () => openMultiAdView({ key: 'view_ads', name: 'View Ads', adType: 'interstitial', coins: 10, logo: 'https://img.icons8.com/color/96/monitor.png', color: 'from-sky-400 to-cyan-500' }), count: getMultiAdCount('view_ads'), maxCount: 5 },
                 ].map(item => <OptionCard key={item.id} item={item} count={item.count} maxCount={item.maxCount} />)}
               </div>
             </div>
@@ -2617,7 +2617,7 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
             <h2 className="text-[#FACC15] font-bold ml-1 text-lg tracking-wide flex-1">Get IP</h2>
           </div>
 
-          <div className="flex-1 overflow-y-auto px-5 py-6 scrollbar-hide flex flex-col relative z-10">
+          <div className="flex-1 overflow-y-auto px-5 pt-6 pb-32 scrollbar-hide flex flex-col relative z-10">
              <div className="flex-1 space-y-6">
              {/* If Premium Active Timer View (Step 1 when Premium) */}
              {isPremium && ipStep === 1 ? (
@@ -2657,11 +2657,11 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
                 <div className="flex flex-col items-center">
                    <Crown className="w-12 h-12 text-[#FACC15] fill-[#FACC15] mb-3 drop-shadow-[0_0_15px_rgba(250,204,21,0.4)]" />
                    <h2 className="text-2xl font-black text-white mb-1 tracking-tight">Get IP</h2>
-                   <p className="text-slate-400 text-xs mb-6 text-center px-4 leading-relaxed">
+                   <p className="text-slate-400 text-xs mb-4 text-center px-4 leading-relaxed">
                       Upgrade to Premium IP to enjoy more<br/>features
                    </p>
                    
-                   <div className="w-full space-y-3 mb-8 px-2 max-w-[280px]">
+                   <div className="w-full space-y-3 mb-4 px-2 max-w-[280px]">
                       <div className="flex items-center gap-3 text-slate-300">
                          <Globe className="w-4 h-4 text-[#FACC15]" />
                          <span className="text-xs font-bold opacity-90">All Global Services</span>
@@ -2717,6 +2717,17 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
                             )}
                          </button>
                       )})}
+                   </div>
+
+                   {/* GET IP NOW Button - Moved Higher */}
+                   <div className="w-full mt-4">
+                      <button
+                         disabled={!selectedPackage}
+                         onClick={() => setIpStep(isPremium ? 3 : 2)}
+                         className="w-full py-4 rounded-xl bg-gradient-to-r from-[#FACC15] to-[#EAB308] text-slate-900 font-black shadow-[0_5px_20px_rgba(250,204,21,0.3)] active:scale-95 transition-transform disabled:opacity-50 disabled:shadow-none tracking-wider text-sm"
+                      >
+                         GET IP NOW
+                      </button>
                    </div>
                 </div>
              ) : null}
@@ -2852,15 +2863,6 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
              {/* Action Buttons Container (Appended correctly beneath content) */}
              {(!isPremium || ipStep > 1) && (
                 <div className="w-full pt-4 mt-auto">
-                   {((!isPremium && ipStep === 1) || (isPremium && ipStep === 2)) && (
-                      <button
-                         disabled={!selectedPackage}
-                         onClick={() => setIpStep(isPremium ? 3 : 2)}
-                         className="w-full py-4 rounded-xl bg-gradient-to-r from-[#FACC15] to-[#EAB308] text-slate-900 font-black shadow-[0_5px_20px_rgba(250,204,21,0.3)] active:scale-95 transition-transform disabled:opacity-50 disabled:shadow-none tracking-wider text-sm"
-                      >
-                         GET IP NOW
-                      </button>
-                   )}
                    {((!isPremium && ipStep === 2) || (isPremium && ipStep === 3)) && (
                       <button
                          disabled={!selectedCountry}

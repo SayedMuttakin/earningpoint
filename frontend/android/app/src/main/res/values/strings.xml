@@ -4,4 +4,5 @@
     <string name="title_activity_main">Zenvio</string>
     <string name="package_name">app.earningpoint</string>
     <string name="custom_url_scheme">app.earningpoint</string>
+    <string name="server_client_id">683886612726-hpfnmmev12c8fbl7f4bbe37s03s48r23.apps.googleusercontent.com</string>
 </resources>

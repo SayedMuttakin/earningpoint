@@ -1,0 +1,46 @@
+{
+  "project_info": {
+    "project_number": "410797628659",
+    "project_id": "agile-athlete-467720-c1",
+    "storage_bucket": "agile-athlete-467720-c1.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:410797628659:android:earningpoint",
+        "android_client_info": {
+          "package_name": "app.earningpoint"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "410797628659-2mckqrqhbarqse925e2a30cb28gq0ii6.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "app.earningpoint"
+          }
+        },
+        {
+          "client_id": "683886612726-hpfnmmev12c8fbl7f4bbe37s03s48r23.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "PLACEHOLDER"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "683886612726-hpfnmmev12c8fbl7f4bbe37s03s48r23.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
