@@ -1345,7 +1345,7 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
       )}
 
       {showQuizView && quizQuestion && (
-          <div className="fixed inset-0 z-[100] bg-slate-50 dark:bg-slate-950 flex flex-col max-h-[100vh] overflow-y-auto animate-slide-up">
+          <div className="fixed inset-0 z-[100] bg-slate-50 dark:bg-slate-950 flex flex-col h-screen w-full overflow-hidden animate-slide-up">
             <div className="bg-[#1a362d] text-white pt-safe px-6 py-5 flex justify-between items-center shadow-lg shrink-0">
               <button onClick={() => goBackWithAd(() => { setShowQuizView(false); setQuizTimerActive(false); })} className="p-2 hover:bg-white/10 rounded-lg shrink-0">
                 <ArrowLeft className="w-6 h-6" />
@@ -1747,7 +1747,7 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
 
       {/* Quiz Selection Modal */}
       {showQuizSelection && (
-          <div className="fixed inset-0 z-[100] bg-slate-50 dark:bg-slate-950 flex flex-col max-h-[100vh] overflow-y-auto animate-slide-up">
+          <div className="fixed inset-0 z-[100] bg-slate-50 dark:bg-slate-950 flex flex-col h-screen w-full overflow-hidden animate-slide-up">
               <div className="bg-slate-50 dark:bg-slate-900 pt-safe px-8 py-6 flex justify-between items-center border-b border-slate-200 dark:border-slate-700 shrink-0">
                 <h3 className="text-xl font-bold text-slate-800 dark:text-white">Choose a Quiz</h3>
                 <button 
@@ -1869,7 +1869,7 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
       {/* Ad Overlay Removed - Using Real AdMob */}
 
             {showGkQuizView && gkQuizQuestions.length > 0 && (
-          <div className="fixed inset-0 z-[100] bg-slate-50 dark:bg-slate-950 flex flex-col max-h-[100vh] overflow-y-auto animate-slide-up">
+          <div className="fixed inset-0 z-[100] bg-slate-50 dark:bg-slate-950 flex flex-col h-screen w-full overflow-hidden animate-slide-up">
             <div className="bg-gradient-to-r from-amber-500 to-orange-600 pt-safe px-6 py-4 flex justify-between items-center shadow-lg shrink-0">
               <h3 className="text-xl font-bold text-white flex items-center gap-2">
                 <Star className="w-6 h-6" /> Gen. Knowledge
