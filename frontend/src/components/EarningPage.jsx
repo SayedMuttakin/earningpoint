@@ -196,10 +196,10 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
   };
 
   const withdrawMethods = [
-    { id: 'bkash', name: 'bKash', logo: 'https://img.icons8.com/color/96/bkash.png', available: true },
-    { id: 'nagad', name: 'Nagad', logo: 'https://img.icons8.com/color/96/nagad.png', available: true },
-    { id: 'rocket', name: 'Rocket', logo: 'https://img.icons8.com/color/96/rocket.png', available: true },
-    { id: 'upay', name: 'Upay', logo: 'https://img.icons8.com/color/96/money-transfer.png', available: false },
+    { id: 'bkash', name: 'bKash', logo: 'https://freelogopng.com/images/all_img/1656234745bkash-app-logo-png.png', available: true },
+    { id: 'nagad', name: 'Nagad', logo: 'https://download.logo.wine/logo/Nagad/Nagad-Logo.wine.png', available: true },
+    { id: 'rocket', name: 'Rocket', logo: 'https://freelogopng.com/images/all_img/1656235199rocket-app-logo.png', available: true },
+    { id: 'upay', name: 'Upay', logo: 'https://freelogopng.com/images/all_img/1656235105upay-logo.png', available: false },
   ];
 
   const [showCheckinView, setShowCheckinView] = React.useState(false);
@@ -1042,7 +1042,7 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
 
   const OptionCard = ({ item, isLarge = false, count = null, maxCount = null, skipIntro = false }) => {
     const isCompleted = count !== null && count >= maxCount;
-    const itemsToSkipIntro = ['Premium IP', 'Refer & Earn', 'Wallet', 'History', 'Tutorial', 'Invite Friends', 'Daily Quiz', 'Math Quiz', 'Binary Quiz', 'Word Quiz', 'Gen. Knowledge', 'Meta'];
+    const itemsToSkipIntro = ['Premium IP', 'Refer & Earn', 'Wallet', 'History', 'Tutorial', 'Invite Friends', 'Daily Quiz', 'Math Quiz', 'Binary Quiz', 'Word Quiz', 'Meta'];
     const shouldSkip = skipIntro || itemsToSkipIntro.includes(item?.name);
 
     const handleClick = () => {
@@ -1873,7 +1873,7 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
       {/* Ad Overlay Removed - Using Real AdMob */}
 
             {showGkQuizView && gkQuizQuestions.length > 0 && (
-          <div className="fixed inset-[auto_0_auto_0] top-0 z-[9999] bg-slate-50 dark:bg-slate-950 flex flex-col rounded-b-3xl shadow-2xl pb-6 max-h-[96vh] overflow-y-auto">
+          <div className="fixed inset-0 z-[99999] bg-slate-50 dark:bg-slate-950 flex flex-col overflow-hidden">
             <div className="bg-gradient-to-r from-amber-500 to-orange-600 pt-safe px-6 py-4 flex justify-between items-center shadow-lg shrink-0">
               <h3 className="text-xl font-bold text-white flex items-center gap-2">
                 <Star className="w-6 h-6" /> Gen. Knowledge
@@ -2796,9 +2796,9 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
                   
                   <div className="grid grid-cols-2 gap-3 mb-8">
                      {[
-                        { id: 'bkash', name: 'bKash', logo: 'https://img.icons8.com/color/96/bkash.png', available: true, number: globalSettings.bkashNumber },
-                        { id: 'nagad', name: 'Nagad', logo: 'https://img.icons8.com/color/96/nagad.png', available: true, number: globalSettings.nagadNumber },
-                        { id: 'rocket', name: 'Rocket', logo: 'https://img.icons8.com/color/96/rocket.png', available: true, number: globalSettings.rocketNumber },
+                        { id: 'bkash', name: 'bKash', logo: 'https://freelogopng.com/images/all_img/1656234745bkash-app-logo-png.png', available: true, number: globalSettings.bkashNumber },
+                        { id: 'nagad', name: 'Nagad', logo: 'https://download.logo.wine/logo/Nagad/Nagad-Logo.wine.png', available: true, number: globalSettings.nagadNumber },
+                        { id: 'rocket', name: 'Rocket', logo: 'https://freelogopng.com/images/all_img/1656235199rocket-app-logo.png', available: true, number: globalSettings.rocketNumber },
                         { id: 'bank', name: 'Bank Transfer', logo: 'https://img.icons8.com/color/96/bank-building.png', available: false },
                         { id: 'card', name: 'Mobile Card', logo: 'https://img.icons8.com/color/96/bank-cards.png', available: false },
                         { id: 'visa', name: 'Visa', logo: 'https://img.icons8.com/color/96/visa.png', available: false },
