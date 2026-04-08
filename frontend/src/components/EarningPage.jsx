@@ -1747,8 +1747,7 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
 
       {/* Quiz Selection Modal */}
       {showQuizSelection && (
-          <div className="fixed inset-0 animate-fade-in z-[9999] bg-slate-900/60 backdrop-blur-sm flex items-start justify-center cursor-pointer" onClick={() => setShowQuizSelection(false)}>
-            <div className="bg-white dark:bg-slate-800 w-full max-w-lg flex flex-col overflow-y-auto rounded-b-3xl shadow-2xl max-h-screen cursor-auto pb-6" onClick={e => e.stopPropagation()}>
+          <div className="fixed inset-0 z-[100] bg-slate-50 dark:bg-slate-950 flex flex-col max-h-[100vh] overflow-y-auto animate-slide-up">
               <div className="bg-slate-50 dark:bg-slate-900 pt-safe px-8 py-6 flex justify-between items-center border-b border-slate-200 dark:border-slate-700 shrink-0">
                 <h3 className="text-xl font-bold text-slate-800 dark:text-white">Choose a Quiz</h3>
                 <button 
@@ -1807,7 +1806,6 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
                   </div>
                 </div>
               </div>
-            </div>
           </div>
         )}
       
