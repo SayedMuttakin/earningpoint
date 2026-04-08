@@ -83,15 +83,6 @@ const GoogleButton = ({ onSuccess }) => {
       window.google.accounts.id.prompt((notification) => {
         if (notification.isNotDisplayed() || notification.isSkippedMoment()) {
           setLoading(false);
-          const btn = document.getElementById('google-signin-btn-register');
-          if (btn) {
-            window.google.accounts.id.renderButton(btn, {
-              type: 'standard',
-              theme: 'outline',
-              size: 'large',
-              width: btn.offsetWidth || 300,
-            });
-          }
         }
       });
     }
