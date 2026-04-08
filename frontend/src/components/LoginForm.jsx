@@ -19,24 +19,31 @@ const GoogleButton = ({ onSuccess }) => {
         setLoading(true);
         const result = await GoogleAuth.signIn();
         
-        if (result && result.accessToken) {
-          const res = await fetch(`${API_BASE}/api/auth/google`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ credential: result.idToken || result.accessToken }),
-          });
-          const data = await res.json();
-          if (res.ok) {
-            localStorage.setItem('tokenNormal', data.token);
-            localStorage.setItem('token', data.token);
-            if (data.darkMode) localStorage.setItem('darkMode', 'true');
-            if (onSuccess) onSuccess();
-          } else {
-            alert(data.message || 'Google Sign-In failed');
-          }
+        // idToken is what the backend needs for verification
+        const idToken = result?.authentication?.idToken || result?.idToken;
+        
+        if (!idToken) {
+          alert('Google Sign-In failed: No ID token received. Result: ' + JSON.stringify(result));
+          setLoading(false);
+          return;
+        }
+
+        const res = await fetch(`${API_BASE}/api/auth/google`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ credential: idToken }),
+        });
+        const data = await res.json();
+        if (res.ok) {
+          localStorage.setItem('tokenNormal', data.token);
+          localStorage.setItem('token', data.token);
+          if (data.darkMode) localStorage.setItem('darkMode', 'true');
+          if (onSuccess) onSuccess();
+        } else {
+          alert(data.message || 'Google Sign-In failed');
         }
       } catch (e) {
-        alert('Google Sign-In error: ' + e.message);
+        alert('Google Sign-In error: ' + (e.message || JSON.stringify(e)));
       } finally {
         setLoading(false);
       }
@@ -50,6 +57,7 @@ const GoogleButton = ({ onSuccess }) => {
 
       window.google.accounts.id.initialize({
         client_id: GOOGLE_CLIENT_ID,
+        use_fedcm_for_prompt: true,
         callback: async (response) => {
           try {
             const res = await fetch(`${API_BASE}/api/auth/google`, {
