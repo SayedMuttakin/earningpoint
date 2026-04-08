@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Send, UserCircle, Mail, HelpCircle, ArrowLeft, Loader2, Bot, User as UserIcon } from 'lucide-react';
+import { Send, UserCircle, Mail, HelpCircle, ArrowLeft, Loader2, Bot, User as UserIcon, BadgeCheck } from 'lucide-react';
 import { io } from 'socket.io-client';
 import { API_BASE } from '../config';
 import PullToRefresh from './PullToRefresh';
@@ -7,7 +7,6 @@ import PullToRefresh from './PullToRefresh';
 const SupportPage = ({ onBack }) => {
   const [step, setStep] = useState(1); // 1: Form, 2: Wait, 3: Chat
   const [name, setName] = useState('');
-  const [email, setEmail] = useState('');
   
   const [socket, setSocket] = useState(null);
   const [sessionId, setSessionId] = useState(null);
@@ -78,10 +77,10 @@ const SupportPage = ({ onBack }) => {
 
   const handleSubmitForm = (e) => {
     e.preventDefault();
-    if (!name || !email) return;
+    if (!name) return;
     
     setIsSubmitting(true);
-    socket.emit('request_support', { name, email, userId: null });
+    socket.emit('request_support', { name, email: 'user@zenvio.com', userId: null });
   };
 
   const handleSendMessage = (e) => {
@@ -103,7 +102,6 @@ const SupportPage = ({ onBack }) => {
     if (step > 1) {
       setStep(1);
       setName('');
-      setEmail('');
       setMessages([]);
       setSessionId(null);
       setIsAdminJoined(false);
@@ -121,8 +119,10 @@ const SupportPage = ({ onBack }) => {
         </button>
         <div>
           <h1 className="text-xl font-black text-slate-800 dark:text-white flex items-center gap-2">
-            <HelpCircle className="w-5 h-5 text-indigo-500" />
-            Live Support
+            <div className="flex items-center gap-1">
+              Zenvio Customer Support
+              <BadgeCheck className="w-[18px] h-[18px] fill-blue-500 text-white flex-shrink-0 mt-0.5" />
+            </div>
           </h1>
           {step === 3 && isAdminJoined && (
             <p className="text-xs font-bold text-emerald-500 flex items-center gap-1.5 mt-0.5">
@@ -164,24 +164,10 @@ const SupportPage = ({ onBack }) => {
                       />
                     </div>
                   </div>
-                  <div>
-                    <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-1">Email Address</label>
-                    <div className="relative">
-                      <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
-                      <input 
-                        type="email" 
-                        required
-                        value={email}
-                        onChange={(e) => setEmail(e.target.value)}
-                        placeholder="e.g. john@example.com"
-                        className="w-full pl-10 pr-4 py-3 bg-white dark:bg-slate-800 border-2 border-slate-200 dark:border-slate-700 rounded-xl focus:border-indigo-500 outline-none text-slate-800 dark:text-white transition-colors"
-                      />
-                    </div>
-                  </div>
 
                   <button 
                     type="submit" 
-                    disabled={isSubmitting || !name || !email}
+                    disabled={isSubmitting || !name}
                     className="w-full py-3.5 bg-indigo-600 hover:bg-indigo-700 text-white font-black rounded-xl shadow-lg shadow-indigo-600/30 transition-all disabled:opacity-70 flex items-center justify-center gap-2"
                   >
                     {isSubmitting ? (
