@@ -205,7 +205,7 @@ const SupportPage = ({ onBack }) => {
                   {connectionError && (
                     <div className="flex items-center gap-2 text-red-500 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl px-4 py-3 text-sm font-semibold">
                       <WifiOff className="w-4 h-4 flex-shrink-0" />
-                      <span>সার্ভারের সাথে সংযোগ সম্ভব হচ্ছে না। অনুগ্রহ করে একটু পর আবার চেষ্টা করুন।</span>
+                      <span>Unable to connect to the server. Please try again later.</span>
                     </div>
                   )}
 
@@ -215,7 +215,7 @@ const SupportPage = ({ onBack }) => {
                     className="w-full py-3.5 bg-indigo-600 hover:bg-indigo-700 text-white font-black rounded-xl shadow-lg shadow-indigo-600/30 transition-all disabled:opacity-70 flex items-center justify-center gap-2"
                   >
                     {isSubmitting ? (
-                      <><Loader2 className="w-5 h-5 animate-spin" /> সংযোগ হচ্ছে...</>
+                      <><Loader2 className="w-5 h-5 animate-spin" /> Connecting...</>
                     ) : (
                       'Start Live Chat'
                     )}
