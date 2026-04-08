@@ -2,59 +2,81 @@ import React, { useState, useEffect } from 'react';
 import { API_BASE } from '../config';
 import { Lock, UserPlus, AtSign, Globe, ChevronDown, Check, Search, Users, Eye, EyeOff } from 'lucide-react';
 import { countries } from '../utils/countries';
+import { Capacitor } from '@capacitor/core';
+import { GoogleAuth } from '@codetrix-studio/capacitor-google-auth';
 
 const GOOGLE_CLIENT_ID = '683886612726-hpfnmmev12c8fbl7f4bbe37s03s48r23.apps.googleusercontent.com';
 
 const GoogleButton = ({ onSuccess }) => {
   const [loading, setLoading] = useState(false);
 
-  const handleGoogleLogin = () => {
-    if (!window.google) {
-      alert('Google Sign-In is not available. Please refresh the page.');
-      return;
-    }
-    setLoading(true);
-    const client = window.google.accounts.oauth2.initTokenClient({
-      client_id: GOOGLE_CLIENT_ID,
-      scope: 'email profile',
-      callback: () => {},
-    });
+  const handleGoogleLogin = async () => {
+    const isMobileApp = Capacitor.getPlatform() !== 'web';
 
-    window.google.accounts.id.initialize({
-      client_id: GOOGLE_CLIENT_ID,
-      callback: async (response) => {
-        try {
+    if (isMobileApp) {
+      try {
+        setLoading(true);
+        const result = await GoogleAuth.signIn();
+        if (result && result.accessToken) {
           const res = await fetch(`${API_BASE}/api/auth/google`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ credential: response.credential }),
+            body: JSON.stringify({ credential: result.idToken || result.accessToken }),
           });
           const data = await res.json();
           if (res.ok) {
+            localStorage.setItem('tokenNormal', data.token);
             localStorage.setItem('token', data.token);
             if (data.darkMode) localStorage.setItem('darkMode', 'true');
             if (onSuccess) onSuccess();
           } else {
             alert(data.message || 'Google Sign-In failed');
           }
-        } catch (e) {
-          alert('Network error. Please try again.');
-        } finally {
-          setLoading(false);
         }
-      },
-    });
-
-    window.google.accounts.id.prompt((notification) => {
-      if (notification.isNotDisplayed() || notification.isSkippedMoment()) {
-        // Fallback to popup
-        window.google.accounts.id.renderButton(
-          document.createElement('div'),
-          { theme: 'outline', size: 'large' }
-        );
+      } catch (e) {
+        alert('Google Sign-In error: ' + e.message);
+      } finally {
         setLoading(false);
       }
-    });
+    } else {
+      if (!window.google) {
+        alert('Google Sign-In is not available. Please refresh the page.');
+        return;
+      }
+      setLoading(true);
+
+      window.google.accounts.id.initialize({
+        client_id: GOOGLE_CLIENT_ID,
+        callback: async (response) => {
+          try {
+            const res = await fetch(`${API_BASE}/api/auth/google`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ credential: response.credential }),
+            });
+            const data = await res.json();
+            if (res.ok) {
+              localStorage.setItem('tokenNormal', data.token);
+              localStorage.setItem('token', data.token);
+              if (data.darkMode) localStorage.setItem('darkMode', 'true');
+              if (onSuccess) onSuccess();
+            } else {
+              alert(data.message || 'Google Sign-In failed');
+            }
+          } catch (e) {
+            alert('Network error. Please try again.');
+          } finally {
+            setLoading(false);
+          }
+        },
+      });
+
+      window.google.accounts.id.prompt((notification) => {
+        if (notification.isNotDisplayed() || notification.isSkippedMoment()) {
+          setLoading(false);
+        }
+      });
+    }
   };
 
   return (
