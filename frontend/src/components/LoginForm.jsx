@@ -57,7 +57,7 @@ const GoogleButton = ({ onSuccess }) => {
 
       window.google.accounts.id.initialize({
         client_id: GOOGLE_CLIENT_ID,
-        use_fedcm_for_prompt: true,
+        use_fedcm_for_prompt: false,
         callback: async (response) => {
           try {
             const res = await fetch(`${API_BASE}/api/auth/google`, {
@@ -84,7 +84,17 @@ const GoogleButton = ({ onSuccess }) => {
 
       window.google.accounts.id.prompt((notification) => {
         if (notification.isNotDisplayed() || notification.isSkippedMoment()) {
+          // Fallback: render button if prompt is blocked
           setLoading(false);
+          const btn = document.getElementById('google-signin-btn-login');
+          if (btn) {
+            window.google.accounts.id.renderButton(btn, {
+              type: 'standard',
+              theme: 'outline',
+              size: 'large',
+              width: btn.offsetWidth || 300,
+            });
+          }
         }
       });
     }
@@ -92,6 +102,7 @@ const GoogleButton = ({ onSuccess }) => {
 
   return (
     <button
+      id="google-signin-btn-login"
       type="button"
       onClick={handleGoogleLogin}
       disabled={loading}
