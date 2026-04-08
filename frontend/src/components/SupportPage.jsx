@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Send, UserCircle, Mail, HelpCircle, ArrowLeft, Loader2, Bot, User as UserIcon, BadgeCheck } from 'lucide-react';
+import { Send, UserCircle, ArrowLeft, Loader2, Bot, User as UserIcon, BadgeCheck, WifiOff } from 'lucide-react';
 import { io } from 'socket.io-client';
 import { API_BASE } from '../config';
 import PullToRefresh from './PullToRefresh';
@@ -16,6 +16,9 @@ const SupportPage = ({ onBack }) => {
   const [isAdminTyping, setIsAdminTyping] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
+  const [socketConnected, setSocketConnected] = useState(false);
+  const [connectionError, setConnectionError] = useState(false);
+  const submitTimeoutRef = useRef(null);
   
   const messagesEndRef = useRef(null);
   const typingTimeoutRef = useRef(null);
@@ -31,11 +34,32 @@ const SupportPage = ({ onBack }) => {
 
   // Connect socket
   useEffect(() => {
-    const newSocket = io(API_BASE);
+    const newSocket = io(API_BASE, {
+      transports: ['websocket', 'polling'],
+      timeout: 10000,
+      reconnectionAttempts: 3,
+    });
     setSocket(newSocket);
+
+    newSocket.on('connect', () => {
+      setSocketConnected(true);
+      setConnectionError(false);
+    });
+
+    newSocket.on('connect_error', () => {
+      setSocketConnected(false);
+      setConnectionError(true);
+      setIsSubmitting(false);
+      if (submitTimeoutRef.current) clearTimeout(submitTimeoutRef.current);
+    });
+
+    newSocket.on('disconnect', () => {
+      setSocketConnected(false);
+    });
 
     return () => {
       newSocket.disconnect();
+      if (submitTimeoutRef.current) clearTimeout(submitTimeoutRef.current);
     };
   }, []);
 
@@ -77,10 +101,22 @@ const SupportPage = ({ onBack }) => {
 
   const handleSubmitForm = (e) => {
     e.preventDefault();
-    if (!name) return;
+    if (!name || !socket) return;
+
+    if (!socketConnected) {
+      setConnectionError(true);
+      return;
+    }
     
     setIsSubmitting(true);
+    setConnectionError(false);
     socket.emit('request_support', { name, email: 'user@zenvio.com', userId: null });
+
+    // Timeout: if no response in 10s, show error
+    submitTimeoutRef.current = setTimeout(() => {
+      setIsSubmitting(false);
+      setConnectionError(true);
+    }, 10000);
   };
 
   const handleSendMessage = (e) => {
@@ -99,13 +135,14 @@ const SupportPage = ({ onBack }) => {
 
   const handleRefresh = async () => {
     setRefreshing(true);
-    if (step > 1) {
-      setStep(1);
-      setName('');
-      setMessages([]);
-      setSessionId(null);
-      setIsAdminJoined(false);
-    }
+    setStep(1);
+    setName('');
+    setMessages([]);
+    setSessionId(null);
+    setIsAdminJoined(false);
+    setIsSubmitting(false);
+    setConnectionError(false);
+    if (submitTimeoutRef.current) clearTimeout(submitTimeoutRef.current);
     await new Promise(resolve => setTimeout(resolve, 800));
     setRefreshing(false);
   };
@@ -165,13 +202,20 @@ const SupportPage = ({ onBack }) => {
                     </div>
                   </div>
 
+                  {connectionError && (
+                    <div className="flex items-center gap-2 text-red-500 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl px-4 py-3 text-sm font-semibold">
+                      <WifiOff className="w-4 h-4 flex-shrink-0" />
+                      <span>সার্ভারের সাথে সংযোগ সম্ভব হচ্ছে না। অনুগ্রহ করে একটু পর আবার চেষ্টা করুন।</span>
+                    </div>
+                  )}
+
                   <button 
                     type="submit" 
                     disabled={isSubmitting || !name}
                     className="w-full py-3.5 bg-indigo-600 hover:bg-indigo-700 text-white font-black rounded-xl shadow-lg shadow-indigo-600/30 transition-all disabled:opacity-70 flex items-center justify-center gap-2"
                   >
                     {isSubmitting ? (
-                      <><Loader2 className="w-5 h-5 animate-spin" /> Connecting...</>
+                      <><Loader2 className="w-5 h-5 animate-spin" /> সংযোগ হচ্ছে...</>
                     ) : (
                       'Start Live Chat'
                     )}
