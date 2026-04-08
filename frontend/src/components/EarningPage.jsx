@@ -1816,8 +1816,7 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
 
       {/* Daily Checkin Pre-Ad View */}
       {showCheckinView && !showAdOverlay && (
-          <div className="fixed inset-0 animate-fade-in z-[9999] bg-slate-900/60 backdrop-blur-sm flex items-start justify-center cursor-pointer" onClick={() => setShowCheckinView(false)}>
-            <div className="bg-white dark:bg-slate-800 w-full max-w-lg flex flex-col overflow-y-auto rounded-b-3xl shadow-2xl max-h-screen cursor-auto pb-6" onClick={e => e.stopPropagation()}>
+          <div className="fixed inset-[auto_0_auto_0] top-0 z-[9999] bg-white dark:bg-slate-800 flex flex-col rounded-b-3xl shadow-2xl pb-6 max-h-[96vh] overflow-y-auto">
                <div className="bg-slate-50 dark:bg-slate-900 pt-safe px-8 py-6 flex justify-between items-center border-b border-slate-200 dark:border-slate-700 shrink-0">
                   <h3 className="text-xl font-bold text-slate-800 dark:text-white">Daily Checkin</h3>
                   <button onClick={() => goBackWithAd(() => setShowCheckinView(false))} className="text-slate-400 hover:text-slate-600 dark:hover:text-white transition-colors">
@@ -1865,15 +1864,14 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
                      )}
                   </div>
                </div>
-            </div>
           </div>
-        )}
+      )}
       
 
       {/* Ad Overlay Removed - Using Real AdMob */}
 
             {showGkQuizView && gkQuizQuestions.length > 0 && (
-          <div className="fixed inset-0 z-[99999] bg-slate-50 dark:bg-slate-950 flex flex-col overflow-hidden">
+          <div className="fixed inset-[auto_0_auto_0] top-0 z-[9999] bg-slate-50 dark:bg-slate-950 flex flex-col rounded-b-3xl shadow-2xl pb-6 max-h-[96vh] overflow-y-auto">
             <div className="bg-gradient-to-r from-amber-500 to-orange-600 pt-safe px-6 py-4 flex justify-between items-center shadow-lg shrink-0">
               <h3 className="text-xl font-bold text-white flex items-center gap-2">
                 <Star className="w-6 h-6" /> Gen. Knowledge
