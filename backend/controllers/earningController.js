@@ -597,7 +597,18 @@ exports.getGlobalSettings = async (req, res) => {
 exports.getArticles = async (req, res) => {
   try {
     const articles = await Article.find({ active: true }).sort({ createdAt: -1 });
-    res.json(articles);
+    
+    // Get user's daily count
+    const user = await User.findById(req.user._id);
+    const now = new Date();
+    let currentCount = user.articleReadCount || 0;
+    if (user.lastArticleReadDate) {
+      if (user.lastArticleReadDate.toDateString() !== now.toDateString()) {
+        currentCount = 0;
+      }
+    }
+
+    res.json({ articles, dailyCount: currentCount });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
