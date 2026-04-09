@@ -499,10 +499,42 @@ exports.submitWithdrawal = async (req, res) => {
 exports.submitPremiumOrder = async (req, res) => {
   try {
     const PremiumOrder = require('../models/PremiumOrder');
+    const User = require('../models/User');
+    const Transaction = require('../models/Transaction');
     const { packageId, packageName, country, division, district, thana, village, postalCode, paymentMethod, transactionId, amount } = req.body;
 
-    if (!packageId || !paymentMethod || !transactionId || !amount) {
-      return res.status(400).json({ message: 'All fields are required' });
+    if (!packageId || !paymentMethod || !amount) {
+      return res.status(400).json({ message: 'Package, payment method, and amount are required' });
+    }
+
+    const user = await User.findById(req.user._id);
+    if (!user) return res.status(404).json({ message: 'User not found' });
+
+    let finalTxId = transactionId;
+
+    if (['bkash', 'nagad', 'rocket'].includes(paymentMethod)) {
+      if (!transactionId) return res.status(400).json({ message: 'Transaction ID is required for mobile banking' });
+    } else if (paymentMethod === 'earning') {
+       if (user.balance < Number(amount)) {
+          return res.status(400).json({ message: 'Insufficient earning balance! Please earn more or use another method.' });
+       }
+       // Deduct immediately
+       user.balance -= Number(amount);
+       await user.save();
+       
+       await Transaction.create({
+         userId: user._id,
+         type: 'withdrawal', // generic type for deduction
+         amount: Number(amount),
+         description: `Store Purchase: ${packageName || packageId}`,
+         status: 'completed'
+       });
+       
+       finalTxId = 'EARNING_BALANCE';
+    } else if (paymentMethod === 'cod') {
+       finalTxId = 'CASH_ON_DELIVERY';
+    } else {
+       return res.status(400).json({ message: 'Invalid payment method' });
     }
 
     const order = await PremiumOrder.create({
@@ -516,15 +548,18 @@ exports.submitPremiumOrder = async (req, res) => {
       village: village || '',
       postalCode: postalCode || '',
       paymentMethod,
-      transactionId,
+      transactionId: finalTxId,
       amount: Number(amount),
       status: 'pending',
     });
 
     // Notify user
-    createNotification(req.user._id, 'Order Submitted! 🚀', `Your order for ${packageName || packageId} is pending. Activation takes up to 1 hour.`, 'premium');
+    let notifyMsg = `Your order for ${packageName || packageId} is pending. Activation/Delivery takes some time.`;
+    if (paymentMethod === 'earning') notifyMsg = `Your order for ${packageName || packageId} is placed and ${amount}৳ was deducted from your wallet!`;
+    
+    createNotification(req.user._id, 'Order Submitted! 🚀', notifyMsg, 'premium');
 
-    res.status(201).json({ message: 'Order submitted! Admin will activate your IP within 1 hour.', order });
+    res.status(201).json({ message: 'Order submitted! Admin will process it soon.', order });
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: error.message || 'Server Error' });

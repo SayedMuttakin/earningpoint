@@ -8,7 +8,6 @@ const PremiumOrderSchema = new mongoose.Schema({
   },
   packageId: {
     type: String,
-    enum: ['month-1', 'month-3', 'month-6', 'year-1'],
     required: true,
   },
   packageName: { type: String, default: '' },
@@ -20,10 +19,10 @@ const PremiumOrderSchema = new mongoose.Schema({
   postalCode: { type: String, default: '' },
   paymentMethod: {
     type: String,
-    enum: ['bkash', 'nagad', 'rocket'],
+    enum: ['bkash', 'nagad', 'rocket', 'earning', 'cod'],
     required: true,
   },
-  transactionId: { type: String, required: true },
+  transactionId: { type: String, default: '' },
   amount: { type: Number, required: true },
   status: {
     type: String,

@@ -30,6 +30,7 @@ function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(() => !!localStorage.getItem('token'));
   const [activeTab, setActiveTab] = useState('Home');
   const [selectedProduct, setSelectedProduct] = useState(null);
+  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState('');
   const [darkMode, setDarkMode] = useState(() => localStorage.getItem('darkMode') === 'true');
 
   // Initialize AdMob
@@ -102,9 +103,9 @@ function App() {
         <Navbar onLogout={handleLogout} activeTab={activeTab} setActiveTab={setActiveTab} />
         {activeTab === 'Home' && <HomePage onBuyNow={handleBuyNow} />}
         {activeTab === 'Cart' && <CartPage onBuyNow={handleBuyNow} />}
-        {activeTab === 'Checkout' && <CheckoutPage product={selectedProduct} onBack={() => setActiveTab('Cart')} onSuccess={() => setActiveTab('PaymentSuccess')} />}
+        {activeTab === 'Checkout' && <CheckoutPage product={selectedProduct} onBack={() => setActiveTab('Cart')} onSuccess={(method) => { setSelectedPaymentMethod(method); setActiveTab('PaymentSuccess'); }} />}
         {activeTab === 'Notification' && <NotificationPage onBack={() => showBackAd(() => setActiveTab('Home'))} />}
-        {activeTab === 'PaymentSuccess' && <PaymentSuccess onBack={() => showBackAd(() => setActiveTab('Home'))} />}
+        {activeTab === 'PaymentSuccess' && <PaymentSuccess paymentMethod={selectedPaymentMethod} onBack={() => showBackAd(() => setActiveTab('Home'))} />}
         {activeTab === 'Profile' && <ProfilePage 
           onVerifyClick={() => setActiveTab('Verify')} 
           onLanguageClick={() => setActiveTab('Language')} 
