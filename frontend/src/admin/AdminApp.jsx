@@ -10,6 +10,7 @@ import PremiumOrders from './pages/PremiumOrders';
 import PremiumIpSettings from './pages/PremiumIpSettings';
 import Settings from './pages/Settings';
 import Posts from './pages/Posts';
+import Articles from './pages/Articles';
 
 import { API_BASE as GlobalApiBase } from '../config';
 export const API_BASE = GlobalApiBase;
@@ -50,6 +51,7 @@ const AdminApp = () => {
       {activePage === 'premium' && <PremiumOrders {...pageProps} />}
       {activePage === 'ip-settings' && <PremiumIpSettings {...pageProps} />}
       {activePage === 'posts' && <Posts {...pageProps} />}
+      {activePage === 'articles' && <Articles {...pageProps} />}
       {activePage === 'settings' && <Settings {...pageProps} onLogout={handleLogout} />}
     </AdminLayout>
   );

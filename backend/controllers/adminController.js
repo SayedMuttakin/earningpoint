@@ -1,4 +1,5 @@
 const User = require('../models/User');
+const Article = require('../models/Article');
 const Transaction = require('../models/Transaction');
 const Referral = require('../models/Referral');
 const SupportTicket = require('../models/SupportTicket');
@@ -521,6 +522,47 @@ exports.updateGlobalSettings = async (req, res) => {
 
     await settings.save();
     res.json({ message: 'Settings updated successfully', settings });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+// ARTICLES MANAGEMENT
+exports.getArticles = async (req, res) => {
+  try {
+    const articles = await Article.find().sort({ createdAt: -1 });
+    res.json(articles);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+exports.createArticle = async (req, res) => {
+  try {
+    const { title, content, coins, readingTime, category } = req.body;
+    const article = new Article({ title, content, coins, readingTime, category });
+    await article.save();
+    res.status(201).json(article);
+  } catch (error) {
+    res.status(400).json({ message: error.message });
+  }
+};
+
+exports.updateArticle = async (req, res) => {
+  try {
+    const article = await Article.findByIdAndUpdate(req.params.id, req.body, { new: true });
+    if (!article) return res.status(404).json({ message: 'Article not found' });
+    res.json(article);
+  } catch (error) {
+    res.status(400).json({ message: error.message });
+  }
+};
+
+exports.deleteArticle = async (req, res) => {
+  try {
+    const article = await Article.findByIdAndDelete(req.params.id);
+    if (!article) return res.status(404).json({ message: 'Article not found' });
+    res.json({ message: 'Article deleted' });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }

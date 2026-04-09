@@ -45,6 +45,12 @@ router.post('/posts', adminProtect, postController.createPost);
 router.put('/posts/:id', adminProtect, postController.updatePost);
 router.delete('/posts/:id', adminProtect, postController.deletePost);
 
+// Articles Management
+router.get('/articles', adminProtect, adminController.getArticles);
+router.post('/articles', adminProtect, adminController.createArticle);
+router.put('/articles/:id', adminProtect, adminController.updateArticle);
+router.delete('/articles/:id', adminProtect, adminController.deleteArticle);
+
 // Global App Settings
 router.get('/settings/global', adminProtect, adminController.getGlobalSettings);
 router.put('/settings/global', adminProtect, adminController.updateGlobalSettings);

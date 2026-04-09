@@ -1,4 +1,5 @@
 const User = require('../models/User');
+const Article = require('../models/Article');
 const Transaction = require('../models/Transaction');
 const GlobalSetting = require('../models/GlobalSetting');
 const { createNotification } = require('./notificationController');
@@ -588,6 +589,67 @@ exports.getGlobalSettings = async (req, res) => {
       premiumIpPackages: settings.premiumIpPackages
     });
   } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+// ─── Articles ────────────────────────────────────────────────────────────────
+exports.getArticles = async (req, res) => {
+  try {
+    const articles = await Article.find({ active: true }).sort({ createdAt: -1 });
+    res.json(articles);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+exports.claimArticleReward = async (req, res) => {
+  try {
+    const { articleId } = req.body;
+    const user = await User.findById(req.user._id);
+    const article = await Article.findById(articleId);
+
+    if (!article) return res.status(404).json({ message: 'Article not found' });
+
+    // Check if daily limit reached
+    const now = new Date();
+    let currentCount = user.articleReadCount || 0;
+    if (user.lastArticleReadDate) {
+      if (user.lastArticleReadDate.toDateString() !== now.toDateString()) {
+        currentCount = 0;
+      }
+    }
+
+    if (currentCount >= 5) {
+      return res.status(400).json({ message: 'Daily article reading limit reached. Try again tomorrow.' });
+    }
+
+    const reward = article.coins || 15;
+    processPoints(user, reward);
+    
+    user.articleReadCount = currentCount + 1;
+    user.lastArticleReadDate = now;
+
+    await user.save();
+
+    await Transaction.create({
+      userId: user._id,
+      type: 'earning',
+      amount: reward,
+      description: `Read Article: ${article.title}`,
+      status: 'completed'
+    });
+
+    createNotification(user._id, 'Knowledge Reward! 📚', `You earned ${reward} coins for reading "${article.title}"`, 'earning');
+
+    res.json({
+      message: `Rewarded ${reward} coins!`,
+      balance: user.balance,
+      points: user.points,
+      count: user.articleReadCount
+    });
+  } catch (error) {
+    console.error(error);
     res.status(500).json({ message: error.message });
   }
 };

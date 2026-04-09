@@ -127,6 +127,14 @@ const UserSchema = new mongoose.Schema({
     type: String,
     default: '',
   },
+  lastArticleReadDate: {
+    type: Date,
+    default: null,
+  },
+  articleReadCount: {
+    type: Number,
+    default: 0,
+  },
 }, { timestamps: true });
 
 // Auto-generate referral code before saving if not set

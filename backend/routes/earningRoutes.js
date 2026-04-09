@@ -20,6 +20,10 @@ router.post('/scratch-claim', protect, earningController.claimScratch);
 router.get('/quiz-status', protect, earningController.getQuizStatus);
 router.post('/quiz-claim', protect, earningController.claimQuiz);
 router.post('/gk-claim', protect, earningController.claimGkQuiz);
+
+router.get('/articles', protect, earningController.getArticles);
+router.post('/article-claim', protect, earningController.claimArticleReward);
+
 router.post('/convert-coins', protect, earningController.convertCoins);
 router.post('/withdraw', protect, earningController.submitWithdrawal);
 router.post('/premium-order', protect, earningController.submitPremiumOrder);

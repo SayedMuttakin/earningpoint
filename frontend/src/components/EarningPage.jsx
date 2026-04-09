@@ -142,7 +142,7 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
   const [refreshing, setRefreshing] = React.useState(false);
   const showToast = (message, type = 'success') => {
     setToast({ visible: true, message, type });
-    setTimeout(() => setToast(prev => ({ ...prev, visible: false })), 4000);
+    setTimeout(() => setToast(prev => ({ ...prev, visible: false })), 3000);
   };
 
   const [withdrawAmount, setWithdrawAmount] = React.useState('');
@@ -289,7 +289,30 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
   const [gkAnswered, setGkAnswered] = React.useState(false);
 
   const [showArticleView, setShowArticleView] = React.useState(false);
+  const [articles, setArticles] = useState([]);
+  const [currentArticle, setCurrentArticle] = useState(null);
+  const [articleReadingTime, setArticleReadingTime] = useState(0);
+  const [isReadingStarted, setIsReadingStarted] = useState(false);
+  const [articleReadCount, setArticleReadCount] = useState(0);
+
+  const fetchArticles = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const res = await fetch(`${API_BASE}/api/earning/articles`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setArticles(data.articles);
+        setArticleReadCount(data.dailyCount);
+      }
+    } catch (err) {
+      console.error('Error fetching articles:', err);
+    }
+  };
   const [articleStep, setArticleStep] = React.useState(1);
+  const [showArticleReader, setShowArticleReader] = React.useState(false);
+  const [showArticleListView, setShowArticleListView] = React.useState(false);
 
   const [showInterstitialAd, setShowInterstitialAd] = React.useState(false);
   const [showNativeAd, setShowNativeAd] = React.useState(false);
@@ -503,6 +526,7 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
   const handleStatusClick = (name, type) => {
     setStatusData({ name, type });
     setShowStatusOverlay(true);
+    AdMobService.showInterstitial();
   };
 
   const fetchScratchStatus = async () => {
@@ -528,6 +552,7 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
     fetchWheelStatus();
     fetchScratchStatus();
     fetchQuizStatus();
+    fetchArticles();
     AdMobService.showBanner();
     return () => {
       AdMobService.hideBanner();
@@ -563,6 +588,213 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
       setTimeLeft({ days: 0, hours: 0, minutes: 0, seconds: 0 });
     }
   }, [premiumExpiryDate]);
+
+  // Article Timer Logic
+  useEffect(() => {
+    let timer;
+    if (showArticleReader && isReadingStarted && articleReadingTime > 0) {
+      timer = setInterval(() => {
+        setArticleReadingTime((prev) => {
+          if (prev <= 1) {
+            clearInterval(timer);
+            return 0;
+          }
+          return prev - 1;
+        });
+      }, 1000);
+    }
+    return () => clearInterval(timer);
+  }, [showArticleReader, isReadingStarted, articleReadingTime]);
+
+  const startReadingArticle = (article) => {
+    setCurrentArticle(article);
+    setArticleReadingTime(article.readingTime || 60);
+    setIsReadingStarted(true);
+    setShowArticleReader(true);
+    setShowArticleListView(false);
+  };
+
+  const claimArticleReward = async () => {
+    if (articleReadingTime > 0) {
+      showToast(`Please wait ${articleReadingTime}s more.`, 'error');
+      return;
+    }
+
+    try {
+      const token = localStorage.getItem('token');
+      const res = await fetch(`${API_BASE}/api/earning/article-claim`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify({ articleId: currentArticle._id })
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setBalance(data.balance);
+        setCoins(data.coins);
+        setArticleReadCount(data.dailyCount);
+        showToast(`🎉 +${currentArticle.coins} Coins earned!`, 'success');
+        setShowArticleReader(false);
+        setIsReadingStarted(false);
+      } else {
+        showToast(data.message || 'Failed to claim reward.', 'error');
+      }
+    } catch (err) {
+      console.error('Error claiming article reward:', err);
+      showToast('Network error.', 'error');
+    }
+  };
+
+  const ArticleListView = () => {
+    return createPortal(
+      <div className="fixed inset-0 z-[9999] bg-slate-50 dark:bg-slate-950 flex flex-col h-screen w-full overflow-hidden animate-slide-up">
+        <div className="bg-gradient-to-r from-blue-600 to-indigo-700 pt-safe px-6 py-5 flex justify-between items-center shadow-lg shrink-0">
+          <div className="flex items-center gap-3">
+             <button onClick={() => setShowArticleListView(false)} className="p-2 hover:bg-white/10 rounded-lg">
+                <ArrowLeft className="w-6 h-6 text-white" />
+             </button>
+             <h3 className="text-xl font-bold text-white">Daily Articles</h3>
+          </div>
+          <div className="bg-white/20 px-4 py-1.5 rounded-full border border-white/20">
+             <span className="text-white font-black text-sm">{articleReadCount}/5 Today</span>
+          </div>
+        </div>
+        
+        <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-4">
+          <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-2xl border border-blue-100 dark:border-blue-900/30 flex items-center gap-4">
+            <div className="w-12 h-12 bg-blue-500 rounded-xl flex items-center justify-center shrink-0 shadow-lg">
+              <Newspaper className="w-7 h-7 text-white" />
+            </div>
+            <div>
+              <p className="text-blue-900 dark:text-blue-200 font-bold text-sm">Read & Earn Coins</p>
+              <p className="text-blue-700 dark:text-blue-400 text-xs">Tap each card to read an article and earn coins.</p>
+            </div>
+          </div>
+
+          <div className="space-y-4">
+            {articles.length > 0 ? (
+              articles.map((art, idx) => (
+                <div key={art._id} className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 flex items-center gap-4 shadow-sm hover:shadow-md transition-all active:scale-[0.98]">
+                  <div className="w-12 h-12 rounded-xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center shrink-0 font-black text-slate-400">
+                    {idx + 1}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <h4 className="font-bold text-slate-800 dark:text-white truncate">{art.title}</h4>
+                    <div className="flex items-center gap-3 mt-1">
+                      <span className="text-[10px] font-bold text-emerald-500 bg-emerald-50 dark:bg-emerald-500/10 px-2 py-0.5 rounded-full">+{art.coins} Coins</span>
+                      <span className="text-[10px] font-bold text-slate-400 flex items-center gap-1">
+                        <Clock className="w-3 h-3" /> {art.readingTime}s
+                      </span>
+                    </div>
+                  </div>
+                  <button 
+                    onClick={() => startReadingArticle(art)}
+                    className="px-5 py-2 bg-blue-600 text-white rounded-xl font-black text-xs shadow-md shadow-blue-600/20 active:scale-95 transition-transform"
+                  >
+                    READ
+                  </button>
+                </div>
+              ))
+            ) : (
+              <div className="text-center py-20 px-10">
+                <div className="w-20 h-20 bg-slate-100 dark:bg-slate-800 rounded-full flex items-center justify-center mx-auto mb-4 opacity-50">
+                  <BookOpen className="w-10 h-10 text-slate-400" />
+                </div>
+                <p className="text-slate-400 font-bold">No articles available yet.</p>
+                <p className="text-slate-500 text-xs mt-1">Check back later for new content!</p>
+              </div>
+            )}
+          </div>
+
+          <div className="pt-6">
+            <BigAdBanner />
+          </div>
+        </div>
+      </div>,
+      document.body
+    );
+  };
+
+  const ArticleReader = () => {
+    if (!currentArticle) return null;
+    
+    // Split content by double new lines for paragraphs
+    const paragraphs = currentArticle.content.split(/\n\n|\r\n\r\n/).filter(p => p.trim() !== '');
+
+    return createPortal(
+      <div className="fixed inset-0 z-[10000] bg-white dark:bg-slate-950 flex flex-col h-screen w-full overflow-hidden animate-slide-up">
+        {/* Header */}
+        <div className="bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 pt-safe px-6 py-4 flex justify-between items-center shrink-0">
+          <button onClick={() => setShowArticleReader(false)} className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg">
+            <ArrowLeft className="w-6 h-6 text-slate-500" />
+          </button>
+          <div className="flex flex-col items-center flex-1 mx-4">
+             <div className="flex items-center gap-2 mb-0.5">
+                <div className="w-6 h-6 rounded-full border-2 border-brand-500/30 flex items-center justify-center overflow-hidden">
+                   <div className="h-full bg-brand-500 transition-all duration-1000" style={{ width: `${((currentArticle.readingTime - articleReadingTime) / currentArticle.readingTime) * 100}%` }} />
+                </div>
+                <span className="font-black text-slate-800 dark:text-white text-sm">
+                  {articleReadingTime > 0 ? `${articleReadingTime}s remaining` : 'Reading Complete!'}
+                </span>
+             </div>
+          </div>
+          <div className="w-10" /> {/* Spacer */}
+        </div>
+
+        {/* Content Scroll Area */}
+        <div className="flex-1 overflow-y-auto p-6 sm:p-10 max-w-2xl mx-auto w-full">
+           <h1 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white mb-8 leading-tight">
+             {currentArticle.title}
+           </h1>
+
+           <div className="space-y-6">
+             {paragraphs.map((para, idx) => (
+               <React.Fragment key={idx}>
+                 <p className="text-slate-700 dark:text-slate-300 leading-relaxed text-base sm:text-lg">
+                   {para}
+                 </p>
+                 {/* Inject 468x60 Banner between paragraphs (every 2nd paragraph) */}
+                 {(idx + 1) % 2 === 0 && (
+                   <div className="py-4 flex flex-col items-center">
+                     <div className="w-full max-w-lg border border-slate-200 dark:border-slate-800 rounded-xl p-3 flex items-center justify-center bg-slate-50 dark:bg-slate-800/30 relative overflow-hidden">
+                       <span className="absolute top-0 right-0 bg-slate-600 text-white text-[8px] px-1.5 py-0.5 font-bold rounded-bl-lg">Ad</span>
+                       <div className="flex items-center gap-4">
+                         <span className="text-blue-500 font-bold text-sm">SPONSORED</span>
+                         <div className="h-6 w-px bg-slate-200 dark:bg-slate-700"></div>
+                         <span className="text-slate-500 dark:text-slate-400 text-xs font-medium">468x60 Banner Ad</span>
+                       </div>
+                     </div>
+                   </div>
+                 )}
+               </React.Fragment>
+             ))}
+           </div>
+
+           <div className="mt-12 mb-20">
+              <BigAdBanner />
+           </div>
+        </div>
+
+        {/* Bottom Action Bar */}
+        <div className="p-6 bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 flex justify-center shrink-0">
+          <button
+            onClick={claimArticleReward}
+            disabled={articleReadingTime > 0}
+            className={`w-full max-w-sm py-4 rounded-2xl font-black text-lg transition-all transform-gpu shadow-xl ${
+              articleReadingTime > 0
+                ? 'bg-slate-200 dark:bg-slate-800 text-slate-400 cursor-not-allowed scale-95'
+                : 'bg-gradient-to-r from-emerald-500 to-green-600 text-white animate-bounce-subtle'
+            }`}
+          >
+            {articleReadingTime > 0 ? `READING... (${articleReadingTime}s)` : 'CLAIM REWARD 🎉'}
+          </button>
+        </div>
+      </div>,
+      document.body
+    );
+  };
 
   const goBackWithAd = (closeFn) => {
     if (isAdLoading.current) return;
@@ -1084,7 +1316,12 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
           {typeof item.icon === 'string' ? (
             <img src={item.icon} alt={item.name} className="w-7 h-7 md:w-10 md:h-10 object-contain drop-shadow-md" />
           ) : React.isValidElement(item.icon) ? (
-            <div className="text-white drop-shadow-md">{React.cloneElement(item.icon, { className: `w-7 h-7 md:w-${isLarge ? '10' : '8'} md:h-${isLarge ? '10' : '8'}` })}</div>
+            <div className="text-white drop-shadow-md flex items-center justify-center">
+              {React.cloneElement(item.icon, { 
+                className: `${isLarge ? 'w-10 h-10' : 'w-7 h-7'}`,
+                strokeWidth: 2.5
+              })}
+            </div>
           ) : item.logo ? (
             <img src={item.logo} alt={item.name} className="w-8 h-8 md:w-11 md:h-11 object-contain drop-shadow-md" />
           ) : (
@@ -1266,7 +1503,7 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
               ? <div className="text-white drop-shadow-xl">{React.cloneElement(item.icon, { className: 'w-12 h-12' })}</div>
               : typeof item.icon === 'string' && item.icon.startsWith('http')
                 ? <img src={item.icon} alt={item.name} className="w-14 h-14 object-contain drop-shadow-xl" />
-                : <span className="text-5xl drop-shadow-xl">{centerEmoji}</span>
+                : <span className="text-5xl drop-shadow-xl" style={{ transform: 'translateZ(0)' }}>{centerEmoji}</span>
             }
           </div>
         </div>
@@ -1350,6 +1587,9 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
         )}
 
       {showIntroScreen && introItem && <OptionIntroScreen />}
+      
+      {showArticleListView && <ArticleListView />}
+      {showArticleReader && <ArticleReader />}
       
       {showMultiAdView && multiAdConfig && (
         <MultiAdViewPage
@@ -2235,7 +2475,7 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
               </div>
               <div className="grid grid-cols-3 sm:grid-cols-5 gap-4 md:gap-6 justify-items-center">
                 {[
-                  { id: 'l1-article', name: 'Articles', icon: <Newspaper className="w-7 h-7" />, coins: 15, color: 'from-blue-400 to-indigo-500', action: () => openMultiAdView({ key: 'articles', name: 'Articles', adType: 'native', coins: 15, logo: 'https://img.icons8.com/color/96/news.png', color: 'from-blue-400 to-indigo-500' }), count: getMultiAdCount('articles'), maxCount: 5 },
+                  { id: 'l1-article', name: 'Articles', icon: <Newspaper className="w-7 h-7" />, coins: 15, color: 'from-blue-400 to-indigo-500', action: () => setShowArticleListView(true), count: articleReadCount, maxCount: 5 },
                   { id: 'l1-videos', name: 'Videos', icon: <Video className="w-7 h-7" />, coins: 25, color: 'from-purple-400 to-pink-500', action: () => openMultiAdView({ key: 'videos', name: 'Videos', adType: 'rewarded', coins: 25, logo: 'https://img.icons8.com/color/96/youtube-play.png', color: 'from-purple-400 to-pink-500' }), count: getMultiAdCount('videos'), maxCount: 5 },
                   { id: 'l1-games', name: 'Games', icon: <Gamepad2 className="w-7 h-7" />, coins: 50, color: 'from-emerald-400 to-teal-500', action: () => setShowGamesView(true) },
                   { id: 'l1-wheel', name: 'Fortune Wheel', icon: <Aperture className="w-7 h-7" />, coins: null, color: 'from-amber-400 to-orange-500', action: () => setShowWheelView(true) },
@@ -2316,9 +2556,9 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
           <div className="w-full max-w-2xl mx-auto border border-slate-200 dark:border-slate-800 rounded-xl p-3 flex items-center justify-center bg-slate-50 dark:bg-slate-800/30 relative overflow-hidden">
             <span className="absolute top-0 right-0 bg-slate-600 text-white text-[8px] px-1.5 py-0.5 font-bold rounded-bl-lg">Ad</span>
             <div className="flex items-center gap-4">
-              <span className="text-blue-500 font-bold text-sm">Nice job!</span>
+              <span className="text-blue-500 font-bold text-sm">SPONSORED</span>
               <div className="h-6 w-px bg-slate-200 dark:bg-slate-700"></div>
-              <span className="text-slate-500 dark:text-slate-400 text-xs font-medium">This is a 468x60 test ad.</span>
+              <span className="text-slate-500 dark:text-slate-400 text-xs font-medium">468x60 Banner Ad</span>
             </div>
           </div>
 
@@ -2354,9 +2594,9 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
           <div className="w-full max-w-2xl mx-auto border border-slate-200 dark:border-slate-800 rounded-xl p-3 flex items-center justify-center bg-slate-50 dark:bg-slate-800/30 relative overflow-hidden">
             <span className="absolute top-0 right-0 bg-slate-600 text-white text-[8px] px-1.5 py-0.5 font-bold rounded-bl-lg">Ad</span>
             <div className="flex items-center gap-4">
-              <span className="text-blue-500 font-bold text-sm">Nice job!</span>
+              <span className="text-blue-500 font-bold text-sm">SPONSORED</span>
               <div className="h-6 w-px bg-slate-200 dark:bg-slate-700"></div>
-              <span className="text-slate-500 dark:text-slate-400 text-xs font-medium">This is a 468x60 test ad.</span>
+              <span className="text-slate-500 dark:text-slate-400 text-xs font-medium">468x60 Banner Ad</span>
             </div>
           </div>
 
@@ -2376,12 +2616,12 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
               </div>
               <div className="grid grid-cols-3 sm:grid-cols-3 md:grid-cols-6 gap-3 md:gap-4 justify-items-center">
                 {[
-                  { id: 'l5-rik-survey', name: 'Rik Survey', icon: <ClipboardList className="w-7 h-7" />, coins: 1200, color: 'from-sky-400 to-blue-500', action: () => handleStatusClick('Rik Survey', 'unavailable') },
-                  { id: 'l5-web-reg', name: 'Website Reg.', icon: <Globe className="w-7 h-7" />, coins: 30, color: 'from-violet-400 to-purple-500', action: () => handleStatusClick('Website Registration', 'upcoming') },
-                  { id: 'l5-email', name: 'Email Submit', icon: <Mail className="w-7 h-7" />, coins: 20, color: 'from-orange-400 to-red-500', action: () => handleStatusClick('Email Submit', 'upcoming') },
-                  { id: 'l5-app', name: 'App Install', icon: <Download className="w-7 h-7" />, coins: 40, color: 'from-emerald-400 to-green-500', action: () => handleStatusClick('App Install', 'unavailable') },
-                  { id: 'l5-affiliate', name: 'Affiliate Market', icon: <ShoppingBag className="w-7 h-7" />, coins: 75, color: 'from-amber-400 to-yellow-500', action: () => handleStatusClick('Affiliate Market', 'upcoming') },
-                  { id: 'l5-trial', name: 'Trial Signup', icon: <Key className="w-7 h-7" />, coins: 60, color: 'from-rose-400 to-pink-500', action: () => handleStatusClick('Trial Signup', 'upcoming') },
+                  { id: 'l5-rik-survey', name: 'Rik Survey', icon: <ClipboardList />, coins: 1200, color: 'from-sky-400 to-blue-500', action: () => handleStatusClick('Rik Survey', 'unavailable') },
+                  { id: 'l5-web-reg', name: 'Website Reg.', icon: <Globe />, coins: 30, color: 'from-violet-400 to-purple-500', action: () => handleStatusClick('Website Registration', 'upcoming') },
+                  { id: 'l5-email', name: 'Email Submit', icon: <Mail />, coins: 20, color: 'from-orange-400 to-red-500', action: () => handleStatusClick('Email Submit', 'upcoming') },
+                  { id: 'l5-app', name: 'App Install', icon: <Download />, coins: 40, color: 'from-emerald-400 to-green-500', action: () => handleStatusClick('App Install', 'unavailable') },
+                  { id: 'l5-affiliate', name: 'Affiliate Market', icon: <ShoppingBag />, coins: 75, color: 'from-amber-400 to-yellow-500', action: () => handleStatusClick('Affiliate Market', 'upcoming') },
+                  { id: 'l5-trial', name: 'Trial Signup', icon: <Key />, coins: 60, color: 'from-rose-400 to-pink-500', action: () => handleStatusClick('Trial Signup', 'upcoming') },
                 ].map(item => <OptionCard key={item.id} item={item} />)}
               </div>
             </div>
@@ -2892,41 +3132,60 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
       , document.body)}
 
       {showStatusOverlay && createPortal(
-        <div className="fixed inset-0 z-[99999] bg-[#070B14]/95 backdrop-blur-xl flex flex-col animate-fade-in overflow-hidden">
-          <div className="p-4 flex items-center border-b border-white/5 bg-black/20">
+        <div className="fixed inset-0 z-[99999] bg-[#070B14] flex flex-col animate-fade-in overflow-hidden">
+          {/* Animated Background Pattern */}
+          <div className="absolute inset-0 opacity-10">
+            <div className="absolute inset-0 bg-[radial-gradient(#ffffff_1px,transparent_1px)] [background-size:20px_20px] animate-pulse"></div>
+          </div>
+          
+          <div className="relative z-10 p-4 flex items-center border-b border-white/5 bg-black/40 backdrop-blur-md">
             <button
               onClick={() => setShowStatusOverlay(false)}
-              className="w-10 h-10 flex items-center justify-start text-slate-300 active:scale-95 transition-transform"
+              className="w-10 h-10 flex items-center justify-center text-slate-300 hover:text-white transition-colors"
             >
               <ArrowLeft className="w-6 h-6" />
             </button>
-            <h2 className="text-[#FACC15] font-bold ml-1 text-lg tracking-wide flex-1">Task Status</h2>
+            <h2 className="text-[#FACC15] font-black ml-2 text-lg uppercase tracking-tight flex-1">Status Update</h2>
           </div>
 
-          <div className="flex-1 flex flex-col items-center justify-center px-6 text-center space-y-8">
-            <div className={`w-24 h-24 rounded-3xl bg-gradient-to-br ${statusData.type === 'upcoming' ? 'from-amber-400 to-orange-500' : 'from-rose-500 to-pink-600'} flex items-center justify-center shadow-2xl animate-bounce-slow`}>
-              {statusData.type === 'upcoming' ? (
-                <Clock className="w-12 h-12 text-white" strokeWidth={3} />
-              ) : (
-                <AlertCircle className="w-12 h-12 text-white" strokeWidth={3} />
-              )}
+          <div className="flex-1 flex flex-col items-center justify-center px-8 text-center relative z-10">
+            <div className={`relative mb-10`}>
+                <div className={`absolute inset-0 blur-3xl opacity-30 ${statusData.type === 'upcoming' ? 'bg-amber-500' : 'bg-rose-500'} animate-pulse`}></div>
+                <div className={`w-28 h-28 rounded-[2rem] bg-gradient-to-br ${statusData.type === 'upcoming' ? 'from-amber-400 to-orange-600 shadow-amber-500/20' : 'from-rose-500 to-pink-700 shadow-rose-500/20'} flex items-center justify-center shadow-2xl animate-float relative z-20`}>
+                  {statusData.type === 'upcoming' ? (
+                    <Clock className="w-14 h-14 text-white" strokeWidth={2.5} />
+                  ) : (
+                    <AlertCircle className="w-14 h-14 text-white" strokeWidth={2.5} />
+                  )}
+                </div>
             </div>
 
-            <div className="space-y-4">
-              <h2 className="text-3xl font-black text-white tracking-tight">
-                {statusData.name}
-              </h2>
-              <p className="text-xl font-bold bg-gradient-to-r from-amber-200 to-yellow-500 bg-clip-text text-transparent">
-                {statusData.type === 'upcoming' ? 'Coming Soon' : 'Not Available Right Now'}
-              </p>
-              <p className="text-slate-400 text-sm max-w-xs mx-auto leading-relaxed">
+            <div className="space-y-6 max-w-sm">
+              <div className="space-y-2">
+                <h2 className="text-4xl font-black text-white tracking-tighter leading-none">
+                  {statusData.name}
+                </h2>
+                <div className={`inline-block px-4 py-1.5 rounded-full text-sm font-black uppercase tracking-widest ${statusData.type === 'upcoming' ? 'bg-amber-500/10 text-amber-400' : 'bg-rose-500/10 text-rose-400'}`}>
+                   {statusData.type === 'upcoming' ? 'Coming Soon' : 'Locked!'}
+                </div>
+              </div>
+
+              <p className="text-slate-400 font-medium text-lg leading-relaxed">
                 {statusData.type === 'upcoming' 
-                  ? 'We are currently preparing this task. Stay tuned for updates and be the first to earn big!' 
-                  : 'This task is temporarily unavailable. Please try again later or check out other tasks.'}
+                  ? 'Great things take time! We are polishing this feature to give you the best earning experience.' 
+                  : 'This section is currently under maintenance or requires a higher level to unlock.'}
               </p>
+              
+              <button 
+                onClick={() => setShowStatusOverlay(false)}
+                className="w-full py-4 rounded-2xl bg-white/5 border border-white/10 text-white font-bold hover:bg-white/10 transition-colors"
+              >
+                Go Back
+              </button>
             </div>
 
-            <div className="w-full flex justify-center pt-8">
+            <div className="mt-auto w-full pb-8 flex flex-col items-center gap-4">
+               <div className="text-[10px] font-black text-slate-600 uppercase tracking-widest bg-slate-800/50 px-3 py-1 rounded-full">Sponsored Ad</div>
                <BigAdBanner />
             </div>
           </div>
