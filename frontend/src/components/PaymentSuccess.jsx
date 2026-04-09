@@ -26,35 +26,18 @@ const PaymentSuccess = ({ paymentMethod, onBack }) => {
         </h1>
 
         <p className="text-slate-500 dark:text-slate-400 text-lg mb-10 max-w-md font-medium animate-fade-in-up" style={{ animationDelay: '100ms' }}>
-          {needsReview ? (
-            <>
-              আপনার পেমেন্ট সফলভাবে গ্রহণ করা হয়েছে এবং তা রিভিউতে আছে। <br />
-              দ্রুত এপ্রুভালের জন্য নিচের নাম্বারে হোয়াটসঅ্যাপে যোগাযোগ করুন 📲
-            </>
-          ) : paymentMethod === 'cod' ? (
+          {paymentMethod === 'cod' ? (
             'ক্যাশ অন ডেলিভারি (Cash on Delivery) সফলভাবে নির্বাচন করা হয়েছে। পণ্য রিসিভ করার সময় মূল্য পরিশোধ করুন।'
+          ) : needsReview ? (
+            'আপনার পেমেন্ট সফলভাবে গ্রহণ করা হয়েছে এবং তা রিভিউতে আছে। এডমিন দ্রুত আপনার পেমেন্টটি ভেরিফাই করবেন।'
           ) : (
             'আপনার অর্ডারটি সফলভাবে প্লেস করা হয়েছে এবং ওয়ালেট থেকে ব্যালেন্স কেটে নেওয়া হয়েছে।'
           )}
         </p>
 
-        {/* Action Button */}
-        {needsReview && (
-          <a
-            href="https://Wa.me/+447476591257"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="bg-[#25D366] text-white px-8 py-4 rounded-[2rem] font-black text-xl flex items-center gap-3 shadow-xl hover:shadow-[#25D366]/40 transition-all mb-8 animate-fade-in-up"
-            style={{ animationDelay: '200ms' }}
-          >
-            <Send size={24} />
-            WhatsApp এ যোগাযোগ করুন
-          </a>
-        )}
-
-        <div className="space-y-2 mb-10 animate-fade-in-up" style={{ animationDelay: '300ms' }}>
-          <p className="text-slate-600 dark:text-slate-400 font-bold">
-            {needsReview ? '🤝 আমরা দ্রুত আপনাকে সহায়তা করার জন্য প্রস্তুত আছি।' : '📦 আপনার অর্ডার শিগগিরই প্রসেস করা হবে।'}
+        <div className="space-y-2 mb-10 animate-fade-in-up" style={{ animationDelay: '200ms' }}>
+           <p className="text-slate-600 dark:text-slate-400 font-bold">
+            {needsReview ? '🤝 আমরা দ্রুত আপনার অর্ডারটি প্রসেস করব।' : '📦 আপনার অর্ডার শিগগিরই প্রসেস করা হবে।'}
           </p>
           <p className="text-slate-400 dark:text-slate-500 text-sm">
             ধন্যবাদ আমাদের সাথে থাকার জন্য ❤️

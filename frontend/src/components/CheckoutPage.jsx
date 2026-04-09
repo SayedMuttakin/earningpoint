@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import PullToRefresh from './PullToRefresh';
 import { ArrowLeft, Wallet, CreditCard, ShieldCheck } from 'lucide-react';
+import { API_BASE } from '../config';
 
 const CheckoutPage = ({ product, onBack, onSuccess }) => {
   const [paymentMethod, setPaymentMethod] = useState('cod');
@@ -8,11 +9,13 @@ const CheckoutPage = ({ product, onBack, onSuccess }) => {
   const [transactionId, setTransactionId] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [settings, setSettings] = useState(null);
+  const [step, setStep] = useState(1);
 
   useEffect(() => {
     const fetchSettings = async () => {
       try {
-        const res = await fetch(`${import.meta.env.VITE_API_URL}/api/earning/settings`);
+        const res = await fetch(`${API_BASE}/api/earning/settings`);
+        if (!res.ok) return;
         const data = await res.json();
         setSettings(data);
       } catch (err) {
@@ -38,8 +41,17 @@ const CheckoutPage = ({ product, onBack, onSuccess }) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  const handlePlaceOrder = async (e) => {
+  const handleProceedClick = (e) => {
     e.preventDefault();
+    if (['bkash', 'nagad', 'rocket'].includes(paymentMethod)) {
+      setStep(2); // Go to instruction page
+    } else {
+      submitOrder(); // Direct purchase
+    }
+  };
+
+  const submitOrder = async (e) => {
+    if (e) e.preventDefault();
     if (['bkash', 'nagad', 'rocket'].includes(paymentMethod) && !transactionId) {
       alert('Please enter the Transaction ID to confirm your payment.');
       return;
@@ -47,8 +59,8 @@ const CheckoutPage = ({ product, onBack, onSuccess }) => {
 
     setIsSubmitting(true);
     try {
-      const token = localStorage.getItem('zenvio_token');
-      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/earning/premium-order`, {
+      const token = localStorage.getItem('token');
+      const res = await fetch(`${API_BASE}/api/earning/premium-order`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -80,6 +92,52 @@ const CheckoutPage = ({ product, onBack, onSuccess }) => {
       <div className="max-w-2xl mx-auto px-4 py-16 text-center">
         <h2 className="text-xl text-slate-500 font-medium">No product selected for checkout.</h2>
         <button onClick={onBack} className="mt-4 text-brand-600 font-bold">Go Back to Store</button>
+      </div>
+    );
+  }
+
+  if (step === 2) {
+    const adminNumber = paymentMethod === 'bkash' ? settings?.bkashNumber : 
+                        paymentMethod === 'nagad' ? settings?.nagadNumber : 
+                        settings?.rocketNumber;
+
+    return (
+      <div className="max-w-md mx-auto px-4 py-12">
+        <button onClick={() => setStep(1)} className="flex items-center gap-2 text-slate-500 hover:text-brand-600 font-medium mb-6">
+          <ArrowLeft className="w-5 h-5" /> Back
+        </button>
+        <div className="bg-white rounded-3xl p-6 md:p-8 border border-slate-200 shadow-sm">
+          <h2 className="text-2xl font-bold text-slate-900 mb-2 text-center capitalize">{paymentMethod} Payment</h2>
+          <p className="text-slate-600 text-center mb-6">
+            Please send exact <b className="text-brand-600">৳{product.price}</b> to the following {paymentMethod} number using <b>Send Money</b>.
+          </p>
+          
+          <div className="bg-slate-50 border border-slate-200 p-4 rounded-2xl flex flex-col items-center justify-center mb-6">
+             <span className="text-sm text-slate-500 mb-1">Admin {paymentMethod} Number</span>
+             <span className="text-2xl font-bold tracking-wider text-slate-800">{adminNumber || 'Unavailable'}</span>
+          </div>
+
+          <form onSubmit={submitOrder} className="space-y-4">
+            <div>
+              <label className="block text-sm font-semibold text-slate-700 mb-1.5 text-center">Transaction ID</label>
+              <input 
+                type="text" 
+                placeholder="e.g. 9J1A2B3C" 
+                value={transactionId} 
+                onChange={(e) => setTransactionId(e.target.value)} 
+                className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-brand-500 outline-none text-center font-mono text-lg font-bold uppercase tracking-widest" 
+                required 
+              />
+            </div>
+            <button 
+              type="submit" 
+              disabled={isSubmitting}
+              className="w-full bg-brand-600 hover:bg-brand-700 text-white font-bold py-4 rounded-xl shadow-lg shadow-brand-500/30 transition-all flex items-center justify-center gap-2 active:scale-[0.98] disabled:opacity-70 disabled:cursor-not-allowed mt-4"
+            >
+              {isSubmitting ? 'Confirming...' : 'Confirm Order'}
+            </button>
+          </form>
+        </div>
       </div>
     );
   }
@@ -120,7 +178,7 @@ const CheckoutPage = ({ product, onBack, onSuccess }) => {
               Your registered profile details have been auto-filled.
             </p>
             
-            <form id="checkout-form" onSubmit={handlePlaceOrder} className="space-y-4">
+            <form id="checkout-form" onSubmit={handleProceedClick} className="space-y-4">
               <div>
                 <label className="block text-sm font-semibold text-slate-700 mb-1.5">Full Name</label>
                 <input 
@@ -193,15 +251,6 @@ const CheckoutPage = ({ product, onBack, onSuccess }) => {
                      <img src="https://freelogopng.com/images/all_img/1656234745bkash-app-logo-png.png" alt="bKash Logo" className="w-full h-full object-contain" />
                   </div>
                 </label>
-                {paymentMethod === 'bkash' && (
-                  <div className="px-4 pb-4 border-t border-pink-100 pt-3 mt-1">
-                     <p className="text-sm text-slate-600 mb-2 font-medium flex justify-between items-center">
-                       <span>Send money to:</span> 
-                       <span className="font-bold text-pink-700 bg-pink-100 px-2 rounded">{settings?.bkashNumber || 'Unavailable'}</span>
-                     </p>
-                     <input type="text" placeholder="Enter Transaction ID" value={transactionId} onChange={(e) => setTransactionId(e.target.value)} className="w-full px-3 py-2 border border-pink-200 rounded-lg text-sm bg-white focus:ring-2 focus:ring-pink-500 outline-none" required />
-                  </div>
-                )}
               </div>
 
               {/* Nagad */}
@@ -218,15 +267,6 @@ const CheckoutPage = ({ product, onBack, onSuccess }) => {
                      <img src="https://download.logo.wine/logo/Nagad/Nagad-Logo.wine.png" alt="Nagad Logo" className="w-full h-full object-contain scale-150" />
                   </div>
                 </label>
-                {paymentMethod === 'nagad' && (
-                  <div className="px-4 pb-4 border-t border-orange-100 pt-3 mt-1">
-                     <p className="text-sm text-slate-600 mb-2 font-medium flex justify-between items-center">
-                       <span>Send money to:</span> 
-                       <span className="font-bold text-orange-700 bg-orange-100 px-2 rounded">{settings?.nagadNumber || 'Unavailable'}</span>
-                     </p>
-                     <input type="text" placeholder="Enter Transaction ID" value={transactionId} onChange={(e) => setTransactionId(e.target.value)} className="w-full px-3 py-2 border border-orange-200 rounded-lg text-sm bg-white focus:ring-2 focus:ring-orange-500 outline-none" required />
-                  </div>
-                )}
               </div>
 
               {/* Rocket */}
@@ -243,15 +283,6 @@ const CheckoutPage = ({ product, onBack, onSuccess }) => {
                      <img src="https://freelogopng.com/images/all_img/1679747124rocket-logo-png.png" alt="Rocket Logo" className="w-full h-full object-contain scale-125" />
                   </div>
                 </label>
-                {paymentMethod === 'rocket' && (
-                  <div className="px-4 pb-4 border-t border-purple-100 pt-3 mt-1">
-                     <p className="text-sm text-slate-600 mb-2 font-medium flex justify-between items-center">
-                       <span>Send money to:</span> 
-                       <span className="font-bold text-purple-700 bg-purple-100 px-2 rounded">{settings?.rocketNumber || 'Unavailable'}</span>
-                     </p>
-                     <input type="text" placeholder="Enter Transaction ID" value={transactionId} onChange={(e) => setTransactionId(e.target.value)} className="w-full px-3 py-2 border border-purple-200 rounded-lg text-sm bg-white focus:ring-2 focus:ring-purple-500 outline-none" required />
-                  </div>
-                )}
               </div>
 
               {/* Cash on Delivery */}
@@ -273,7 +304,7 @@ const CheckoutPage = ({ product, onBack, onSuccess }) => {
               disabled={isSubmitting}
               className="w-full bg-brand-600 hover:bg-brand-700 text-white font-bold py-4 rounded-xl shadow-lg shadow-brand-500/30 transition-all flex items-center justify-center gap-2 active:scale-[0.98] disabled:opacity-70 disabled:cursor-not-allowed"
             >
-              {isSubmitting ? 'Confirming...' : <ShieldCheck className="w-5 h-5" />} {!isSubmitting && 'Confirm Payment'}
+              {isSubmitting ? 'Processing...' : <ShieldCheck className="w-5 h-5" />} {!isSubmitting && (['bkash', 'nagad', 'rocket'].includes(paymentMethod) ? 'Proceed to Pay' : 'Confirm Order')}
             </button>
             <p className="text-center text-xs text-slate-400 mt-4 flex items-center justify-center gap-1.5">
                <ShieldCheck className="w-3.5 h-3.5" /> 100% Secured and Encrypted
