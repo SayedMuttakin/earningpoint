@@ -50,7 +50,12 @@ import {
   Pointer,
   Hash,
   Facebook,
-  Youtube
+  Youtube,
+  Mail,
+  Download,
+  ClipboardList,
+  ShoppingBag,
+  Key
 } from 'lucide-react';
 
 const gkQuizDB = [
@@ -2363,12 +2368,12 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
               </div>
               <div className="grid grid-cols-3 sm:grid-cols-3 md:grid-cols-6 gap-3 md:gap-4 justify-items-center">
                 {[
-                  { id: 'l5-rik-survey', name: 'Rik Survey', logo: 'https://img.icons8.com/color/96/survey.png', coins: 1200, color: 'from-sky-400 to-blue-500', action: () => handleStatusClick('Rik Survey', 'unavailable') },
-                  { id: 'l5-web-reg', name: 'Website Reg.', logo: 'https://img.icons8.com/color/96/domain.png', coins: 30, color: 'from-violet-400 to-purple-500', action: () => handleAdOptionClick('Website Registration', 'Offerwall', 30) },
-                  { id: 'l5-email', name: 'Email Submit', logo: 'https://img.icons8.com/color/96/email.png', coins: 20, color: 'from-orange-400 to-red-500', action: () => handleStatusClick('Email Submit', 'upcoming') },
-                  { id: 'l5-app', name: 'App Install', logo: 'https://img.icons8.com/color/96/google-play.png', coins: 40, color: 'from-emerald-400 to-green-500', action: () => handleAdOptionClick('App Install', 'Offerwall', 40) },
-                  { id: 'l5-affiliate', name: 'Affiliate Market', logo: 'https://img.icons8.com/color/96/merchant-account.png', coins: 75, color: 'from-amber-400 to-yellow-500', action: () => handleStatusClick('Affiliate Market', 'upcoming') },
-                  { id: 'l5-trial', name: 'Trial Signup', logo: 'https://img.icons8.com/color/96/key.png', coins: 60, color: 'from-rose-400 to-pink-500', action: () => handleAdOptionClick('Trial Signup', 'Offerwall', 60) },
+                  { id: 'l5-rik-survey', name: 'Rik Survey', icon: <ClipboardList className="w-7 h-7" />, coins: 1200, color: 'from-sky-400 to-blue-500', action: () => handleStatusClick('Rik Survey', 'unavailable') },
+                  { id: 'l5-web-reg', name: 'Website Reg.', icon: <Globe className="w-7 h-7" />, coins: 30, color: 'from-violet-400 to-purple-500', action: () => handleAdOptionClick('Website Registration', 'Offerwall', 30) },
+                  { id: 'l5-email', name: 'Email Submit', icon: <Mail className="w-7 h-7" />, coins: 20, color: 'from-orange-400 to-red-500', action: () => handleStatusClick('Email Submit', 'upcoming') },
+                  { id: 'l5-app', name: 'App Install', icon: <Download className="w-7 h-7" />, coins: 40, color: 'from-emerald-400 to-green-500', action: () => handleAdOptionClick('App Install', 'Offerwall', 40) },
+                  { id: 'l5-affiliate', name: 'Affiliate Market', icon: <ShoppingBag className="w-7 h-7" />, coins: 75, color: 'from-amber-400 to-yellow-500', action: () => handleStatusClick('Affiliate Market', 'upcoming') },
+                  { id: 'l5-trial', name: 'Trial Signup', icon: <Key className="w-7 h-7" />, coins: 60, color: 'from-rose-400 to-pink-500', action: () => handleAdOptionClick('Trial Signup', 'Offerwall', 60) },
                 ].map(item => <OptionCard key={item.id} item={item} />)}
               </div>
             </div>
