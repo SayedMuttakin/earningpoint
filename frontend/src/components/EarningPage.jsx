@@ -1794,6 +1794,10 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
                     />
                   </div>
                 </div>
+
+                <div className="mt-8 flex justify-center">
+                  <BigAdBanner />
+                </div>
               </div>
           </div>
         )}
@@ -2260,13 +2264,8 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
           </div>
 
           {/* Ad Banner */}
-          <div className="w-full max-w-2xl mx-auto border border-slate-100 dark:border-slate-800 rounded-xl p-3 flex items-center justify-center bg-slate-50 dark:bg-slate-800/50 relative overflow-hidden">
-            <span className="absolute top-0 right-0 bg-slate-600 text-white text-[10px] px-1.5 py-0.5 font-bold rounded-bl-lg">Ad</span>
-            <div className="flex items-center gap-4">
-              <span className="text-blue-500 font-bold text-sm">Nice job!</span>
-              <div className="h-6 w-px bg-slate-200 dark:bg-slate-700"></div>
-              <span className="text-slate-500 dark:text-slate-400 text-xs font-medium">This is a 468x60 test ad.</span>
-            </div>
+          <div className="py-4">
+            <BigAdBanner />
           </div>
 
           {/* ═══════ LEVEL 3 ═══════ */}
