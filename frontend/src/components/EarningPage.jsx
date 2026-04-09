@@ -1345,7 +1345,7 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
       )}
 
       {showQuizView && quizQuestion && (
-          <div className="fixed inset-0 z-[100] bg-slate-50 dark:bg-slate-950 flex flex-col h-screen w-full overflow-hidden animate-slide-up">
+          <div className="fixed inset-0 z-[9999] bg-slate-50 dark:bg-slate-950 flex flex-col h-screen w-full overflow-hidden animate-slide-up">
             <div className="bg-[#1a362d] text-white pt-safe px-6 py-5 flex justify-between items-center shadow-lg shrink-0">
               <button onClick={() => goBackWithAd(() => { setShowQuizView(false); setQuizTimerActive(false); })} className="p-2 hover:bg-white/10 rounded-lg shrink-0">
                 <ArrowLeft className="w-6 h-6" />
@@ -1578,7 +1578,7 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
 
       {/* Scratch Card View */}
             {showScratchView && (
-          <div className="fixed inset-0 z-[9999] bg-slate-50 dark:bg-slate-950 flex flex-col">
+          <div className="fixed inset-0 z-[9999] bg-slate-50 dark:bg-slate-950 flex flex-col h-screen w-full">
             <div className="bg-slate-50 dark:bg-slate-950 pt-safe px-6 py-5 flex justify-between items-center border-b border-slate-200 dark:border-slate-800 shrink-0">
               <h3 className="text-xl font-bold text-slate-800 dark:text-white">Scratch Cards</h3>
               <button onClick={() => goBackWithAd(() => setShowScratchView(false))} className="p-2 text-slate-400">
@@ -1655,7 +1655,7 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
       {/* Active Scratch Card Action View */}
       {activeScratchCard && (
           <div
-            className="fixed inset-0 animate-fade-in z-[100] bg-slate-100 flex flex-col"
+            className="fixed inset-0 animate-fade-in z-[9999] bg-slate-100 flex flex-col h-screen w-full"
           >
             {/* Header */}
             <div className="bg-[#1a362d] text-white pt-safe px-4 py-4 flex items-center gap-4 shadow-md shrink-0">
@@ -1747,7 +1747,7 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
 
       {/* Quiz Selection Modal */}
       {showQuizSelection && (
-          <div className="fixed inset-0 z-[100] bg-slate-50 dark:bg-slate-950 flex flex-col h-screen w-full overflow-hidden animate-slide-up">
+          <div className="fixed inset-0 z-[9999] bg-slate-50 dark:bg-slate-950 flex flex-col h-screen w-full overflow-hidden animate-slide-up">
               <div className="bg-slate-50 dark:bg-slate-900 pt-safe px-8 py-6 flex justify-between items-center border-b border-slate-200 dark:border-slate-700 shrink-0">
                 <h3 className="text-xl font-bold text-slate-800 dark:text-white">Choose a Quiz</h3>
                 <button 
@@ -1814,7 +1814,7 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
 
       {/* Daily Checkin Full Screen View */}
       {showCheckinView && !showAdOverlay && (
-          <div className="fixed inset-0 z-[9999] bg-slate-50 dark:bg-slate-950 flex flex-col">
+          <div className="fixed inset-0 z-[9999] bg-slate-50 dark:bg-slate-950 flex flex-col h-screen w-full">
                <div className="bg-slate-50 dark:bg-slate-950 pt-safe px-6 py-5 flex justify-between items-center border-b border-slate-200 dark:border-slate-800 shrink-0">
                   <h3 className="text-xl font-bold text-slate-800 dark:text-white">Daily Checkin</h3>
                   <button onClick={() => goBackWithAd(() => setShowCheckinView(false))} className="text-slate-400 hover:text-slate-600 dark:hover:text-white transition-colors">
@@ -1869,7 +1869,7 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
       {/* Ad Overlay Removed - Using Real AdMob */}
 
             {showGkQuizView && gkQuizQuestions.length > 0 && (
-          <div className="fixed inset-0 z-[100] bg-slate-50 dark:bg-slate-950 flex flex-col h-screen w-full overflow-hidden animate-slide-up">
+          <div className="fixed inset-0 z-[9999] bg-slate-50 dark:bg-slate-950 flex flex-col h-screen w-full overflow-hidden animate-slide-up">
             <div className="bg-gradient-to-r from-amber-500 to-orange-600 pt-safe px-6 py-4 flex justify-between items-center shadow-lg shrink-0">
               <h3 className="text-xl font-bold text-white flex items-center gap-2">
                 <Star className="w-6 h-6" /> Gen. Knowledge
