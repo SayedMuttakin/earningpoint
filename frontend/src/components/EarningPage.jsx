@@ -354,7 +354,14 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
           rocketNumber: data.rocketNumber || '01700-000000',
           premiumIpPackages: data.premiumIpPackages || [],
           nativeAdsConfig: data.nativeAdsConfig || prev.nativeAdsConfig,
-          fortuneWheelConfig: data.fortuneWheelConfig || prev.fortuneWheelConfig
+          fortuneWheelConfig: data.fortuneWheelConfig ? {
+            ...prev.fortuneWheelConfig,
+            ...data.fortuneWheelConfig,
+            // Ensure coins array is always valid
+            coins: (Array.isArray(data.fortuneWheelConfig.coins) && data.fortuneWheelConfig.coins.length > 0)
+              ? data.fortuneWheelConfig.coins
+              : prev.fortuneWheelConfig.coins
+          } : prev.fortuneWheelConfig
         }));
       }
     } catch (error) {
@@ -1695,15 +1702,15 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
                   className="w-full h-full rounded-full border-[10px] border-amber-400 dark:border-amber-500 shadow-2xl relative transition-transform duration-5000 ease-out flex items-center justify-center overflow-hidden"
                   style={{ 
                     transform: isSpinning ? `rotate(${spinReward?.totalRotation || 0}deg)` : 'rotate(0deg)',
-                    background: `conic-gradient(${(globalSettings.fortuneWheelConfig?.coins || [10, 20, 30, 40, 50, 60, 70, 80, 90, 100]).map((_, i, arr) => {
+                    background: `conic-gradient(${(Array.isArray(globalSettings.fortuneWheelConfig?.coins) && globalSettings.fortuneWheelConfig.coins.length > 0 ? globalSettings.fortuneWheelConfig.coins : [10, 20, 30, 40, 50, 60, 70, 80, 90, 100]).map((_, i, arr) => {
                       const colors = ['#ef4444', '#f97316', '#eab308', '#22c55e', '#06b6d4', '#3b82f6', '#8b5cf6', '#ec4899', '#f43f5e', '#14b8a6'];
-                      const size = 360 / arr.length;
+                      const size = 360 / (arr.length || 1);
                       return `${colors[i % colors.length]} ${i * size}deg ${(i + 1) * size}deg`;
                     }).join(', ')})` 
                   }}
                 >
-                  {(globalSettings.fortuneWheelConfig?.coins || [10, 20, 30, 40, 50, 60, 70, 80, 90, 100]).map((pts, i, arr) => {
-                    const segmentSize = 360 / arr.length;
+                  {(Array.isArray(globalSettings.fortuneWheelConfig?.coins) && globalSettings.fortuneWheelConfig.coins.length > 0 ? globalSettings.fortuneWheelConfig.coins : [10, 20, 30, 40, 50, 60, 70, 80, 90, 100]).map((pts, i, arr) => {
+                    const segmentSize = 360 / (arr.length || 1);
                     const rotation = i * segmentSize + (segmentSize / 2);
                     return (
                       <div
