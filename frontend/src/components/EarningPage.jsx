@@ -103,7 +103,13 @@ const BigAdBanner = () => {
 
         <div className="flex flex-col items-center text-center p-6 pt-10 space-y-4">
           <div className="w-20 h-20 bg-white dark:bg-slate-900 rounded-3xl shadow-md flex items-center justify-center ring-4 ring-blue-500/10">
-             <img src="https://img.icons8.com/fluency/96/google-logo.png" alt="Ad Mascot" className="w-12 h-12" />
+            {/* Inline Google-style G icon - no external URL */}
+            <svg viewBox="0 0 48 48" className="w-12 h-12">
+              <path fill="#4285F4" d="M44.5 20H24v8.5h11.7C34.1 33.1 29.6 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3 0 5.8 1.1 7.9 3l6-6C34.5 6.4 29.6 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20c11 0 19.7-7.9 19.7-20 0-1.3-.1-2.7-.2-4z"/>
+              <path fill="#34A853" d="M6.3 14.7l7 5.1C15 16.2 19.1 13 24 13c3 0 5.8 1.1 7.9 3l6-6C34.5 6.4 29.6 4 24 4 16.3 4 9.7 8.4 6.3 14.7z"/>
+              <path fill="#FBBC05" d="M24 44c5.5 0 10.4-1.9 14.2-5.1l-6.6-5.4C29.6 35.3 26.9 36 24 36c-5.6 0-10.1-2.9-11.7-7.5l-7 5.4C9.7 39.6 16.3 44 24 44z"/>
+              <path fill="#EA4335" d="M44.5 20H24v8.5h11.7c-.8 2.3-2.3 4.2-4.2 5.5l6.6 5.4C41.9 35.9 44.5 30.4 44.5 24c0-1.3-.1-2.7-.2-4z"/>
+            </svg>
           </div>
           
           <div className="space-y-1">
@@ -122,7 +128,9 @@ const BigAdBanner = () => {
 
         <div className="absolute bottom-2 right-4 flex items-center gap-1.5 opacity-30">
            <span className="text-[9px] font-black text-slate-400 tracking-tighter">Ads by Google</span>
-           <img src="https://img.icons8.com/color/48/google-logo.png" className="w-3.5 h-3.5 grayscale" />
+           <svg viewBox="0 0 48 48" className="w-3.5 h-3.5 grayscale">
+             <path fill="#4285F4" d="M44.5 20H24v8.5h11.7C34.1 33.1 29.6 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3 0 5.8 1.1 7.9 3l6-6C34.5 6.4 29.6 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20c11 0 19.7-7.9 19.7-20 0-1.3-.1-2.7-.2-4z"/>
+           </svg>
         </div>
       </div>
     </div>
@@ -303,8 +311,8 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
       });
       const data = await res.json();
       if (res.ok) {
-        setArticles(data.articles);
-        setArticleReadCount(data.dailyCount);
+        setArticles(Array.isArray(data.articles) ? data.articles : []);
+        setArticleReadCount(data.dailyCount || 0);
       }
     } catch (err) {
       console.error('Error fetching articles:', err);
@@ -2680,7 +2688,18 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
               <div
                 className="w-32 h-32 bg-rose-100 rounded-full flex items-center justify-center animate-float"
               >
-                <img src="https://img.icons8.com/color/144/monster.png" alt="Ad Character" className="w-24 h-24" />
+                <svg viewBox="0 0 100 100" className="w-24 h-24" xmlns="http://www.w3.org/2000/svg">
+                  <circle cx="50" cy="55" r="38" fill="#4ade80"/>
+                  <rect x="20" y="20" width="60" height="45" rx="20" fill="#22c55e"/>
+                  <circle cx="35" cy="38" r="8" fill="white"/>
+                  <circle cx="65" cy="38" r="8" fill="white"/>
+                  <circle cx="37" cy="40" r="4" fill="#1e293b"/>
+                  <circle cx="67" cy="40" r="4" fill="#1e293b"/>
+                  <path d="M38 55 Q50 65 62 55" stroke="white" strokeWidth="3" fill="none" strokeLinecap="round"/>
+                  <rect x="28" y="14" width="10" height="16" rx="5" fill="#16a34a"/>
+                  <rect x="62" y="14" width="10" height="16" rx="5" fill="#16a34a"/>
+                  <rect x="45" y="10" width="10" height="18" rx="5" fill="#16a34a"/>
+                </svg>
               </div>
               <div className="absolute -top-2 -right-2 bg-blue-500 text-white px-3 py-1 rounded-full text-xs font-bold shadow-lg">
                 Nice job!
@@ -2689,7 +2708,9 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
             <div className="space-y-2">
               <p className="text-lg font-bold text-slate-800 dark:text-slate-200">This is a 300x250 test ad.</p>
               <div className="flex items-center justify-center gap-2 text-slate-400 text-sm">
-                 <img src="https://img.icons8.com/color/48/google-logo.png" alt="Google" className="w-5 h-5 opacity-50" />
+                 <svg viewBox="0 0 48 48" className="w-5 h-5 opacity-50">
+                   <path fill="#4285F4" d="M44.5 20H24v8.5h11.7C34.1 33.1 29.6 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3 0 5.8 1.1 7.9 3l6-6C34.5 6.4 29.6 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20c11 0 19.7-7.9 19.7-20 0-1.3-.1-2.7-.2-4z"/>
+                 </svg>
                  <span>Google AdMob</span>
               </div>
             </div>
