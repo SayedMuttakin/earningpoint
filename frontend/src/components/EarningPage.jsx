@@ -739,7 +739,7 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
     const paragraphs = currentArticle.content.split(/\n\n|\r\n\r\n/).filter(p => p.trim() !== '');
 
     return createPortal(
-      <div className="fixed inset-0 z-[10000] bg-white dark:bg-slate-950 flex flex-col h-screen w-full overflow-hidden animate-slide-up">
+      <div className="fixed inset-0 z-[10000] bg-white dark:bg-slate-950 flex flex-col w-full overflow-hidden animate-slide-up">
         {/* Header */}
         <div className="bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 pt-safe px-6 py-4 flex justify-between items-center shrink-0">
           <button onClick={() => setShowArticleReader(false)} className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg">
@@ -759,7 +759,7 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
         </div>
 
         {/* Content Scroll Area */}
-        <div className="flex-1 overflow-y-auto p-6 sm:p-10 max-w-2xl mx-auto w-full">
+        <div className="flex-1 overflow-y-auto min-h-0 p-6 sm:p-10 max-w-2xl mx-auto w-full">
            <h1 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white mb-8 leading-tight">
              {currentArticle.title}
            </h1>
