@@ -497,6 +497,14 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
     }
   };
 
+  const [showStatusOverlay, setShowStatusOverlay] = React.useState(false);
+  const [statusData, setStatusData] = React.useState({ name: '', type: 'upcoming' });
+
+  const handleStatusClick = (name, type) => {
+    setStatusData({ name, type });
+    setShowStatusOverlay(true);
+  };
+
   const fetchScratchStatus = async () => {
     try {
       const token = localStorage.getItem('token');
@@ -2369,11 +2377,11 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
               <div className="grid grid-cols-3 sm:grid-cols-3 md:grid-cols-6 gap-3 md:gap-4 justify-items-center">
                 {[
                   { id: 'l5-rik-survey', name: 'Rik Survey', icon: <ClipboardList className="w-7 h-7" />, coins: 1200, color: 'from-sky-400 to-blue-500', action: () => handleStatusClick('Rik Survey', 'unavailable') },
-                  { id: 'l5-web-reg', name: 'Website Reg.', icon: <Globe className="w-7 h-7" />, coins: 30, color: 'from-violet-400 to-purple-500', action: () => handleAdOptionClick('Website Registration', 'Offerwall', 30) },
+                  { id: 'l5-web-reg', name: 'Website Reg.', icon: <Globe className="w-7 h-7" />, coins: 30, color: 'from-violet-400 to-purple-500', action: () => handleStatusClick('Website Registration', 'upcoming') },
                   { id: 'l5-email', name: 'Email Submit', icon: <Mail className="w-7 h-7" />, coins: 20, color: 'from-orange-400 to-red-500', action: () => handleStatusClick('Email Submit', 'upcoming') },
-                  { id: 'l5-app', name: 'App Install', icon: <Download className="w-7 h-7" />, coins: 40, color: 'from-emerald-400 to-green-500', action: () => handleAdOptionClick('App Install', 'Offerwall', 40) },
+                  { id: 'l5-app', name: 'App Install', icon: <Download className="w-7 h-7" />, coins: 40, color: 'from-emerald-400 to-green-500', action: () => handleStatusClick('App Install', 'unavailable') },
                   { id: 'l5-affiliate', name: 'Affiliate Market', icon: <ShoppingBag className="w-7 h-7" />, coins: 75, color: 'from-amber-400 to-yellow-500', action: () => handleStatusClick('Affiliate Market', 'upcoming') },
-                  { id: 'l5-trial', name: 'Trial Signup', icon: <Key className="w-7 h-7" />, coins: 60, color: 'from-rose-400 to-pink-500', action: () => handleAdOptionClick('Trial Signup', 'Offerwall', 60) },
+                  { id: 'l5-trial', name: 'Trial Signup', icon: <Key className="w-7 h-7" />, coins: 60, color: 'from-rose-400 to-pink-500', action: () => handleStatusClick('Trial Signup', 'upcoming') },
                 ].map(item => <OptionCard key={item.id} item={item} />)}
               </div>
             </div>
@@ -2879,6 +2887,48 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
                    )}
                 </div>
              )}
+          </div>
+        </div>
+      , document.body)}
+
+      {showStatusOverlay && createPortal(
+        <div className="fixed inset-0 z-[99999] bg-[#070B14]/95 backdrop-blur-xl flex flex-col animate-fade-in overflow-hidden">
+          <div className="p-4 flex items-center border-b border-white/5 bg-black/20">
+            <button
+              onClick={() => setShowStatusOverlay(false)}
+              className="w-10 h-10 flex items-center justify-start text-slate-300 active:scale-95 transition-transform"
+            >
+              <ArrowLeft className="w-6 h-6" />
+            </button>
+            <h2 className="text-[#FACC15] font-bold ml-1 text-lg tracking-wide flex-1">Task Status</h2>
+          </div>
+
+          <div className="flex-1 flex flex-col items-center justify-center px-6 text-center space-y-8">
+            <div className={`w-24 h-24 rounded-3xl bg-gradient-to-br ${statusData.type === 'upcoming' ? 'from-amber-400 to-orange-500' : 'from-rose-500 to-pink-600'} flex items-center justify-center shadow-2xl animate-bounce-slow`}>
+              {statusData.type === 'upcoming' ? (
+                <Clock className="w-12 h-12 text-white" strokeWidth={3} />
+              ) : (
+                <AlertCircle className="w-12 h-12 text-white" strokeWidth={3} />
+              )}
+            </div>
+
+            <div className="space-y-4">
+              <h2 className="text-3xl font-black text-white tracking-tight">
+                {statusData.name}
+              </h2>
+              <p className="text-xl font-bold bg-gradient-to-r from-amber-200 to-yellow-500 bg-clip-text text-transparent">
+                {statusData.type === 'upcoming' ? 'Coming Soon' : 'Not Available Right Now'}
+              </p>
+              <p className="text-slate-400 text-sm max-w-xs mx-auto leading-relaxed">
+                {statusData.type === 'upcoming' 
+                  ? 'We are currently preparing this task. Stay tuned for updates and be the first to earn big!' 
+                  : 'This task is temporarily unavailable. Please try again later or check out other tasks.'}
+              </p>
+            </div>
+
+            <div className="w-full flex justify-center pt-8">
+               <BigAdBanner />
+            </div>
           </div>
         </div>
       , document.body)}
