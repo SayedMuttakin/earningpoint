@@ -44,7 +44,13 @@ import {
   Tv,
   RefreshCw,
   Gamepad2,
-  MonitorPlay
+  MonitorPlay,
+  Music2,
+  Zap,
+  Pointer,
+  Hash,
+  Facebook,
+  Youtube
 } from 'lucide-react';
 
 const gkQuizDB = [
@@ -1324,8 +1330,9 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
   return (
     <>
       {toast.visible && (
-          <div className={`fixed top-4 left-1/2 -translate-x-1/2 z-[9999] px-6 py-3 rounded-full flex items-center gap-3 shadow-2xl font-bold text-sm ${toast.type === 'error' ? 'bg-red-500 text-white' : 'bg-emerald-500 text-white'}`}>
-            {toast.type === 'error' ? '✖' : '🎉'} {toast.message}
+          <div className="fixed top-6 left-1/2 -translate-x-1/2 z-[9999] px-6 py-3 rounded-full flex items-center gap-3 shadow-[0_8px_30px_rgba(139,92,246,0.3)] font-bold text-sm bg-violet-600 text-white animate-fade-in whitespace-nowrap border border-white/20 backdrop-blur-md">
+            <span>{toast.type === 'error' ? '✖' : '🎉'}</span>
+            <span>{toast.message}</span>
           </div>
         )}
 
@@ -2284,9 +2291,9 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
               </div>
               <div className="grid grid-cols-3 gap-4 md:gap-6 justify-items-center">
                 {[
-                  { id: 'l3-youtube', name: 'YouTube', logo: 'https://img.icons8.com/color/96/youtube-play.png', coins: 30, color: 'from-red-500 to-rose-600', action: () => openMultiAdView({ key: 'youtube', name: 'YouTube', adType: 'rewarded', coins: 30, logo: 'https://img.icons8.com/color/96/youtube-play.png', color: 'from-red-500 to-rose-600' }) },
-                  { id: 'l3-tiktok', name: 'TikTok', logo: 'https://img.icons8.com/color/96/tiktok.png', coins: 25, color: 'from-slate-800 to-slate-900', action: () => openMultiAdView({ key: 'tiktok', name: 'TikTok', adType: 'rewarded', coins: 25, logo: 'https://img.icons8.com/color/96/tiktok.png', color: 'from-slate-800 to-slate-900' }) },
-                  { id: 'l3-facebook', name: 'Facebook', logo: 'https://img.icons8.com/color/96/facebook-new.png', coins: 20, color: 'from-blue-500 to-blue-700', action: () => openMultiAdView({ key: 'facebook', name: 'Facebook', adType: 'rewarded', coins: 20, logo: 'https://img.icons8.com/color/96/facebook-new.png', color: 'from-blue-500 to-blue-700' }) },
+                  { id: 'l3-youtube', name: 'YouTube', icon: <Youtube className="w-7 h-7" />, coins: 30, color: 'from-red-500 to-rose-600', action: () => openMultiAdView({ key: 'youtube', name: 'YouTube', adType: 'rewarded', coins: 30, logo: 'https://img.icons8.com/color/96/youtube-play.png', color: 'from-red-500 to-rose-600' }) },
+                  { id: 'l3-tiktok', name: 'TikTok', icon: <Music2 className="w-7 h-7" />, coins: 25, color: 'from-slate-800 to-slate-900', action: () => openMultiAdView({ key: 'tiktok', name: 'TikTok', adType: 'rewarded', coins: 25, logo: 'https://img.icons8.com/color/96/tiktok.png', color: 'from-slate-800 to-slate-900' }) },
+                  { id: 'l3-facebook', name: 'Facebook', icon: <Facebook className="w-7 h-7" />, coins: 20, color: 'from-blue-500 to-blue-700', action: () => openMultiAdView({ key: 'facebook', name: 'Facebook', adType: 'rewarded', coins: 20, logo: 'https://img.icons8.com/color/96/facebook-new.png', color: 'from-blue-500 to-blue-700' }) },
                 ].map(item => <OptionCard key={item.id} item={item} count={getMultiAdCount(item.id.replace('l3-',''))} maxCount={5} />)}
               </div>
             </div>
@@ -2318,13 +2325,13 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
               </div>
               <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-7 gap-3 md:gap-4 justify-items-center">
                 {[
-                  { id: 'l4-reward-video', name: 'Reward Video', logo: 'https://img.icons8.com/color/96/youtube-play.png', coins: 25, color: 'from-red-500 to-rose-600', action: () => openMultiAdView({ key: 'reward_video', name: 'Reward Video', adType: 'rewarded', coins: 25, logo: 'https://img.icons8.com/color/96/youtube-play.png', color: 'from-red-500 to-rose-600' }) },
-                  { id: 'l4-interstitial', name: 'Interstitial Ad', logo: 'https://img.icons8.com/color/96/google-ads.png', coins: 15, color: 'from-blue-500 to-indigo-600', action: () => openMultiAdView({ key: 'interstitial_ad', name: 'Interstitial Ad', adType: 'interstitial', coins: 15, logo: 'https://img.icons8.com/color/96/google-ads.png', color: 'from-blue-500 to-indigo-600' }) },
-                  { id: 'l4-native', name: 'Native Ad Click', logo: 'https://img.icons8.com/color/96/facebook-new.png', coins: 10, color: 'from-indigo-500 to-blue-600', action: () => openMultiAdView({ key: 'native_ad', name: 'Native Ad Click', adType: 'native', coins: 10, logo: 'https://img.icons8.com/color/96/facebook-new.png', color: 'from-indigo-500 to-blue-600' }) },
-                  { id: 'l4-bonus', name: 'Bonus Ad', logo: 'https://img.icons8.com/color/96/gift.png', coins: 30, color: 'from-amber-400 to-orange-500', action: () => openMultiAdView({ key: 'bonus_ad', name: 'Bonus Ad', adType: 'rewarded', coins: 30, logo: 'https://img.icons8.com/color/96/gift.png', color: 'from-amber-400 to-orange-500' }) },
-                  { id: 'l4-hourly', name: 'Hourly Ad', logo: 'https://img.icons8.com/color/96/hourglass.png', coins: 20, color: 'from-teal-400 to-emerald-500', action: () => openMultiAdView({ key: 'hourly_ad', name: 'Hourly Ad', adType: 'interstitial', coins: 20, logo: 'https://img.icons8.com/color/96/hourglass.png', color: 'from-teal-400 to-emerald-500' }) },
-                  { id: 'l4-weekly-refer', name: 'Meta', logo: 'https://img.icons8.com/color/96/conference-call.png', coins: 100, color: 'from-purple-400 to-pink-500', action: () => openMultiAdView({ key: 'weekly_refer', name: 'Meta', adType: 'rewarded', coins: 100, logo: 'https://img.icons8.com/color/96/conference-call.png', color: 'from-purple-400 to-pink-500' }) },
-                  { id: 'l4-surprise', name: 'Surprise Bonus', logo: 'https://img.icons8.com/color/96/confetti.png', coins: 50, color: 'from-pink-400 to-rose-500', action: () => openMultiAdView({ key: 'surprise_bonus', name: 'Surprise Bonus', adType: 'rewarded', coins: 50, logo: 'https://img.icons8.com/color/96/confetti.png', color: 'from-pink-400 to-rose-500' }) },
+                  { id: 'l4-reward-video', name: 'Reward Video', icon: <MonitorPlay className="w-7 h-7" />, coins: 25, color: 'from-red-500 to-rose-600', action: () => openMultiAdView({ key: 'reward_video', name: 'Reward Video', adType: 'rewarded', coins: 25, logo: 'https://img.icons8.com/color/96/youtube-play.png', color: 'from-red-500 to-rose-600' }) },
+                  { id: 'l4-interstitial', name: 'Interstitial Ad', icon: <Zap className="w-7 h-7" />, coins: 15, color: 'from-blue-500 to-indigo-600', action: () => openMultiAdView({ key: 'interstitial_ad', name: 'Interstitial Ad', adType: 'interstitial', coins: 15, logo: 'https://img.icons8.com/color/96/google-ads.png', color: 'from-blue-500 to-indigo-600' }) },
+                  { id: 'l4-native', name: 'Native Ad Click', icon: <Pointer className="w-7 h-7" />, coins: 10, color: 'from-indigo-500 to-blue-600', action: () => openMultiAdView({ key: 'native_ad', name: 'Native Ad Click', adType: 'native', coins: 10, logo: 'https://img.icons8.com/color/96/facebook-new.png', color: 'from-indigo-500 to-blue-600' }) },
+                  { id: 'l4-bonus', name: 'Bonus Ad', icon: <Gift className="w-7 h-7" />, coins: 30, color: 'from-amber-400 to-orange-500', action: () => openMultiAdView({ key: 'bonus_ad', name: 'Bonus Ad', adType: 'rewarded', coins: 30, logo: 'https://img.icons8.com/color/96/gift.png', color: 'from-amber-400 to-orange-500' }) },
+                  { id: 'l4-hourly', name: 'Hourly Ad', icon: <Clock className="w-7 h-7" />, coins: 20, color: 'from-teal-400 to-emerald-500', action: () => openMultiAdView({ key: 'hourly_ad', name: 'Hourly Ad', adType: 'interstitial', coins: 20, logo: 'https://img.icons8.com/color/96/hourglass.png', color: 'from-teal-400 to-emerald-500' }) },
+                  { id: 'l4-weekly-refer', name: 'Meta', icon: <Hash className="w-7 h-7" />, coins: 100, color: 'from-purple-400 to-pink-500', action: () => openMultiAdView({ key: 'weekly_refer', name: 'Meta', adType: 'rewarded', coins: 100, logo: 'https://img.icons8.com/color/96/conference-call.png', color: 'from-purple-400 to-pink-500' }) },
+                  { id: 'l4-surprise', name: 'Surprise Bonus', icon: <Star className="w-7 h-7" />, coins: 50, color: 'from-pink-400 to-rose-500', action: () => openMultiAdView({ key: 'surprise_bonus', name: 'Surprise Bonus', adType: 'rewarded', coins: 50, logo: 'https://img.icons8.com/color/96/confetti.png', color: 'from-pink-400 to-rose-500' }) },
                 ].map(item => <OptionCard key={item.id} item={item} count={getMultiAdCount(item.id.replace('l4-','').replace(/-/g,'_'))} maxCount={5} />)}
               </div>
             </div>
