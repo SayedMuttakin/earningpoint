@@ -1529,12 +1529,8 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
           </div>
         )}
 
-    <PullToRefresh onRefresh={handleRefresh} refreshing={refreshing}>
-      <main className="min-h-screen bg-slate-50 dark:bg-slate-950 transition-colors duration-500 pb-24 md:pb-8">
-      
-
       {showGamesView && (
-          <div className="fixed inset-0 z-[9999] bg-slate-50 dark:bg-slate-950 flex flex-col">
+          <div className="fixed inset-0 z-[9999] bg-slate-50 dark:bg-slate-950 flex flex-col h-screen w-full">
             <div className="bg-slate-50 dark:bg-slate-950 pt-safe px-6 py-5 flex justify-between items-center border-b border-slate-200 dark:border-slate-800 shrink-0">
               <h3 className="text-xl font-bold text-slate-800 dark:text-white">Games</h3>
               <button onClick={() => goBackWithAd(() => setShowGamesView(false))} className="p-2 text-slate-400">
@@ -1573,11 +1569,8 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
             </div>
           </div>
         )}
-      
 
-
-      {/* Scratch Card View */}
-            {showScratchView && (
+      {showScratchView && (
           <div className="fixed inset-0 z-[9999] bg-slate-50 dark:bg-slate-950 flex flex-col h-screen w-full">
             <div className="bg-slate-50 dark:bg-slate-950 pt-safe px-6 py-5 flex justify-between items-center border-b border-slate-200 dark:border-slate-800 shrink-0">
               <h3 className="text-xl font-bold text-slate-800 dark:text-white">Scratch Cards</h3>
@@ -1650,9 +1643,7 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
             </div>
           </div>
         )}
-      
 
-      {/* Active Scratch Card Action View */}
       {activeScratchCard && (
           <div
             className="fixed inset-0 animate-fade-in z-[9999] bg-slate-100 flex flex-col h-screen w-full"
@@ -1743,9 +1734,7 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
             </div>
           </div>
         )}
-      
 
-      {/* Quiz Selection Modal */}
       {showQuizSelection && (
           <div className="fixed inset-0 z-[9999] bg-slate-50 dark:bg-slate-950 flex flex-col h-screen w-full overflow-hidden animate-slide-up">
               <div className="bg-slate-50 dark:bg-slate-900 pt-safe px-8 py-6 flex justify-between items-center border-b border-slate-200 dark:border-slate-700 shrink-0">
@@ -1808,11 +1797,7 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
               </div>
           </div>
         )}
-      
 
-      
-
-      {/* Daily Checkin Full Screen View */}
       {showCheckinView && !showAdOverlay && (
           <div className="fixed inset-0 z-[9999] bg-slate-50 dark:bg-slate-950 flex flex-col h-screen w-full">
                <div className="bg-slate-50 dark:bg-slate-950 pt-safe px-6 py-5 flex justify-between items-center border-b border-slate-200 dark:border-slate-800 shrink-0">
@@ -1864,11 +1849,8 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
                </div>
           </div>
       )}
-      
 
-      {/* Ad Overlay Removed - Using Real AdMob */}
-
-            {showGkQuizView && gkQuizQuestions.length > 0 && (
+      {showGkQuizView && gkQuizQuestions.length > 0 && (
           <div className="fixed inset-0 z-[9999] bg-slate-50 dark:bg-slate-950 flex flex-col h-screen w-full overflow-hidden animate-slide-up">
             <div className="bg-gradient-to-r from-amber-500 to-orange-600 pt-safe px-6 py-4 flex justify-between items-center shadow-lg shrink-0">
               <h3 className="text-xl font-bold text-white flex items-center gap-2">
@@ -1952,6 +1934,9 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
           </div>
         )}
       
+
+    <PullToRefresh onRefresh={handleRefresh} refreshing={refreshing}>
+      <main className="min-h-screen bg-slate-50 dark:bg-slate-950 transition-colors duration-500 pb-24 md:pb-8">
 
       {/* Responsive Container */}
       <div className="w-full max-w-4xl mx-auto bg-white dark:bg-slate-900 md:rounded-3xl shadow-xl overflow-hidden border border-slate-200 dark:border-slate-800">
