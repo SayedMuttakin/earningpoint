@@ -2511,15 +2511,7 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
             </div>
           )}
 
-          {/* Ad Banner */}
-          <div className="w-full max-w-4xl mx-auto border-2 border-slate-100 dark:border-slate-800 rounded-2xl p-4 flex flex-col items-center justify-center bg-slate-50 dark:bg-slate-800/50 relative overflow-hidden">
-            <span className="absolute top-0 right-0 bg-slate-600 text-white text-[10px] px-3 py-1 font-bold rounded-bl-xl">Ad</span>
-            <div className="flex flex-col sm:flex-row items-center gap-2 sm:gap-4 text-center sm:text-left">
-              <span className="text-blue-500 font-bold text-lg">Nice job!</span>
-              <div className="hidden sm:block h-8 w-px bg-slate-200 dark:bg-slate-700"></div>
-              <span className="text-slate-500 dark:text-slate-400 text-sm font-medium">This is a 320x50 test ad.</span>
-            </div>
-          </div>
+
 
           {/* ═══════ LEVEL 2 ═══════ */}
           <div className="space-y-5 max-w-5xl mx-auto relative">
