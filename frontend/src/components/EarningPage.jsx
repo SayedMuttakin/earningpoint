@@ -2463,10 +2463,14 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
 
           {/* Promotional Banner */}
           {globalSettings?.promoBanner?.isActive && globalSettings?.promoBanner?.imageUrl && (
-            <div className="w-full max-w-4xl mx-auto px-2 mb-6">
-              <a href={globalSettings.promoBanner.linkUrl || '#'} target="_blank" rel="noopener noreferrer" className="block w-full overflow-hidden rounded-2xl shadow-md border border-slate-200 dark:border-slate-800 active:scale-[0.98] transition-transform">
-                <img src={globalSettings.promoBanner.imageUrl} alt="Promotional Banner" className="w-full h-auto object-cover" />
-              </a>
+            <div className="w-full max-w-2xl mx-auto px-4 mb-8">
+              <div className="w-full aspect-[468/200] max-h-[200px] overflow-hidden rounded-2xl shadow-lg border border-slate-200 dark:border-slate-800 bg-slate-100 dark:bg-slate-900 flex items-center justify-center">
+                <img 
+                  src={globalSettings.promoBanner.imageUrl} 
+                  alt="Promotional Banner" 
+                  className="w-full h-full object-cover" 
+                />
+              </div>
             </div>
           )}
 
