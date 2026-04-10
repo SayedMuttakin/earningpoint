@@ -2406,6 +2406,38 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
             </button>
 
             <p className="text-center text-xs text-slate-400">Withdrawals are processed within 1–3 business days. Secure and encrypted.</p>
+
+            {/* ═══ Withdrawal History Section ═══ */}
+            <div className="mt-8 pt-8 border-t border-slate-200 dark:border-slate-700">
+              <h3 className="font-black text-slate-800 dark:text-white text-lg mb-4 flex items-center gap-2">
+                <History className="w-5 h-5 text-brand-500" /> Recent Withdrawals
+              </h3>
+              <div className="space-y-3">
+                {demoWithdrawHistory && demoWithdrawHistory.length > 0 ? demoWithdrawHistory.map((item) => (
+                  <div key={item.id} className="bg-slate-50 dark:bg-slate-800/50 rounded-2xl border border-slate-200 dark:border-slate-700 p-4 flex items-center gap-4 shadow-sm hover:shadow-md transition-shadow">
+                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-brand-400 to-brand-600 flex items-center justify-center shrink-0 text-white font-black text-sm">
+                      {item.name.charAt(0)}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="font-bold text-slate-800 dark:text-white text-sm truncate">{item.name}</p>
+                      <p className="text-xs text-slate-400 font-mono">{blurPhone(item.phone)}</p>
+                      <p className="text-[10px] text-slate-400 mt-0.5">{item.date} • {item.method}</p>
+                    </div>
+                    <div className="text-right shrink-0">
+                      <p className="font-black text-slate-800 dark:text-white">৳{item.amount.toLocaleString()}</p>
+                      <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full inline-block mt-1 ${
+                        item.status === 'completed' ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-400' : 'bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-400'
+                      }`}>{item.status === 'completed' ? '✓ Completed' : '⏱ Pending'}</span>
+                    </div>
+                  </div>
+                )) : (
+                  <div className="text-center py-6 bg-slate-50 dark:bg-slate-800/30 rounded-2xl border border-dashed border-slate-200 dark:border-slate-700">
+                    <History className="w-8 h-8 text-slate-300 dark:text-slate-600 mx-auto mb-2" />
+                    <p className="text-slate-500 dark:text-slate-400 text-sm font-medium">No withdrawal history yet</p>
+                  </div>
+                )}
+              </div>
+            </div>
           </div>
         )}
 
