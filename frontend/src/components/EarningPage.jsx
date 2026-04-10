@@ -345,7 +345,8 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
       coins: [5, 10, 15, 20, 25, 30, 35, 50],
       adsPerSpin: 1,
       dailyLimit: 10
-    }
+    },
+    promoBanner: { imageUrl: '', linkUrl: '', isActive: false }
   });
 
   const fetchGlobalSettings = async () => {
@@ -369,7 +370,8 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
             coins: (Array.isArray(data.fortuneWheelConfig.coins) && data.fortuneWheelConfig.coins.length > 0)
               ? data.fortuneWheelConfig.coins
               : prev.fortuneWheelConfig.coins
-          } : prev.fortuneWheelConfig
+          } : prev.fortuneWheelConfig,
+          promoBanner: data.promoBanner || prev.promoBanner
         }));
       }
     } catch (error) {
@@ -2499,6 +2501,15 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
               </div>
             </div>
           </div>
+
+          {/* Promotional Banner */}
+          {globalSettings?.promoBanner?.isActive && globalSettings?.promoBanner?.imageUrl && (
+            <div className="w-full max-w-4xl mx-auto px-2 mb-6">
+              <a href={globalSettings.promoBanner.linkUrl || '#'} target="_blank" rel="noopener noreferrer" className="block w-full overflow-hidden rounded-2xl shadow-md border border-slate-200 dark:border-slate-800 active:scale-[0.98] transition-transform">
+                <img src={globalSettings.promoBanner.imageUrl} alt="Promotional Banner" className="w-full h-auto object-cover" />
+              </a>
+            </div>
+          )}
 
           {/* Ad Banner */}
           <div className="w-full max-w-4xl mx-auto border-2 border-slate-100 dark:border-slate-800 rounded-2xl p-4 flex flex-col items-center justify-center bg-slate-50 dark:bg-slate-800/50 relative overflow-hidden">

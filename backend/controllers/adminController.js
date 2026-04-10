@@ -504,7 +504,8 @@ exports.updateGlobalSettings = async (req, res) => {
       rocketNumber, 
       premiumIpPackages,
       nativeAdsConfig,
-      fortuneWheelConfig
+      fortuneWheelConfig,
+      promoBanner
     } = req.body;
     
     let settings = await GlobalSetting.findOne({ configKey: 'main_config' });
@@ -520,6 +521,7 @@ exports.updateGlobalSettings = async (req, res) => {
     if (premiumIpPackages !== undefined) settings.premiumIpPackages = premiumIpPackages;
     if (nativeAdsConfig !== undefined) settings.nativeAdsConfig = nativeAdsConfig;
     if (fortuneWheelConfig !== undefined) settings.fortuneWheelConfig = fortuneWheelConfig;
+    if (promoBanner !== undefined) settings.promoBanner = promoBanner;
 
     await settings.save();
     res.json({ message: 'Settings updated successfully', settings });

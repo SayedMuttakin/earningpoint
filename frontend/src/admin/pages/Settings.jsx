@@ -14,7 +14,8 @@ const Settings = ({ ADMIN_API, authHeaders, onLogout }) => {
     premiumIpDuration: '30 Days',
     bkashNumber: '01700-000000',
     nagadNumber: '01700-000000',
-    rocketNumber: '01700-000000'
+    rocketNumber: '01700-000000',
+    promoBanner: { imageUrl: '', linkUrl: '', isActive: false }
   });
   const [settingsLoading, setSettingsLoading] = useState(false);
 
@@ -24,7 +25,13 @@ const Settings = ({ ADMIN_API, authHeaders, onLogout }) => {
     try {
       const res = await fetch(`${ADMIN_API}/settings/global`, { headers: authHeaders });
       const data = await res.json();
-      if (data) setGlobalSettings(data);
+      if (data) {
+        setGlobalSettings(prev => ({
+          ...prev,
+          ...data,
+          promoBanner: data.promoBanner || prev.promoBanner
+        }));
+      }
     } catch (error) {
       console.error('Error fetching global settings:', error);
     }
@@ -104,6 +111,38 @@ const Settings = ({ ADMIN_API, authHeaders, onLogout }) => {
             ⚠️ To change these values, update your backend <code className="font-mono">.env</code> file and restart the server.
           </p>
         </div>
+      </div>
+
+      {/* Promotional Banner Form */}
+      <div className="bg-[#111827] border border-slate-800 rounded-2xl p-6">
+        <h3 className="text-white font-bold text-base mb-1">Earning Page Promo Banner</h3>
+        <p className="text-slate-500 text-xs mb-5">Set a promotional banner that appears above the Level 1 ad section.</p>
+
+        <form onSubmit={handleUpdateSettings} className="space-y-4">
+          <div className="flex items-center gap-3 mb-4">
+            <div 
+              className="w-10 h-6 bg-slate-800 rounded-full relative cursor-pointer border border-slate-700" 
+              onClick={() => setGlobalSettings({...globalSettings, promoBanner: {...(globalSettings.promoBanner || {}), isActive: !globalSettings.promoBanner?.isActive}})}
+            >
+              <div className={`absolute top-[1px] bottom-[1px] w-5 rounded-full transition-all ${globalSettings.promoBanner?.isActive ? 'right-[1px] bg-emerald-500' : 'left-[1px] bg-slate-500'}`}></div>
+            </div>
+            <span className="text-slate-300 text-sm font-bold">{globalSettings.promoBanner?.isActive ? 'Banner Active' : 'Banner Hidden'}</span>
+          </div>
+          <div>
+            <label className="text-slate-400 text-xs font-bold uppercase tracking-wider block mb-2">Image URL</label>
+            <input type="url" value={globalSettings.promoBanner?.imageUrl || ''} onChange={e => setGlobalSettings({...globalSettings, promoBanner: {...(globalSettings.promoBanner || {}), imageUrl: e.target.value}})} placeholder="https://example.com/image.jpg"
+              className="w-full bg-slate-800 border border-slate-700 focus:border-indigo-500 rounded-xl px-4 py-3 text-white text-sm outline-none transition-colors" />
+          </div>
+          <div>
+            <label className="text-slate-400 text-xs font-bold uppercase tracking-wider block mb-2">Target Link URL</label>
+            <input type="url" value={globalSettings.promoBanner?.linkUrl || ''} onChange={e => setGlobalSettings({...globalSettings, promoBanner: {...(globalSettings.promoBanner || {}), linkUrl: e.target.value}})} placeholder="https://where-to-go.com"
+              className="w-full bg-slate-800 border border-slate-700 focus:border-indigo-500 rounded-xl px-4 py-3 text-white text-sm outline-none transition-colors" />
+          </div>
+          <button type="submit" disabled={settingsLoading}
+            className="w-full py-3 mt-4 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-bold rounded-xl transition-all disabled:opacity-50 shadow-lg shadow-emerald-500/20 active:scale-95">
+            {settingsLoading ? 'Saving...' : 'Save Settings'}
+          </button>
+        </form>
       </div>
 
       {/* Change Password */}
