@@ -85,57 +85,16 @@ const ipPackages = [
 ];
 
 
-const BigAdBanner = () => {
-  return (
-    <div className="w-full flex justify-center mt-2">
-      <div className="w-[320px] h-[250px] bg-slate-50 dark:bg-slate-800/50 border-2 border-slate-200 dark:border-slate-700 relative rounded-2xl flex flex-col items-center justify-center overflow-hidden shadow-sm">
-        <div className="absolute top-0 left-0 right-0 h-7 bg-slate-100 dark:bg-slate-800 flex items-center px-4 justify-between border-b border-slate-200 dark:border-slate-700">
-          <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest flex items-center gap-1.5">
-            <Shield className="w-3 h-3" /> Sponsored
-          </span>
-          <div className="flex items-center gap-1.5">
-             <div className="w-3 h-3 rounded-full bg-slate-200 dark:bg-slate-700" />
-             <div className="w-3.5 h-3.5 bg-blue-500 rounded-sm flex items-center justify-center">
-                <Check className="w-2.5 h-2.5 text-white" strokeWidth={4} />
-             </div>
-          </div>
-        </div>
-
-        <div className="flex flex-col items-center text-center p-6 pt-10 space-y-4">
-          <div className="w-20 h-20 bg-white dark:bg-slate-900 rounded-3xl shadow-md flex items-center justify-center ring-4 ring-blue-500/10">
-            {/* Inline Google-style G icon - no external URL */}
-            <svg viewBox="0 0 48 48" className="w-12 h-12">
-              <path fill="#4285F4" d="M44.5 20H24v8.5h11.7C34.1 33.1 29.6 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3 0 5.8 1.1 7.9 3l6-6C34.5 6.4 29.6 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20c11 0 19.7-7.9 19.7-20 0-1.3-.1-2.7-.2-4z"/>
-              <path fill="#34A853" d="M6.3 14.7l7 5.1C15 16.2 19.1 13 24 13c3 0 5.8 1.1 7.9 3l6-6C34.5 6.4 29.6 4 24 4 16.3 4 9.7 8.4 6.3 14.7z"/>
-              <path fill="#FBBC05" d="M24 44c5.5 0 10.4-1.9 14.2-5.1l-6.6-5.4C29.6 35.3 26.9 36 24 36c-5.6 0-10.1-2.9-11.7-7.5l-7 5.4C9.7 39.6 16.3 44 24 44z"/>
-              <path fill="#EA4335" d="M44.5 20H24v8.5h11.7c-.8 2.3-2.3 4.2-4.2 5.5l6.6 5.4C41.9 35.9 44.5 30.4 44.5 24c0-1.3-.1-2.7-.2-4z"/>
-            </svg>
-          </div>
-          
-          <div className="space-y-1">
-            <h4 className="text-base font-black text-blue-600 dark:text-blue-400 leading-none">Google AdMob Test</h4>
-            <p className="text-[12px] text-slate-500 dark:text-slate-400 font-bold leading-tight px-4 opacity-80">
-              320x250 Medium Rectangle Ad Ready for Production Implementation.
-            </p>
-          </div>
-
-          <button
-            className="px-8 py-2.5 rounded-full bg-blue-500 text-white text-xs font-black shadow-lg shadow-blue-500/30"
-          >
-            AD UNIT ACTIVE
-          </button>
-        </div>
-
-        <div className="absolute bottom-2 right-4 flex items-center gap-1.5 opacity-30">
-           <span className="text-[9px] font-black text-slate-400 tracking-tighter">Ads by Google</span>
-           <svg viewBox="0 0 48 48" className="w-3.5 h-3.5 grayscale">
-             <path fill="#4285F4" d="M44.5 20H24v8.5h11.7C34.1 33.1 29.6 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3 0 5.8 1.1 7.9 3l6-6C34.5 6.4 29.6 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20c11 0 19.7-7.9 19.7-20 0-1.3-.1-2.7-.2-4z"/>
-           </svg>
-        </div>
-      </div>
+const BannerAd468x60 = () => (
+  <div className="w-full max-w-2xl mx-auto border border-slate-200 dark:border-slate-800 rounded-xl p-3 flex items-center justify-center bg-slate-50 dark:bg-slate-800/30 relative overflow-hidden my-4">
+    <span className="absolute top-0 right-0 bg-slate-600 text-white text-[8px] px-1.5 py-0.5 font-bold rounded-bl-lg">Ad</span>
+    <div className="flex items-center gap-4">
+      <span className="text-blue-500 font-bold text-sm">SPONSORED</span>
+      <div className="h-6 w-px bg-slate-200 dark:bg-slate-700"></div>
+      <span className="text-slate-500 dark:text-slate-400 text-xs font-medium">468x60 Banner Ad</span>
     </div>
-  );
-};
+  </div>
+);
 
 const EarningPage = ({ onReferralsClick, setActiveTab }) => {
   const [balance, setBalance] = React.useState(0);
@@ -2542,9 +2501,7 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
           </div>
 
           {/* Ad Banner */}
-          <div className="py-4">
-            <BigAdBanner />
-          </div>
+          <BannerAd468x60 />
 
           {/* ═══════ LEVEL 3 ═══════ */}
           <div className="space-y-5 max-w-5xl mx-auto relative">
@@ -2571,14 +2528,7 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
           </div>
 
           {/* Ad Banner */}
-          <div className="w-full max-w-2xl mx-auto border border-slate-200 dark:border-slate-800 rounded-xl p-3 flex items-center justify-center bg-slate-50 dark:bg-slate-800/30 relative overflow-hidden">
-            <span className="absolute top-0 right-0 bg-slate-600 text-white text-[8px] px-1.5 py-0.5 font-bold rounded-bl-lg">Ad</span>
-            <div className="flex items-center gap-4">
-              <span className="text-blue-500 font-bold text-sm">SPONSORED</span>
-              <div className="h-6 w-px bg-slate-200 dark:bg-slate-700"></div>
-              <span className="text-slate-500 dark:text-slate-400 text-xs font-medium">468x60 Banner Ad</span>
-            </div>
-          </div>
+          <BannerAd468x60 />
 
           {/* ═══════ LEVEL 4 ═══════ */}
           <div className="space-y-5 max-w-5xl mx-auto relative">
@@ -2609,14 +2559,7 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
           </div>
 
           {/* Ad Banner */}
-          <div className="w-full max-w-2xl mx-auto border border-slate-200 dark:border-slate-800 rounded-xl p-3 flex items-center justify-center bg-slate-50 dark:bg-slate-800/30 relative overflow-hidden">
-            <span className="absolute top-0 right-0 bg-slate-600 text-white text-[8px] px-1.5 py-0.5 font-bold rounded-bl-lg">Ad</span>
-            <div className="flex items-center gap-4">
-              <span className="text-blue-500 font-bold text-sm">SPONSORED</span>
-              <div className="h-6 w-px bg-slate-200 dark:bg-slate-700"></div>
-              <span className="text-slate-500 dark:text-slate-400 text-xs font-medium">468x60 Banner Ad</span>
-            </div>
-          </div>
+          <BannerAd468x60 />
 
           {/* ═══════ LEVEL 5 ═══════ */}
           <div className="space-y-5 max-w-5xl mx-auto relative">
@@ -2684,40 +2627,8 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
             </div>
           </div>
 
-          {/* Large Monster Ad 300x250 */}
-          <div className="w-full max-w-md animate-fade-in-up mx-auto border-2 border-slate-200 dark:border-slate-800 rounded-2xl p-8 flex flex-col items-center justify-center bg-white dark:bg-slate-900 shadow-inner relative overflow-hidden text-center gap-6">
-            <span className="absolute top-0 right-0 bg-slate-700 text-white text-[10px] px-3 py-1 font-bold rounded-bl-xl">Ad</span>
-            <div className="relative">
-              <div
-                className="w-32 h-32 bg-rose-100 rounded-full flex items-center justify-center animate-float"
-              >
-                <svg viewBox="0 0 100 100" className="w-24 h-24" xmlns="http://www.w3.org/2000/svg">
-                  <circle cx="50" cy="55" r="38" fill="#4ade80"/>
-                  <rect x="20" y="20" width="60" height="45" rx="20" fill="#22c55e"/>
-                  <circle cx="35" cy="38" r="8" fill="white"/>
-                  <circle cx="65" cy="38" r="8" fill="white"/>
-                  <circle cx="37" cy="40" r="4" fill="#1e293b"/>
-                  <circle cx="67" cy="40" r="4" fill="#1e293b"/>
-                  <path d="M38 55 Q50 65 62 55" stroke="white" strokeWidth="3" fill="none" strokeLinecap="round"/>
-                  <rect x="28" y="14" width="10" height="16" rx="5" fill="#16a34a"/>
-                  <rect x="62" y="14" width="10" height="16" rx="5" fill="#16a34a"/>
-                  <rect x="45" y="10" width="10" height="18" rx="5" fill="#16a34a"/>
-                </svg>
-              </div>
-              <div className="absolute -top-2 -right-2 bg-blue-500 text-white px-3 py-1 rounded-full text-xs font-bold shadow-lg">
-                Nice job!
-              </div>
-            </div>
-            <div className="space-y-2">
-              <p className="text-lg font-bold text-slate-800 dark:text-slate-200">This is a 300x250 test ad.</p>
-              <div className="flex items-center justify-center gap-2 text-slate-400 text-sm">
-                 <svg viewBox="0 0 48 48" className="w-5 h-5 opacity-50">
-                   <path fill="#4285F4" d="M44.5 20H24v8.5h11.7C34.1 33.1 29.6 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3 0 5.8 1.1 7.9 3l6-6C34.5 6.4 29.6 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20c11 0 19.7-7.9 19.7-20 0-1.3-.1-2.7-.2-4z"/>
-                 </svg>
-                 <span>Google AdMob</span>
-              </div>
-            </div>
-          </div>
+          {/* Ad Banner */}
+          <BannerAd468x60 />
 
           {/* Custom Modals Down Here */}
           {/* Interstitial Ad / Rewarded Video Modal */}
