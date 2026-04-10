@@ -133,7 +133,7 @@ const PremiumIpSettings = ({ ADMIN_API, authHeaders }) => {
           <div className="flex items-center justify-between mb-6">
             <h3 className="text-white font-bold text-base flex items-center gap-2">
               <svg className="w-5 h-5 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" /></svg>
-              Premium IP Packages
+              Premium Order
             </h3>
             <button 
               type="button" 
@@ -213,7 +213,7 @@ const PremiumIpSettings = ({ ADMIN_API, authHeaders }) => {
             disabled={saveLoading}
             className="px-8 py-4 bg-indigo-600 hover:bg-indigo-500 text-white font-black text-sm rounded-2xl transition-all shadow-xl shadow-indigo-600/20 disabled:opacity-50 min-w-[200px]"
           >
-            {saveLoading ? 'Saving Changes...' : 'Save IP Settings'}
+            {saveLoading ? 'Saving Changes...' : 'Save Order'}
           </button>
         </div>
       </form>
