@@ -622,7 +622,10 @@ exports.getGlobalSettings = async (req, res) => {
       bkashNumber: settings.bkashNumber,
       nagadNumber: settings.nagadNumber,
       rocketNumber: settings.rocketNumber,
-      premiumIpPackages: settings.premiumIpPackages
+      premiumIpPackages: settings.premiumIpPackages,
+      promoBanner: settings.promoBanner,
+      nativeAdsConfig: settings.nativeAdsConfig,
+      fortuneWheelConfig: settings.fortuneWheelConfig
     });
   } catch (error) {
     res.status(500).json({ message: error.message });

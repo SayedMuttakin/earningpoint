@@ -338,9 +338,7 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
     }
   };
 
-  useEffect(() => {
-    fetchGlobalSettings();
-  }, []);
+
 
   const [showIntroScreen, setShowIntroScreen] = React.useState(false);
   const [introSection, setIntroSection] = React.useState(null);
@@ -529,6 +527,7 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
     fetchScratchStatus();
     fetchQuizStatus();
     fetchArticles();
+    fetchGlobalSettings();
     AdMobService.showBanner();
     return () => {
       AdMobService.hideBanner();
