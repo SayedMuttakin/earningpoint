@@ -22,25 +22,25 @@ const PaymentSuccess = ({ paymentMethod, onBack }) => {
 
         {/* Main Message */}
         <h1 className="text-3xl font-black mb-4 text-slate-900 dark:text-white animate-fade-in-up">
-          {needsReview ? '💳 পেমেন্ট সম্পন্ন হয়েছে — ধন্যবাদ! 🙏' : '🎉 অর্ডার সফল হয়েছে!'}
+          {needsReview ? '💳 Payment Completed — Thank you! 🙏' : '🎉 Order Successful!'}
         </h1>
 
         <p className="text-slate-500 dark:text-slate-400 text-lg mb-10 max-w-md font-medium animate-fade-in-up" style={{ animationDelay: '100ms' }}>
           {paymentMethod === 'cod' ? (
-            'ক্যাশ অন ডেলিভারি (Cash on Delivery) সফলভাবে নির্বাচন করা হয়েছে। পণ্য রিসিভ করার সময় মূল্য পরিশোধ করুন।'
+            'Cash on Delivery selected successfully. Please pay when receiving the product.'
           ) : needsReview ? (
-            'আপনার পেমেন্ট সফলভাবে গ্রহণ করা হয়েছে এবং তা রিভিউতে আছে। এডমিন দ্রুত আপনার পেমেন্টটি ভেরিফাই করবেন।'
+            'Your payment has been received and is under review. Admin will verify it shortly.'
           ) : (
-            'আপনার অর্ডারটি সফলভাবে প্লেস করা হয়েছে এবং ওয়ালেট থেকে ব্যালেন্স কেটে নেওয়া হয়েছে।'
+            'Your order has been successfully placed and the balance was deducted from your wallet.'
           )}
         </p>
 
         <div className="space-y-2 mb-10 animate-fade-in-up" style={{ animationDelay: '200ms' }}>
            <p className="text-slate-600 dark:text-slate-400 font-bold">
-            {needsReview ? '🤝 আমরা দ্রুত আপনার অর্ডারটি প্রসেস করব।' : '📦 আপনার অর্ডার শিগগিরই প্রসেস করা হবে।'}
+            {needsReview ? '🤝 We will process your order shortly.' : '📦 Your order will be processed soon.'}
           </p>
           <p className="text-slate-400 dark:text-slate-500 text-sm">
-            ধন্যবাদ আমাদের সাথে থাকার জন্য ❤️
+            Thank you for staying with us ❤️
           </p>
         </div>
 
@@ -50,7 +50,7 @@ const PaymentSuccess = ({ paymentMethod, onBack }) => {
           className="flex items-center gap-2 text-slate-400 hover:text-brand-500 font-bold transition-all text-sm bg-white dark:bg-slate-900 px-6 py-3 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-800"
         >
           <ArrowLeft size={16} />
-          হোম পেজে ফিরে যান
+          Return to Home Page
         </button>
       </div>
     </PullToRefresh>
