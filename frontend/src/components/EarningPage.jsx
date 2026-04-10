@@ -684,7 +684,7 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
           </div>
 
           <div className="pt-6">
-            <BigAdBanner />
+            <BannerAd468x60 />
           </div>
         </div>
       </div>,
@@ -748,7 +748,7 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
            </div>
 
            <div className="mt-12 mb-20">
-              <BigAdBanner />
+              <BannerAd468x60 />
            </div>
         </div>
 
