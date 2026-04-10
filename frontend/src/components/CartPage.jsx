@@ -1,52 +1,40 @@
-import React, { useState } from 'react';
-import { ShoppingCart, Flame } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { ShoppingCart, Flame, Loader2 } from 'lucide-react';
 import PullToRefresh from './PullToRefresh';
-
-const STORE_PRODUCTS = [
-  {
-    id: 1,
-    title: 'Premium VIP Membership',
-    price: 1470,
-    originalPrice: 1550,
-    image: 'https://images.unsplash.com/photo-1558486012-817176f84c6d?auto=format&fit=crop&q=80&w=500',
-    badge: 'Best Selling'
-  },
-  {
-    id: 2,
-    title: 'Pro Earning Guide eBook',
-    price: 450,
-    originalPrice: 500,
-    image: 'https://images.unsplash.com/photo-1580893246395-52aead8960dc?auto=format&fit=crop&q=80&w=500',
-    badge: 'Best Selling'
-  },
-  {
-    id: 3,
-    title: 'Ad-Free Experience 1 Year',
-    price: 2200,
-    originalPrice: 2500,
-    image: 'https://images.unsplash.com/photo-1616469829581-73993eb86b02?auto=format&fit=crop&q=80&w=500',
-    badge: 'Offered Items'
-  },
-  {
-    id: 4,
-    title: 'Zenvio Exclusive Merch T-Shirt',
-    price: 1710,
-    originalPrice: 1800,
-    image: 'https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?auto=format&fit=crop&q=80&w=500',
-    badge: 'Best Selling'
-  }
-];
+import { API_BASE } from '../config';
 
 const CartPage = ({ onBuyNow }) => {
+  const [products, setProducts] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+
+  const fetchProducts = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const res = await fetch(`${API_BASE}/api/earning/products`, {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setProducts(data);
+      }
+    } catch (err) {
+      console.error('Failed to fetch products:', err);
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchProducts();
+  }, []);
 
   const handleRefresh = () => {
     setRefreshing(true);
-    // Simulate refresh - in a real app, you might fetch updated products
-    setTimeout(() => {
-      setRefreshing(false);
-      // Optionally show a toast or update state
-    }, 1000);
+    fetchProducts();
   };
 
   return (
@@ -63,12 +51,24 @@ const CartPage = ({ onBuyNow }) => {
       </div>
 
       {/* Product Grid */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6">
-        {STORE_PRODUCTS.map((product, index) => {
-          const savings = product.originalPrice ? product.originalPrice - product.price : 0;
+      {loading && !refreshing ? (
+        <div className="flex flex-col items-center justify-center py-20 text-slate-500">
+          <Loader2 className="w-8 h-8 animate-spin mb-4 text-brand-500" />
+          <p className="font-medium">Loading products...</p>
+        </div>
+      ) : products.length === 0 ? (
+        <div className="flex flex-col items-center justify-center py-20 text-slate-500 bg-white rounded-[24px] shadow-sm border border-slate-100">
+          <ShoppingCart className="w-16 h-16 mb-4 text-slate-300" />
+          <h3 className="text-xl font-bold text-slate-700 mb-2">No Products Available</h3>
+          <p className="max-w-md text-center">New items will be added to the store soon. Check back later!</p>
+        </div>
+      ) : (
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6">
+          {products.map((product, index) => {
+            const savings = product.originalPrice ? product.originalPrice - product.price : 0;
           return (
             <div
-              key={product.id}
+              key={product._id}
               className="group bg-white rounded-[20px] shadow-sm hover:shadow-lg transition-all duration-300 flex flex-col overflow-hidden relative border border-slate-100 animate-fade-in-up"
               style={{ animationDelay: `${index * 0.1}s` }}
             >
@@ -110,16 +110,23 @@ const CartPage = ({ onBuyNow }) => {
                 <div className="mt-auto">
                   <button
                     onClick={() => onBuyNow(product)}
-                    className="w-full bg-white border-[1.5px] border-brand-500 hover:bg-brand-50 text-brand-600 font-bold py-2 sm:py-2.5 rounded-xl transition-all flex items-center justify-center gap-2 text-[13px] sm:text-sm active:scale-95 shadow-sm hover:shadow"
+                    disabled={!product.inStock}
+                    className={`w-full border-[1.5px] font-bold py-2 sm:py-2.5 rounded-xl transition-all flex items-center justify-center gap-2 text-[13px] sm:text-sm active:scale-95 shadow-sm 
+                      ${product.inStock 
+                        ? 'bg-white border-brand-500 hover:bg-brand-50 text-brand-600 hover:shadow' 
+                        : 'bg-slate-50 border-slate-200 text-slate-400 cursor-not-allowed'
+                      }`}
                   >
-                    <ShoppingCart className="w-4 h-4" strokeWidth={2.5} /> Buy Now
+                    <ShoppingCart className="w-4 h-4" strokeWidth={2.5} /> 
+                    {product.inStock ? 'Buy Now' : 'Out of Stock'}
                   </button>
                 </div>
               </div>
             </div>
           );
         })}
-      </div>
+        </div>
+      )}
       </div>
     </PullToRefresh>
   );

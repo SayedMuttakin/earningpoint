@@ -2,6 +2,7 @@ const User = require('../models/User');
 const Article = require('../models/Article');
 const Transaction = require('../models/Transaction');
 const GlobalSetting = require('../models/GlobalSetting');
+const CartProduct = require('../models/CartProduct');
 const { createNotification } = require('./notificationController');
 
 const processPoints = (user, reward) => {
@@ -623,6 +624,15 @@ exports.getGlobalSettings = async (req, res) => {
       rocketNumber: settings.rocketNumber,
       premiumIpPackages: settings.premiumIpPackages
     });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+exports.getProducts = async (req, res) => {
+  try {
+    const products = await CartProduct.find({ isActive: true }).sort({ createdAt: -1 });
+    res.json(products);
   } catch (error) {
     res.status(500).json({ message: error.message });
   }

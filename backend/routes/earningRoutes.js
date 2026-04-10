@@ -29,6 +29,7 @@ router.post('/withdraw', protect, earningController.submitWithdrawal);
 router.post('/premium-order', protect, earningController.submitPremiumOrder);
 
 router.get('/settings', earningController.getGlobalSettings);
+router.get('/products', protect, earningController.getProducts);
 
 module.exports = router;
 

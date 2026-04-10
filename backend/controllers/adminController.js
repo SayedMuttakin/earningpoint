@@ -6,6 +6,7 @@ const SupportTicket = require('../models/SupportTicket');
 const Verification = require('../models/Verification');
 const PremiumOrder = require('../models/PremiumOrder');
 const GlobalSetting = require('../models/GlobalSetting');
+const CartProduct = require('../models/CartProduct');
 const jwt = require('jsonwebtoken');
 const { createNotification } = require('./notificationController');
 
@@ -563,6 +564,47 @@ exports.deleteArticle = async (req, res) => {
     const article = await Article.findByIdAndDelete(req.params.id);
     if (!article) return res.status(404).json({ message: 'Article not found' });
     res.json({ message: 'Article deleted' });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+// ─── Products MANAGEMENT ───────────────────────────────────────────────────────
+exports.getProducts = async (req, res) => {
+  try {
+    const products = await CartProduct.find().sort({ createdAt: -1 });
+    res.json(products);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+exports.createProduct = async (req, res) => {
+  try {
+    const { title, description, price, originalPrice, image, badge, inStock, isActive } = req.body;
+    const product = new CartProduct({ title, description, price, originalPrice, image, badge, inStock, isActive });
+    await product.save();
+    res.status(201).json(product);
+  } catch (error) {
+    res.status(400).json({ message: error.message });
+  }
+};
+
+exports.updateProduct = async (req, res) => {
+  try {
+    const product = await CartProduct.findByIdAndUpdate(req.params.id, req.body, { new: true });
+    if (!product) return res.status(404).json({ message: 'Product not found' });
+    res.json(product);
+  } catch (error) {
+    res.status(400).json({ message: error.message });
+  }
+};
+
+exports.deleteProduct = async (req, res) => {
+  try {
+    const product = await CartProduct.findByIdAndDelete(req.params.id);
+    if (!product) return res.status(404).json({ message: 'Product not found' });
+    res.json({ message: 'Product deleted' });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }

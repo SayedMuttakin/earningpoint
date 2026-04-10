@@ -55,4 +55,10 @@ router.delete('/articles/:id', adminProtect, adminController.deleteArticle);
 router.get('/settings/global', adminProtect, adminController.getGlobalSettings);
 router.put('/settings/global', adminProtect, adminController.updateGlobalSettings);
 
+// Products Management
+router.get('/products', adminProtect, adminController.getProducts);
+router.post('/products', adminProtect, adminController.createProduct);
+router.put('/products/:id', adminProtect, adminController.updateProduct);
+router.delete('/products/:id', adminProtect, adminController.deleteProduct);
+
 module.exports = router;

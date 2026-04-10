@@ -67,7 +67,7 @@ const CheckoutPage = ({ product, onBack, onSuccess }) => {
           'Authorization': `Bearer ${token}`
         },
         body: JSON.stringify({
-          packageId: product.id || 'store-item',
+          packageId: product._id || 'store-item',
           packageName: product.title,
           amount: product.price,
           paymentMethod,

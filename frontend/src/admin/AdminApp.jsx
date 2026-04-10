@@ -11,6 +11,7 @@ import PremiumIpSettings from './pages/PremiumIpSettings';
 import Settings from './pages/Settings';
 import Posts from './pages/Posts';
 import Articles from './pages/Articles';
+import Products from './pages/Products';
 
 import { API_BASE as GlobalApiBase } from '../config';
 export const API_BASE = GlobalApiBase;
@@ -52,6 +53,7 @@ const AdminApp = () => {
       {activePage === 'ip-settings' && <PremiumIpSettings {...pageProps} />}
       {activePage === 'posts' && <Posts {...pageProps} />}
       {activePage === 'articles' && <Articles {...pageProps} />}
+      {activePage === 'products' && <Products {...pageProps} />}
       {activePage === 'settings' && <Settings {...pageProps} onLogout={handleLogout} />}
     </AdminLayout>
   );
