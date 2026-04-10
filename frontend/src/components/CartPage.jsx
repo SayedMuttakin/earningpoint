@@ -88,9 +88,14 @@ const CartPage = ({ onBuyNow }) => {
 
               {/* Content Section */}
               <div className="flex flex-col flex-1 p-4 sm:p-5 pt-3 sm:pt-4">
-                <h3 className="text-[15px] sm:text-lg font-semibold text-slate-800 mb-2 leading-tight line-clamp-2">
+                <h3 className="text-[15px] sm:text-lg font-semibold text-slate-800 mb-1.5 leading-tight line-clamp-2">
                   {product.title}
                 </h3>
+                {product.description && (
+                  <p className="text-xs text-slate-500 mb-3 line-clamp-2 leading-relaxed">
+                    {product.description}
+                  </p>
+                )}
                 
                 <div className="mb-4">
                   <div className="flex items-end gap-2 mb-1.5">
