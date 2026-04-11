@@ -143,10 +143,7 @@ const PostCard = ({ post }) => {
           </h2>
         </div>
       )}
-        
-        {/* Banner Ad after Latest News */}
-        <BannerAd468x60 globalSettings={globalSettings} />
-        
+
         {/* Main Column Feed */}
       </div>
 
@@ -254,6 +251,9 @@ const HomePage = () => {
             </div>
           </div>
         )}
+
+        {/* Banner Ad after Latest News */}
+        <BannerAd468x60 globalSettings={globalSettings} />
 
         {/* Main Column Feed */}
         <main className="max-w-4xl mx-auto px-0 sm:px-6 lg:px-8 py-3 sm:py-8 w-full flex-1">
