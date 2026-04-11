@@ -735,6 +735,17 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
     return () => clearInterval(timer);
   }, [showArticleReader, isReadingStarted, articleReadingTime]);
 
+  // Fix: Reset scroll position when article reader opens
+  useEffect(() => {
+    if (showArticleReader) {
+      setTimeout(() => {
+        const contentDiv = document.querySelector('.article-reader-content');
+        if (contentDiv) contentDiv.scrollTop = 0;
+        window.scrollTo(0, 0);
+      }, 100);
+    }
+  }, [showArticleReader]);
+
   const startReadingArticle = (article) => {
     setCurrentArticle(article);
     setArticleReadingTime(article.readingTime || 60);
@@ -873,7 +884,7 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
         </div>
 
         {/* Content Scroll Area */}
-        <div className="flex-1 overflow-y-auto min-h-0 p-6 sm:p-10 max-w-2xl mx-auto w-full">
+        <div className="flex-1 overflow-y-auto min-h-0 p-6 sm:p-10 max-w-2xl mx-auto w-full article-reader-content">
            <h1 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white mb-8 leading-tight">
              {currentArticle.title}
            </h1>
