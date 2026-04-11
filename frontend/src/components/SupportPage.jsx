@@ -157,7 +157,7 @@ const SupportPage = ({ onBack }) => {
         <div>
           <h1 className="text-xl font-black text-slate-800 dark:text-white flex items-center gap-2">
             <div className="flex items-center gap-1">
-              Zenvio Customer Support
+              Zenvio Team Support
               <BadgeCheck className="w-[18px] h-[18px] fill-blue-500 text-white flex-shrink-0 mt-0.5" />
             </div>
           </h1>
