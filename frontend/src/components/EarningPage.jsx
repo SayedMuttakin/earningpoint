@@ -812,7 +812,7 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
           </div>
 
           <div className="pt-6">
-            <BannerAd468x60 globalSettings={globalSettings} />
+            <BannerAd globalSettings={globalSettings} />
           </div>
         </div>
       </div>,
@@ -1671,7 +1671,7 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
               ))}
             </div>
             <div className="mt-12 mb-20">
-              <BannerAd468x60 globalSettings={globalSettings} />
+              <BannerAd globalSettings={globalSettings} />
             </div>
           </div>
 
@@ -2522,7 +2522,7 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
                   </div>
                 )}
                 {withdrawHistory && withdrawHistory.length > 0 && (
-                  <BannerAd468x60 globalSettings={globalSettings} />
+                  <BannerAd globalSettings={globalSettings} />
                 )}
               </div>
             </div>
@@ -2562,7 +2562,7 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
                     </div>
                   </div>
                   {(index + 1) % 3 === 0 && index !== displayWithdrawals.length - 1 && (
-                    <BannerAd468x60 globalSettings={globalSettings} />
+                    <BannerAd globalSettings={globalSettings} />
                   )}
                 </React.Fragment>
               )) : (
@@ -2685,7 +2685,7 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
           </div>
 
           {/* Ad Banner */}
-          <BannerAd468x60 globalSettings={globalSettings} />
+          <BannerAd globalSettings={globalSettings} />
 
           {/* ═══════ LEVEL 3 ═══════ */}
           <div className="space-y-5 max-w-5xl mx-auto relative">
@@ -2712,7 +2712,7 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
           </div>
 
           {/* Ad Banner */}
-          <BannerAd468x60 globalSettings={globalSettings} />
+          <BannerAd globalSettings={globalSettings} />
 
           {/* ═══════ LEVEL 4 ═══════ */}
           <div className="space-y-5 max-w-5xl mx-auto relative">
@@ -2743,7 +2743,7 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
           </div>
 
           {/* Ad Banner */}
-          <BannerAd468x60 globalSettings={globalSettings} />
+          <BannerAd globalSettings={globalSettings} />
 
           {/* ═══════ LEVEL 5 ═══════ */}
           <div className="space-y-5 max-w-5xl mx-auto relative">
@@ -2812,7 +2812,7 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
           </div>
 
           {/* Ad Banner */}
-          <BannerAd468x60 globalSettings={globalSettings} />
+          <BannerAd globalSettings={globalSettings} />
 
           {/* Custom Modals Down Here */}
           {/* Interstitial Ad / Rewarded Video Modal */}
