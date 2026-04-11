@@ -735,30 +735,23 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
     return () => clearInterval(timer);
   }, [showArticleReader, isReadingStarted, articleReadingTime]);
 
-  // Fix: Reset scroll position when article reader opens
-  useEffect(() => {
-    if (showArticleReader) {
-      requestAnimationFrame(() => {
-        requestAnimationFrame(() => {
-          const contentDiv = document.querySelector('.article-reader-content');
-          if (contentDiv) {
-            contentDiv.scrollTop = 0;
-          }
-          window.scrollTo(0, 0);
-          document.body.scrollTop = 0;
-          document.documentElement.scrollTop = 0;
-        });
-      });
-    }
-  }, [showArticleReader]);
-
   const startReadingArticle = (article) => {
     setCurrentArticle(null);
     setArticleReadingTime(article.readingTime || 60);
     setIsReadingStarted(true);
     setShowArticleReader(true);
     setShowArticleListView(false);
-    setTimeout(() => setCurrentArticle(article), 10);
+    setTimeout(() => {
+      setCurrentArticle(article);
+      // Reset scroll after content loads
+      setTimeout(() => {
+        const contentDiv = document.querySelector('.article-reader-content');
+        if (contentDiv) contentDiv.scrollTop = 0;
+        window.scrollTo(0, 0);
+        document.body.scrollTop = 0;
+        document.documentElement.scrollTop = 0;
+      }, 100);
+    }, 50);
   };
 
   const claimArticleReward = async () => {
