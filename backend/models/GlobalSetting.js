@@ -56,11 +56,24 @@ const GlobalSettingSchema = new mongoose.Schema({
     adsPerSpin: { type: Number, default: 1 },
     dailyLimit: { type: Number, default: 10 }
   },
-  // Promotional Banner Configuration
+  // Promotional Banner Configuration (Legacy)
   promoBanner: {
     imageUrl: { type: String, default: '' },
     linkUrl: { type: String, default: '' },
     isActive: { type: Boolean, default: false }
+  },
+  // Multi-Banner Configuration
+  promoBanners: {
+    type: [{
+      imageUrl: { type: String, default: '' },
+      linkUrl: { type: String, default: '' },
+      isActive: { type: Boolean, default: false }
+    }],
+    default: [
+      { imageUrl: '', linkUrl: '', isActive: false },
+      { imageUrl: '', linkUrl: '', isActive: false },
+      { imageUrl: '', linkUrl: '', isActive: false }
+    ]
   },
   premiumIpPackages: {
     type: [{

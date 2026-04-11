@@ -16,6 +16,11 @@ const Settings = ({ ADMIN_API, authHeaders, onLogout }) => {
     nagadNumber: '01700-000000',
     rocketNumber: '01700-000000',
     promoBanner: { imageUrl: '', linkUrl: '', isActive: false },
+    promoBanners: [
+      { imageUrl: '', linkUrl: '', isActive: false },
+      { imageUrl: '', linkUrl: '', isActive: false },
+      { imageUrl: '', linkUrl: '', isActive: false }
+    ],
     admobConfig: {
       bannerAdUnitId: '',
       interstitialAdUnitId: '',
@@ -36,6 +41,7 @@ const Settings = ({ ADMIN_API, authHeaders, onLogout }) => {
           ...prev,
           ...data,
           promoBanner: data.promoBanner || prev.promoBanner,
+          promoBanners: data.promoBanners?.length ? data.promoBanners : prev.promoBanners,
           admobConfig: data.admobConfig || prev.admobConfig
         }));
       }
@@ -120,74 +126,92 @@ const Settings = ({ ADMIN_API, authHeaders, onLogout }) => {
         </div>
       </div>
 
-      {/* Promotional Banner Form */}
+      {/* Promotional Banners Form */}
       <div className="bg-[#111827] border border-slate-800 rounded-2xl p-6">
-        <h3 className="text-white font-bold text-base mb-1">Earning Page Promo Banner</h3>
-        <p className="text-slate-500 text-xs mb-5">Set a promotional banner that appears above the Level 1 ad section.</p>
+        <h3 className="text-white font-bold text-base mb-1">Earning Page Promo Banners</h3>
+        <p className="text-slate-500 text-xs mb-5">Set up to 3 promotional banners that rotate above the Level 2 section.</p>
 
-        <form onSubmit={handleUpdateSettings} className="space-y-4">
-          <div className="space-y-4 pt-2">
-            <div className="flex items-center gap-3">
-              <div 
-                className="w-10 h-6 bg-slate-800 rounded-full relative cursor-pointer border border-slate-700" 
-                onClick={() => setGlobalSettings({...globalSettings, promoBanner: {...(globalSettings.promoBanner || {}), isActive: !globalSettings.promoBanner?.isActive}})}
-              >
-                <div className={`absolute top-[1px] bottom-[1px] w-5 rounded-full transition-all ${globalSettings.promoBanner?.isActive ? 'right-[1px] bg-emerald-500' : 'left-[1px] bg-slate-500'}`}></div>
-              </div>
-              <span className="text-slate-300 text-sm font-bold">{globalSettings.promoBanner?.isActive ? 'Banner Active' : 'Banner Hidden'}</span>
-            </div>
-
-            <div>
-              <label className="text-slate-400 text-xs font-bold uppercase tracking-wider block mb-2">Upload Banner Image (Local Computer)</label>
-              <div className="relative group">
-                <input 
-                  type="file" 
-                  accept="image/*"
-                  onChange={(e) => {
-                    const file = e.target.files[0];
-                    if (file) {
-                      if (file.size > 4 * 1024 * 1024) {
-                        showToast('❌ Image too large (max 4MB)');
-                        return;
-                      }
-                      const reader = new FileReader();
-                      reader.onloadend = () => {
-                        setGlobalSettings(prev => ({
-                          ...prev,
-                          promoBanner: { ...(prev.promoBanner || {}), imageUrl: reader.result }
-                        }));
-                      };
-                      reader.readAsDataURL(file);
-                    }
-                  }}
-                  className="absolute inset-0 opacity-0 cursor-pointer z-10"
-                />
-                <div className="w-full bg-slate-800 border-2 border-dashed border-slate-700 group-hover:border-indigo-500 rounded-xl px-4 py-8 text-center transition-colors">
-                  <div className="text-slate-400 mb-2">
-                    <svg className="w-8 h-8 mx-auto opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                    </svg>
+        <form onSubmit={handleUpdateSettings} className="space-y-6">
+          {(globalSettings.promoBanners || []).map((banner, index) => (
+            <div key={index} className="bg-slate-800/30 border border-slate-700/50 rounded-xl p-4 space-y-4">
+              <div className="flex items-center justify-between">
+                <h4 className="text-white text-sm font-bold">Banner {index + 1}</h4>
+                <div className="flex items-center gap-3">
+                  <div 
+                    className="w-10 h-6 bg-slate-800 rounded-full relative cursor-pointer border border-slate-700" 
+                    onClick={() => {
+                      const newBanners = [...globalSettings.promoBanners];
+                      newBanners[index] = { ...newBanners[index], isActive: !newBanners[index].isActive };
+                      setGlobalSettings({ ...globalSettings, promoBanners: newBanners });
+                    }}
+                  >
+                    <div className={`absolute top-[1px] bottom-[1px] w-5 rounded-full transition-all ${banner.isActive ? 'right-[1px] bg-emerald-500' : 'left-[1px] bg-slate-500'}`}></div>
                   </div>
-                  <p className="text-slate-300 text-sm font-bold">Click to Upload or Drag & Drop</p>
-                  <p className="text-slate-500 text-[10px] mt-1 uppercase tracking-tighter">Recommended size: 468x200 px</p>
+                  <span className="text-slate-300 text-xs font-bold">{banner.isActive ? 'Active' : 'Hidden'}</span>
                 </div>
+              </div>
+
+              <div>
+                <label className="text-slate-400 text-xs font-bold uppercase tracking-wider block mb-2">Upload Banner Image</label>
+                <div className="relative group">
+                  <input 
+                    type="file" 
+                    accept="image/*"
+                    onChange={(e) => {
+                      const file = e.target.files[0];
+                      if (file) {
+                        if (file.size > 4 * 1024 * 1024) {
+                          showToast('❌ Image too large (max 4MB)');
+                          return;
+                        }
+                        const reader = new FileReader();
+                        reader.onloadend = () => {
+                          const newBanners = [...globalSettings.promoBanners];
+                          newBanners[index] = { ...newBanners[index], imageUrl: reader.result };
+                          setGlobalSettings({ ...globalSettings, promoBanners: newBanners });
+                        };
+                        reader.readAsDataURL(file);
+                      }
+                    }}
+                    className="absolute inset-0 opacity-0 cursor-pointer z-10"
+                  />
+                  <div className="w-full bg-slate-800 border-2 border-dashed border-slate-700 group-hover:border-indigo-500 rounded-xl px-4 py-6 text-center transition-colors">
+                    <p className="text-slate-300 text-sm font-bold">Click to Upload Image</p>
+                    <p className="text-slate-500 text-[10px] mt-1 uppercase tracking-tighter">Recommended size: 468x200 px</p>
+                  </div>
+                </div>
+              </div>
+
+              {banner.imageUrl && (
+                <div className="mt-2">
+                  <div className="w-full h-24 rounded-lg overflow-hidden border border-slate-700 bg-slate-900 flex items-center justify-center">
+                    <img src={banner.imageUrl} alt="Preview" className="max-w-full max-h-full object-contain" />
+                  </div>
+                </div>
+              )}
+
+              <div>
+                <label className="text-slate-400 text-xs font-bold uppercase tracking-wider block mb-2">Target Link URL</label>
+                <input 
+                  type="text" 
+                  value={banner.linkUrl || ''} 
+                  onChange={(e) => {
+                    const newBanners = [...globalSettings.promoBanners];
+                    newBanners[index] = { ...newBanners[index], linkUrl: e.target.value };
+                    setGlobalSettings({ ...globalSettings, promoBanners: newBanners });
+                  }}
+                  placeholder="e.g. /referrals, /leaderboard or https://..."
+                  className="w-full bg-slate-800 border border-slate-700 focus:border-indigo-500 rounded-xl px-4 py-2 text-white text-sm outline-none" 
+                />
+                <p className="text-slate-500 text-[10px] mt-1">Leave empty if not clickable. Starts with / for app pages, http for external.</p>
               </div>
             </div>
+          ))}
 
-            {globalSettings.promoBanner?.imageUrl && (
-              <div className="mt-4">
-                <label className="text-slate-400 text-[10px] font-bold uppercase mb-2 block">Upload Preview</label>
-                <div className="w-full h-32 rounded-lg overflow-hidden border border-slate-700 bg-slate-900 flex items-center justify-center">
-                  <img src={globalSettings.promoBanner.imageUrl} alt="Preview" className="max-w-full max-h-full object-contain" />
-                </div>
-              </div>
-            )}
-            
-            <button type="submit" disabled={settingsLoading}
-              className="w-full py-3 mt-4 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-bold rounded-xl transition-all disabled:opacity-50 shadow-lg shadow-emerald-500/20 active:scale-95">
-              {settingsLoading ? 'Saving...' : 'Update Promotional Banner'}
-            </button>
-          </div>
+          <button type="submit" disabled={settingsLoading}
+            className="w-full py-3 mt-4 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-bold rounded-xl transition-all disabled:opacity-50 shadow-lg shadow-emerald-500/20 active:scale-95">
+            {settingsLoading ? 'Saving...' : 'Update Promotional Banners'}
+          </button>
         </form>
       </div>
 

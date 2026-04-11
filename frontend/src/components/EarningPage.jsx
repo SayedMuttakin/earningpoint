@@ -380,6 +380,7 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
       dailyLimit: 10
     },
     promoBanner: { imageUrl: '', linkUrl: '', isActive: false },
+    promoBanners: [],
     admobConfig: {
       bannerAdUnitId: '',
       interstitialAdUnitId: '',
@@ -411,6 +412,7 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
               : prev.fortuneWheelConfig.coins
           } : prev.fortuneWheelConfig,
           promoBanner: data.promoBanner || prev.promoBanner,
+          promoBanners: data.promoBanners || prev.promoBanners,
           admobConfig: data.admobConfig || prev.admobConfig
         }));
       }
@@ -423,6 +425,41 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
 
   const [showIntroScreen, setShowIntroScreen] = React.useState(false);
   const [introSection, setIntroSection] = React.useState(null);
+
+  const [activePromoBannerIndex, setActivePromoBannerIndex] = React.useState(0);
+  
+  const getActiveBanners = () => {
+    const banners = globalSettings?.promoBanners?.filter(b => b.isActive && b.imageUrl) || [];
+    if (banners.length > 0) return banners;
+    if (globalSettings?.promoBanner?.isActive && globalSettings?.promoBanner?.imageUrl) {
+      return [globalSettings.promoBanner];
+    }
+    return [];
+  };
+
+  const activeBanners = getActiveBanners();
+
+  React.useEffect(() => {
+    if (activeBanners.length <= 1) return;
+    const interval = setInterval(() => {
+      setActivePromoBannerIndex(prev => (prev + 1) % activeBanners.length);
+    }, 3000);
+    return () => clearInterval(interval);
+  }, [activeBanners.length]);
+
+  const handleBannerClick = (linkUrl) => {
+    if (!linkUrl) return;
+    if (linkUrl.startsWith('http')) {
+      window.open(linkUrl, '_blank');
+    } else {
+      const tabName = linkUrl.replace('/', '');
+      if (tabName && setActiveTab) {
+         // Tab names are usually capitalized: Referrals, Leaderboard, Cart
+         const formattedTab = tabName.charAt(0).toUpperCase() + tabName.slice(1);
+         setActiveTab(formattedTab);
+      }
+    }
+  };
 
   const [showMultiAdView, setShowMultiAdView] = React.useState(false);
   const [multiAdConfig, setMultiAdConfig] = React.useState(null);
@@ -2642,14 +2679,40 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
           </div>
 
           {/* Promotional Banner */}
-          {globalSettings?.promoBanner?.isActive && globalSettings?.promoBanner?.imageUrl && (
+          {activeBanners.length > 0 && (
             <div className="w-full max-w-2xl mx-auto px-4 mb-8">
-              <div className="w-full aspect-[468/200] max-h-[200px] overflow-hidden rounded-2xl shadow-lg border border-slate-200 dark:border-slate-800 bg-slate-100 dark:bg-slate-900 flex items-center justify-center">
-                <img 
-                  src={globalSettings.promoBanner.imageUrl} 
-                  alt="Promotional Banner" 
-                  className="w-full h-full object-cover" 
-                />
+              <div 
+                className="w-full aspect-[468/200] max-h-[200px] overflow-hidden rounded-2xl shadow-lg border border-slate-200 dark:border-slate-800 bg-slate-100 dark:bg-slate-900 relative cursor-pointer group"
+                onClick={() => handleBannerClick(activeBanners[activePromoBannerIndex]?.linkUrl)}
+              >
+                <AnimatePresence mode="wait">
+                  <motion.img 
+                    key={activePromoBannerIndex}
+                    src={activeBanners[activePromoBannerIndex]?.imageUrl} 
+                    alt={`Promotional Banner ${activePromoBannerIndex + 1}`} 
+                    className="w-full h-full object-cover absolute inset-0"
+                    initial={{ opacity: 0, x: 20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={{ opacity: 0, x: -20 }}
+                    transition={{ duration: 0.3 }}
+                  />
+                </AnimatePresence>
+                
+                {/* Pagination Dots */}
+                {activeBanners.length > 1 && (
+                  <div className="absolute bottom-2 left-0 right-0 flex justify-center gap-1.5 z-10">
+                    {activeBanners.map((_, idx) => (
+                      <div 
+                        key={idx} 
+                        className={`w-1.5 h-1.5 rounded-full transition-all duration-300 ${
+                          idx === activePromoBannerIndex 
+                            ? 'bg-white w-4' 
+                            : 'bg-white/50'
+                        }`}
+                      />
+                    ))}
+                  </div>
+                )}
               </div>
             </div>
           )}
