@@ -24,6 +24,39 @@ const BannerAd468x60 = ({ globalSettings }) => {
   );
 };
 
+const BigAdBanner = ({ globalSettings }) => {
+  const bannerId = globalSettings?.admobConfig?.bannerAdUnitId;
+  if (bannerId && bannerId.trim()) {
+    return (
+      <div className="w-full flex justify-center mt-2">
+        <div className="w-[320px] h-[250px] bg-slate-100 dark:bg-slate-800 flex items-center justify-center">
+          <p className="text-xs text-slate-400">AdMob Banner: {bannerId}</p>
+        </div>
+      </div>
+    );
+  }
+  return (
+    <div className="w-full flex justify-center mt-2">
+      <div className="w-[320px] h-[250px] bg-slate-50 dark:bg-slate-800/50 border-2 border-slate-200 dark:border-slate-700 relative rounded-2xl flex flex-col items-center justify-center overflow-hidden shadow-sm">
+        <div className="absolute top-0 left-0 right-0 h-7 bg-slate-100 dark:bg-slate-800 flex items-center px-4 justify-between border-b border-slate-200 dark:border-slate-700">
+          <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest flex items-center gap-1.5">Sponsored</span>
+          <div className="w-3.5 h-3.5 bg-blue-500 rounded-sm flex items-center justify-center"></div>
+        </div>
+        <div className="flex flex-col items-center text-center p-6 pt-10 space-y-4">
+          <div className="w-20 h-20 bg-white dark:bg-slate-900 rounded-3xl shadow-md flex items-center justify-center">
+            <span className="text-3xl">📺</span>
+          </div>
+          <div className="space-y-1">
+            <h4 className="text-base font-black text-blue-600 dark:text-blue-400">Google AdMob Test</h4>
+            <p className="text-[12px] text-slate-500 dark:text-slate-400 font-bold">320x250 Medium Rectangle Ad</p>
+          </div>
+          <button className="px-8 py-2.5 rounded-full bg-blue-500 text-white text-xs font-bold">AD UNIT ACTIVE</button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 const ReferralsPage = ({ onBack, globalSettings }) => {
   const [refreshing, setRefreshing] = useState(false);
   const [copied, setCopied] = useState(false);
@@ -166,6 +199,8 @@ const ReferralsPage = ({ onBack, globalSettings }) => {
                </div>
                <div className="absolute top-0 right-0 -mt-8 -mr-8 w-32 h-32 bg-white opacity-10 rounded-full blur-2xl"></div>
             </div>
+
+            <BigAdBanner globalSettings={globalSettings} />
             
           </div>
         </div>
