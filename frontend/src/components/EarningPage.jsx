@@ -86,18 +86,38 @@ const ipPackages = [
 ];
 
 
-const BannerAd468x60 = () => (
-  <div className="w-full max-w-2xl mx-auto border border-slate-200 dark:border-slate-800 rounded-xl p-3 flex items-center justify-center bg-slate-50 dark:bg-slate-800/30 relative overflow-hidden my-4">
-    <span className="absolute top-0 right-0 bg-slate-600 text-white text-[8px] px-1.5 py-0.5 font-bold rounded-bl-lg">Ad</span>
-    <div className="flex items-center gap-4">
-      <span className="text-blue-500 font-bold text-sm">SPONSORED</span>
-      <div className="h-6 w-px bg-slate-200 dark:bg-slate-700"></div>
-      <span className="text-slate-500 dark:text-slate-400 text-xs font-medium">468x60 Banner Ad</span>
+const BannerAd468x60 = () => {
+  const bannerId = globalSettings?.admobConfig?.bannerAdUnitId;
+  if (bannerId && bannerId.trim()) {
+    return (
+      <div className="w-full max-w-2xl mx-auto border border-slate-200 dark:border-slate-800 rounded-xl p-3 flex items-center justify-center bg-slate-50 dark:bg-slate-800/30 relative overflow-hidden my-4">
+        <span className="text-xs text-slate-500">AdMob Banner: {bannerId}</span>
+      </div>
+    );
+  }
+  return (
+    <div className="w-full max-w-2xl mx-auto border border-slate-200 dark:border-slate-800 rounded-xl p-3 flex items-center justify-center bg-slate-50 dark:bg-slate-800/30 relative overflow-hidden my-4">
+      <span className="absolute top-0 right-0 bg-slate-600 text-white text-[8px] px-1.5 py-0.5 font-bold rounded-bl-lg">Ad</span>
+      <div className="flex items-center gap-4">
+        <span className="text-blue-500 font-bold text-sm">SPONSORED</span>
+        <div className="h-6 w-px bg-slate-200 dark:bg-slate-700"></div>
+        <span className="text-slate-500 dark:text-slate-400 text-xs font-medium">468x60 Banner Ad</span>
+      </div>
     </div>
-  </div>
-);
+  );
+};
 
 const BigAdBanner = () => {
+  const bannerId = globalSettings?.admobConfig?.bannerAdUnitId;
+  if (bannerId && bannerId.trim()) {
+    return (
+      <div className="w-full flex justify-center mt-2">
+        <div className="w-[320px] h-[250px] bg-slate-100 dark:bg-slate-800 flex items-center justify-center">
+          <p className="text-xs text-slate-400">AdMob Banner: {bannerId}</p>
+        </div>
+      </div>
+    );
+  }
   return (
     <div className="w-full flex justify-center mt-2">
       <div className="w-[320px] h-[250px] bg-slate-50 dark:bg-slate-800/50 border-2 border-slate-200 dark:border-slate-700 relative rounded-2xl flex flex-col items-center justify-center overflow-hidden shadow-sm">
