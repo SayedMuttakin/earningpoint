@@ -859,84 +859,9 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
     );
   };
 
-  const ArticleReader = () => {
-    if (!currentArticle) return null;
-    
-    // Split content by double new lines for paragraphs
-    const paragraphs = currentArticle.content.split(/\n\n|\r\n\r\n/).filter(p => p.trim() !== '');
-
-    return createPortal(
-      <div className="fixed inset-0 z-[10000] bg-white dark:bg-slate-950 flex flex-col w-full overflow-hidden">
-        {/* Header */}
-        <div className="bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 pt-safe px-6 py-4 flex justify-between items-center shrink-0">
-          <button onClick={() => setShowArticleReader(false)} className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg">
-            <ArrowLeft className="w-6 h-6 text-slate-500" />
-          </button>
-           <div className="flex flex-col items-center flex-1 mx-4">
-              <div className="flex items-center gap-2 mb-0.5">
-                 <div className="w-6 h-6 rounded-full border-2 border-brand-500/30 flex items-center justify-center overflow-hidden">
-                    <div className="h-full bg-brand-500" style={{ width: `${((currentArticle.readingTime - articleReadingTime) / currentArticle.readingTime) * 100}%` }} />
-                 </div>
-                <span className="font-black text-slate-800 dark:text-white text-sm">
-                  {articleReadingTime > 0 ? `${articleReadingTime}s remaining` : 'Reading Complete!'}
-                </span>
-             </div>
-          </div>
-          <div className="w-10" /> {/* Spacer */}
-        </div>
-
-        {/* Content Scroll Area */}
-        <div className="flex-1 overflow-y-auto min-h-0 p-6 sm:p-10 max-w-2xl mx-auto w-full article-reader-content">
-           <h1 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white mb-8 leading-tight">
-             {currentArticle.title}
-           </h1>
-
-           <div className="space-y-6">
-             {paragraphs.map((para, idx) => (
-               <React.Fragment key={idx}>
-                 <p className="text-slate-700 dark:text-slate-300 leading-relaxed text-base sm:text-lg">
-                   {para}
-                 </p>
-                 {/* Inject 468x60 Banner between paragraphs (every 2nd paragraph) */}
-                 {(idx + 1) % 2 === 0 && (
-                   <div className="py-4 flex flex-col items-center">
-                     <div className="w-full max-w-lg border border-slate-200 dark:border-slate-800 rounded-xl p-3 flex items-center justify-center bg-slate-50 dark:bg-slate-800/30 relative overflow-hidden">
-                       <span className="absolute top-0 right-0 bg-slate-600 text-white text-[8px] px-1.5 py-0.5 font-bold rounded-bl-lg">Ad</span>
-                       <div className="flex items-center gap-4">
-                         <span className="text-blue-500 font-bold text-sm">SPONSORED</span>
-                         <div className="h-6 w-px bg-slate-200 dark:bg-slate-700"></div>
-                         <span className="text-slate-500 dark:text-slate-400 text-xs font-medium">468x60 Banner Ad</span>
-                       </div>
-                     </div>
-                   </div>
-                 )}
-               </React.Fragment>
-             ))}
-           </div>
-
-           <div className="mt-12 mb-20">
-              <BannerAd468x60 globalSettings={globalSettings} />
-           </div>
-        </div>
-
-        {/* Bottom Action Bar */}
-        <div className="p-6 bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 flex justify-center shrink-0">
-          <button
-            onClick={claimArticleReward}
-            disabled={articleReadingTime > 0}
-            className={`w-full max-w-sm py-4 rounded-2xl font-black text-lg transition-all transform-gpu shadow-xl ${
-              articleReadingTime > 0
-                ? 'bg-slate-200 dark:bg-slate-800 text-slate-400 cursor-not-allowed scale-95'
-                : 'bg-gradient-to-r from-emerald-500 to-green-600 text-white animate-bounce-subtle'
-            }`}
-          >
-            {articleReadingTime > 0 ? `READING... (${articleReadingTime}s)` : 'CLAIM REWARD 🎉'}
-          </button>
-        </div>
-      </div>,
-      document.body
-    );
-  };
+  // ArticleReader JSX is now inlined in the render below (not a nested component)
+  // This prevents React from unmounting/remounting it on every parent re-render,
+  // which was causing scroll position to reset to top every second.
 
   const goBackWithAd = (closeFn) => {
     if (isAdLoading.current) return;
@@ -1731,7 +1656,72 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
       {showIntroScreen && introItem && <OptionIntroScreen />}
       
       {showArticleListView && <ArticleListView />}
-      {showArticleReader && <ArticleReader />}
+      {showArticleReader && currentArticle && createPortal(
+        <div className="fixed inset-0 z-[10000] bg-white dark:bg-slate-950 flex flex-col w-full overflow-hidden">
+          {/* Header - re-renders every second but scroll area below does NOT remount */}
+          <div className="bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 pt-safe px-6 py-4 flex justify-between items-center shrink-0">
+            <button onClick={() => setShowArticleReader(false)} className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg">
+              <ArrowLeft className="w-6 h-6 text-slate-500" />
+            </button>
+            <div className="flex flex-col items-center flex-1 mx-4">
+              <div className="flex items-center gap-2 mb-0.5">
+                <div className="w-6 h-6 rounded-full border-2 border-brand-500/30 flex items-center justify-center overflow-hidden">
+                  <div className="h-full bg-brand-500" style={{ width: `${((currentArticle.readingTime - articleReadingTime) / currentArticle.readingTime) * 100}%` }} />
+                </div>
+                <span className="font-black text-slate-800 dark:text-white text-sm">
+                  {articleReadingTime > 0 ? `${articleReadingTime}s remaining` : 'Reading Complete!'}
+                </span>
+              </div>
+            </div>
+            <div className="w-10" />
+          </div>
+
+          {/* Content Scroll Area - stable DOM node, scroll preserved */}
+          <div className="flex-1 overflow-y-auto min-h-0 p-6 sm:p-10 max-w-2xl mx-auto w-full">
+            <h1 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white mb-8 leading-tight">
+              {currentArticle.title}
+            </h1>
+            <div className="space-y-6">
+              {currentArticle.content.split(/\n\n|\r\n\r\n/).filter(p => p.trim() !== '').map((para, idx) => (
+                <React.Fragment key={idx}>
+                  <p className="text-slate-700 dark:text-slate-300 leading-relaxed text-base sm:text-lg">{para}</p>
+                  {(idx + 1) % 2 === 0 && (
+                    <div className="py-4 flex flex-col items-center">
+                      <div className="w-full max-w-lg border border-slate-200 dark:border-slate-800 rounded-xl p-3 flex items-center justify-center bg-slate-50 dark:bg-slate-800/30 relative overflow-hidden">
+                        <span className="absolute top-0 right-0 bg-slate-600 text-white text-[8px] px-1.5 py-0.5 font-bold rounded-bl-lg">Ad</span>
+                        <div className="flex items-center gap-4">
+                          <span className="text-blue-500 font-bold text-sm">SPONSORED</span>
+                          <div className="h-6 w-px bg-slate-200 dark:bg-slate-700"></div>
+                          <span className="text-slate-500 dark:text-slate-400 text-xs font-medium">468x60 Banner Ad</span>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </React.Fragment>
+              ))}
+            </div>
+            <div className="mt-12 mb-20">
+              <BannerAd468x60 globalSettings={globalSettings} />
+            </div>
+          </div>
+
+          {/* Bottom Action Bar */}
+          <div className="p-6 bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 flex justify-center shrink-0">
+            <button
+              onClick={claimArticleReward}
+              disabled={articleReadingTime > 0}
+              className={`w-full max-w-sm py-4 rounded-2xl font-black text-lg transition-all transform-gpu shadow-xl ${
+                articleReadingTime > 0
+                  ? 'bg-slate-200 dark:bg-slate-800 text-slate-400 cursor-not-allowed scale-95'
+                  : 'bg-gradient-to-r from-emerald-500 to-green-600 text-white animate-bounce-subtle'
+              }`}
+            >
+              {articleReadingTime > 0 ? `READING... (${articleReadingTime}s)` : 'CLAIM REWARD 🎉'}
+            </button>
+          </div>
+        </div>,
+        document.body
+      )}
       
       {showMultiAdView && multiAdConfig && (
         <MultiAdViewPage
