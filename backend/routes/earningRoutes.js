@@ -26,6 +26,7 @@ router.post('/article-claim', protect, earningController.claimArticleReward);
 
 router.post('/convert-coins', protect, earningController.convertCoins);
 router.post('/withdraw', protect, earningController.submitWithdrawal);
+router.get('/withdrawals', protect, earningController.getWithdrawals);
 router.post('/premium-order', protect, earningController.submitPremiumOrder);
 
 router.get('/settings', earningController.getGlobalSettings);

@@ -166,6 +166,7 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
   const [withdrawMethod, setWithdrawMethod] = React.useState('');
   const [withdrawLoading, setWithdrawLoading] = React.useState(false);
   const [withdrawSuccess, setWithdrawSuccess] = React.useState(false);
+  const [withdrawHistory, setWithdrawHistory] = React.useState([]);
 
   const blurPhone = (phone = '') => {
     if (!phone || phone.length < 6) return phone;
@@ -175,8 +176,17 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
   const demoWithdrawHistory = [
     { id: 1, name: 'Sayed Muttakin', phone: '01711234567', amount: 1500, method: 'bKash', date: '2025-03-28', status: 'completed' },
     { id: 2, name: 'Rahim Uddin', phone: '01819876543', amount: 2000, method: 'Nagad', date: '2025-03-25', status: 'completed' },
-    { id: 3, name: 'Karim Hossain', phone: '01612345678', amount: 1000, method: 'Rocket', date: '2025-03-22', status: 'pending' },
+    { id: 3, name: 'Karim Hossain', phone: '01612345678', amount: 1000, method: 'Rocket', date: '2025-03-22', status: 'completed' },
+    { id: 4, name: 'Al Hasan', phone: '01912345678', amount: 500, method: 'bKash', date: '2025-03-20', status: 'completed' },
+    { id: 5, name: 'Jewel Mia', phone: '01512345678', amount: 2500, method: 'Nagad', date: '2025-03-18', status: 'completed' },
+    { id: 6, name: 'Ripon Khan', phone: '01722334455', amount: 800, method: 'Rocket', date: '2025-03-15', status: 'completed' },
+    { id: 7, name: 'Monir Hossain', phone: '01812345678', amount: 1200, method: 'bKash', date: '2025-03-12', status: 'completed' },
+    { id: 8, name: 'Sobuj Sarker', phone: '01612344321', amount: 3500, method: 'Nagad', date: '2025-03-10', status: 'completed' },
+    { id: 9, name: 'Tonmoy Roy', phone: '01987654321', amount: 700, method: 'Rocket', date: '2025-03-08', status: 'completed' },
+    { id: 10, name: 'Parvez Hasan', phone: '01711223344', amount: 1800, method: 'bKash', date: '2025-03-05', status: 'completed' },
   ];
+
+  const allWithdrawals = [...withdrawHistory, ...demoWithdrawHistory];
 
   const handleWithdraw = async () => {
     if (!withdrawAmount || parseFloat(withdrawAmount) < 1000) {
@@ -207,6 +217,17 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
       if (res.ok) {
         setWithdrawSuccess(true);
         setBalance(data.balance ?? balance);
+        const user = JSON.parse(localStorage.getItem('user') || '{}');
+        const newWithdrawal = {
+          id: Date.now(),
+          name: user.name || 'User',
+          phone: withdrawPhone,
+          amount: parseFloat(withdrawAmount),
+          method: withdrawMethod.charAt(0).toUpperCase() + withdrawMethod.slice(1),
+          date: new Date().toISOString().split('T')[0],
+          status: 'pending'
+        };
+        setWithdrawHistory(prev => [newWithdrawal, ...prev]);
         showToast('Withdrawal request submitted successfully!', 'success');
         setWithdrawAmount('');
         setWithdrawPhone('');
@@ -470,6 +491,22 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
     }
   };
 
+  const fetchWithdrawHistory = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) return;
+      const response = await fetch(`${API_BASE}/api/earning/withdrawals`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (response.ok) {
+        const data = await response.json();
+        setWithdrawHistory(data.withdrawals || []);
+      }
+    } catch (err) {
+      console.error('Failed to fetch withdrawal history:', err);
+    }
+  };
+
   const handleRefresh = async () => {
     setRefreshing(true);
     try {
@@ -577,6 +614,7 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
     fetchQuizStatus();
     fetchArticles();
     fetchGlobalSettings();
+    fetchWithdrawHistory();
     AdMobService.showBanner();
     return () => {
       AdMobService.hideBanner();
@@ -2413,7 +2451,7 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
                 <History className="w-5 h-5 text-brand-500" /> Recent Withdrawals
               </h3>
               <div className="space-y-3">
-                {demoWithdrawHistory && demoWithdrawHistory.length > 0 ? demoWithdrawHistory.map((item) => (
+                {allWithdrawals && allWithdrawals.length > 0 ? allWithdrawals.map((item) => (
                   <div key={item.id} className="bg-slate-50 dark:bg-slate-800/50 rounded-2xl border border-slate-200 dark:border-slate-700 p-4 flex items-center gap-4 shadow-sm hover:shadow-md transition-shadow">
                     <div className="w-10 h-10 rounded-full bg-gradient-to-br from-brand-400 to-brand-600 flex items-center justify-center shrink-0 text-white font-black text-sm">
                       {item.name.charAt(0)}
@@ -2455,7 +2493,7 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
             </div>
 
             <div className="space-y-3">
-              {demoWithdrawHistory.map((item) => (
+              {allWithdrawals.length > 0 ? allWithdrawals.map((item) => (
                 <div key={item.id} className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 p-4 flex items-center gap-4 shadow-sm">
                   <div className="w-10 h-10 rounded-full bg-gradient-to-br from-brand-400 to-brand-600 flex items-center justify-center shrink-0 text-white font-black text-sm">
                     {item.name.charAt(0)}
@@ -2472,9 +2510,16 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
                     }`}>{item.status === 'completed' ? 'Completed' : 'Pending'}</span>
                   </div>
                 </div>
-              ))}
+              )) : (
+                <div className="text-center py-6 bg-slate-50 dark:bg-slate-800/30 rounded-2xl border border-dashed border-slate-200 dark:border-slate-700">
+                  <History className="w-8 h-8 text-slate-300 dark:text-slate-600 mx-auto mb-2" />
+                  <p className="text-slate-500 dark:text-slate-400 text-sm font-medium">No withdrawal history yet</p>
+                </div>
+              )}
             </div>
-            <p className="text-center text-xs text-slate-400 pt-2">Showing demo data. Real transactions will appear here once live.</p>
+            {allWithdrawals.length === 0 && (
+              <p className="text-center text-xs text-slate-400 pt-2">No withdrawals yet. Make your first withdrawal to see it here.</p>
+            )}
           </div>
         )}
 
