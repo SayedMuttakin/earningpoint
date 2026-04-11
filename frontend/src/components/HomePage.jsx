@@ -144,9 +144,6 @@ const PostCard = ({ post }) => {
         </div>
       )}
 
-        {/* Main Column Feed */}
-      </div>
-
       {/* Post Attachment */}
       {post.image && (
         <div className="px-4 pb-4">
