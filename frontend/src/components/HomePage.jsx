@@ -3,6 +3,27 @@ import { BadgeCheck, Loader2 } from 'lucide-react';
 import { API_BASE } from '../config';
 import PullToRefresh from './PullToRefresh';
 
+const BannerAd468x60 = ({ globalSettings }) => {
+  const bannerId = globalSettings?.admobConfig?.bannerAdUnitId;
+  if (bannerId && bannerId.trim()) {
+    return (
+      <div className="w-full max-w-2xl mx-auto border border-slate-200 dark:border-slate-800 rounded-xl p-3 flex items-center justify-center bg-slate-50 dark:bg-slate-800/30 relative overflow-hidden my-4">
+        <span className="text-xs text-slate-500">AdMob Banner: {bannerId}</span>
+      </div>
+    );
+  }
+  return (
+    <div className="w-full max-w-2xl mx-auto border border-slate-200 dark:border-slate-800 rounded-xl p-3 flex items-center justify-center bg-slate-50 dark:bg-slate-800/30 relative overflow-hidden my-4">
+      <span className="absolute top-0 right-0 bg-slate-600 text-white text-[8px] px-1.5 py-0.5 font-bold rounded-bl-lg">Ad</span>
+      <div className="flex items-center gap-4">
+        <span className="text-blue-500 font-bold text-sm">SPONSORED</span>
+        <div className="h-6 w-px bg-slate-200 dark:bg-slate-700"></div>
+        <span className="text-slate-500 dark:text-slate-400 text-xs font-medium">468x60 Banner Ad</span>
+      </div>
+    </div>
+  );
+};
+
 const PostAd = ({ index }) => {
   const isLarge = index > 1; // 1st is 320x50, 2nd and 3rd are 320x250
   const sizeText = isLarge ? "320 x 250 Medium Rectangle" : "320 x 50 Responsive Banner";
@@ -120,21 +141,14 @@ const PostCard = ({ post }) => {
           <h2 className="text-2xl sm:text-[32px] font-black text-slate-900 leading-[1.1] tracking-tight decoration-indigo-500/30 underline-offset-8">
             {post.title}
           </h2>
-        </div>
-      )}
-
-      {/* Post Content */}
-      <div className="px-4 pb-3">
-        {renderContentWithAds()}
-        
-        {shouldTruncate && !isExpanded && (
-          <button 
-            onClick={() => setIsExpanded(true)}
-            className="text-blue-500 font-bold text-sm mt-2 hover:underline underline-offset-2 transition-all"
-          >
-            See more
-          </button>
+</div>
+          )}
         )}
+        
+        {/* Banner Ad after Latest News */}
+        <BannerAd468x60 globalSettings={globalSettings} />
+        
+        {/* Main Column Feed */}
       </div>
 
       {/* Post Attachment */}
@@ -161,6 +175,7 @@ const HomePage = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [refreshing, setRefreshing] = useState(false);
+  const [globalSettings, setGlobalSettings] = useState(null);
 
   const fetchPosts = async () => {
     try {
@@ -185,7 +200,20 @@ const HomePage = () => {
 
   useEffect(() => {
     fetchPosts();
+    fetchGlobalSettings();
   }, []);
+
+  const fetchGlobalSettings = async () => {
+    try {
+      const response = await fetch(`${API_BASE}/api/earning/settings`);
+      if (response.ok) {
+        const data = await response.json();
+        setGlobalSettings(data);
+      }
+    } catch (err) {
+      console.error('Failed to fetch settings:', err);
+    }
+  };
 
   return (
     <PullToRefresh onRefresh={handleRefresh} refreshing={refreshing}>
