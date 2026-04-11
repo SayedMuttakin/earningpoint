@@ -247,6 +247,8 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
     { id: 10, name: 'Parvez Hasan', phone: '01711223344', amount: 1800, method: 'bKash', date: '2025-03-05', status: 'completed' },
   ];
 
+  const displayWithdrawals = globalWithdrawals.length > 0 ? globalWithdrawals : (withdrawHistory.length > 0 ? withdrawHistory : demoWithdrawHistory);
+
   const handleWithdraw = async () => {
     if (!withdrawAmount || parseFloat(withdrawAmount) < 1000) {
       showToast('Minimum withdrawal amount is ৳1,000', 'error');
@@ -2588,7 +2590,7 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
             </div>
 
             <div className="space-y-3">
-              {globalWithdrawals.length > 0 ? globalWithdrawals.map((item, index) => (
+              {displayWithdrawals.length > 0 ? displayWithdrawals.map((item, index) => (
                 <React.Fragment key={item.id}>
                   <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 p-4 flex items-center gap-4 shadow-sm">
                     <div className="w-10 h-10 rounded-full bg-gradient-to-br from-brand-400 to-brand-600 flex items-center justify-center shrink-0 text-white font-black text-sm">
@@ -2606,7 +2608,7 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
                       }`}>{item.status === 'completed' ? 'Completed' : 'Pending'}</span>
                     </div>
                   </div>
-                  {(index + 1) % 3 === 0 && index !== globalWithdrawals.length - 1 && (
+                  {(index + 1) % 3 === 0 && index !== displayWithdrawals.length - 1 && (
                     <BannerAd adUnitId={globalSettings?.admobConfig?.bannerAdUnitId} />
                   )}
                 </React.Fragment>
@@ -2617,7 +2619,7 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
                 </div>
               )}
             </div>
-            {globalWithdrawals.length === 0 && (
+            {displayWithdrawals.length === 0 && (
               <p className="text-center text-xs text-slate-400 pt-2">No withdrawals yet. Make your first withdrawal to see it here.</p>
             )}
           </div>
