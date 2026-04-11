@@ -793,7 +793,7 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
 
   const ArticleListView = () => {
     return createPortal(
-      <div className="fixed inset-0 z-[9999] bg-slate-50 dark:bg-slate-950 flex flex-col h-screen w-full overflow-hidden animate-slide-up">
+      <div className="fixed inset-0 z-[9999] bg-slate-50 dark:bg-slate-950 flex flex-col h-screen w-full overflow-hidden">
         <div className="bg-gradient-to-r from-blue-600 to-indigo-700 pt-safe px-6 py-5 flex justify-between items-center shadow-lg shrink-0">
           <div className="flex items-center gap-3">
              <button onClick={() => setShowArticleListView(false)} className="p-2 hover:bg-white/10 rounded-lg">
@@ -868,7 +868,7 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
     const paragraphs = currentArticle.content.split(/\n\n|\r\n\r\n/).filter(p => p.trim() !== '');
 
     return createPortal(
-      <div className="fixed inset-0 z-[10000] bg-white dark:bg-slate-950 flex flex-col w-full overflow-hidden animate-slide-up">
+      <div className="fixed inset-0 z-[10000] bg-white dark:bg-slate-950 flex flex-col w-full overflow-hidden">
         {/* Header */}
         <div className="bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 pt-safe px-6 py-4 flex justify-between items-center shrink-0">
           <button onClick={() => setShowArticleReader(false)} className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg">
