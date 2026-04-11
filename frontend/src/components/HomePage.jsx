@@ -141,9 +141,8 @@ const PostCard = ({ post }) => {
           <h2 className="text-2xl sm:text-[32px] font-black text-slate-900 leading-[1.1] tracking-tight decoration-indigo-500/30 underline-offset-8">
             {post.title}
           </h2>
-</div>
-          )}
-        )}
+        </div>
+      )}
         
         {/* Banner Ad after Latest News */}
         <BannerAd468x60 globalSettings={globalSettings} />
