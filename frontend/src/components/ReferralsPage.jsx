@@ -2,8 +2,9 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { API_BASE } from '../config';
 import { ChevronLeft, Share2, Copy, Check, Users } from 'lucide-react';
 import PullToRefresh from './PullToRefresh';
+import EarningPage from './EarningPage';
 
-const ReferralsPage = ({ onBack }) => {
+const ReferralsPage = ({ onBack, globalSettings }) => {
   const [refreshing, setRefreshing] = useState(false);
   const [copied, setCopied] = useState(false);
   const [referralData, setReferralData] = useState({
@@ -134,6 +135,8 @@ const ReferralsPage = ({ onBack }) => {
                 <span className="text-xs sm:text-sm font-medium text-slate-500">Total Earned</span>
               </div>
             </div>
+
+            <BannerAd468x60 globalSettings={globalSettings} />
 
             {/* Promotional Banner */}
             <div className="w-full mt-4 sm:mt-6 bg-gradient-to-r from-brand-600 to-indigo-600 rounded-2xl p-5 sm:p-6 text-white text-center shadow-lg relative overflow-hidden animate-fade-in-up" style={{ animationDelay: '0.2s' }}>
