@@ -144,6 +144,21 @@ const PostCard = ({ post }) => {
         </div>
       )}
 
+      {/* Post Content / Details */}
+      {(post.content || post.description) && (
+        <div className="px-4 pb-4">
+          {renderContentWithAds()}
+          {shouldTruncate && !isExpanded && (
+            <button 
+              onClick={() => setIsExpanded(true)}
+              className="mt-2 text-indigo-600 font-bold text-sm hover:underline"
+            >
+              Read More
+            </button>
+          )}
+        </div>
+      )}
+
       {/* Post Attachment */}
       {post.image && (
         <div className="px-4 pb-4">
