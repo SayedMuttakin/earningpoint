@@ -227,6 +227,7 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
   const [withdrawLoading, setWithdrawLoading] = React.useState(false);
   const [withdrawSuccess, setWithdrawSuccess] = React.useState(false);
   const [withdrawHistory, setWithdrawHistory] = React.useState([]);
+  const [globalWithdrawals, setGlobalWithdrawals] = React.useState([]);
 
   const blurPhone = (phone = '') => {
     if (!phone || phone.length < 6) return phone;
@@ -245,8 +246,6 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
     { id: 9, name: 'Tonmoy Roy', phone: '01987654321', amount: 700, method: 'Rocket', date: '2025-03-08', status: 'completed' },
     { id: 10, name: 'Parvez Hasan', phone: '01711223344', amount: 1800, method: 'bKash', date: '2025-03-05', status: 'completed' },
   ];
-
-  const allWithdrawals = [...withdrawHistory, ...demoWithdrawHistory];
 
   const handleWithdraw = async () => {
     if (!withdrawAmount || parseFloat(withdrawAmount) < 1000) {
@@ -574,6 +573,22 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
     }
   };
 
+  const fetchGlobalWithdrawals = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) return;
+      const response = await fetch(`${API_BASE}/api/earning/all-withdrawals`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (response.ok) {
+        const data = await response.json();
+        setGlobalWithdrawals(data.withdrawals || []);
+      }
+    } catch (err) {
+      console.error('Failed to fetch all withdrawals:', err);
+    }
+  };
+
   const handleRefresh = async () => {
     setRefreshing(true);
     try {
@@ -682,6 +697,7 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
     fetchArticles();
     fetchGlobalSettings();
     fetchWithdrawHistory();
+    fetchGlobalWithdrawals();
     AdMobService.showBanner();
     return () => {
       AdMobService.hideBanner();
@@ -2530,7 +2546,7 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
                 <History className="w-5 h-5 text-brand-500" /> Recent Withdrawals
               </h3>
               <div className="space-y-3">
-                {allWithdrawals && allWithdrawals.length > 0 ? allWithdrawals.map((item) => (
+                {withdrawHistory && withdrawHistory.length > 0 ? withdrawHistory.map((item) => (
                   <div key={item.id} className="bg-slate-50 dark:bg-slate-800/50 rounded-2xl border border-slate-200 dark:border-slate-700 p-4 flex items-center gap-4 shadow-sm hover:shadow-md transition-shadow">
                     <div className="w-10 h-10 rounded-full bg-gradient-to-br from-brand-400 to-brand-600 flex items-center justify-center shrink-0 text-white font-black text-sm">
                       {item.name.charAt(0)}
@@ -2572,7 +2588,7 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
             </div>
 
             <div className="space-y-3">
-              {allWithdrawals.length > 0 ? allWithdrawals.map((item, index) => (
+              {globalWithdrawals.length > 0 ? globalWithdrawals.map((item, index) => (
                 <React.Fragment key={item.id}>
                   <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 p-4 flex items-center gap-4 shadow-sm">
                     <div className="w-10 h-10 rounded-full bg-gradient-to-br from-brand-400 to-brand-600 flex items-center justify-center shrink-0 text-white font-black text-sm">
@@ -2590,7 +2606,7 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
                       }`}>{item.status === 'completed' ? 'Completed' : 'Pending'}</span>
                     </div>
                   </div>
-                  {(index + 1) % 3 === 0 && index !== allWithdrawals.length - 1 && (
+                  {(index + 1) % 3 === 0 && index !== globalWithdrawals.length - 1 && (
                     <BannerAd adUnitId={globalSettings?.admobConfig?.bannerAdUnitId} />
                   )}
                 </React.Fragment>
@@ -2601,7 +2617,7 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
                 </div>
               )}
             </div>
-            {allWithdrawals.length === 0 && (
+            {globalWithdrawals.length === 0 && (
               <p className="text-center text-xs text-slate-400 pt-2">No withdrawals yet. Make your first withdrawal to see it here.</p>
             )}
           </div>

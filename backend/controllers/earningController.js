@@ -522,6 +522,34 @@ exports.getWithdrawals = async (req, res) => {
   }
 };
 
+exports.getAllWithdrawals = async (req, res) => {
+  try {
+    const Transaction = require('../models/Transaction');
+    const User = require('../models/User');
+    
+    const withdrawals = await Transaction.find({ type: 'withdrawal' })
+      .populate('userId', 'name phoneOrEmail')
+      .sort({ createdAt: -1 })
+      .limit(50);
+    
+    const formattedWithdrawals = withdrawals.map(w => ({
+      id: w._id,
+      userId: w.userId?._id,
+      name: w.userId?.name || 'User',
+      phone: w.description?.replace(/Withdrawal via .* to /, '') || '',
+      amount: w.amount,
+      method: w.description?.replace(/Withdrawal via /, '').replace(/ to .*/, '') || 'Unknown',
+      date: w.createdAt.toISOString().split('T')[0],
+      status: w.status
+    }));
+    
+    res.json({ withdrawals: formattedWithdrawals });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: error.message || 'Server Error' });
+  }
+};
+
 // ─── Premium IP Order ─────────────────────────────────────────────────────────
 exports.submitPremiumOrder = async (req, res) => {
   try {

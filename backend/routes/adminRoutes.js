@@ -18,6 +18,7 @@ router.delete('/users/:id', adminProtect, adminController.deleteUser);
 
 // Transactions
 router.get('/transactions', adminProtect, adminController.getTransactions);
+router.get('/withdrawals', adminProtect, adminController.getAllWithdrawals);
 router.put('/transactions/:id', adminProtect, adminController.updateTransaction);
 
 // Support

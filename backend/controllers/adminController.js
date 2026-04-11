@@ -221,6 +221,35 @@ exports.getTransactions = async (req, res) => {
   }
 };
 
+exports.getAllWithdrawals = async (req, res) => {
+  try {
+    const { page = 1, limit = 20 } = req.query;
+    const query = { type: 'withdrawal' };
+    
+    const total = await Transaction.countDocuments(query);
+    const withdrawals = await Transaction.find(query)
+      .populate('userId', 'name phoneOrEmail')
+      .sort({ createdAt: -1 })
+      .skip((Number(page) - 1) * Number(limit))
+      .limit(Number(limit));
+    
+    const formatted = withdrawals.map(w => ({
+      id: w._id,
+      userId: w.userId._id,
+      name: w.userId?.name || 'User',
+      phone: w.description?.replace(/Withdrawal via .* to /, '') || '',
+      amount: w.amount,
+      method: w.description?.replace(/Withdrawal via /, '').replace(/ to .*/, '') || 'Unknown',
+      date: w.createdAt.toISOString().split('T')[0],
+      status: w.status
+    }));
+    
+    res.json({ withdrawals: formatted, total, page: Number(page), pages: Math.ceil(total / Number(limit)) });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
 exports.updateTransaction = async (req, res) => {
   try {
     const { status } = req.body;
