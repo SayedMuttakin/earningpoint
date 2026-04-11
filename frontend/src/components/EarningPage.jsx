@@ -2571,6 +2571,9 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
                     <p className="text-slate-500 dark:text-slate-400 text-sm font-medium">No withdrawal history yet</p>
                   </div>
                 )}
+                {withdrawHistory && withdrawHistory.length > 0 && (
+                  <BannerAd468x60 globalSettings={globalSettings} />
+                )}
               </div>
             </div>
           </div>
@@ -2609,7 +2612,7 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
                     </div>
                   </div>
                   {(index + 1) % 3 === 0 && index !== displayWithdrawals.length - 1 && (
-                    <BannerAd adUnitId={globalSettings?.admobConfig?.bannerAdUnitId} />
+                    <BannerAd468x60 globalSettings={globalSettings} />
                   )}
                 </React.Fragment>
               )) : (
