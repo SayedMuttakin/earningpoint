@@ -211,49 +211,54 @@ const HomePage = () => {
   return (
     <PullToRefresh onRefresh={handleRefresh} refreshing={refreshing}>
       <div className="min-h-screen bg-slate-50 sm:bg-transparent flex flex-col">
-        {/* Headlines News Ticker */}
-        {!loading && !error && posts.length > 0 && (
-          <div className="bg-white text-slate-800 py-2.5 sticky top-[132px] sm:top-[140px] md:top-16 z-30 shadow-sm border-b border-slate-200">
-            <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center">
-              <div className="flex items-center gap-2 pr-4 border-r border-slate-200 shrink-0">
-                <span className="relative flex h-3 w-3">
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-rose-400 opacity-75"></span>
-                  <span className="relative inline-flex rounded-full h-3 w-3 bg-rose-500"></span>
-                </span>
-                <span className="font-black text-brand-600 uppercase tracking-widest text-xs hidden sm:inline-block">LATEST NEWS</span>
-                <span className="font-black text-brand-600 uppercase tracking-widest text-xs sm:hidden">LATEST</span>
-              </div>
-              <div className="flex-1 overflow-hidden ml-4 relative h-8 flex items-center">
-                <div
-                  className="flex whitespace-nowrap absolute left-0 will-change-transform animate-marquee"
-                  style={{ animation: 'marquee 50s linear infinite' }}
-                >
-                  {/* Render posts twice for a seamless continuous loop */}
-                  {[...posts, ...posts].map((post, idx) => (
-                    <a
-                      key={`${post._id}-${idx}`}
-                      href={`#post-${post._id}`}
-                      onClick={(e) => {
-                        e.preventDefault();
-                        document.getElementById(`post-${post._id}`)?.scrollIntoView({ behavior: 'smooth' });
-                      }}
-                      className="mx-10 hover:text-brand-600 transition-colors inline-flex items-center gap-2 text-[15px] font-bold text-slate-700"
-                    >
-                      {idx > 0 && <span className="text-slate-300 font-black px-4">•</span>}
-                      {post.title || post.content.substring(0, 60) + "..."}
-                    </a>
-                  ))}
+        {/* Sticky Header for Ticker + Ad */}
+        <div className="sticky top-[132px] sm:top-[140px] md:top-16 z-30 flex flex-col w-full bg-slate-50 pb-2 border-b border-slate-200 shadow-sm">
+          {/* Headlines News Ticker */}
+          {!loading && !error && posts.length > 0 && (
+            <div className="bg-white text-slate-800 py-2.5 shadow-sm border-b border-slate-200 relative z-10">
+              <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center">
+                <div className="flex items-center gap-2 pr-4 border-r border-slate-200 shrink-0">
+                  <span className="relative flex h-3 w-3">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-rose-400 opacity-75"></span>
+                    <span className="relative inline-flex rounded-full h-3 w-3 bg-rose-500"></span>
+                  </span>
+                  <span className="font-black text-brand-600 uppercase tracking-widest text-xs hidden sm:inline-block">LATEST NEWS</span>
+                  <span className="font-black text-brand-600 uppercase tracking-widest text-xs sm:hidden">LATEST</span>
+                </div>
+                <div className="flex-1 overflow-hidden ml-4 relative h-8 flex items-center">
+                  <div
+                    className="flex whitespace-nowrap absolute left-0 will-change-transform animate-marquee"
+                    style={{ animation: 'marquee 50s linear infinite' }}
+                  >
+                    {/* Render posts twice for a seamless continuous loop */}
+                    {[...posts, ...posts].map((post, idx) => (
+                      <a
+                        key={`${post._id}-${idx}`}
+                        href={`#post-${post._id}`}
+                        onClick={(e) => {
+                          e.preventDefault();
+                          document.getElementById(`post-${post._id}`)?.scrollIntoView({ behavior: 'smooth' });
+                        }}
+                        className="mx-10 hover:text-brand-600 transition-colors inline-flex items-center gap-2 text-[15px] font-bold text-slate-700"
+                      >
+                        {idx > 0 && <span className="text-slate-300 font-black px-4">•</span>}
+                        {post.title || post.content.substring(0, 60) + "..."}
+                      </a>
+                    ))}
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
-        )}
+          )}
 
-        {/* Banner Ad after Latest News */}
-        <BannerAd468x60 globalSettings={globalSettings} />
+          {/* Banner Ad after Latest News */}
+          <div className="bg-slate-50 pt-2 px-2 sm:px-0">
+            <BannerAd468x60 globalSettings={globalSettings} />
+          </div>
+        </div>
 
         {/* Main Column Feed */}
-        <main className="max-w-4xl mx-auto px-0 sm:px-6 lg:px-8 py-3 sm:py-8 w-full flex-1">
+        <main className="max-w-4xl mx-auto px-0 sm:px-6 lg:px-8 pt-2 pb-8 w-full flex-1">
           <div className="flex flex-col gap-3 sm:gap-6">
             
             <>
