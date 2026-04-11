@@ -2493,23 +2493,28 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
             </div>
 
             <div className="space-y-3">
-              {allWithdrawals.length > 0 ? allWithdrawals.map((item) => (
-                <div key={item.id} className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 p-4 flex items-center gap-4 shadow-sm">
-                  <div className="w-10 h-10 rounded-full bg-gradient-to-br from-brand-400 to-brand-600 flex items-center justify-center shrink-0 text-white font-black text-sm">
-                    {item.name.charAt(0)}
+              {allWithdrawals.length > 0 ? allWithdrawals.map((item, index) => (
+                <React.Fragment key={item.id}>
+                  <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 p-4 flex items-center gap-4 shadow-sm">
+                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-brand-400 to-brand-600 flex items-center justify-center shrink-0 text-white font-black text-sm">
+                      {item.name.charAt(0)}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="font-bold text-slate-800 dark:text-white text-sm truncate">{item.name}</p>
+                      <p className="text-xs text-slate-400 font-mono">{blurPhone(item.phone)}</p>
+                      <p className="text-[10px] text-slate-400 mt-0.5">{item.date} • {item.method}</p>
+                    </div>
+                    <div className="text-right shrink-0">
+                      <p className="font-black text-slate-800 dark:text-white">৳{item.amount.toLocaleString()}</p>
+                      <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
+                        item.status === 'completed' ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-400' : 'bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-400'
+                      }`}>{item.status === 'completed' ? 'Completed' : 'Pending'}</span>
+                    </div>
                   </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="font-bold text-slate-800 dark:text-white text-sm truncate">{item.name}</p>
-                    <p className="text-xs text-slate-400 font-mono">{blurPhone(item.phone)}</p>
-                    <p className="text-[10px] text-slate-400 mt-0.5">{item.date} • {item.method}</p>
-                  </div>
-                  <div className="text-right shrink-0">
-                    <p className="font-black text-slate-800 dark:text-white">৳{item.amount.toLocaleString()}</p>
-                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
-                      item.status === 'completed' ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-400' : 'bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-400'
-                    }`}>{item.status === 'completed' ? 'Completed' : 'Pending'}</span>
-                  </div>
-                </div>
+                  {(index + 1) % 3 === 0 && index !== allWithdrawals.length - 1 && (
+                    <BigAdBanner />
+                  )}
+                </React.Fragment>
               )) : (
                 <div className="text-center py-6 bg-slate-50 dark:bg-slate-800/30 rounded-2xl border border-dashed border-slate-200 dark:border-slate-700">
                   <History className="w-8 h-8 text-slate-300 dark:text-slate-600 mx-auto mb-2" />
