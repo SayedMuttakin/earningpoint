@@ -535,6 +535,7 @@ exports.updateGlobalSettings = async (req, res) => {
       nativeAdsConfig,
       fortuneWheelConfig,
       promoBanner,
+      promoBanners,
       admobConfig
     } = req.body;
     
@@ -552,6 +553,7 @@ exports.updateGlobalSettings = async (req, res) => {
     if (nativeAdsConfig !== undefined) settings.nativeAdsConfig = nativeAdsConfig;
     if (fortuneWheelConfig !== undefined) settings.fortuneWheelConfig = fortuneWheelConfig;
     if (promoBanner !== undefined) settings.promoBanner = promoBanner;
+    if (promoBanners !== undefined) settings.promoBanners = promoBanners;
     if (admobConfig !== undefined) settings.admobConfig = admobConfig;
 
     await settings.save();

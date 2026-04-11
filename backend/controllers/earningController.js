@@ -678,6 +678,7 @@ exports.getGlobalSettings = async (req, res) => {
       rocketNumber: settings.rocketNumber,
       premiumIpPackages: settings.premiumIpPackages,
       promoBanner: settings.promoBanner,
+      promoBanners: settings.promoBanners,
       nativeAdsConfig: settings.nativeAdsConfig,
       fortuneWheelConfig: settings.fortuneWheelConfig,
       admobConfig: settings.admobConfig
