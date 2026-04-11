@@ -744,19 +744,29 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
     setIsReadingStarted(true);
     setShowArticleReader(true);
     setShowArticleListView(false);
+    
+    // Direct DOM manipulation after state updates
     setTimeout(() => {
       setCurrentArticle(article);
-      // Reset scroll only on initial load
-      setTimeout(() => {
-        if (scrollRef.current.isInitialLoad) {
-          scrollRef.current.isInitialLoad = false;
-          const contentDiv = document.querySelector('.article-reader-content');
-          if (contentDiv) contentDiv.scrollTop = 0;
-          window.scrollTo(0, 0);
-        }
-      }, 100);
-    }, 50);
+    }, 100);
   };
+
+  // Separate effect to handle scroll reset after article loads
+  React.useEffect(() => {
+    if (showArticleReader && currentArticle && scrollRef.current.isInitialLoad) {
+      scrollRef.current.isInitialLoad = false;
+      // Use multiple methods to ensure scroll is at top
+      requestAnimationFrame(() => {
+        const container = document.querySelector('.article-reader-content');
+        if (container) {
+          container.style.scrollBehavior = 'auto';
+          container.scrollTop = 0;
+          container.style.scrollBehavior = 'smooth';
+        }
+        window.scrollTo(0, 0);
+      });
+    }
+  }, [showArticleReader, currentArticle]);
 
   const claimArticleReward = async () => {
     if (articleReadingTime > 0) {
