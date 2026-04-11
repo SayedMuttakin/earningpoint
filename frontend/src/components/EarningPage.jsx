@@ -735,7 +735,10 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
     return () => clearInterval(timer);
   }, [showArticleReader, isReadingStarted, articleReadingTime]);
 
+  const scrollRef = React.useRef({ isInitialLoad: true });
+
   const startReadingArticle = (article) => {
+    scrollRef.current.isInitialLoad = true;
     setCurrentArticle(null);
     setArticleReadingTime(article.readingTime || 60);
     setIsReadingStarted(true);
@@ -743,13 +746,14 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
     setShowArticleListView(false);
     setTimeout(() => {
       setCurrentArticle(article);
-      // Reset scroll after content loads
+      // Reset scroll only on initial load
       setTimeout(() => {
-        const contentDiv = document.querySelector('.article-reader-content');
-        if (contentDiv) contentDiv.scrollTop = 0;
-        window.scrollTo(0, 0);
-        document.body.scrollTop = 0;
-        document.documentElement.scrollTop = 0;
+        if (scrollRef.current.isInitialLoad) {
+          scrollRef.current.isInitialLoad = false;
+          const contentDiv = document.querySelector('.article-reader-content');
+          if (contentDiv) contentDiv.scrollTop = 0;
+          window.scrollTo(0, 0);
+        }
       }, 100);
     }, 50);
   };
