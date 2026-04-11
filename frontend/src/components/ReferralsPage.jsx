@@ -2,7 +2,27 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { API_BASE } from '../config';
 import { ChevronLeft, Share2, Copy, Check, Users } from 'lucide-react';
 import PullToRefresh from './PullToRefresh';
-import EarningPage from './EarningPage';
+
+const BannerAd468x60 = ({ globalSettings }) => {
+  const bannerId = globalSettings?.admobConfig?.bannerAdUnitId;
+  if (bannerId && bannerId.trim()) {
+    return (
+      <div className="w-full max-w-2xl mx-auto border border-slate-200 dark:border-slate-800 rounded-xl p-3 flex items-center justify-center bg-slate-50 dark:bg-slate-800/30 relative overflow-hidden my-4">
+        <span className="text-xs text-slate-500">AdMob Banner: {bannerId}</span>
+      </div>
+    );
+  }
+  return (
+    <div className="w-full max-w-2xl mx-auto border border-slate-200 dark:border-slate-800 rounded-xl p-3 flex items-center justify-center bg-slate-50 dark:bg-slate-800/30 relative overflow-hidden my-4">
+      <span className="absolute top-0 right-0 bg-slate-600 text-white text-[8px] px-1.5 py-0.5 font-bold rounded-bl-lg">Ad</span>
+      <div className="flex items-center gap-4">
+        <span className="text-blue-500 font-bold text-sm">SPONSORED</span>
+        <div className="h-6 w-px bg-slate-200 dark:bg-slate-700"></div>
+        <span className="text-slate-500 dark:text-slate-400 text-xs font-medium">468x60 Banner Ad</span>
+      </div>
+    </div>
+  );
+};
 
 const ReferralsPage = ({ onBack, globalSettings }) => {
   const [refreshing, setRefreshing] = useState(false);
