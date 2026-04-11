@@ -86,7 +86,7 @@ const ipPackages = [
 ];
 
 
-const BannerAd468x60 = () => {
+const BannerAd468x60 = ({ globalSettings }) => {
   const bannerId = globalSettings?.admobConfig?.bannerAdUnitId;
   if (bannerId && bannerId.trim()) {
     return (
@@ -107,7 +107,7 @@ const BannerAd468x60 = () => {
   );
 };
 
-const BigAdBanner = () => {
+const BigAdBanner = ({ globalSettings }) => {
   const bannerId = globalSettings?.admobConfig?.bannerAdUnitId;
   if (bannerId && bannerId.trim()) {
     return (
@@ -838,7 +838,7 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
           </div>
 
           <div className="pt-6">
-            <BannerAd468x60 />
+            <BannerAd468x60 globalSettings={globalSettings} />
           </div>
         </div>
       </div>,
@@ -902,7 +902,7 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
            </div>
 
            <div className="mt-12 mb-20">
-              <BannerAd468x60 />
+              <BannerAd468x60 globalSettings={globalSettings} />
            </div>
         </div>
 
@@ -1687,7 +1687,7 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
 
           {/* Ad Banner */}
           <div className="mt-4 flex flex-col items-center">
-            <BigAdBanner />
+            <BigAdBanner globalSettings={globalSettings} />
           </div>
         </div>
       </div>
@@ -1787,7 +1787,7 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
               </div>
 
               <div className="mt-8 flex justify-center">
-                <BigAdBanner />
+                <BigAdBanner globalSettings={globalSettings} />
               </div>
             </div>
           </div>
@@ -1912,7 +1912,7 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
               </button>
 
               <div className="mt-8 flex justify-center">
-                <BigAdBanner />
+                <BigAdBanner globalSettings={globalSettings} />
               </div>
             </div>
           </div>
@@ -2117,7 +2117,7 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
               </button>
 
               <div className="mt-6 min-h-[280px] flex items-center justify-center">
-                <BigAdBanner />
+                <BigAdBanner globalSettings={globalSettings} />
               </div>
 
             </div>
@@ -2185,7 +2185,7 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
                 </div>
 
                 <div className="mt-8 flex justify-center">
-                  <BigAdBanner />
+                  <BigAdBanner globalSettings={globalSettings} />
                 </div>
               </div>
           </div>
@@ -2321,7 +2321,7 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
                 </div>
               </div>
               <div className="mt-8 flex justify-center">
-                <BigAdBanner />
+                <BigAdBanner globalSettings={globalSettings} />
               </div>
             </div>
           </div>
@@ -2702,7 +2702,7 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
           </div>
 
           {/* Ad Banner */}
-          <BannerAd468x60 />
+          <BannerAd468x60 globalSettings={globalSettings} />
 
           {/* ═══════ LEVEL 3 ═══════ */}
           <div className="space-y-5 max-w-5xl mx-auto relative">
@@ -2729,7 +2729,7 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
           </div>
 
           {/* Ad Banner */}
-          <BannerAd468x60 />
+          <BannerAd468x60 globalSettings={globalSettings} />
 
           {/* ═══════ LEVEL 4 ═══════ */}
           <div className="space-y-5 max-w-5xl mx-auto relative">
@@ -2760,7 +2760,7 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
           </div>
 
           {/* Ad Banner */}
-          <BannerAd468x60 />
+          <BannerAd468x60 globalSettings={globalSettings} />
 
           {/* ═══════ LEVEL 5 ═══════ */}
           <div className="space-y-5 max-w-5xl mx-auto relative">
@@ -2829,7 +2829,7 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
           </div>
 
           {/* Ad Banner */}
-          <BannerAd468x60 />
+          <BannerAd468x60 globalSettings={globalSettings} />
 
           {/* Custom Modals Down Here */}
           {/* Interstitial Ad / Rewarded Video Modal */}
@@ -3329,7 +3329,7 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
 
             <div className="mt-auto w-full pb-8 flex flex-col items-center gap-4">
                <div className="text-[10px] font-black text-slate-600 uppercase tracking-widest bg-slate-800/50 px-3 py-1 rounded-full">Sponsored Ad</div>
-               <BigAdBanner />
+               <BigAdBanner globalSettings={globalSettings} />
             </div>
           </div>
         </div>
