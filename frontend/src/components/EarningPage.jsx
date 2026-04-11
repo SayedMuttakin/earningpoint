@@ -1660,7 +1660,16 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
         <div className="fixed inset-0 z-[10000] bg-white dark:bg-slate-950 flex flex-col w-full overflow-hidden">
           {/* Header - re-renders every second but scroll area below does NOT remount */}
           <div className="bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 pt-safe px-6 py-4 flex justify-between items-center shrink-0">
-            <button onClick={() => setShowArticleReader(false)} className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg">
+            <button 
+              onClick={() => {
+                if (articleReadingTime > 0) {
+                  showToast(`Please wait ${articleReadingTime}s to finish reading!`, 'error');
+                  return;
+                }
+                setShowArticleReader(false);
+              }} 
+              className={`p-2 rounded-lg ${articleReadingTime > 0 ? 'opacity-50 cursor-not-allowed' : 'hover:bg-slate-100 dark:hover:bg-slate-800'}`}
+            >
               <ArrowLeft className="w-6 h-6 text-slate-500" />
             </button>
             <div className="flex flex-col items-center flex-1 mx-4">
