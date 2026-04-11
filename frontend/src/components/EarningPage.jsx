@@ -884,11 +884,11 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
           <button onClick={() => setShowArticleReader(false)} className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg">
             <ArrowLeft className="w-6 h-6 text-slate-500" />
           </button>
-          <div className="flex flex-col items-center flex-1 mx-4">
-             <div className="flex items-center gap-2 mb-0.5">
-                <div className="w-6 h-6 rounded-full border-2 border-brand-500/30 flex items-center justify-center overflow-hidden">
-                   <div className="h-full bg-brand-500 transition-all duration-1000" style={{ width: `${((currentArticle.readingTime - articleReadingTime) / currentArticle.readingTime) * 100}%` }} />
-                </div>
+           <div className="flex flex-col items-center flex-1 mx-4">
+              <div className="flex items-center gap-2 mb-0.5">
+                 <div className="w-6 h-6 rounded-full border-2 border-brand-500/30 flex items-center justify-center overflow-hidden">
+                    <div className="h-full bg-brand-500" style={{ width: `${((currentArticle.readingTime - articleReadingTime) / currentArticle.readingTime) * 100}%` }} />
+                 </div>
                 <span className="font-black text-slate-800 dark:text-white text-sm">
                   {articleReadingTime > 0 ? `${articleReadingTime}s remaining` : 'Reading Complete!'}
                 </span>
