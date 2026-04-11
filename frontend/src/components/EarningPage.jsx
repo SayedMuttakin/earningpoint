@@ -147,45 +147,6 @@ const BigAdBanner = ({ globalSettings }) => {
   );
 };
 
-const BannerAd = ({ adUnitId }) => {
-  const hasValidId = adUnitId && adUnitId.trim() !== '';
-  
-  if (hasValidId) {
-    return (
-      <div className="w-full flex justify-center mt-2">
-        <div className="w-[468px] h-[60px] bg-slate-100 dark:bg-slate-800 flex items-center justify-center overflow-hidden">
-          <p className="text-xs text-slate-400">AdMob Banner: {adUnitId}</p>
-        </div>
-      </div>
-    );
-  }
-  
-  return (
-    <div className="w-full flex justify-center mt-2">
-      <div className="w-[468px] h-[60px] bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 relative rounded-lg flex flex-col items-center justify-center overflow-hidden">
-        <div className="absolute top-0 left-0 right-0 h-5 bg-slate-100 dark:bg-slate-800 flex items-center px-3 justify-between border-b border-slate-200 dark:border-slate-700">
-          <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest flex items-center gap-1">
-            <Shield className="w-2.5 h-2.5" /> Sponsored
-          </span>
-          <div className="w-2.5 h-2.5 bg-blue-500 rounded-sm" />
-        </div>
-        <div className="flex items-center gap-3 pt-4">
-          <div className="w-8 h-8 bg-white dark:bg-slate-900 rounded-lg shadow flex items-center justify-center">
-            <img src="https://img.icons8.com/fluency/32/google-logo.png" alt="Ad" className="w-5 h-5" />
-          </div>
-          <div className="text-left">
-            <p className="text-xs font-black text-blue-600 dark:text-blue-400">AdMob Banner Test</p>
-            <p className="text-[10px] text-slate-500 dark:text-slate-400">468x60 Banner Ad Unit</p>
-          </div>
-          <button className="px-4 py-1.5 rounded bg-blue-500 text-white text-[10px] font-bold">Visit</button>
-        </div>
-        <div className="absolute bottom-1 right-2 opacity-30">
-          <span className="text-[8px] text-slate-400">Ads by Google</span>
-        </div>
-      </div>
-    </div>
-  );
-};
 
 const EarningPage = ({ onReferralsClick, setActiveTab }) => {
   const [balance, setBalance] = React.useState(0);

@@ -157,6 +157,7 @@ const CartPage = ({ onBuyNow }) => {
         })}
         </div>
       )}
+        </div>
       </div>
     </PullToRefresh>
   );
