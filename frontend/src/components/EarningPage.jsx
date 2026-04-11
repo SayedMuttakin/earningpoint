@@ -719,9 +719,13 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
   }, [premiumExpiryDate]);
 
   // Article Timer Logic
+  // FIX: articleReadingTime removed from deps to prevent scroll-to-top bug.
+  // Each second when articleReadingTime changed, this effect restarted,
+  // causing re-render which reset the nested ArticleReader scroll position.
+  // Using functional update (prev =>) so we don't need it in deps.
   useEffect(() => {
     let timer;
-    if (showArticleReader && isReadingStarted && articleReadingTime > 0) {
+    if (showArticleReader && isReadingStarted) {
       timer = setInterval(() => {
         setArticleReadingTime((prev) => {
           if (prev <= 1) {
@@ -733,7 +737,8 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
       }, 1000);
     }
     return () => clearInterval(timer);
-  }, [showArticleReader, isReadingStarted, articleReadingTime]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [showArticleReader, isReadingStarted]);
 
   const scrollRef = React.useRef({ initialized: false });
 
