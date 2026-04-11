@@ -15,7 +15,13 @@ const Settings = ({ ADMIN_API, authHeaders, onLogout }) => {
     bkashNumber: '01700-000000',
     nagadNumber: '01700-000000',
     rocketNumber: '01700-000000',
-    promoBanner: { imageUrl: '', linkUrl: '', isActive: false }
+    promoBanner: { imageUrl: '', linkUrl: '', isActive: false },
+    admobConfig: {
+      bannerAdUnitId: '',
+      interstitialAdUnitId: '',
+      rewardedAdUnitId: '',
+      appOpenAdUnitId: ''
+    }
   });
   const [settingsLoading, setSettingsLoading] = useState(false);
 
@@ -29,7 +35,8 @@ const Settings = ({ ADMIN_API, authHeaders, onLogout }) => {
         setGlobalSettings(prev => ({
           ...prev,
           ...data,
-          promoBanner: data.promoBanner || prev.promoBanner
+          promoBanner: data.promoBanner || prev.promoBanner,
+          admobConfig: data.admobConfig || prev.admobConfig
         }));
       }
     } catch (error) {
@@ -181,6 +188,62 @@ const Settings = ({ ADMIN_API, authHeaders, onLogout }) => {
               {settingsLoading ? 'Saving...' : 'Update Promotional Banner'}
             </button>
           </div>
+        </form>
+      </div>
+
+      {/* AdMob Configuration */}
+      <div className="bg-[#111827] border border-slate-800 rounded-2xl p-6">
+        <h3 className="text-white font-bold text-base mb-1">AdMob Configuration</h3>
+        <p className="text-slate-500 text-xs mb-5">Enter your AdMob Ad Unit IDs to display real ads in the app. Leave empty to show test ads.</p>
+
+        <form onSubmit={handleUpdateSettings} className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label className="text-slate-400 text-xs font-bold uppercase tracking-wider block mb-2">Banner Ad Unit ID</label>
+              <input 
+                type="text" 
+                value={globalSettings.admobConfig?.bannerAdUnitId || ''} 
+                onChange={(e) => setGlobalSettings({...globalSettings, admobConfig: {...globalSettings.admobConfig, bannerAdUnitId: e.target.value}})}
+                placeholder="ca-app-pub-xxxxx/xxxxx"
+                className="w-full bg-slate-800 border border-slate-700 focus:border-indigo-500 rounded-xl px-4 py-3 text-white text-sm outline-none" 
+              />
+            </div>
+            <div>
+              <label className="text-slate-400 text-xs font-bold uppercase tracking-wider block mb-2">Interstitial Ad Unit ID</label>
+              <input 
+                type="text" 
+                value={globalSettings.admobConfig?.interstitialAdUnitId || ''} 
+                onChange={(e) => setGlobalSettings({...globalSettings, admobConfig: {...globalSettings.admobConfig, interstitialAdUnitId: e.target.value}})}
+                placeholder="ca-app-pub-xxxxx/xxxxx"
+                className="w-full bg-slate-800 border border-slate-700 focus:border-indigo-500 rounded-xl px-4 py-3 text-white text-sm outline-none" 
+              />
+            </div>
+            <div>
+              <label className="text-slate-400 text-xs font-bold uppercase tracking-wider block mb-2">Rewarded Ad Unit ID</label>
+              <input 
+                type="text" 
+                value={globalSettings.admobConfig?.rewardedAdUnitId || ''} 
+                onChange={(e) => setGlobalSettings({...globalSettings, admobConfig: {...globalSettings.admobConfig, rewardedAdUnitId: e.target.value}})}
+                placeholder="ca-app-pub-xxxxx/xxxxx"
+                className="w-full bg-slate-800 border border-slate-700 focus:border-indigo-500 rounded-xl px-4 py-3 text-white text-sm outline-none" 
+              />
+            </div>
+            <div>
+              <label className="text-slate-400 text-xs font-bold uppercase tracking-wider block mb-2">App Open Ad Unit ID</label>
+              <input 
+                type="text" 
+                value={globalSettings.admobConfig?.appOpenAdUnitId || ''} 
+                onChange={(e) => setGlobalSettings({...globalSettings, admobConfig: {...globalSettings.admobConfig, appOpenAdUnitId: e.target.value}})}
+                placeholder="ca-app-pub-xxxxx/xxxxx"
+                className="w-full bg-slate-800 border border-slate-700 focus:border-indigo-500 rounded-xl px-4 py-3 text-white text-sm outline-none" 
+              />
+            </div>
+          </div>
+          
+          <button type="submit" disabled={settingsLoading}
+            className="w-full py-3 mt-2 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white font-bold rounded-xl transition-all disabled:opacity-50 shadow-lg shadow-indigo-500/20 active:scale-95">
+            {settingsLoading ? 'Saving...' : 'Update AdMob Settings'}
+          </button>
         </form>
       </div>
 

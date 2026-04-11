@@ -651,7 +651,8 @@ exports.getGlobalSettings = async (req, res) => {
       premiumIpPackages: settings.premiumIpPackages,
       promoBanner: settings.promoBanner,
       nativeAdsConfig: settings.nativeAdsConfig,
-      fortuneWheelConfig: settings.fortuneWheelConfig
+      fortuneWheelConfig: settings.fortuneWheelConfig,
+      admobConfig: settings.admobConfig
     });
   } catch (error) {
     res.status(500).json({ message: error.message });

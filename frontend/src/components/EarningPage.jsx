@@ -145,7 +145,19 @@ const BigAdBanner = () => {
   );
 };
 
-const BannerAd = () => {
+const BannerAd = ({ adUnitId }) => {
+  const hasValidId = adUnitId && adUnitId.trim() !== '';
+  
+  if (hasValidId) {
+    return (
+      <div className="w-full flex justify-center mt-2">
+        <div className="w-[468px] h-[60px] bg-slate-100 dark:bg-slate-800 flex items-center justify-center overflow-hidden">
+          <p className="text-xs text-slate-400">AdMob Banner: {adUnitId}</p>
+        </div>
+      </div>
+    );
+  }
+  
   return (
     <div className="w-full flex justify-center mt-2">
       <div className="w-[468px] h-[60px] bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 relative rounded-lg flex flex-col items-center justify-center overflow-hidden">
@@ -403,7 +415,13 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
       adsPerSpin: 1,
       dailyLimit: 10
     },
-    promoBanner: { imageUrl: '', linkUrl: '', isActive: false }
+    promoBanner: { imageUrl: '', linkUrl: '', isActive: false },
+    admobConfig: {
+      bannerAdUnitId: '',
+      interstitialAdUnitId: '',
+      rewardedAdUnitId: '',
+      appOpenAdUnitId: ''
+    }
   });
 
   const fetchGlobalSettings = async () => {
@@ -428,7 +446,8 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
               ? data.fortuneWheelConfig.coins
               : prev.fortuneWheelConfig.coins
           } : prev.fortuneWheelConfig,
-          promoBanner: data.promoBanner || prev.promoBanner
+          promoBanner: data.promoBanner || prev.promoBanner,
+          admobConfig: data.admobConfig || prev.admobConfig
         }));
       }
     } catch (error) {
@@ -2540,7 +2559,7 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
                     </div>
                   </div>
                   {(index + 1) % 3 === 0 && index !== allWithdrawals.length - 1 && (
-                    <BannerAd />
+                    <BannerAd adUnitId={globalSettings?.admobConfig?.bannerAdUnitId} />
                   )}
                 </React.Fragment>
               )) : (
