@@ -17,11 +17,14 @@ import {
 } from 'lucide-react';
 import PullToRefresh from './PullToRefresh';
 
+import BannerAd from './BannerAd';
+
 const ProfilePage = ({ onVerifyClick, onLanguageClick, onPasswordClick, onReferralsClick, onLeaderboardClick, onTermsClick, onDeleteClick, darkMode, onToggleDarkMode }) => {
   const [profilePic, setProfilePic] = useState('https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=facearea&facepad=2&w=256&h=256&q=80');
   const [userName, setUserName] = useState('User');
   const [userEmail, setUserEmail] = useState('');
   const [refreshing, setRefreshing] = useState(false);
+  const [globalSettings, setGlobalSettings] = useState(null);
   const fileInputRef = useRef(null);
 
   const fetchProfile = async () => {
@@ -42,13 +45,27 @@ const ProfilePage = ({ onVerifyClick, onLanguageClick, onPasswordClick, onReferr
     }
   };
 
+  const fetchGlobalSettings = async () => {
+    try {
+      const response = await fetch(`${API_BASE}/api/earning/settings`);
+      if (response.ok) {
+        const data = await response.json();
+        setGlobalSettings(data);
+      }
+    } catch (err) {
+      console.error('Failed to fetch settings:', err);
+    }
+  };
+
   useEffect(() => {
     fetchProfile();
+    fetchGlobalSettings();
   }, []);
 
   const handleRefresh = async () => {
     setRefreshing(true);
     await fetchProfile();
+    await fetchGlobalSettings();
     setTimeout(() => setRefreshing(false), 500);
   };
 
@@ -97,8 +114,15 @@ const ProfilePage = ({ onVerifyClick, onLanguageClick, onPasswordClick, onReferr
 
   return (
     <PullToRefresh onRefresh={handleRefresh} refreshing={refreshing}>
-      <div className="w-full bg-slate-50 dark:bg-slate-900 min-h-screen pb-24">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 sm:pt-12">
+      <div className="w-full bg-slate-50 dark:bg-slate-900 min-h-screen pb-24 flex flex-col">
+        {/* Sticky Header for Ad */}
+        <div className="sticky top-[132px] sm:top-[140px] md:top-16 z-30 flex flex-col w-full bg-slate-50 dark:bg-slate-900 pb-2 border-b border-slate-200 dark:border-slate-800 shadow-sm">
+          <div className="bg-slate-50 dark:bg-slate-900 pt-2 px-2 sm:px-0">
+            <BannerAd globalSettings={globalSettings} />
+          </div>
+        </div>
+
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 sm:pt-10 w-full">
           {/* Header */}
           <div className="flex items-center justify-between pb-6 sm:pb-10 mb-6 sm:mb-10 text-center relative border-b border-slate-100 dark:border-slate-700">
             <h1 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white absolute left-1/2 -translate-x-1/2">Profile</h1>

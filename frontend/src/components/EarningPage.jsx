@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { AdMobService } from '../utils/admob';
 import { API_BASE } from '../config';
 import MultiAdViewPage from './MultiAdViewPage';
+import BannerAd from './BannerAd';
 import { 
   Check, 
   ArrowLeft, 
@@ -86,26 +87,7 @@ const ipPackages = [
 ];
 
 
-const BannerAd468x60 = ({ globalSettings }) => {
-  const bannerId = globalSettings?.admobConfig?.bannerAdUnitId;
-  if (bannerId && bannerId.trim()) {
-    return (
-      <div className="w-full max-w-2xl mx-auto border border-slate-200 dark:border-slate-800 rounded-xl p-3 flex items-center justify-center bg-slate-50 dark:bg-slate-800/30 relative overflow-hidden my-4">
-        <span className="text-xs text-slate-500">AdMob Banner: {bannerId}</span>
-      </div>
-    );
-  }
-  return (
-    <div className="w-full max-w-2xl mx-auto border border-slate-200 dark:border-slate-800 rounded-xl p-3 flex items-center justify-center bg-slate-50 dark:bg-slate-800/30 relative overflow-hidden my-4">
-      <span className="absolute top-0 right-0 bg-slate-600 text-white text-[8px] px-1.5 py-0.5 font-bold rounded-bl-lg">Ad</span>
-      <div className="flex items-center gap-4">
-        <span className="text-blue-500 font-bold text-sm">SPONSORED</span>
-        <div className="h-6 w-px bg-slate-200 dark:bg-slate-700"></div>
-        <span className="text-slate-500 dark:text-slate-400 text-xs font-medium">468x60 Banner Ad</span>
-      </div>
-    </div>
-  );
-};
+
 
 const BigAdBanner = ({ globalSettings }) => {
   const bannerId = globalSettings?.admobConfig?.bannerAdUnitId;
@@ -2360,9 +2342,16 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
 
     <PullToRefresh onRefresh={handleRefresh} refreshing={refreshing}>
       <main className="min-h-screen bg-slate-50 dark:bg-slate-950 transition-colors duration-500 pb-24 md:pb-8">
+        
+        {/* Sticky Header for Ad */}
+        <div className="sticky top-[132px] sm:top-[140px] md:top-16 z-30 flex flex-col w-full bg-slate-50 pb-2 border-b border-slate-200 shadow-sm">
+          <div className="bg-slate-50 pt-2 px-2 sm:px-0">
+            <BannerAd globalSettings={globalSettings} />
+          </div>
+        </div>
 
       {/* Responsive Container */}
-      <div className="w-full max-w-4xl mx-auto bg-white dark:bg-slate-900 md:rounded-3xl shadow-xl overflow-hidden border border-slate-200 dark:border-slate-800">
+      <div className="w-full max-w-4xl mx-auto bg-white dark:bg-slate-900 md:rounded-3xl shadow-xl overflow-hidden border border-slate-200 dark:border-slate-800 mt-2">
 
         {/* Top Header - more compact height */}
         <div className="bg-[#f5f3ff] dark:bg-slate-900 text-slate-800 dark:text-white px-4 py-3 sm:px-6 sm:py-4 flex justify-center items-center gap-3 sm:gap-6 border-b border-purple-100 dark:border-slate-800">

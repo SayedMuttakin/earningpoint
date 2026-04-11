@@ -3,10 +3,13 @@ import { ShoppingCart, Flame, Loader2 } from 'lucide-react';
 import PullToRefresh from './PullToRefresh';
 import { API_BASE } from '../config';
 
+import BannerAd from './BannerAd';
+
 const CartPage = ({ onBuyNow }) => {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [globalSettings, setGlobalSettings] = useState(null);
 
   const fetchProducts = async () => {
     try {
@@ -28,27 +31,49 @@ const CartPage = ({ onBuyNow }) => {
     }
   };
 
+  const fetchGlobalSettings = async () => {
+    try {
+      const response = await fetch(`${API_BASE}/api/earning/settings`);
+      if (response.ok) {
+        const data = await response.json();
+        setGlobalSettings(data);
+      }
+    } catch (err) {
+      console.error('Failed to fetch settings:', err);
+    }
+  };
+
   useEffect(() => {
     fetchProducts();
+    fetchGlobalSettings();
   }, []);
 
   const handleRefresh = () => {
     setRefreshing(true);
     fetchProducts();
+    fetchGlobalSettings();
   };
 
   return (
     <PullToRefresh onRefresh={handleRefresh} refreshing={refreshing}>
-      <div className="max-w-[1200px] mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-12 bg-[#F9FAFB] min-h-screen">
-        {/* Header */}
-        <div className="text-center mb-8 relative">
-          <div className="flex items-center justify-center gap-2">
-            <h1 className="text-2xl sm:text-3xl font-black text-slate-900 mb-2">Zenvio Store</h1>
+      <div className="bg-[#F9FAFB] min-h-screen flex flex-col">
+        {/* Sticky Header for Ad */}
+        <div className="sticky top-[132px] sm:top-[140px] md:top-16 z-30 flex flex-col w-full bg-[#F9FAFB] pb-2 border-b border-slate-200 shadow-sm">
+          <div className="bg-[#F9FAFB] pt-2 px-2 sm:px-0">
+            <BannerAd globalSettings={globalSettings} />
           </div>
-        <p className="text-sm sm:text-base text-slate-500 max-w-lg mx-auto">
-          Purchase exclusive memberships, tools, and merchandise directly using your earning balance or cash on delivery.
-        </p>
-      </div>
+        </div>
+
+        <div className="max-w-[1200px] mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 w-full">
+          {/* Header */}
+          <div className="text-center mb-8 relative">
+            <div className="flex items-center justify-center gap-2">
+              <h1 className="text-2xl sm:text-3xl font-black text-slate-900 mb-2">Zenvio Store</h1>
+            </div>
+          <p className="text-sm sm:text-base text-slate-500 max-w-lg mx-auto">
+            Purchase exclusive memberships, tools, and merchandise directly using your earning balance or cash on delivery.
+          </p>
+        </div>
 
       {/* Product Grid */}
       {loading && !refreshing ? (

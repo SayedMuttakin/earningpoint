@@ -20,6 +20,7 @@ import {
 } from 'lucide-react';
 import { API_BASE } from '../config';
 import PullToRefresh from './PullToRefresh';
+import BannerAd from './BannerAd';
 
 const SettingsPage = ({ 
   darkMode, 
@@ -40,10 +41,24 @@ const SettingsPage = ({
   const [editEmail, setEditEmail] = useState('');
   const [updateLoading, setUpdateLoading] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
+  const [globalSettings, setGlobalSettings] = useState(null);
 
   useEffect(() => {
     fetchProfile();
+    fetchGlobalSettings();
   }, []);
+
+  const fetchGlobalSettings = async () => {
+    try {
+      const response = await fetch(`${API_BASE}/api/earning/settings`);
+      if (response.ok) {
+        const data = await response.json();
+        setGlobalSettings(data);
+      }
+    } catch (err) {
+      console.error('Failed to fetch settings:', err);
+    }
+  };
 
   const fetchProfile = async () => {
     try {
@@ -68,7 +83,7 @@ const SettingsPage = ({
 
   const handleRefresh = async () => {
     setRefreshing(true);
-    await fetchProfile();
+    await Promise.all([fetchProfile(), fetchGlobalSettings()]);
   };
 
   const handleUpdateProfile = async (e) => {
@@ -144,6 +159,9 @@ const SettingsPage = ({
     <PullToRefresh onRefresh={handleRefresh} refreshing={refreshing}>
       <div className="min-h-screen bg-slate-50 dark:bg-slate-900 pb-32">
         <div className="sticky top-0 z-30 bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl border-b border-slate-200 dark:border-slate-800">
+          <div className="bg-slate-50 dark:bg-slate-900/10 pt-2 px-2 sm:px-0">
+            <BannerAd globalSettings={globalSettings} />
+          </div>
           <div className="max-w-4xl mx-auto px-4 h-16 sm:h-20 flex items-center justify-between">
             <div className="flex items-center gap-4">
               <button
