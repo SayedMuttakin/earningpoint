@@ -7,19 +7,15 @@ const BannerAd468x60 = ({ globalSettings }) => {
   const bannerId = globalSettings?.admobConfig?.bannerAdUnitId;
   if (bannerId && bannerId.trim()) {
     return (
-      <div className="sticky top-[158px] sm:top-[166px] md:top-[68px] z-20 w-full max-w-2xl mx-auto border border-slate-200 dark:border-slate-800 rounded-xl p-2 sm:p-3 flex items-center justify-center bg-slate-50 dark:bg-slate-800/30 relative overflow-hidden my-1">
-        <span className="text-xs text-slate-500">AdMob Banner: {bannerId}</span>
+      <div className="sticky top-[158px] sm:top-[166px] md:top-[68px] z-20 w-full max-w-2xl mx-auto border border-slate-200 dark:border-slate-800 rounded-lg p-1 flex items-center justify-center bg-slate-50 dark:bg-slate-800/30 relative overflow-hidden">
+        <span className="text-[10px] text-slate-500">Ad</span>
       </div>
     );
   }
   return (
-    <div className="sticky top-[158px] sm:top-[166px] md:top-[68px] z-20 w-full max-w-2xl mx-auto border border-slate-200 dark:border-slate-800 rounded-xl p-2 sm:p-3 flex items-center justify-center bg-slate-50 dark:bg-slate-800/30 relative overflow-hidden my-1">
-      <span className="absolute top-0 right-0 bg-slate-600 text-white text-[8px] px-1.5 py-0.5 font-bold rounded-bl-lg">Ad</span>
-      <div className="flex items-center gap-2 sm:gap-4">
-        <span className="text-blue-500 font-bold text-xs sm:text-sm">SPONSORED</span>
-        <div className="h-4 w-px bg-slate-200 dark:bg-slate-700"></div>
-        <span className="text-slate-500 dark:text-slate-400 text-[10px] sm:text-xs font-medium">468x60 Banner</span>
-      </div>
+    <div className="sticky top-[158px] sm:top-[166px] md:top-[68px] z-20 w-full max-w-2xl mx-auto border border-slate-200 dark:border-slate-800 rounded-lg p-1 flex items-center justify-center bg-slate-50 dark:bg-slate-800/30 relative overflow-hidden">
+      <span className="absolute top-0 right-0 bg-slate-500 text-white text-[7px] px-1 py-0.5 font-bold rounded-bl">Ad</span>
+      <span className="text-[9px] text-slate-500 dark:text-slate-400 font-medium">468x60</span>
     </div>
   );
 };
