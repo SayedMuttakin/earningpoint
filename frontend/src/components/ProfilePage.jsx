@@ -24,6 +24,7 @@ const ProfilePage = ({ onVerifyClick, onLanguageClick, onPasswordClick, onReferr
   const [profilePic, setProfilePic] = useState('https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=facearea&facepad=2&w=256&h=256&q=80');
   const [userName, setUserName] = useState('User');
   const [userEmail, setUserEmail] = useState('');
+  const [isVerified, setIsVerified] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const [globalSettings, setGlobalSettings] = useState(null);
   const fileInputRef = useRef(null);
@@ -32,17 +33,24 @@ const ProfilePage = ({ onVerifyClick, onLanguageClick, onPasswordClick, onReferr
     try {
       const token = localStorage.getItem('token');
       if (!token) return;
-      const response = await fetch(`${API_BASE}/api/profile`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      if (response.ok) {
-        const data = await response.json();
+      const [profileRes, verificationRes] = await Promise.all([
+        fetch(`${API_BASE}/api/profile`, { headers: { Authorization: `Bearer ${token}` } }),
+        fetch(`${API_BASE}/api/verification`, { headers: { Authorization: `Bearer ${token}` } })
+      ]);
+
+      if (profileRes.ok) {
+        const data = await profileRes.json();
         setUserName(data.name || data.phoneOrEmail || 'User');
         setUserEmail(data.phoneOrEmail || '');
         if (data.profilePic) setProfilePic(data.profilePic);
       }
+
+      if (verificationRes.ok) {
+        const vData = await verificationRes.json();
+        setIsVerified(vData.status === 'approved');
+      }
     } catch (err) {
-      console.error('Failed to fetch profile:', err);
+      console.error('Failed to fetch profile info:', err);
     }
   };
 
@@ -168,13 +176,15 @@ const ProfilePage = ({ onVerifyClick, onLanguageClick, onPasswordClick, onReferr
               <div className="flex flex-col min-w-0">
                 <div className="flex items-center gap-2 mb-1">
                   <h2 className="text-xl sm:text-3xl font-black text-slate-900 dark:text-white truncate">{userName}</h2>
-                  <VerifiedBadge iconClassName="w-5 h-5 sm:w-6 sm:h-6 fill-blue-500 text-white" />
+                  {isVerified && <VerifiedBadge iconClassName="w-5 h-5 sm:w-6 sm:h-6 fill-blue-500 text-white" />}
                 </div>
                 <p className="text-sm sm:text-lg text-slate-500 dark:text-slate-400 font-bold mb-3 truncate font-mono tracking-tight">{userEmail}</p>
                 <div className="flex flex-wrap gap-2">
-                  <span className="inline-flex items-center px-2.5 py-1 rounded-lg text-[10px] sm:text-xs font-black bg-brand-50 dark:bg-brand-500/10 text-brand-600 dark:text-brand-400 border border-brand-100 dark:border-brand-500/20 uppercase tracking-wider">
-                    Member
-                  </span>
+                  {isVerified && (
+                    <span className="inline-flex items-center px-2.5 py-1 rounded-lg text-[10px] sm:text-xs font-black bg-brand-50 dark:bg-brand-500/10 text-brand-600 dark:text-brand-400 border border-brand-100 dark:border-brand-500/20 uppercase tracking-wider">
+                      Member
+                    </span>
+                  )}
                 </div>
               </div>
             </div>
