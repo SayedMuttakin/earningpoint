@@ -439,13 +439,21 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
 
   const activeBanners = getActiveBanners();
 
+  const activeBannersLengthRef = React.useRef(activeBanners.length);
+  activeBannersLengthRef.current = activeBanners.length;
+
   React.useEffect(() => {
-    if (activeBanners.length <= 1) return;
     const interval = setInterval(() => {
-      setActivePromoBannerIndex(prev => (prev + 1) % activeBanners.length);
+      if (activeBannersLengthRef.current > 1) {
+        setActivePromoBannerIndex(prev => {
+          // If the length shrank, ensure we don't go out of bounds
+          const nextIndex = (prev + 1) % activeBannersLengthRef.current;
+          return Number.isNaN(nextIndex) ? 0 : nextIndex;
+        });
+      }
     }, 3000);
     return () => clearInterval(interval);
-  }, [activeBanners.length]);
+  }, []);
 
   const handleBannerClick = (linkUrl) => {
     if (!linkUrl) return;
@@ -2685,17 +2693,19 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
                 className="w-full aspect-[468/200] max-h-[200px] overflow-hidden rounded-2xl shadow-lg border border-slate-200 dark:border-slate-800 bg-slate-100 dark:bg-slate-900 relative cursor-pointer group"
                 onClick={() => handleBannerClick(activeBanners[activePromoBannerIndex]?.linkUrl)}
               >
-                <AnimatePresence mode="wait">
-                  <motion.img 
-                    key={activePromoBannerIndex}
-                    src={activeBanners[activePromoBannerIndex]?.imageUrl} 
-                    alt={`Promotional Banner ${activePromoBannerIndex + 1}`} 
-                    className="w-full h-full object-cover absolute inset-0"
-                    initial={{ opacity: 0, x: 20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    exit={{ opacity: 0, x: -20 }}
-                    transition={{ duration: 0.3 }}
-                  />
+                <AnimatePresence>
+                  {activeBanners[activePromoBannerIndex]?.imageUrl && (
+                    <motion.img 
+                      key={activePromoBannerIndex}
+                      src={activeBanners[activePromoBannerIndex].imageUrl} 
+                      alt={`Promotional Banner ${activePromoBannerIndex + 1}`} 
+                      className="w-full h-full object-cover absolute inset-0"
+                      initial={{ opacity: 0, x: 20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      exit={{ opacity: 0, x: -20 }}
+                      transition={{ duration: 0.5 }}
+                    />
+                  )}
                 </AnimatePresence>
                 
                 {/* Pagination Dots */}
