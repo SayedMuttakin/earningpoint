@@ -1,3 +1,4 @@
+import React, { useState, useEffect } from 'react';
 import { Plus, Trash2, Image as ImageIcon, X, Send, AlertCircle, CheckCircle } from 'lucide-react';
 import VerifiedBadge from '../../components/VerifiedBadge';
 
