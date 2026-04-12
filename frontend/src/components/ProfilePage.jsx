@@ -18,6 +18,7 @@ import {
 import PullToRefresh from './PullToRefresh';
 
 import BannerAd from './BannerAd';
+import VerifiedBadge from './VerifiedBadge';
 
 const ProfilePage = ({ onVerifyClick, onLanguageClick, onPasswordClick, onReferralsClick, onLeaderboardClick, onTermsClick, onDeleteClick, darkMode, onToggleDarkMode }) => {
   const [profilePic, setProfilePic] = useState('https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=facearea&facepad=2&w=256&h=256&q=80');
@@ -135,37 +136,52 @@ const ProfilePage = ({ onVerifyClick, onLanguageClick, onPasswordClick, onReferr
 
         {/* Responsive Grid Layout */}
         <div className="grid grid-cols-1 md:grid-cols-12 gap-y-6 md:gap-x-6 lg:gap-x-8">
-          {/* Profile Info - Top Left on Desktop, Top on Mobile */}
-          <div className="md:col-span-4 lg:col-span-4 flex flex-col items-center text-center">
-            <div className="relative mb-6">
-              <div 
-                className="w-28 h-28 sm:w-36 sm:h-36 rounded-full overflow-hidden border-4 border-slate-50 dark:border-slate-700 shadow-md cursor-pointer group"
-                onClick={triggerFileInput}
-              >
-                <img 
-                  src={profilePic}
-                  alt="Profile" 
-                  className="w-full h-full object-cover group-hover:opacity-75 transition-opacity"
+          {/* Profile Info - Horizontal Layout on Mobile/Desktop */}
+          <div className="md:col-span-12 lg:col-span-12">
+            <div className="bg-white dark:bg-slate-800 rounded-[2rem] border border-slate-100 dark:border-slate-700 shadow-sm p-6 sm:p-8 flex flex-row items-center gap-5 sm:gap-8 hover:shadow-md transition-shadow duration-300">
+              <div className="relative flex-shrink-0">
+                <div 
+                  className="w-20 h-20 sm:w-32 sm:h-32 rounded-3xl overflow-hidden border-2 border-slate-100 dark:border-slate-700 shadow-sm cursor-pointer group"
+                  onClick={triggerFileInput}
+                >
+                  <img 
+                    src={profilePic}
+                    alt="Profile" 
+                    className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                  />
+                  <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                    <Camera className="w-6 h-6 sm:w-8 sm:h-8 text-white" />
+                  </div>
+                </div>
+                <input 
+                  type="file" 
+                  ref={fileInputRef} 
+                  onChange={handleImageUpload} 
+                  accept="image/*" 
+                  className="hidden" 
                 />
-                <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                  <Camera className="w-8 h-8 text-white" />
+                <div className="absolute -bottom-1 -right-1 w-6 h-6 sm:w-8 sm:h-8 bg-brand-500 rounded-lg border-2 border-white dark:border-slate-800 flex items-center justify-center text-white shadow-lg">
+                  <Camera className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                 </div>
               </div>
-              <input 
-                type="file" 
-                ref={fileInputRef} 
-                onChange={handleImageUpload} 
-                accept="image/*" 
-                className="hidden" 
-              />
+              
+              <div className="flex flex-col min-w-0">
+                <div className="flex items-center gap-2 mb-1">
+                  <h2 className="text-xl sm:text-3xl font-black text-slate-900 dark:text-white truncate">{userName}</h2>
+                  <VerifiedBadge iconClassName="w-5 h-5 sm:w-6 sm:h-6 fill-blue-500 text-white" />
+                </div>
+                <p className="text-sm sm:text-lg text-slate-500 dark:text-slate-400 font-bold mb-3 truncate font-mono tracking-tight">{userEmail}</p>
+                <div className="flex flex-wrap gap-2">
+                  <span className="inline-flex items-center px-2.5 py-1 rounded-lg text-[10px] sm:text-xs font-black bg-brand-50 dark:bg-brand-500/10 text-brand-600 dark:text-brand-400 border border-brand-100 dark:border-brand-500/20 uppercase tracking-wider">
+                    Member
+                  </span>
+                </div>
+              </div>
             </div>
-            
-            <h2 className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white mb-1">{userName}</h2>
-            <p className="text-sm sm:text-base text-slate-500 dark:text-slate-400 font-medium">{userEmail}</p>
           </div>
 
-          {/* Main Menu Block - Right Column on Desktop (spans vertically), Middle on Mobile */}
-          <div className="md:col-span-8 lg:col-span-8 md:row-span-2">
+          {/* Main Menu Block - Spans below the profile card */}
+          <div className="md:col-span-8 lg:col-span-8">
             <MenuList items={menuItemsBlock1} />
           </div>
 
