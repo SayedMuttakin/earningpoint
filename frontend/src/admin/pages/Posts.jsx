@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
 import { Plus, Trash2, Image as ImageIcon, X, Send, AlertCircle, CheckCircle } from 'lucide-react';
+import VerifiedBadge from '../../components/VerifiedBadge';
 
 const Posts = ({ authHeaders, ADMIN_API }) => {
   const [posts, setPosts] = useState([]);
@@ -268,9 +268,7 @@ const Posts = ({ authHeaders, ADMIN_API }) => {
                       <div className="flex items-center gap-1.5">
                         <span className="text-white font-black text-sm">{post.authorName}</span>
                         {post.isVerified && (
-                          <div className="p-0.5 bg-blue-500 rounded-full">
-                            <CheckCircle className="w-2.5 h-2.5 text-white" />
-                          </div>
+                          <VerifiedBadge iconClassName="w-3.5 h-3.5 fill-blue-500 text-white flex-shrink-0" />
                         )}
                       </div>
                       <span className="text-slate-500 text-[10px] font-black uppercase tracking-widest block mt-0.5">

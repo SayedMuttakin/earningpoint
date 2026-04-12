@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Send, UserCircle, ArrowLeft, Loader2, Bot, User as UserIcon, BadgeCheck, WifiOff } from 'lucide-react';
+import { Send, UserCircle, ArrowLeft, Loader2, Bot, User as UserIcon, WifiOff } from 'lucide-react';
+import VerifiedBadge from './VerifiedBadge';
 import { io } from 'socket.io-client';
 import { API_BASE } from '../config';
 import PullToRefresh from './PullToRefresh';
@@ -158,7 +159,7 @@ const SupportPage = ({ onBack }) => {
           <h1 className="text-xl font-black text-slate-800 dark:text-white flex items-center gap-2">
             <div className="flex items-center gap-1">
               Zenvio Team Support
-              <BadgeCheck className="w-[18px] h-[18px] fill-blue-500 text-white flex-shrink-0 mt-0.5" />
+              <VerifiedBadge iconClassName="w-[18px] h-[18px] fill-blue-500 text-white flex-shrink-0 mt-0.5" />
             </div>
           </h1>
           {step === 3 && isAdminJoined && (
