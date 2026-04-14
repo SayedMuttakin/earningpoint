@@ -135,6 +135,10 @@ const UserSchema = new mongoose.Schema({
     type: Number,
     default: 0,
   },
+  lastMysteryBoxDate: {
+    type: Date,
+    default: null,
+  },
 }, { timestamps: true });
 
 // Auto-generate referral code before saving if not set

@@ -465,6 +465,69 @@ exports.claimGkQuiz = async (req, res) => {
   }
 };
 
+exports.getMysteryBoxStatus = async (req, res) => {
+  try {
+    const user = await User.findById(req.user._id).select('lastMysteryBoxDate');
+    const now = new Date();
+    let claimed = false;
+    
+    if (user.lastMysteryBoxDate) {
+      if (user.lastMysteryBoxDate.toDateString() === now.toDateString()) {
+        claimed = true;
+      }
+    }
+    
+    res.json({
+      lastMysteryBoxDate: user.lastMysteryBoxDate,
+      claimed: claimed
+    });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+exports.claimMysteryBox = async (req, res) => {
+  try {
+    const user = await User.findById(req.user._id);
+    const now = new Date();
+    
+    if (user.lastMysteryBoxDate) {
+      if (user.lastMysteryBoxDate.toDateString() === now.toDateString()) {
+        return res.status(400).json({ message: "You already claimed your Mystery Box today! Come back tomorrow." });
+      }
+    }
+
+    const reward = Math.floor(Math.random() * 45) + 1; // 1 to 45
+    const converted = processPoints(user, reward);
+    user.lastMysteryBoxDate = now;
+
+    await user.save();
+
+    await Transaction.create({
+      userId: user._id,
+      type: 'earning',
+      amount: reward,
+      description: `Mystery Box Reward`,
+      status: 'completed'
+    });
+
+    createNotification(user._id, 'Mystery Box Opened! 🎁', `You got ${reward} points from the Mystery Box!`, 'earning');
+
+    res.json({ 
+      message: converted ? `Rewarded ${reward} points! You reached 1000+ points and got 50৳ converted!` : `Rewarded ${reward} points!`,
+      reward: reward,
+      balance: user.balance,
+      points: user.points,
+      lifetimePoints: user.lifetimePoints,
+      lastMysteryBoxDate: user.lastMysteryBoxDate
+    });
+
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: error.message || 'Server Error' });
+  }
+};
+
 // ─── Withdrawal ───────────────────────────────────────────────────────────────
 exports.submitWithdrawal = async (req, res) => {
   try {

@@ -256,6 +256,11 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
 
   const [showCheckinView, setShowCheckinView] = React.useState(false);
 
+  const [showMysteryBoxView, setShowMysteryBoxView] = React.useState(false);
+  const [mysteryBoxStatus, setMysteryBoxStatus] = React.useState({ lastClaimDate: null, claimedToday: false });
+  const [mysteryBoxReward, setMysteryBoxReward] = React.useState(null);
+  const [isOpeningBox, setIsOpeningBox] = React.useState(false);
+
   const [showAdOverlay, setShowAdOverlay] = React.useState(false);
   const [adCountdown, setAdCountdown] = React.useState(40);
   const [canCloseAd, setCanCloseAd] = React.useState(false);
@@ -301,7 +306,7 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
   const [currentGkIndex, setCurrentGkIndex] = React.useState(0);
   const [gkQuizScore, setGkQuizScore] = React.useState(0);
 
-  // Featured options shown at top (Daily Checkin, Refer)
+  // Featured options shown at top (Daily Checkin, Mystery Box, Refer)
   const mainOptions = [
     {
       id: 'feat-checkin',
@@ -310,6 +315,14 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
       coins: 5,
       color: 'from-emerald-400 to-teal-400',
       action: () => setShowCheckinView(true)
+    },
+    {
+      id: 'feat-mystery',
+      name: 'Mystery Box',
+      icon: <Gift className="w-6 h-6" />,
+      coins: '1-45',
+      color: 'from-rose-400 to-pink-500',
+      action: () => setShowMysteryBoxView(true)
     },
     {
       id: 'feat-refer',
@@ -585,6 +598,7 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
       await Promise.all([
         fetchBalance(),
         fetchCheckinStatus(),
+        fetchMysteryBoxStatus(),
         fetchVideoStatus(),
         fetchWheelStatus(),
         fetchScratchStatus(),
@@ -597,6 +611,22 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
       showToast('Refresh failed', 'error');
     } finally {
       setRefreshing(false);
+    }
+  };
+
+  const fetchMysteryBoxStatus = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) return;
+      const response = await fetch(`${API_BASE}/api/earning/mystery-status`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (response.ok) {
+        const data = await response.json();
+        setMysteryBoxStatus(data);
+      }
+    } catch (err) {
+      console.error('Failed to fetch mystery box status:', err);
     }
   };
 
@@ -680,6 +710,7 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
   React.useEffect(() => {
     fetchBalance();
     fetchCheckinStatus();
+    fetchMysteryBoxStatus();
     fetchVideoStatus();
     fetchWheelStatus();
     fetchScratchStatus();
@@ -2208,6 +2239,97 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
               </div>
           </div>
         )}
+
+      {showMysteryBoxView && (
+        <div className="fixed inset-0 z-[9999] bg-slate-50 dark:bg-slate-950 flex flex-col h-screen w-full">
+          <div className="bg-slate-50 dark:bg-slate-950 pt-safe px-6 py-5 flex justify-between items-center border-b border-slate-200 dark:border-slate-800 shrink-0">
+            <h3 className="text-xl font-bold text-slate-800 dark:text-white">Mystery Box</h3>
+            <button onClick={() => goBackWithAd(() => setShowMysteryBoxView(false))} className="text-slate-400 hover:text-slate-600 dark:hover:text-white transition-colors">
+              <ArrowLeft className="w-6 h-6 hover:-translate-x-1 transition-transform" />
+            </button>
+          </div>
+          <div className="flex-1 overflow-y-auto p-8 space-y-8 flex flex-col items-center">
+            <div className="text-center space-y-2">
+              <p className="text-slate-500 dark:text-slate-400 font-medium">Open the Mystery Box to earn random Coins (1-45)!</p>
+              <p className="text-xs text-slate-400">Available once per day</p>
+            </div>
+
+            <button
+              disabled={mysteryBoxStatus.claimedToday || isOpeningBox || isLoading}
+              onClick={() => {
+                if (mysteryBoxStatus.claimedToday || isOpeningBox || isLoading) return;
+                
+                AdMobService.showInterstitial(async () => {
+                  setIsOpeningBox(true);
+                  setIsLoading(true);
+                  try {
+                    const token = localStorage.getItem('token');
+                    const response = await fetch(`${API_BASE}/api/earning/mystery-claim`, {
+                      method: 'POST',
+                      headers: { Authorization: `Bearer ${token}` },
+                    });
+                    const data = await response.json();
+                    
+                    // Simulate box opening animation delay
+                    setTimeout(() => {
+                      setIsOpeningBox(false);
+                      setIsLoading(false);
+                      if (response.ok) {
+                        setBalance(data.balance);
+                        if (data.coins !== undefined) setCoins(data.coins);
+                        if (data.lifetimeCoins !== undefined) setLifetimeCoins(data.lifetimeCoins);
+                        setMysteryBoxStatus({ lastMysteryBoxDate: data.lastMysteryBoxDate, claimedToday: true });
+                        setMysteryBoxReward(data.reward);
+                        showToast(`🎉 Congratulations! You won ${data.reward} Coins!`, "success");
+                      } else {
+                        showToast(data.message || 'Failed to open Mystery Box.', "error");
+                      }
+                    }, 2000);
+                  } catch (err) {
+                    setIsOpeningBox(false);
+                    setIsLoading(false);
+                    showToast('Network error.', "error");
+                  }
+                });
+              }}
+              className={`relative flex flex-col items-center justify-center p-8 rounded-3xl transition-all overflow-hidden ${
+                mysteryBoxStatus.claimedToday
+                  ? 'bg-slate-100 dark:bg-slate-800/60 border-2 border-slate-200 dark:border-slate-700 opacity-70 cursor-not-allowed'
+                  : 'bg-gradient-to-br from-rose-50 to-pink-50 dark:from-rose-900/20 dark:to-pink-900/20 border-2 border-rose-300 dark:border-rose-700 shadow-xl cursor-pointer hover:scale-105 active:scale-95 group'
+              }`}
+            >
+              {mysteryBoxStatus.claimedToday ? (
+                <>
+                  <div className="text-6xl mb-4 grayscale opacity-50">📤</div>
+                  <span className="font-bold text-slate-400 dark:text-slate-500 text-lg">Already Claimed</span>
+                  <span className="mt-2 text-xs text-rose-500 font-bold uppercase tracking-wider bg-rose-500/10 px-3 py-1 rounded-full">Come back tomorrow!</span>
+                </>
+              ) : mysteryBoxReward ? (
+                <>
+                  <div className="text-6xl mb-4 animate-bounce-subtle">🎉</div>
+                  <span className="font-black text-emerald-600 dark:text-emerald-400 text-2xl">+{mysteryBoxReward} Coins</span>
+                  <span className="mt-2 text-xs text-emerald-500 font-bold uppercase tracking-wider bg-emerald-500/10 px-3 py-1 rounded-full">Reward Claimed!</span>
+                </>
+              ) : isOpeningBox ? (
+                <>
+                  <div className="text-6xl mb-4 animate-bounce">🎁</div>
+                  <span className="font-black text-rose-600 dark:text-rose-400 text-lg animate-pulse">Opening...</span>
+                </>
+              ) : (
+                <>
+                  <div className="text-6xl mb-4 animate-wiggle group-hover:animate-shake">🎁</div>
+                  <span className="font-black text-rose-600 dark:text-rose-400 text-xl tracking-wide drop-shadow-sm">OPEN BOX</span>
+                  <span className="text-xs font-bold text-slate-500 mt-2">Tap to reveal reward</span>
+                </>
+              )}
+            </button>
+
+            <div className="mt-auto pt-8">
+              <BigAdBanner globalSettings={globalSettings} />
+            </div>
+          </div>
+        </div>
+      )}
 
       {showCheckinView && !showAdOverlay && (
           <div className="fixed inset-0 z-[9999] bg-slate-50 dark:bg-slate-950 flex flex-col h-screen w-full">

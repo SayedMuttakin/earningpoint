@@ -21,6 +21,9 @@ router.get('/quiz-status', protect, earningController.getQuizStatus);
 router.post('/quiz-claim', protect, earningController.claimQuiz);
 router.post('/gk-claim', protect, earningController.claimGkQuiz);
 
+router.get('/mystery-status', protect, earningController.getMysteryBoxStatus);
+router.post('/mystery-claim', protect, earningController.claimMysteryBox);
+
 router.get('/articles', protect, earningController.getArticles);
 router.post('/article-claim', protect, earningController.claimArticleReward);
 
