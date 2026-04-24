@@ -104,7 +104,7 @@ function App() {
         {activeTab === 'Home' && <HomePage onBuyNow={handleBuyNow} />}
         {activeTab === 'Cart' && <CartPage onBuyNow={handleBuyNow} />}
         {activeTab === 'Checkout' && <CheckoutPage product={selectedProduct} onBack={() => setActiveTab('Cart')} onSuccess={(method) => { setSelectedPaymentMethod(method); setActiveTab('PaymentSuccess'); }} />}
-        {activeTab === 'Notification' && <NotificationPage onBack={() => showBackAd(() => setActiveTab('Home'))} />}
+        {activeTab === 'Notification' && <NotificationPage onBack={() => setActiveTab('Home')} />}
         {activeTab === 'PaymentSuccess' && <PaymentSuccess paymentMethod={selectedPaymentMethod} onBack={() => showBackAd(() => setActiveTab('Home'))} />}
         {activeTab === 'Profile' && <ProfilePage 
           onVerifyClick={() => setActiveTab('Verify')} 

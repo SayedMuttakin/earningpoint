@@ -901,12 +901,7 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
   // which was causing scroll position to reset to top every second.
 
   const goBackWithAd = (closeFn) => {
-    if (isAdLoading.current) return;
-    isAdLoading.current = true;
-    AdMobService.showInterstitial(() => {
-      isAdLoading.current = false;
-      if (closeFn) closeFn();
-    });
+    if (closeFn) closeFn();
   };
 
   const startAd = (type) => {
