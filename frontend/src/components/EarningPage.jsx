@@ -2235,6 +2235,110 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
           </div>
         )}
 
+      {showLevelView && (
+          <div
+            className="fixed inset-0 animate-fade-in z-[120] bg-[#050B14]/95 backdrop-blur-md flex items-center justify-center p-4 overflow-y-auto"
+          >
+            <div
+              className="bg-[#0F172A] w-full max-w-[400px] rounded-[2.5rem] shadow-2xl border border-slate-800 flex flex-col items-center relative overflow-hidden p-6 pb-8 my-auto"
+            >
+              {/* Back Button */}
+              <button 
+                onClick={() => setShowLevelView(false)}
+                className="absolute top-5 left-5 text-slate-400 hover:text-white transition-colors z-20"
+              >
+                <ArrowLeft className="w-6 h-6" />
+              </button>
+
+              {/* Level Badge */}
+              <div
+                className="w-20 h-20 rounded-full bg-gradient-to-br from-amber-400 to-orange-600 shadow-xl shadow-orange-500/30 flex items-center justify-center border-4 border-amber-300/30 mt-6 mb-3 animate-float"
+              >
+                <span className="font-black text-white text-3xl">{levelInfo.level}</span>
+              </div>
+              <h2 className="text-2xl font-black text-white">{levelInfo.label}</h2>
+              <p className="text-sm text-slate-400 font-medium mb-6">
+                {lifetimeCoins.toLocaleString()} lifetime coins collected
+              </p>
+              
+              {/* Current Level Progress */}
+              <div className="w-full bg-slate-800/60 rounded-2xl p-4 border border-slate-700/50 mb-5">
+                <div className="flex justify-between items-center mb-2">
+                  <span className="text-xs font-bold text-amber-400 uppercase tracking-widest">
+                    {levelInfo.isMax ? 'Max Level Reached!' : `Progress to Level ${levelInfo.level + 1}`}
+                  </span>
+                  <span className="text-xs text-slate-400 font-bold">
+                    {levelInfo.isMax ? '✓' : `${Math.round(progressPercent)}%`}
+                  </span>
+                </div>
+                <div className="h-3 w-full bg-slate-900 rounded-full overflow-hidden">
+                  <div
+                    className="h-full bg-gradient-to-r from-amber-400 to-orange-500 rounded-full"
+                    style={{ width: `${progressPercent}%` }}
+                  />
+                </div>
+                {!levelInfo.isMax && (
+                  <p className="text-[11px] text-slate-500 mt-2 text-center">
+                    {(levelInfo.target - levelInfo.current).toLocaleString()} coins to level up
+                  </p>
+                )}
+              </div>
+
+              {/* All Levels */}
+              <div className="w-full space-y-2">
+                {[
+                  { lv: 1, from: 0, to: 1500 },
+                  { lv: 2, from: 1500, to: 3500 },
+                  { lv: 3, from: 3500, to: 6000 },
+                  { lv: 4, from: 6000, to: 10000 },
+                  { lv: 5, from: 10000, to: null },
+                ].map((tier) => {
+                  const isActive = levelInfo.level === tier.lv;
+                  const isCompleted = levelInfo.level > tier.lv;
+                  return (
+                    <div key={tier.lv} className={`flex items-center gap-3 p-3 rounded-xl transition-all ${
+                      isActive ? 'bg-amber-500/10 border border-amber-500/30' 
+                      : isCompleted ? 'bg-slate-800/40 border border-slate-700/30' 
+                      : 'bg-slate-800/20 border border-slate-800/50'}
+                    `}>
+                      <div className={`w-9 h-9 rounded-full flex items-center justify-center font-black text-sm ${
+                        isActive ? 'bg-gradient-to-br from-amber-400 to-orange-500 text-white shadow-md shadow-orange-500/20'
+                        : isCompleted ? 'bg-emerald-500/20 text-emerald-400'
+                        : 'bg-slate-700/50 text-slate-500'}
+                      `}>
+                        {isCompleted ? <Check className="w-4 h-4" /> : tier.lv}
+                      </div>
+                      <div className="flex-1">
+                        <p className={`text-sm font-bold ${
+                          isActive ? 'text-amber-400' : isCompleted ? 'text-emerald-400' : 'text-slate-500'
+                        }`}>
+                          Level {tier.lv} {tier.to === null && '(Max)'}
+                        </p>
+                        <p className="text-[11px] text-slate-500 font-medium">
+                          {tier.to !== null ? `${tier.from.toLocaleString()} — ${tier.to.toLocaleString()} Coins` : `${tier.from.toLocaleString()}+ Coins`}
+                        </p>
+                      </div>
+                      {isActive && (
+                        <span className="text-[10px] font-black text-amber-400 bg-amber-500/10 px-2 py-1 rounded-full border border-amber-500/20">CURRENT</span>
+                      )}
+                      {isCompleted && (
+                        <span className="text-[10px] font-black text-emerald-400">DONE</span>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+
+              <button
+                onClick={() => goBackWithAd(() => setShowLevelView(false))}
+                className="mt-8 w-full py-4 rounded-full bg-gradient-to-r from-amber-400 to-orange-500 text-white font-black shadow-lg shadow-orange-500/20 transform-gpu text-sm uppercase tracking-wide"
+              >
+                Continue Earning
+              </button>
+            </div>
+          </div>
+        )}
+
       {showMysteryBoxView && (
         <div className="fixed inset-0 z-[9999] bg-slate-50 dark:bg-slate-950 flex flex-col h-screen w-full">
           <div className="bg-slate-50 dark:bg-slate-950 pt-safe px-6 py-5 flex justify-between items-center border-b border-slate-200 dark:border-slate-800 shrink-0">
