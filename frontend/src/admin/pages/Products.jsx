@@ -29,7 +29,11 @@ const Products = ({ authHeaders, ADMIN_API }) => {
     try {
       const res = await fetch(`${ADMIN_API}/products`, { headers: authHeaders });
       const data = await res.json();
-      setProducts(data);
+      if (res.ok) {
+        setProducts(data);
+      } else {
+        setProducts([]);
+      }
     } catch (err) {
       console.error('Error fetching products:', err);
     } finally {

@@ -23,7 +23,11 @@ const Articles = ({ authHeaders, ADMIN_API }) => {
     try {
       const res = await fetch(`${ADMIN_API}/articles`, { headers: authHeaders });
       const data = await res.json();
-      setArticles(data);
+      if (res.ok) {
+        setArticles(data);
+      } else {
+        setArticles([]);
+      }
     } catch (err) {
       console.error('Error fetching articles:', err);
     } finally {

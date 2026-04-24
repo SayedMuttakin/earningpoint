@@ -19,7 +19,11 @@ const Posts = ({ authHeaders, ADMIN_API }) => {
     try {
       const res = await fetch(`${ADMIN_API}/posts`, { headers: authHeaders });
       const data = await res.json();
-      setPosts(data);
+      if (res.ok) {
+        setPosts(data);
+      } else {
+        setPosts([]);
+      }
     } catch (err) {
       console.error('Error fetching posts:', err);
     } finally {

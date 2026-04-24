@@ -22,7 +22,9 @@ const Dashboard = ({ ADMIN_API, authHeaders }) => {
     try {
       const res = await fetch(`${ADMIN_API}/stats`, { headers: authHeaders });
       const data = await res.json();
-      setStats(data);
+      if (res.ok) {
+        setStats(data);
+      }
     } catch (e) {
       console.error(e);
     } finally {
