@@ -1161,22 +1161,28 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
   const handleGkAnswer = (option) => {
     if (gkAnswered) return;
     setGkSelected(option);
+  };
+
+  const handleGkSubmit = () => {
+    if (!gkSelected || gkAnswered) return;
     setGkAnswered(true);
-    
-    const correct = option === gkQuizQuestions[currentGkIndex].answer;
-    if (correct) {
-      setGkQuizScore(prev => prev + 1);
-    }
-    
-    setTimeout(() => {
-      if (currentGkIndex < 9) {
+
+    const correct = gkSelected === gkQuizQuestions[currentGkIndex].answer;
+    const newScore = correct ? gkQuizScore + 1 : gkQuizScore;
+    if (correct) setGkQuizScore(newScore);
+
+    const isLast = currentGkIndex >= 9;
+
+    // Show ad first, then advance
+    AdMobService.showInterstitial(() => {
+      if (!isLast) {
         setCurrentGkIndex(prev => prev + 1);
         setGkSelected(null);
         setGkAnswered(false);
       } else {
-        const finalScore = correct ? gkQuizScore + 1 : gkQuizScore;
-        if (finalScore >= 5) {
-          handleVerifiedAdAction("Daily GK Reward", async () => {
+        // Last question — check score and claim reward
+        if (newScore >= 5) {
+          (async () => {
             try {
               const token = localStorage.getItem('token');
               const response = await fetch(`${API_BASE}/api/earning/gk-claim`, {
@@ -1187,21 +1193,65 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
               if (response.ok) {
                 setBalance(data.balance);
                 if (data.coins !== undefined) setCoins(data.coins);
-                showToast(`🎉 Daily GK completed! You won ${data.reward} Coins!`, "success");
+                else if (data.points !== undefined) setCoins(data.points);
+                showToast(`🎉 Congrats! GK Quiz done! You earned ${data.reward ?? 40} Coins! 🪙`, "success");
               } else {
                 showToast(data.message || 'Failed to claim GK reward.', "error");
               }
             } catch (err) {
               showToast('Network error.', "error");
             }
-          });
+          })();
         } else {
-          showToast(`Quiz finished! You scored ${finalScore}/10. You need at least 5 correct to win Coins!`, 'error');
+          showToast(`Quiz done! Score: ${newScore}/10. Need 5+ correct to earn Coins.`, 'error');
         }
         localStorage.setItem('gk_last_played', new Date().toDateString());
         setShowGkQuizView(false);
       }
-    }, 1200);
+    });
+  };
+
+  const handleMathQuizSubmit = () => {
+    if (!quizSelected || quizAnswered) return;
+    setQuizAnswered(true);
+    setQuizTimerActive(false);
+
+    const correct = quizSelected === quizQuestion.answer;
+    const coinsPerQ = quizType === 'binary' ? 30 : quizType === 'word' ? 25 : 20;
+
+    // Show ad, then claim reward
+    AdMobService.showInterstitial(async () => {
+      if (correct) {
+        try {
+          const token = localStorage.getItem('token');
+          const response = await fetch(`${API_BASE}/api/earning/quiz-claim`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+            body: JSON.stringify({ type: quizType }),
+          });
+          const data = await response.json();
+          if (response.ok) {
+            setBalance(data.balance);
+            if (data.coins !== undefined) setCoins(data.coins);
+            else if (data.points !== undefined) setCoins(data.points);
+            setQuizScore(prev => prev + 1);
+            showToast(`🎉 Correct! You earned ${data.reward ?? coinsPerQ} Coins! 🪙`, "success");
+          } else {
+            showToast(data.message || 'Reward claimed failed.', "error");
+          }
+        } catch (err) {
+          showToast('Network error.', "error");
+        }
+      } else {
+        showToast(`❌ Wrong answer! The correct answer was: ${quizQuestion.answer}`, 'error');
+      }
+
+      // Fetch updated quiz status then next question
+      fetchQuizStatus();
+      setTimeout(() => {
+        startNewQuiz(quizType);
+      }, 800);
+    });
   };
 
   const launchQuiz = (type) => {
@@ -1806,13 +1856,20 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
               <div className="w-full max-w-lg space-y-4">
                 {quizQuestion.options.map((option, idx) => {
                   const isSelected = quizSelected === option;
+                  const showResult = quizAnswered;
+                  const isCorrectOpt = option === quizQuestion.answer;
+                  const isWrongOpt = showResult && isSelected && !isCorrectOpt;
                   return (
                     <button 
                       key={idx} 
                       disabled={quizAnswered} 
-                      onClick={() => setQuizSelected(option)}
+                      onClick={() => !quizAnswered && setQuizSelected(option)}
                       className={`w-full py-5 px-8 rounded-2xl text-center text-xl font-black transition-all border-4 transform-gpu active:scale-95 ${
-                        isSelected 
+                        showResult && isCorrectOpt
+                          ? 'border-emerald-500 bg-emerald-500 text-white shadow-lg shadow-emerald-500/20'
+                          : showResult && isWrongOpt
+                          ? 'border-rose-500 bg-rose-500 text-white'
+                          : isSelected 
                           ? 'border-emerald-500 bg-emerald-500 text-white shadow-lg shadow-emerald-500/20' 
                           : 'bg-white dark:bg-slate-800 border-slate-100 dark:border-slate-700 text-slate-700 dark:text-slate-200 hover:border-emerald-200 dark:hover:border-emerald-900/50'
                       }`}
@@ -1822,6 +1879,19 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
                   );
                 })}
               </div>
+
+              {/* Submit Button */}
+              {quizSelected && !quizAnswered && (
+                <div className="w-full max-w-lg">
+                  <button
+                    onClick={handleMathQuizSubmit}
+                    className="w-full py-4 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-600 text-white font-black text-lg shadow-xl shadow-emerald-500/30 active:scale-95 transition-transform relative overflow-hidden"
+                  >
+                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/15 to-transparent -translate-x-full animate-[shimmer_2.5s_ease-in-out_infinite]" />
+                    <span className="relative z-10">✅ Submit Answer</span>
+                  </button>
+                </div>
+              )}
 
               <div className="mt-auto w-full max-w-lg">
                 <div className="bg-slate-100 dark:bg-slate-800 p-4 rounded-2xl text-center border border-slate-200 dark:border-slate-700">
@@ -2525,18 +2595,23 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 {gkQuizQuestions[currentGkIndex].options.map((option, idx) => {
+                  const isSelected = gkSelected === option;
                   const isCorrect = gkAnswered && option === gkQuizQuestions[currentGkIndex].answer;
-                  const isWrong = gkAnswered && gkSelected === option && option !== gkQuizQuestions[currentGkIndex].answer;
+                  const isWrong = gkAnswered && isSelected && option !== gkQuizQuestions[currentGkIndex].answer;
 
                   let btnClass = "w-full px-6 py-4 rounded-2xl font-black text-base transition-all border-2 text-center ";
-                  if (!gkAnswered) {
-                    btnClass += "bg-white border-slate-200 hover:border-amber-400 text-slate-700 dark:bg-slate-800 dark:border-slate-700 dark:text-slate-200";
-                  } else if (isCorrect) {
-                    btnClass += "bg-emerald-500 border-emerald-400 text-white scale-[1.02] shadow-emerald-500/20 shadow-lg";
-                  } else if (isWrong) {
-                    btnClass += "bg-rose-500 border-rose-400 text-white";
+                  if (gkAnswered) {
+                    if (isCorrect) {
+                      btnClass += "bg-emerald-500 border-emerald-400 text-white scale-[1.02] shadow-emerald-500/20 shadow-lg";
+                    } else if (isWrong) {
+                      btnClass += "bg-rose-500 border-rose-400 text-white";
+                    } else {
+                      btnClass += "bg-slate-100 border-transparent text-slate-400 dark:bg-slate-800 dark:border-slate-700 opacity-40";
+                    }
+                  } else if (isSelected) {
+                    btnClass += "bg-amber-500 border-amber-400 text-white scale-[1.02] shadow-amber-500/20 shadow-lg";
                   } else {
-                    btnClass += "bg-slate-100 border-transparent text-slate-400 dark:bg-slate-800 dark:border-slate-700 opacity-40";
+                    btnClass += "bg-white border-slate-200 hover:border-amber-400 text-slate-700 dark:bg-slate-800 dark:border-slate-700 dark:text-slate-200";
                   }
 
                   return (
@@ -2551,6 +2626,19 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
                   );
                 })}
               </div>
+
+              {/* Submit Button for GK Quiz */}
+              {gkSelected && !gkAnswered && (
+                <div className="w-full">
+                  <button
+                    onClick={handleGkSubmit}
+                    className="w-full py-4 rounded-2xl bg-gradient-to-r from-amber-500 to-orange-600 text-white font-black text-lg shadow-xl shadow-amber-500/30 active:scale-95 transition-transform relative overflow-hidden"
+                  >
+                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/15 to-transparent -translate-x-full animate-[shimmer_2.5s_ease-in-out_infinite]" />
+                    <span className="relative z-10">✅ Submit Answer</span>
+                  </button>
+                </div>
+              )}
 
               <div className="mt-auto pt-8">
                 <div className="bg-slate-100 dark:bg-slate-800 p-4 rounded-2xl text-center">
