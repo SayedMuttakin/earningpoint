@@ -4,12 +4,14 @@ import { Lock, LogIn, AtSign, Eye, EyeOff } from 'lucide-react';
 import { Capacitor } from '@capacitor/core';
 import { GoogleAuth } from '@codetrix-studio/capacitor-google-auth';
 
-const GOOGLE_CLIENT_ID = '683886612726-hpfnmmev12c8fbl7f4bbe37s03s48r23.apps.googleusercontent.com';
+const GOOGLE_CLIENT_ID = '410797628659-49d55sis32em5iktc44aj349v9bsqo02.apps.googleusercontent.com';
 
 const GoogleButton = ({ onSuccess }) => {
   const [loading, setLoading] = useState(false);
+  const [googleError, setGoogleError] = useState('');
 
   const handleGoogleLogin = async () => {
+    setGoogleError('');
     // Check if running in Capacitor mobile app vs web browser
     const isMobileApp = Capacitor.getPlatform() !== 'web';
     
@@ -17,13 +19,21 @@ const GoogleButton = ({ onSuccess }) => {
       // Use Capacitor Google Auth plugin for mobile apps
       try {
         setLoading(true);
+        
+        // Initialize GoogleAuth before signing in (required for some versions)
+        await GoogleAuth.initialize({
+          clientId: GOOGLE_CLIENT_ID,
+          scopes: ['profile', 'email'],
+          grantOfflineAccess: true,
+        }).catch(() => {}); // ignore if already initialized
+        
         const result = await GoogleAuth.signIn();
         
         // idToken is what the backend needs for verification
         const idToken = result?.authentication?.idToken || result?.idToken;
         
         if (!idToken) {
-          alert('Google Sign-In failed: No ID token received. Result: ' + JSON.stringify(result));
+          setGoogleError('Google Sign-In failed. Please try again.');
           setLoading(false);
           return;
         }
@@ -40,17 +50,22 @@ const GoogleButton = ({ onSuccess }) => {
           if (data.darkMode) localStorage.setItem('darkMode', 'true');
           if (onSuccess) onSuccess();
         } else {
-          alert(data.message || 'Google Sign-In failed');
+          setGoogleError(data.message || 'Google Sign-In failed. Please try again.');
         }
       } catch (e) {
-        alert('Google Sign-In error: ' + (e.message || JSON.stringify(e)));
+        // User cancelled sign-in - don't show error
+        if (e?.error === 'popup_closed_by_user' || e?.code === '12501' || e?.message?.includes('cancel')) {
+          // silently ignore cancellation
+        } else {
+          setGoogleError('Google Sign-In failed. Please try again.');
+        }
       } finally {
         setLoading(false);
       }
     } else {
       // Use web-based Google Sign-In for browser
       if (!window.google) {
-        alert('Google Sign-In is not available. Please refresh the page.');
+        setGoogleError('Google Sign-In is not available. Please refresh the page.');
         return;
       }
       setLoading(true);
@@ -72,10 +87,10 @@ const GoogleButton = ({ onSuccess }) => {
               if (data.darkMode) localStorage.setItem('darkMode', 'true');
               if (onSuccess) onSuccess();
             } else {
-              alert(data.message || 'Google Sign-In failed');
+              setGoogleError(data.message || 'Google Sign-In failed. Please try again.');
             }
           } catch (e) {
-            alert('Network error. Please try again.');
+            setGoogleError('Network error. Please try again.');
           } finally {
             setLoading(false);
           }
@@ -91,25 +106,32 @@ const GoogleButton = ({ onSuccess }) => {
   };
 
   return (
-    <button
-      id="google-signin-btn-login"
-      type="button"
-      onClick={handleGoogleLogin}
-      disabled={loading}
-      className="w-full flex items-center justify-center gap-3 bg-white border-2 border-slate-200 hover:border-slate-300 hover:bg-slate-50 hover:-translate-y-0.5 active:scale-95 transition-transform text-slate-700 py-3.5 px-4 rounded-2xl font-bold text-sm shadow-sm disabled:opacity-70"
-    >
-      {loading ? (
-        <div className="w-5 h-5 border-2 border-slate-400 border-t-brand-600 rounded-full animate-spin" />
-      ) : (
-        <svg width="20" height="20" viewBox="0 0 48 48">
-          <path fill="#4285F4" d="M47.532 24.5528C47.532 22.9214 47.3997 21.2811 47.1175 19.6761H24.48V28.9181H37.4434C36.8549 31.8988 35.111 34.473 32.5568 36.1631V42.1254H40.3302C44.9553 37.8691 47.532 31.7371 47.532 24.5528Z"/>
-          <path fill="#34A853" d="M24.48 48.0016C30.9529 48.0016 36.4116 45.8764 40.3435 42.1254L32.57 36.1631C30.4207 37.6132 27.6547 38.4755 24.48 38.4755C18.2289 38.4755 12.9257 34.1624 11.0057 28.3792H2.95437V34.5244C6.99741 42.5987 15.2959 48.0016 24.48 48.0016Z"/>
-          <path fill="#FBBC04" d="M11.0055 28.3792C10.0249 25.3985 10.0249 22.1643 11.0055 19.1836V13.0384H2.95437C-0.969988 20.8848 -0.969988 30.678 2.95437 38.5243L11.0055 28.3792Z"/>
-          <path fill="#EA4335" d="M24.48 9.49932C27.8206 9.44641 31.0468 10.7338 33.4619 13.0168L40.4668 6.01196C36.1895 2.55092 30.7437 0.647064 24.48 0.716878C15.2959 0.716878 6.99741 6.11976 2.95437 14.194L11.0055 20.3392C12.9344 14.5477 18.2289 10.2434 24.48 9.49932Z"/>
-        </svg>
+    <div className="w-full">
+      {googleError && (
+        <div className="mb-3 bg-red-50 text-red-500 p-3 rounded-xl text-sm text-center border border-red-100 font-semibold">
+          {googleError}
+        </div>
       )}
-      {loading ? 'Signing in...' : 'Continue with Google'}
-    </button>
+      <button
+        id="google-signin-btn-login"
+        type="button"
+        onClick={handleGoogleLogin}
+        disabled={loading}
+        className="w-full flex items-center justify-center gap-3 bg-white border-2 border-slate-200 hover:border-slate-300 hover:bg-slate-50 hover:-translate-y-0.5 active:scale-95 transition-transform text-slate-700 py-3.5 px-4 rounded-2xl font-bold text-sm shadow-sm disabled:opacity-70"
+      >
+        {loading ? (
+          <div className="w-5 h-5 border-2 border-slate-400 border-t-brand-600 rounded-full animate-spin" />
+        ) : (
+          <svg width="20" height="20" viewBox="0 0 48 48">
+            <path fill="#4285F4" d="M47.532 24.5528C47.532 22.9214 47.3997 21.2811 47.1175 19.6761H24.48V28.9181H37.4434C36.8549 31.8988 35.111 34.473 32.5568 36.1631V42.1254H40.3302C44.9553 37.8691 47.532 31.7371 47.532 24.5528Z"/>
+            <path fill="#34A853" d="M24.48 48.0016C30.9529 48.0016 36.4116 45.8764 40.3435 42.1254L32.57 36.1631C30.4207 37.6132 27.6547 38.4755 24.48 38.4755C18.2289 38.4755 12.9257 34.1624 11.0057 28.3792H2.95437V34.5244C6.99741 42.5987 15.2959 48.0016 24.48 48.0016Z"/>
+            <path fill="#FBBC04" d="M11.0055 28.3792C10.0249 25.3985 10.0249 22.1643 11.0055 19.1836V13.0384H2.95437C-0.969988 20.8848 -0.969988 30.678 2.95437 38.5243L11.0055 28.3792Z"/>
+            <path fill="#EA4335" d="M24.48 9.49932C27.8206 9.44641 31.0468 10.7338 33.4619 13.0168L40.4668 6.01196C36.1895 2.55092 30.7437 0.647064 24.48 0.716878C15.2959 0.716878 6.99741 6.11976 2.95437 14.194L11.0055 20.3392C12.9344 14.5477 18.2289 10.2434 24.48 9.49932Z"/>
+          </svg>
+        )}
+        {loading ? 'Signing in...' : 'Continue with Google'}
+      </button>
+    </div>
   );
 };
 
