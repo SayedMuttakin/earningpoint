@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { API_BASE } from '../config';
-import { Lock, UserPlus, AtSign, Globe, ChevronDown, Check, Search, Users, Eye, EyeOff } from 'lucide-react';
+import { Lock, Mail, UserPlus, AtSign, Globe, ChevronDown, Check, Search, Users, Eye, EyeOff } from 'lucide-react';
 import { countries } from '../utils/countries';
 import { Capacitor } from '@capacitor/core';
 import { GoogleAuth } from '@codetrix-studio/capacitor-google-auth';
@@ -14,25 +14,21 @@ const GoogleButton = ({ onSuccess }) => {
   const handleGoogleLogin = async () => {
     setGoogleError('');
     const isMobileApp = Capacitor.getPlatform() !== 'web';
-
+    
     if (isMobileApp) {
       try {
         setLoading(true);
-
-        // Initialize GoogleAuth before signing in (required for some versions)
         await GoogleAuth.initialize({
           clientId: GOOGLE_CLIENT_ID,
           scopes: ['profile', 'email'],
           grantOfflineAccess: true,
-        }).catch(() => {}); // ignore if already initialized
-
+        }).catch(() => {}); 
+        
         const result = await GoogleAuth.signIn();
-
-        // idToken is what the backend needs for verification
         const idToken = result?.authentication?.idToken || result?.idToken;
-
+        
         if (!idToken) {
-          setGoogleError('Google Sign-In failed. Please try again.');
+          setGoogleError('Google Sign-In failed.');
           setLoading(false);
           return;
         }
@@ -49,21 +45,19 @@ const GoogleButton = ({ onSuccess }) => {
           if (data.darkMode) localStorage.setItem('darkMode', 'true');
           if (onSuccess) onSuccess();
         } else {
-          setGoogleError(data.message || 'Google Sign-In failed. Please try again.');
+          setGoogleError(data.message || 'Google Sign-In failed.');
         }
       } catch (e) {
-        // User cancelled sign-in - don't show error
         if (e?.error === 'popup_closed_by_user' || e?.code === '12501' || e?.message?.includes('cancel')) {
-          // silently ignore cancellation
         } else {
-          setGoogleError('Google Sign-In failed. Please try again.');
+          setGoogleError('Google Sign-In failed.');
         }
       } finally {
         setLoading(false);
       }
     } else {
       if (!window.google) {
-        setGoogleError('Google Sign-In is not available. Please refresh the page.');
+        setGoogleError('Google Sign-In is not available.');
         return;
       }
       setLoading(true);
@@ -85,7 +79,7 @@ const GoogleButton = ({ onSuccess }) => {
               if (data.darkMode) localStorage.setItem('darkMode', 'true');
               if (onSuccess) onSuccess();
             } else {
-              setGoogleError(data.message || 'Google Sign-In failed. Please try again.');
+              setGoogleError(data.message || 'Google Sign-In failed.');
             }
           } catch (e) {
             setGoogleError('Network error. Please try again.');
@@ -104,30 +98,26 @@ const GoogleButton = ({ onSuccess }) => {
   };
 
   return (
-    <div className="w-full">
+    <div className="w-full flex flex-col items-center">
       {googleError && (
-        <div className="mb-3 bg-red-50 text-red-500 p-3 rounded-xl text-sm text-center border border-red-100 font-semibold">
+        <div className="mb-3 bg-red-50 text-red-500 p-2 rounded-xl text-xs text-center border border-red-100 font-semibold w-full">
           {googleError}
         </div>
       )}
       <button
-        id="google-signin-btn-register"
         type="button"
         onClick={handleGoogleLogin}
         disabled={loading}
-        className="w-full flex items-center justify-center gap-3 bg-white border-2 border-slate-200 hover:border-slate-300 hover:bg-slate-50 hover:-translate-y-0.5 active:scale-95 transition-transform text-slate-700 py-3.5 px-4 rounded-2xl font-bold text-sm shadow-sm disabled:opacity-70"
+        className="w-[280px] flex items-center justify-center gap-3 bg-[#e44d3a] hover:bg-[#d4402e] active:scale-95 transition-all text-white py-3 px-4 rounded-full font-semibold text-sm shadow-sm disabled:opacity-70"
       >
         {loading ? (
-          <div className="w-5 h-5 border-2 border-slate-400 border-t-brand-600 rounded-full animate-spin" />
+          <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
         ) : (
-          <svg width="20" height="20" viewBox="0 0 48 48">
-            <path fill="#4285F4" d="M47.532 24.5528C47.532 22.9214 47.3997 21.2811 47.1175 19.6761H24.48V28.9181H37.4434C36.8549 31.8988 35.111 34.473 32.5568 36.1631V42.1254H40.3302C44.9553 37.8691 47.532 31.7371 47.532 24.5528Z"/>
-            <path fill="#34A853" d="M24.48 48.0016C30.9529 48.0016 36.4116 45.8764 40.3435 42.1254L32.57 36.1631C30.4207 37.6132 27.6547 38.4755 24.48 38.4755C18.2289 38.4755 12.9257 34.1624 11.0057 28.3792H2.95437V34.5244C6.99741 42.5987 15.2959 48.0016 24.48 48.0016Z"/>
-            <path fill="#FBBC04" d="M11.0055 28.3792C10.0249 25.3985 10.0249 22.1643 11.0055 19.1836V13.0384H2.95437C-0.969988 20.8848 -0.969988 30.678 2.95437 38.5243L11.0055 28.3792Z"/>
-            <path fill="#EA4335" d="M24.48 9.49932C27.8206 9.44641 31.0468 10.7338 33.4619 13.0168L40.4668 6.01196C36.1895 2.55092 30.7437 0.647064 24.48 0.716878C15.2959 0.716878 6.99741 6.11976 2.95437 14.194L11.0055 20.3392C12.9344 14.5477 18.2289 10.2434 24.48 9.49932Z"/>
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="white">
+            <path d="M12.48 10.92v2.8h6.24c-.2 1.68-1.52 4.96-6.24 4.96-3.76 0-6.84-3.16-6.84-7.08s3.08-7.08 6.84-7.08c2.16 0 3.6 1.04 4.16 1.6l2.12-2.12C17.08 2.44 14.96 1.6 12.48 1.6 6.72 1.6 2 6.32 2 12.08s4.72 10.48 10.48 10.48c6.04 0 10.08-4.24 10.08-10.28 0-.84-.12-1.36-.2-1.84h-9.88z" />
           </svg>
         )}
-        {loading ? 'Signing in...' : 'Continue with Google'}
+        {loading ? 'Signing in...' : 'Sign Up with Google'}
       </button>
     </div>
   );
@@ -136,18 +126,26 @@ const GoogleButton = ({ onSuccess }) => {
 const RegistrationForm = ({ onToggleForm, onRegisterSuccess }) => {
   const [formData, setFormData] = useState({ 
     name: '', 
+    username: '',
     phoneOrEmail: '', 
     password: '',
+    confirmPassword: '',
     referCode: '',
-    country: 'BGD' // Default to Bangladesh
+    country: 'BGD' 
   });
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
   const [isCountryDropdownOpen, setIsCountryDropdownOpen] = useState(false);
   const [countrySearchQuery, setCountrySearchQuery] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [activeField, setActiveField] = useState('');
+  
   const [referrerName, setReferrerName] = useState(null);
   const [isCheckingReferrer, setIsCheckingReferrer] = useState(false);
+
+  const [isCheckingUsername, setIsCheckingUsername] = useState(false);
+  const [usernameStatus, setUsernameStatus] = useState(null);
 
   // Debounced refer code check
   useEffect(() => {
@@ -174,10 +172,39 @@ const RegistrationForm = ({ onToggleForm, onRegisterSuccess }) => {
 
     const timer = setTimeout(() => {
       checkReferrer();
-    }, 500); // 500ms debounce
+    }, 500);
 
     return () => clearTimeout(timer);
   }, [formData.referCode]);
+
+  // Debounced username availability check
+  useEffect(() => {
+    const checkUsername = async () => {
+      if (!formData.username) {
+        setUsernameStatus(null);
+        return;
+      }
+      setIsCheckingUsername(true);
+      try {
+        const response = await fetch(`${API_BASE}/api/auth/referrer/${formData.username}`);
+        if (response.ok) {
+          setUsernameStatus('taken'); 
+        } else {
+          setUsernameStatus('available');
+        }
+      } catch (err) {
+        setUsernameStatus(null);
+      } finally {
+        setIsCheckingUsername(false);
+      }
+    };
+
+    const timer = setTimeout(() => {
+      checkUsername();
+    }, 500);
+
+    return () => clearTimeout(timer);
+  }, [formData.username]);
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -199,6 +226,15 @@ const RegistrationForm = ({ onToggleForm, onRegisterSuccess }) => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (usernameStatus === 'taken') {
+      setError('Username is already taken. Please choose another one.');
+      return;
+    }
+    if (formData.password !== formData.confirmPassword) {
+      setError('Passwords do not match.');
+      return;
+    }
+    
     setIsLoading(true);
     setError('');
 
@@ -208,6 +244,7 @@ const RegistrationForm = ({ onToggleForm, onRegisterSuccess }) => {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           name: formData.name,
+          username: formData.username,
           phoneOrEmail: formData.phoneOrEmail,
           password: formData.password,
           referCode: formData.referCode,
@@ -231,39 +268,39 @@ const RegistrationForm = ({ onToggleForm, onRegisterSuccess }) => {
   };
 
   return (
-    <div className="w-full">
-      <div className="mb-8 lg:hidden text-center">
-        <h1 className="text-3xl font-black text-slate-900 mb-2 italic">CREATE ACCOUNT</h1>
-        <p className="text-slate-500 font-medium">Join us today to get started.</p>
+    <div className="w-full max-w-sm mx-auto flex flex-col items-center relative z-10 pb-4">
+      <div className="absolute -bottom-16 -right-16 w-64 h-64 bg-slate-100 rounded-full blur-3xl -z-10 pointer-events-none opacity-60"></div>
+
+      <div className="mb-6 w-full flex justify-center">
+        <img src="/login-illustration.png" alt="Registration Illustration" className="h-40 w-auto object-contain" />
       </div>
 
-      <div className="hidden lg:block mb-8">
-        <h2 className="text-3xl font-black text-slate-900 mb-2 italic">CREATE ACCOUNT</h2>
-        <p className="text-slate-500 font-medium">Join us today to get started.</p>
+      <div className="text-center mb-6">
+        <h1 className="text-3xl font-bold text-[#087b7a] mb-1">Create Account</h1>
+        <p className="text-slate-500 text-sm">Join us today to get started.</p>
       </div>
 
-
-      <form onSubmit={handleSubmit} className="space-y-4">
+      <form onSubmit={handleSubmit} className="w-full space-y-4">
         {error && (
-          <div className="bg-rose-50 text-rose-500 p-4 rounded-2xl text-sm font-bold text-center border-2 border-rose-100 flex items-center justify-center gap-2">
-            <div className="w-2 h-2 rounded-full bg-rose-500 animate-pulse"></div>
+          <div className="bg-red-50 text-red-500 p-2 rounded-lg text-sm text-center border border-red-100">
             {error}
           </div>
         )}
 
         <div>
-          <label className="block text-sm font-bold text-slate-700 mb-2 ml-1" htmlFor="name">Full Name</label>
-          <div className="relative group">
+          <div className="relative">
             <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-              <UserPlus className="h-5 w-5 text-slate-400 group-focus-within:text-brand-500 transition-colors" />
+              <UserPlus className={`h-5 w-5 transition-colors ${activeField === 'name' ? 'text-[#087b7a]' : 'text-slate-400'}`} />
             </div>
             <input
               id="name"
               name="name"
               type="text"
               required
-              className="pl-12 block w-full border-2 border-slate-100 rounded-2xl py-4 px-4 bg-slate-50 outline-none transition-all duration-300 font-semibold focus:border-brand-500"
-              placeholder="Enter your full name"
+              onFocus={() => setActiveField('name')}
+              onBlur={() => setActiveField('')}
+              className={`pl-12 pr-4 block w-full border-2 rounded-full py-3 bg-white outline-none transition-all duration-300 text-sm font-medium text-slate-700 ${activeField === 'name' ? 'border-[#087b7a]' : 'border-slate-200'}`}
+              placeholder="Full Name"
               value={formData.name}
               onChange={handleChange}
             />
@@ -271,37 +308,66 @@ const RegistrationForm = ({ onToggleForm, onRegisterSuccess }) => {
         </div>
 
         <div>
-          <label className="block text-sm font-bold text-slate-700 mb-2 ml-1" htmlFor="phoneOrEmail">Email or Phone Number</label>
-          <div className="relative group">
+          <div className="relative">
             <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-              <AtSign className="h-5 w-5 text-slate-400 group-focus-within:text-brand-500 transition-colors" />
+              <AtSign className={`h-5 w-5 transition-colors ${activeField === 'username' ? 'text-[#087b7a]' : 'text-slate-400'}`} />
+            </div>
+            <input
+              id="username"
+              name="username"
+              type="text"
+              required
+              onFocus={() => setActiveField('username')}
+              onBlur={() => setActiveField('')}
+              className={`pl-12 pr-4 block w-full border-2 rounded-full py-3 bg-white outline-none transition-all duration-300 text-sm font-medium text-slate-700 ${activeField === 'username' ? 'border-[#087b7a]' : 'border-slate-200'}`}
+              placeholder="Username (Referral Code)"
+              value={formData.username}
+              onChange={handleChange}
+            />
+          </div>
+          {isCheckingUsername ? (
+            <p className="text-xs text-[#087b7a] font-bold ml-4 mt-1.5 animate-pulse">Checking availability...</p>
+          ) : formData.username && usernameStatus === 'taken' ? (
+            <p className="text-xs text-red-500 font-bold ml-4 mt-1.5">Username is already taken</p>
+          ) : formData.username && usernameStatus === 'available' ? (
+            <p className="text-xs text-[#087b7a] font-bold ml-4 mt-1.5">Username is available!</p>
+          ) : null}
+        </div>
+
+        <div>
+          <div className="relative">
+            <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+              <Mail className={`h-5 w-5 transition-colors ${activeField === 'email' ? 'text-[#087b7a]' : 'text-slate-400'}`} />
             </div>
             <input
               id="phoneOrEmail"
               name="phoneOrEmail"
               type="text"
               required
-              className="pl-12 block w-full border-2 border-slate-100 rounded-2xl py-4 px-4 bg-slate-50 outline-none transition-all duration-300 font-semibold focus:border-brand-500"
-              placeholder="your@email.com or +880 1XX XXX XXXX"
-              value={formData.phoneOrEmail || ''}
+              onFocus={() => setActiveField('email')}
+              onBlur={() => setActiveField('')}
+              className={`pl-12 pr-4 block w-full border-2 rounded-full py-3 bg-white outline-none transition-all duration-300 text-sm font-medium text-slate-700 ${activeField === 'email' ? 'border-[#087b7a]' : 'border-slate-200'}`}
+              placeholder="Email or Phone Number"
+              value={formData.phoneOrEmail}
               onChange={handleChange}
             />
           </div>
         </div>
 
         <div>
-          <label className="block text-sm font-bold text-slate-700 mb-2 ml-1" htmlFor="password">Password</label>
-          <div className="relative group">
+          <div className="relative">
             <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-              <Lock className="h-5 w-5 text-slate-400 group-focus-within:text-brand-500 transition-colors" />
+              <Lock className={`h-5 w-5 transition-colors ${activeField === 'password' ? 'text-[#087b7a]' : 'text-slate-400'}`} />
             </div>
             <input
               id="password"
               name="password"
               type={showPassword ? 'text' : 'password'}
               required
-              className="pl-12 pr-12 block w-full border-2 border-slate-100 rounded-2xl py-4 px-4 bg-slate-50 outline-none transition-all duration-300 font-semibold focus:border-brand-500"
-              placeholder="••••••••"
+              onFocus={() => setActiveField('password')}
+              onBlur={() => setActiveField('')}
+              className={`pl-12 pr-12 block w-full border-2 rounded-full py-3 bg-white outline-none transition-all duration-200 text-sm font-medium text-slate-700 ${activeField === 'password' ? 'border-[#087b7a]' : 'border-slate-200'}`}
+              placeholder="Password (••••••••)"
               value={formData.password}
               onChange={handleChange}
             />
@@ -310,30 +376,55 @@ const RegistrationForm = ({ onToggleForm, onRegisterSuccess }) => {
               onClick={() => setShowPassword(!showPassword)}
               className="absolute inset-y-0 right-0 pr-4 flex items-center text-slate-400 hover:text-slate-600 focus:outline-none"
             >
-              {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+              {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
             </button>
           </div>
         </div>
 
-        {/* Country Selection Dropdown */}
+        <div>
+          <div className="relative">
+            <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+              <Lock className={`h-5 w-5 transition-colors ${activeField === 'confirmPassword' ? 'text-[#087b7a]' : 'text-slate-400'}`} />
+            </div>
+            <input
+              id="confirmPassword"
+              name="confirmPassword"
+              type={showConfirmPassword ? 'text' : 'password'}
+              required
+              onFocus={() => setActiveField('confirmPassword')}
+              onBlur={() => setActiveField('')}
+              className={`pl-12 pr-12 block w-full border-2 rounded-full py-3 bg-white outline-none transition-all duration-200 text-sm font-medium text-slate-700 ${activeField === 'confirmPassword' ? 'border-[#087b7a]' : 'border-slate-200'}`}
+              placeholder="Confirm Password"
+              value={formData.confirmPassword}
+              onChange={handleChange}
+            />
+            <button
+              type="button"
+              onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+              className="absolute inset-y-0 right-0 pr-4 flex items-center text-slate-400 hover:text-slate-600 focus:outline-none"
+            >
+              {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+            </button>
+          </div>
+        </div>
+
         <div className="relative">
-          <label className="block text-sm font-bold text-slate-700 mb-2 ml-1">Country</label>
           <button
             type="button"
             onClick={() => setIsCountryDropdownOpen(!isCountryDropdownOpen)}
-            className="w-full flex items-center justify-between pl-4 pr-5 py-4 bg-slate-50 border-2 border-slate-100 rounded-2xl hover:border-brand-200 transition-all text-left group"
+            className="w-full flex items-center justify-between pl-4 pr-5 py-3 bg-white border-2 border-slate-200 rounded-full hover:border-[#087b7a] transition-all text-left group"
           >
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-white shadow-sm flex items-center justify-center overflow-hidden border border-slate-100 group-hover:scale-110 transition-transform">
+              <div className="w-8 h-8 rounded-full bg-white shadow-sm flex items-center justify-center overflow-hidden border border-slate-100 group-hover:scale-110 transition-transform">
                 <img 
                   src={`https://flagcdn.com/w80/${selectedCountryObj.iso}.png`} 
                   alt={selectedCountryObj.name}
                   className="w-full h-full object-cover scale-125"
                 />
               </div>
-              <div>
-                <p className="text-xs font-bold text-slate-400 uppercase tracking-tight">Select Country</p>
-                <p className="text-slate-900 font-bold">{selectedCountryObj.name}</p>
+              <div className="flex flex-col justify-center">
+                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-tight leading-none mb-0.5">Country</p>
+                <p className="text-slate-700 text-sm font-medium leading-none">{selectedCountryObj.name}</p>
               </div>
             </div>
             <ChevronDown className={`w-5 h-5 text-slate-400 transition-transform duration-300 ${isCountryDropdownOpen ? 'rotate-180' : ''}`} />
@@ -341,9 +432,9 @@ const RegistrationForm = ({ onToggleForm, onRegisterSuccess }) => {
 
             {isCountryDropdownOpen && (
               <div
-                className="absolute z-50 left-0 right-0 mt-3 bg-white rounded-3xl shadow-2xl border-2 border-slate-100 overflow-hidden backdrop-blur-xl animate-fade-in-up"
+                className="absolute z-50 left-0 right-0 mt-2 bg-white rounded-2xl shadow-xl border border-slate-100 overflow-hidden"
               >
-                <div className="p-3 border-b-2 border-slate-50 bg-slate-50/50">
+                <div className="p-2 border-b border-slate-50 bg-slate-50/50">
                   <div className="relative">
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                     <input
@@ -351,11 +442,11 @@ const RegistrationForm = ({ onToggleForm, onRegisterSuccess }) => {
                       placeholder="Search country..."
                       value={countrySearchQuery}
                       onChange={(e) => setCountrySearchQuery(e.target.value)}
-                      className="w-full pl-10 pr-4 py-2.5 bg-white border-2 border-slate-200 rounded-xl text-sm outline-none focus:border-brand-500 transition-all font-semibold"
+                      className="w-full pl-9 pr-4 py-2 bg-white border border-slate-200 rounded-lg text-sm outline-none focus:border-[#087b7a] transition-all font-medium"
                     />
                   </div>
                 </div>
-                <div className="max-h-[240px] overflow-y-auto custom-scrollbar">
+                <div className="max-h-[200px] overflow-y-auto custom-scrollbar">
                   {filteredCountries.map((country) => (
                     <button
                       key={country.id}
@@ -364,31 +455,28 @@ const RegistrationForm = ({ onToggleForm, onRegisterSuccess }) => {
                         setFormData({ ...formData, country: country.id });
                         setIsCountryDropdownOpen(false);
                       }}
-                      className={`w-full flex items-center justify-between px-4 py-3.5 hover:bg-brand-50 transition-colors ${formData.country === country.id ? 'bg-brand-50/50' : ''}`}
+                      className={`w-full flex items-center justify-between px-4 py-2.5 hover:bg-slate-50 transition-colors ${formData.country === country.id ? 'bg-[#087b7a]/10' : ''}`}
                     >
                       <div className="flex items-center gap-3">
-                        <div className="w-8 h-6 rounded-md overflow-hidden border border-slate-100 shadow-sm flex-shrink-0">
+                        <div className="w-6 h-4 rounded-sm overflow-hidden flex-shrink-0">
                           <img 
                             src={`https://flagcdn.com/w40/${country.iso}.png`} 
                             alt={country.name}
                             className="w-full h-full object-cover"
                           />
                         </div>
-                        <span className={`font-bold ${formData.country === country.id ? 'text-brand-600' : 'text-slate-700'}`}>
+                        <span className={`text-sm font-medium ${formData.country === country.id ? 'text-[#087b7a]' : 'text-slate-700'}`}>
                           {country.name}
                         </span>
                       </div>
                       {formData.country === country.id && (
-                        <div className="w-6 h-6 rounded-full bg-brand-600 flex items-center justify-center">
-                          <Check className="w-4 h-4 text-white" />
-                        </div>
+                        <Check className="w-4 h-4 text-[#087b7a]" />
                       )}
                     </button>
                   ))}
                   {filteredCountries.length === 0 && (
-                    <div className="px-4 py-8 text-center">
-                      <Globe className="w-10 h-10 text-slate-200 mx-auto mb-2" />
-                      <p className="text-slate-400 font-bold">No countries found</p>
+                    <div className="px-4 py-6 text-center">
+                      <p className="text-slate-400 text-sm font-medium">No countries found</p>
                     </div>
                   )}
                 </div>
@@ -396,63 +484,66 @@ const RegistrationForm = ({ onToggleForm, onRegisterSuccess }) => {
             )}
         </div>
 
-        {/* Refer Code Field */}
         <div>
-          <label className="block text-sm font-bold text-slate-700 mb-2 ml-1" htmlFor="referCode">Refer Code (Optional)</label>
-          <div className="relative group">
+          <div className="relative">
             <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-              <Users className="h-5 w-5 text-slate-400 group-focus-within:text-brand-500 transition-colors" />
+              <Users className={`h-5 w-5 transition-colors ${activeField === 'referCode' ? 'text-[#087b7a]' : 'text-slate-400'}`} />
             </div>
             <input
               id="referCode"
               name="referCode"
               type="text"
-              className="pl-12 block w-full border-2 border-slate-100 rounded-2xl py-4 px-4 bg-slate-50 outline-none transition-all duration-300 font-semibold focus:border-brand-500"
-              placeholder="Enter refer code if you have one"
+              onFocus={() => setActiveField('referCode')}
+              onBlur={() => setActiveField('')}
+              className={`pl-12 pr-4 block w-full border-2 rounded-full py-3 bg-white outline-none transition-all duration-300 text-sm font-medium text-slate-700 ${activeField === 'referCode' ? 'border-[#087b7a]' : 'border-slate-200'}`}
+              placeholder="Refer Code (Optional)"
               value={formData.referCode}
               onChange={handleChange}
             />
           </div>
           {isCheckingReferrer ? (
-            <p className="text-xs text-brand-500 font-bold ml-1 mt-1.5 animate-pulse">Checking...</p>
+            <p className="text-xs text-[#087b7a] font-bold ml-4 mt-1.5 animate-pulse">Checking...</p>
           ) : formData.referCode && referrerName ? (
-            <p className="text-xs text-emerald-500 font-bold ml-1 mt-1.5">Referred by: {referrerName}</p>
+            <p className="text-xs text-[#087b7a] font-bold ml-4 mt-1.5">Referred by: {referrerName}</p>
           ) : formData.referCode ? (
-            <p className="text-xs text-rose-500 font-bold ml-1 mt-1.5">Invalid refer code</p>
-          ) : (
-            <p className="text-[10px] text-slate-400 font-bold ml-1 mt-1.5 uppercase tracking-wider">Leave blank if you don't have a code</p>
-          )}
+            <p className="text-xs text-red-500 font-bold ml-4 mt-1.5">Invalid refer code</p>
+          ) : null}
         </div>
 
-        <button
-          type="submit"
-          disabled={isLoading}
-          className="w-full flex items-center justify-center gap-3 bg-brand-600 hover:bg-brand-700 hover:-translate-y-0.5 active:scale-95 text-white py-4 px-6 rounded-2xl font-bold text-lg shadow-xl shadow-brand-200/50 transition-all disabled:opacity-70 mt-2"
-        >
-          <UserPlus className="w-6 h-6" />
-          {isLoading ? 'CREATING ACCOUNT...' : 'CREATE ACCOUNT'}
-        </button>
+        <div className="flex justify-center pt-2">
+          <button
+            type="submit"
+            disabled={isLoading || usernameStatus === 'taken'}
+            className="w-[180px] flex items-center justify-center bg-[#087b7a] hover:bg-[#065f5e] text-white py-3 rounded-full font-bold tracking-wide shadow-md hover:-translate-y-0.5 active:translate-y-0 transition-all disabled:opacity-70"
+          >
+            {isLoading ? 'SIGNING UP...' : 'SIGN UP'}
+          </button>
+        </div>
       </form>
 
-      <div className="flex items-center gap-3 my-5">
-        <div className="flex-1 h-px bg-slate-200" />
-        <span className="text-xs text-slate-400 font-bold tracking-widest uppercase">or</span>
-        <div className="flex-1 h-px bg-slate-200" />
+      <div className="text-center my-6">
+        <span className="text-xs text-slate-400 font-medium">Or Connect Using</span>
       </div>
 
-      {/* Google Button */}
       <GoogleButton onSuccess={onRegisterSuccess} />
 
-      <div className="mt-6 text-center">
-        <p className="text-slate-600">
+      <div className="mt-8 text-center">
+        <p className="text-slate-500 text-xs font-medium">
           Already have an account?{' '}
           <button
             type="button"
             onClick={onToggleForm}
-            className="text-brand-600 font-semibold hover:text-brand-700 focus:outline-none focus:underline"
+            className="text-[#087b7a] font-bold hover:underline ml-1 uppercase"
           >
-            Log in now
+            LOG IN NOW
           </button>
+        </p>
+      </div>
+
+      <div className="mt-6 text-center">
+        <p className="text-[10px] text-slate-500 font-medium leading-relaxed">
+          By continuing, you agree to our <br/>
+          <a href="#" className="text-[#087b7a] font-bold hover:underline">Terms of Service</a> and <a href="#" className="text-[#087b7a] font-bold hover:underline">Privacy Policy</a>
         </p>
       </div>
     </div>

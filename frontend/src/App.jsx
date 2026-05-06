@@ -19,6 +19,7 @@ import NotificationPage from './components/NotificationPage';
 import PaymentSuccess from './components/PaymentSuccess';
 import SettingsPage from './components/SettingsPage';
 import SupportPage from './components/SupportPage';
+import SplashScreen from './components/SplashScreen';
 import { API_BASE } from './config';
 
 import { AdMob } from '@capacitor-community/admob';
@@ -26,6 +27,7 @@ import { App as CapacitorApp } from '@capacitor/app';
 import { AdMobService } from './utils/admob';
 
 function App() {
+  const [showSplash, setShowSplash] = useState(true);
   const [isLogin, setIsLogin] = useState(true);
   const [isAuthenticated, setIsAuthenticated] = useState(() => !!localStorage.getItem('token'));
   const [activeTab, setActiveTab] = useState('Home');
@@ -97,6 +99,10 @@ function App() {
     setActiveTab('Checkout');
   };
 
+  if (showSplash) {
+    return <SplashScreen onFinish={() => setShowSplash(false)} />;
+  }
+
   if (isAuthenticated) {
     return (
       <div className="min-h-screen bg-slate-100/50 dark:bg-slate-950 transition-colors duration-300">
@@ -145,7 +151,6 @@ function App() {
       </div>
     );
   }
-
 
   return (
     <AuthLayout>

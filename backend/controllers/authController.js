@@ -36,13 +36,21 @@ const generateToken = (id) => {
 
 // Register User
 exports.registerUser = async (req, res) => {
-  const { name, phoneOrEmail, password, referCode, country } = req.body;
+  const { name, phoneOrEmail, password, referCode, country, username } = req.body;
 
   try {
     const userExists = await User.findOne({ phoneOrEmail });
 
     if (userExists) {
       return res.status(400).json({ message: 'User already exists' });
+    }
+
+    // Check if username (referralCode) already exists
+    if (username) {
+      const usernameExists = await User.findOne({ referralCode: username.toUpperCase() });
+      if (usernameExists) {
+        return res.status(400).json({ message: 'Username is already taken' });
+      }
     }
 
     // Hash password
@@ -55,6 +63,7 @@ exports.registerUser = async (req, res) => {
       phoneOrEmail,
       password: hashedPassword,
       country: country || '',
+      ...(username && { referralCode: username.toUpperCase() }),
     });
 
     if (user) {
