@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 
 const Settings = ({ ADMIN_API, authHeaders, onLogout }) => {
-  const [email, setEmail] = useState('admin@zenvio.com');
+  const [email, setEmail] = useState('admin@zenivio.com');
   const [currentPass, setCurrentPass] = useState('');
   const [newPass, setNewPass] = useState('');
   const [confirmPass, setConfirmPass] = useState('');
@@ -92,7 +92,7 @@ const Settings = ({ ADMIN_API, authHeaders, onLogout }) => {
 
   const infoRows = [
     { label: 'API Base URL', value: ADMIN_API.replace('/api/admin', ''), mono: true },
-    { label: 'Admin Email', value: 'admin@zenvio.com', mono: false },
+    { label: 'Admin Email', value: 'admin@zenivio.com', mono: false },
     { label: 'JWT Expires', value: '7 days', mono: false },
     { label: 'Referral Bonus', value: '৳60 per side', mono: false },
     { label: 'Coin Rate', value: '1000 pts = ৳50', mono: false },
@@ -306,7 +306,7 @@ const Settings = ({ ADMIN_API, authHeaders, onLogout }) => {
           <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white font-black text-2xl shadow-lg">A</div>
           <div>
             <div className="text-white font-black text-base">Admin</div>
-            <div className="text-slate-400 text-sm">admin@zenvio.com</div>
+            <div className="text-slate-400 text-sm">admin@zenivio.com</div>
             <div className="mt-1">
               <span className="text-[10px] font-bold text-indigo-400 bg-indigo-500/10 px-2 py-0.5 rounded-full">SUPER ADMIN</span>
             </div>

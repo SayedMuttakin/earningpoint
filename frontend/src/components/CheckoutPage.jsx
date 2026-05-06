@@ -232,7 +232,7 @@ const CheckoutPage = ({ product, onBack, onSuccess }) => {
                 </div>
                 <div className="flex-1">
                   <span className="block font-bold text-slate-900">Earning Balance</span>
-                  <span className="block text-xs text-brand-600 font-medium mt-0.5">Use your Zenvio wallet</span>
+                  <span className="block text-xs text-brand-600 font-medium mt-0.5">Use your Zenivio wallet</span>
                 </div>
                 <Wallet className="w-6 h-6 text-slate-400" />
               </label>

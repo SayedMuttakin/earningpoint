@@ -68,7 +68,7 @@ const CartPage = ({ onBuyNow }) => {
           {/* Header */}
           <div className="text-center mb-8 relative">
             <div className="flex items-center justify-center gap-2">
-              <h1 className="text-2xl sm:text-3xl font-black text-slate-900 mb-2">Zenvio Store</h1>
+              <h1 className="text-2xl sm:text-3xl font-black text-slate-900 mb-2">Zenivio Store</h1>
             </div>
           <p className="text-sm sm:text-base text-slate-500 max-w-lg mx-auto">
             Purchase exclusive memberships, tools, and merchandise directly using your earning balance or cash on delivery.

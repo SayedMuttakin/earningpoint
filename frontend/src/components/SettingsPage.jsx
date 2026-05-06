@@ -271,7 +271,7 @@ const SettingsPage = ({
         </div>
 
         <div className="mt-12 text-center">
-          <p className="text-sm text-slate-400 dark:text-slate-500 font-medium">Zenvio v2.1.0 • Built with ❤️</p>
+          <p className="text-sm text-slate-400 dark:text-slate-500 font-medium">Zenivio v2.1.0 • Built with ❤️</p>
         </div>
         </div>
       </div>

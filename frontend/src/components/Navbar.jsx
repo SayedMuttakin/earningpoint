@@ -49,10 +49,10 @@ const Navbar = ({ onLogout, activeTab, setActiveTab }) => {
             {/* Left Side: Logo & Brand */}
             <div className="flex items-center gap-3 cursor-pointer" onClick={() => setActiveTab && setActiveTab('Home')}>
               <div className="w-10 h-10 flex items-center justify-center">
-                 <img src="/zenvio-logo.png" alt="Zenvio Logo" className="w-full h-full object-contain" />
+                 <img src="/zenivio-logo.png" alt="Zenivio Logo" className="w-full h-full object-contain" />
               </div>
               <span className="text-2xl font-black bg-gradient-to-r from-brand-500 to-brand-700 bg-clip-text text-transparent transform hover:scale-105 transition-transform duration-300">
-                Zenvio
+                Zenivio
               </span>
             </div>
 

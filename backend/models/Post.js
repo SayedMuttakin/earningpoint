@@ -15,7 +15,7 @@ const PostSchema = new mongoose.Schema({
   },
   authorName: {
     type: String,
-    default: 'Zenvio',
+    default: 'Zenivio',
   },
   isVerified: {
     type: Boolean,

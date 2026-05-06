@@ -29,7 +29,7 @@ exports.createPost = async (req, res) => {
       content,
       title: title || null,
       image: image || null,
-      authorName: authorName || 'Zenvio',
+      authorName: authorName || 'Zenivio',
       isVerified: isVerified !== undefined ? isVerified : true
     });
 
@@ -40,7 +40,7 @@ exports.createPost = async (req, res) => {
         createNotification(
           user._id, 
           'New Post Updated! 📢', 
-          `${authorName || 'Zenvio'} has shared a new update. Check it out now!`, 
+          `${authorName || 'Zenivio'} has shared a new update. Check it out now!`, 
           'post'
         )
       );

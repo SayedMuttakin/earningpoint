@@ -44,7 +44,7 @@ const AdminLogin = ({ onLogin }) => {
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
             </svg>
           </div>
-          <h1 className="text-2xl font-black text-white tracking-tight">Zenvio Admin</h1>
+          <h1 className="text-2xl font-black text-white tracking-tight">Zenivio Admin</h1>
           <p className="text-slate-500 text-sm mt-1 font-medium">Management Dashboard</p>
         </div>
 
@@ -68,7 +68,7 @@ const AdminLogin = ({ onLogin }) => {
                 type="email"
                 value={email}
                 onChange={e => setEmail(e.target.value)}
-                placeholder="admin@zenvio.com"
+                placeholder="admin@zenivio.com"
                 required
                 className="w-full bg-[#1E293B] border border-slate-700 focus:border-indigo-500 rounded-xl px-4 py-3 text-white placeholder-slate-600 font-medium text-sm outline-none transition-colors"
               />
@@ -115,7 +115,7 @@ const AdminLogin = ({ onLogin }) => {
         </div>
 
         <p className="text-center text-slate-600 text-xs mt-6 font-medium">
-          Zenvio Admin Panel • Restricted Access
+          Zenivio Admin Panel • Restricted Access
         </p>
       </div>
     </div>

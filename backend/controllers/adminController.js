@@ -13,7 +13,7 @@ const { createNotification } = require('./notificationController');
 // ─── Admin Login ──────────────────────────────────────────────────────────────
 exports.adminLogin = async (req, res) => {
   const { email, password } = req.body;
-  const ADMIN_EMAIL = process.env.ADMIN_EMAIL || 'admin@zenvio.com';
+  const ADMIN_EMAIL = process.env.ADMIN_EMAIL || 'admin@zenivio.com';
   const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'Admin@12345';
 
   if (email !== ADMIN_EMAIL || password !== ADMIN_PASSWORD) {

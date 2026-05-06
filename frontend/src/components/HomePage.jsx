@@ -102,15 +102,15 @@ const PostCard = ({ post }) => {
       <div className="p-4 flex items-center gap-2">
         <div className="w-9 h-9 rounded-full overflow-hidden flex-shrink-0 bg-white border border-slate-100 shadow-sm p-[1.5px]">
           <img 
-            src="/zenvio-logo.png" 
-            alt="Zenvio" 
+            src="/zenivio-logo.png" 
+            alt="Zenivio" 
             className="w-full h-full object-contain"
           />
         </div>
 
         <div className="flex flex-col sm:flex-row sm:items-center gap-0 sm:gap-2">
           <div className="flex items-center gap-1.5">
-            <span className="font-bold text-slate-900 text-[16px] tracking-tight">{post.authorName || 'Zenvio'}</span>
+            <span className="font-bold text-slate-900 text-[16px] tracking-tight">{post.authorName || 'Zenivio'}</span>
             {post.isVerified !== false && (
               <VerifiedBadge />
             )}

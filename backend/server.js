@@ -70,7 +70,7 @@ const startServer = async () => {
 
     // Basic Route
     app.get('/', (req, res) => {
-      res.send('Zenvio API is running...');
+      res.send('Zenivio API is running...');
     });
 
     const PORT = process.env.PORT || 5001;

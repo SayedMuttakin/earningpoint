@@ -34,7 +34,7 @@ const AuthLayout = ({ children, isLogin }) => {
           </div>
 
           <div className="z-10 relative">
-            <p className="text-sm text-brand-200">© 2026 Zenvio. All rights reserved.</p>
+            <p className="text-sm text-brand-200">© 2026 Zenivio. All rights reserved.</p>
           </div>
 
           {/* Decorative Blob */}

@@ -238,7 +238,7 @@ const NotificationPage = ({ onBack }) => {
         <div className="mt-16 text-center pb-12">
           <div className="w-16 h-1 w-16 bg-slate-100 dark:bg-slate-800 rounded-full mx-auto mb-6" />
           <p className="text-[11px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-[0.3em]">
-             Zenvio Notifications Center
+             Zenivio Notifications Center
           </p>
         </div>
         </div>

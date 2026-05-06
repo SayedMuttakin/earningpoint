@@ -6,7 +6,7 @@ const Posts = ({ authHeaders, ADMIN_API }) => {
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [isAdding, setIsAdding] = useState(false);
-  const [newPost, setNewPost] = useState({ content: '', title: '', image: null, authorName: 'Zenvio', isVerified: true });
+  const [newPost, setNewPost] = useState({ content: '', title: '', image: null, authorName: 'Zenivio', isVerified: true });
   const [imagePreview, setImagePreview] = useState(null);
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(null);
@@ -93,7 +93,7 @@ const Posts = ({ authHeaders, ADMIN_API }) => {
 
       if (res.ok) {
         setSuccess('Post published successfully!');
-        setNewPost({ content: '', title: '', image: null, authorName: 'Zenvio', isVerified: true });
+        setNewPost({ content: '', title: '', image: null, authorName: 'Zenivio', isVerified: true });
         setImagePreview(null);
         setIsAdding(false);
         fetchPosts();

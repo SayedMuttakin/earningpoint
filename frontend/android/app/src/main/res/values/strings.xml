@@ -1,7 +1,7 @@
 <?xml version='1.0' encoding='utf-8'?>
 <resources>
-    <string name="app_name">Zenvio</string>
-    <string name="title_activity_main">Zenvio</string>
+    <string name="app_name">Zenivio</string>
+    <string name="title_activity_main">Zenivio</string>
     <string name="package_name">app.earningpoint</string>
     <string name="custom_url_scheme">app.earningpoint</string>
     <!-- Web/Server OAuth 2.0 Client ID (used by backend to verify tokens) -->

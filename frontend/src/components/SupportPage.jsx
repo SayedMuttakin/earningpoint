@@ -111,7 +111,7 @@ const SupportPage = ({ onBack }) => {
     
     setIsSubmitting(true);
     setConnectionError(false);
-    socket.emit('request_support', { name, email: 'user@zenvio.com', userId: null });
+    socket.emit('request_support', { name, email: 'user@zenivio.com', userId: null });
 
     // Timeout: if no response in 10s, show error
     submitTimeoutRef.current = setTimeout(() => {
@@ -158,7 +158,7 @@ const SupportPage = ({ onBack }) => {
         <div>
           <h1 className="text-xl font-black text-slate-800 dark:text-white flex items-center gap-2">
             <div className="flex items-center gap-1">
-              Zenvio Team Support
+              Zenivio Team Support
               <VerifiedBadge iconClassName="w-[18px] h-[18px] fill-blue-500 text-white flex-shrink-0 mt-0.5" />
             </div>
           </h1>
