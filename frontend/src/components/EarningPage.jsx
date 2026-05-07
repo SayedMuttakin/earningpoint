@@ -2681,7 +2681,7 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
             >
               <Shield className={`w-4 h-4 sm:w-5 sm:h-5 ${isPremium ? "text-white" : "text-purple-500"}`} strokeWidth={3} />
               <span className="text-sm sm:text-base font-black uppercase tracking-tight">
-                Get IP
+                Get VPN
               </span>
             </button>
             <button
@@ -3362,7 +3362,7 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
             >
               <ArrowLeft className="w-6 h-6" />
             </button>
-            <h2 className="text-[#FACC15] font-bold ml-1 text-lg tracking-wide flex-1">Get IP</h2>
+            <h2 className="text-[#FACC15] font-bold ml-1 text-lg tracking-wide flex-1">Get VPN</h2>
           </div>
 
           <div className="flex-1 overflow-y-auto px-5 pt-6 pb-32 scrollbar-hide flex flex-col relative z-10">
@@ -3371,9 +3371,9 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
              {isPremium && ipStep === 1 ? (
                <div className="flex flex-col items-center justify-center pt-6">
                   <Crown className="w-16 h-16 text-[#FACC15] fill-[#FACC15] mb-4 drop-shadow-[0_0_15px_rgba(250,204,21,0.4)]" />
-                  <h2 className="text-2xl font-black text-white mb-2 tracking-tight">Active IP</h2>
+                  <h2 className="text-2xl font-black text-white mb-2 tracking-tight">Active VPN</h2>
                   <p className="text-slate-400 text-sm mb-6 text-center">
-                     You currently have an active premium IP.
+                     You currently have an active premium VPN.
                   </p>
                   
                   <div className="flex gap-4 p-5 bg-[#151A23] rounded-2xl border border-white/5 text-center w-full mb-8 shadow-xl">
@@ -3404,9 +3404,9 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
              {(!isPremium && ipStep === 1) || (isPremium && ipStep === 2) ? (
                 <div className="flex flex-col items-center">
                    <Crown className="w-12 h-12 text-[#FACC15] fill-[#FACC15] mb-3 drop-shadow-[0_0_15px_rgba(250,204,21,0.4)]" />
-                   <h2 className="text-2xl font-black text-white mb-1 tracking-tight">Get IP</h2>
+                   <h2 className="text-2xl font-black text-white mb-1 tracking-tight">Get VPN</h2>
                    <p className="text-slate-400 text-xs mb-4 text-center px-4 leading-relaxed">
-                      Upgrade to Premium IP to enjoy more<br/>features
+                      Upgrade to Premium VPN to enjoy more<br/>features
                    </p>
                    
                    <div className="w-full space-y-3 mb-4 px-2 max-w-[280px]">
@@ -3474,7 +3474,7 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
                          onClick={() => setIpStep(isPremium ? 3 : 2)}
                          className="w-full py-4 rounded-xl bg-gradient-to-r from-[#FACC15] to-[#EAB308] text-slate-900 font-black shadow-[0_5px_20px_rgba(250,204,21,0.3)] active:scale-95 transition-transform disabled:opacity-50 disabled:shadow-none tracking-wider text-sm"
                       >
-                         GET IP NOW
+                         GET VPN NOW
                       </button>
                    </div>
                 </div>
