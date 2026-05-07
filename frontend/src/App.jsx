@@ -20,6 +20,7 @@ import PaymentSuccess from './components/PaymentSuccess';
 import SettingsPage from './components/SettingsPage';
 import SupportPage from './components/SupportPage';
 import SplashScreen from './components/SplashScreen';
+import OnboardingScreen from './components/OnboardingScreen';
 import { API_BASE } from './config';
 
 import { AdMob } from '@capacitor-community/admob';
@@ -28,6 +29,7 @@ import { AdMobService } from './utils/admob';
 
 function App() {
   const [showSplash, setShowSplash] = useState(true);
+  const [showOnboarding, setShowOnboarding] = useState(() => !localStorage.getItem('hasSeenOnboarding'));
   const [isLogin, setIsLogin] = useState(true);
   const [isAuthenticated, setIsAuthenticated] = useState(() => !!localStorage.getItem('token'));
   const [activeTab, setActiveTab] = useState('Home');
@@ -50,9 +52,9 @@ function App() {
     initAdMob();
   }, []);
 
-  // Show an interstitial ad, then run the callback (back navigation)
+  // Back navigation — directly navigate without showing ads
   const showBackAd = (callback) => {
-    AdMobService.showInterstitial(callback);
+    if (callback) callback();
   };
 
   // Apply/remove dark class on <html>
@@ -101,6 +103,17 @@ function App() {
 
   if (showSplash) {
     return <SplashScreen onFinish={() => setShowSplash(false)} />;
+  }
+
+  if (showOnboarding) {
+    return (
+      <OnboardingScreen 
+        onComplete={() => {
+          localStorage.setItem('hasSeenOnboarding', 'true');
+          setShowOnboarding(false);
+        }} 
+      />
+    );
   }
 
   if (isAuthenticated) {

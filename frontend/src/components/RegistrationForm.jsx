@@ -230,6 +230,14 @@ const RegistrationForm = ({ onToggleForm, onRegisterSuccess }) => {
       setError('Username is already taken. Please choose another one.');
       return;
     }
+    
+    // Strong password validation
+    const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&#])[A-Za-z\d@$!%*?&#]{8,}$/;
+    if (!passwordRegex.test(formData.password)) {
+      setError('Password must be at least 8 characters and include uppercase, lowercase, number, and special character.');
+      return;
+    }
+
     if (formData.password !== formData.confirmPassword) {
       setError('Passwords do not match.');
       return;
@@ -297,6 +305,7 @@ const RegistrationForm = ({ onToggleForm, onRegisterSuccess }) => {
               name="name"
               type="text"
               required
+              autoComplete="name"
               onFocus={() => setActiveField('name')}
               onBlur={() => setActiveField('')}
               className={`pl-12 pr-4 block w-full border-2 rounded-full py-3 bg-white outline-none transition-all duration-300 text-sm font-medium text-slate-700 ${activeField === 'name' ? 'border-[#087b7a]' : 'border-slate-200'}`}
@@ -317,6 +326,7 @@ const RegistrationForm = ({ onToggleForm, onRegisterSuccess }) => {
               name="username"
               type="text"
               required
+              autoComplete="username"
               onFocus={() => setActiveField('username')}
               onBlur={() => setActiveField('')}
               className={`pl-12 pr-4 block w-full border-2 rounded-full py-3 bg-white outline-none transition-all duration-300 text-sm font-medium text-slate-700 ${activeField === 'username' ? 'border-[#087b7a]' : 'border-slate-200'}`}
@@ -344,6 +354,7 @@ const RegistrationForm = ({ onToggleForm, onRegisterSuccess }) => {
               name="phoneOrEmail"
               type="text"
               required
+              autoComplete="email"
               onFocus={() => setActiveField('email')}
               onBlur={() => setActiveField('')}
               className={`pl-12 pr-4 block w-full border-2 rounded-full py-3 bg-white outline-none transition-all duration-300 text-sm font-medium text-slate-700 ${activeField === 'email' ? 'border-[#087b7a]' : 'border-slate-200'}`}
@@ -364,6 +375,7 @@ const RegistrationForm = ({ onToggleForm, onRegisterSuccess }) => {
               name="password"
               type={showPassword ? 'text' : 'password'}
               required
+              autoComplete="new-password"
               onFocus={() => setActiveField('password')}
               onBlur={() => setActiveField('')}
               className={`pl-12 pr-12 block w-full border-2 rounded-full py-3 bg-white outline-none transition-all duration-200 text-sm font-medium text-slate-700 ${activeField === 'password' ? 'border-[#087b7a]' : 'border-slate-200'}`}
@@ -391,6 +403,7 @@ const RegistrationForm = ({ onToggleForm, onRegisterSuccess }) => {
               name="confirmPassword"
               type={showConfirmPassword ? 'text' : 'password'}
               required
+              autoComplete="new-password"
               onFocus={() => setActiveField('confirmPassword')}
               onBlur={() => setActiveField('')}
               className={`pl-12 pr-12 block w-full border-2 rounded-full py-3 bg-white outline-none transition-all duration-200 text-sm font-medium text-slate-700 ${activeField === 'confirmPassword' ? 'border-[#087b7a]' : 'border-slate-200'}`}

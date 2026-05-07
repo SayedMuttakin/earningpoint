@@ -198,6 +198,7 @@ const LoginForm = ({ onToggleForm, onLoginSuccess }) => {
               name="phoneOrEmail"
               type="text"
               required
+              autoComplete="username"
               onFocus={() => setActiveField('email')}
               onBlur={() => setActiveField('')}
               className="pl-12 pr-4 block w-full border-2 rounded-full py-3 bg-white outline-none transition-all duration-300 text-sm font-medium text-slate-700 focus:border-[#087b7a] border-[#087b7a]"
@@ -218,6 +219,7 @@ const LoginForm = ({ onToggleForm, onLoginSuccess }) => {
               name="password"
               type={showPassword ? 'text' : 'password'}
               required
+              autoComplete="current-password"
               onFocus={() => setActiveField('password')}
               onBlur={() => setActiveField('')}
               className={`pl-12 pr-12 block w-full border-2 rounded-full py-3 bg-white outline-none transition-all duration-200 text-sm font-medium text-slate-700 ${activeField === 'password' ? 'border-[#087b7a]' : 'border-slate-200'}`}
