@@ -109,16 +109,10 @@ const MultiAdViewPage = ({ config, onClose, onCoinsEarned }) => {
     }
   };
 
-  // Back button — plays interstitial first
+  // Back button — navigate directly without showing an ad
   const handleBack = () => {
-    if (isReturning || isAdLoading.current) return;
-    setIsReturning(true);
-    isAdLoading.current = true;
-    AdMobService.showInterstitial(() => {
-      isAdLoading.current = false;
-      setIsReturning(false);
-      if (onClose) onClose();
-    });
+    if (isReturning) return;
+    if (onClose) onClose();
   };
 
   const watchedCount = watchedSlots.filter(Boolean).length;
