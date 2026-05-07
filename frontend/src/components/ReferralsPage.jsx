@@ -136,7 +136,7 @@ const ReferralsPage = ({ onBack, globalSettings }) => {
 
               <div className="bg-slate-50 border border-slate-200 rounded-2xl p-4 sm:p-6 relative z-10 mb-4 sm:mb-6">
                 <span className="text-[10px] sm:text-xs font-bold text-slate-400 uppercase tracking-wider mb-2 block">Your Unique Referral Code</span>
-                <div className="flex items-center justify-between bg-white border border-slate-200 rounded-xl p-1.5 sm:p-2 pl-4 sm:pl-6 shadow-sm">
+                <div className="flex items-center justify-between bg-white border border-slate-200 rounded-xl p-1.5 sm:p-2 pl-4 sm:pl-6 shadow-sm mb-2">
                   <span className="font-mono text-base sm:text-2xl font-bold text-slate-800 tracking-normal sm:tracking-wider truncate">
                     {referralData.referralCode}
                   </span>
@@ -147,6 +147,7 @@ const ReferralsPage = ({ onBack, globalSettings }) => {
                     {copied ? <Check className="w-4 h-4 sm:w-5 sm:h-5" /> : <Copy className="w-4 h-4 sm:w-5 sm:h-5" />}
                   </button>
                 </div>
+                <p className="text-[11px] text-slate-500 font-medium italic">Note: Your username is your unique referral code.</p>
               </div>
 
               <button 
