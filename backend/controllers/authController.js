@@ -13,7 +13,7 @@ exports.getReferrerName = async (req, res) => {
     if (!code) {
       return res.status(400).json({ message: 'Referral code is required' });
     }
-    const referrer = await User.findOne({ referralCode: code.toUpperCase() }).select('name phoneOrEmail');
+    const referrer = await User.findOne({ referralCode: code.trim().toUpperCase() }).select('name phoneOrEmail');
     if (!referrer) {
       return res.status(404).json({ message: 'Referrer not found' });
     }
@@ -39,31 +39,38 @@ exports.registerUser = async (req, res) => {
   const { name, phoneOrEmail, password, referCode, country, username } = req.body;
 
   try {
-    const userExists = await User.findOne({ phoneOrEmail });
+    // Username is required and must be 3-20 alphanumeric/underscore characters
+    if (!username || !username.trim()) {
+      return res.status(400).json({ message: 'Username is required' });
+    }
+    const usernameClean = username.trim();
+    if (!/^[a-zA-Z0-9_]{3,20}$/.test(usernameClean)) {
+      return res.status(400).json({ message: 'Username must be 3-20 characters (letters, numbers, underscore only)' });
+    }
 
+    const userExists = await User.findOne({ phoneOrEmail });
     if (userExists) {
       return res.status(400).json({ message: 'User already exists' });
     }
 
-    // Check if username (referralCode) already exists
-    if (username) {
-      const usernameExists = await User.findOne({ referralCode: username.toUpperCase() });
-      if (usernameExists) {
-        return res.status(400).json({ message: 'Username is already taken' });
-      }
+    // Username becomes the referral code (uppercase)
+    const referralCode = usernameClean.toUpperCase();
+    const usernameExists = await User.findOne({ referralCode });
+    if (usernameExists) {
+      return res.status(400).json({ message: 'Username is already taken. Please choose another.' });
     }
 
     // Hash password
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt);
 
-    // Create User first
+    // Create User — referralCode = username (uppercase)
     const user = await User.create({
       name,
       phoneOrEmail,
       password: hashedPassword,
       country: country || '',
-      ...(username && { referralCode: username.toUpperCase() }),
+      referralCode,
     });
 
     if (user) {

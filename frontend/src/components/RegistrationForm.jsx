@@ -184,6 +184,11 @@ const RegistrationForm = ({ onToggleForm, onRegisterSuccess }) => {
         setUsernameStatus(null);
         return;
       }
+      // Validate format first
+      if (!/^[a-zA-Z0-9_]{3,20}$/.test(formData.username)) {
+        setUsernameStatus('invalid');
+        return;
+      }
       setIsCheckingUsername(true);
       try {
         const response = await fetch(`${API_BASE}/api/auth/referrer/${formData.username}`);
@@ -226,6 +231,14 @@ const RegistrationForm = ({ onToggleForm, onRegisterSuccess }) => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (!formData.username || !formData.username.trim()) {
+      setError('Username is required.');
+      return;
+    }
+    if (!/^[a-zA-Z0-9_]{3,20}$/.test(formData.username.trim())) {
+      setError('Username must be 3-20 characters (letters, numbers, underscore only).');
+      return;
+    }
     if (usernameStatus === 'taken') {
       setError('Username is already taken. Please choose another one.');
       return;
@@ -330,17 +343,19 @@ const RegistrationForm = ({ onToggleForm, onRegisterSuccess }) => {
               onFocus={() => setActiveField('username')}
               onBlur={() => setActiveField('')}
               className={`pl-12 pr-4 block w-full border-2 rounded-full py-3 bg-white outline-none transition-all duration-300 text-sm font-medium text-slate-700 ${activeField === 'username' ? 'border-[#087b7a]' : 'border-slate-200'}`}
-              placeholder="Username (Referral Code)"
+              placeholder="Username (becomes your Referral Code)"
               value={formData.username}
               onChange={handleChange}
             />
           </div>
           {isCheckingUsername ? (
             <p className="text-xs text-[#087b7a] font-bold ml-4 mt-1.5 animate-pulse">Checking availability...</p>
+          ) : formData.username && usernameStatus === 'invalid' ? (
+            <p className="text-xs text-red-500 font-bold ml-4 mt-1.5">3-20 characters, letters/numbers/underscore only</p>
           ) : formData.username && usernameStatus === 'taken' ? (
-            <p className="text-xs text-red-500 font-bold ml-4 mt-1.5">Username is already taken</p>
+            <p className="text-xs text-red-500 font-bold ml-4 mt-1.5">Username is already taken ✗</p>
           ) : formData.username && usernameStatus === 'available' ? (
-            <p className="text-xs text-[#087b7a] font-bold ml-4 mt-1.5">Username is available!</p>
+            <p className="text-xs text-[#087b7a] font-bold ml-4 mt-1.5">✓ Username available! This will be your referral code.</p>
           ) : null}
         </div>
 
