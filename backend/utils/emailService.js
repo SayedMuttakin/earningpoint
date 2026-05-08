@@ -1,7 +1,7 @@
 const nodemailer = require('nodemailer');
 
 const createTransporter = () => {
-  // Supports both Gmail (service: 'gmail') and custom SMTP (host/port)
+  // Gmail support
   if (process.env.EMAIL_SERVICE === 'gmail') {
     return nodemailer.createTransport({
       service: 'gmail',
@@ -12,18 +12,29 @@ const createTransporter = () => {
     });
   }
 
-  // Custom SMTP (cPanel, DirectAdmin, Hostinger, etc.)
+  const smtpHost = process.env.SMTP_HOST || 'localhost';
+  const smtpPort = parseInt(process.env.SMTP_PORT) || 25;
+
+  // Localhost Postfix — no auth needed (same server)
+  if (smtpHost === 'localhost' || smtpHost === '127.0.0.1') {
+    return nodemailer.createTransport({
+      host: 'localhost',
+      port: smtpPort,
+      secure: false,
+      tls: { rejectUnauthorized: false },
+    });
+  }
+
+  // External custom SMTP (with auth)
   return nodemailer.createTransport({
-    host: process.env.SMTP_HOST,
-    port: parseInt(process.env.SMTP_PORT) || 465,
-    secure: parseInt(process.env.SMTP_PORT) === 465, // true for 465, false for 587
+    host: smtpHost,
+    port: smtpPort,
+    secure: smtpPort === 465,
     auth: {
       user: process.env.EMAIL_USER,
       pass: process.env.EMAIL_PASS,
     },
-    tls: {
-      rejectUnauthorized: false, // allows self-signed certificates
-    },
+    tls: { rejectUnauthorized: false },
   });
 };
 
