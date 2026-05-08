@@ -510,6 +510,10 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
   const [transactionId, setTransactionId] = React.useState('');
   const [ipSubmitting, setIpSubmitting] = React.useState(false);
   const [showUpgradeOptions, setShowUpgradeOptions] = React.useState(false);
+  const [vpnOrderSuccess, setVpnOrderSuccess] = React.useState(false);
+  const [vpnOrderDetails, setVpnOrderDetails] = React.useState(null);
+  const [showVpnActivated, setShowVpnActivated] = React.useState(false);
+  const [vpnActivatedShown, setVpnActivatedShown] = React.useState(() => localStorage.getItem('vpnActivatedShown') === 'true');
 
   // Removed duplicate timer effect — single timer is at line ~728
 
@@ -701,6 +705,15 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
     };
   }, []);
 
+  // Show VPN activated celebration when premium becomes active and user hasn't accepted yet
+  useEffect(() => {
+    if (isPremium && !vpnActivatedShown) {
+      setShowVpnActivated(true);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isPremium]);
+
+
   useEffect(() => {
     if (premiumExpiryDate) {
       const updateTimer = () => {
@@ -730,6 +743,20 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
       setTimeLeft({ days: 0, hours: 0, minutes: 0, seconds: 0 });
     }
   }, [premiumExpiryDate]);
+
+  // Reset vpnActivatedShown when a new subscription is detected (expiry date changes)
+  useEffect(() => {
+    if (premiumExpiryDate) {
+      const storedExpiry = localStorage.getItem('vpnActivatedExpiry');
+      if (storedExpiry !== premiumExpiryDate) {
+        localStorage.setItem('vpnActivatedExpiry', premiumExpiryDate);
+        localStorage.removeItem('vpnActivatedShown');
+        setVpnActivatedShown(false);
+      }
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [premiumExpiryDate]);
+
 
   // Article Timer Logic
   // FIX: articleReadingTime removed from deps to prevent scroll-to-top bug.
@@ -1278,12 +1305,25 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
   };
 
   const handlePremiumSubmit = async () => {
-    if (!selectedPackage || !selectedCountry || !paymentMethod || !transactionId) {
+    const isMobileBanking = ['bkash', 'nagad', 'rocket'].includes(paymentMethod);
+    if (!selectedPackage || !selectedCountry || !paymentMethod) {
       showToast('Please fill all required fields!', 'error');
       return;
     }
-    const pkg = ipPackages.find(p => p.id === selectedPackage);
+    if (isMobileBanking && !transactionId) {
+      showToast('Please enter the Transaction ID!', 'error');
+      return;
+    }
+    // Look up from admin settings packages first, then fallback to local
+    const adminPkg = (globalSettings.premiumIpPackages || []).find(p => p.id === selectedPackage);
+    const localPkg = ipPackages.find(p => p.id === selectedPackage);
+    const pkg = adminPkg || localPkg;
     const amount = pkg?.price || 0;
+    if (!amount) {
+      showToast('Invalid package selected. Please go back and choose again.', 'error');
+      return;
+    }
+    const packageName = adminPkg?.duration || localPkg?.name || selectedPackage;
     
     setIpSubmitting(true);
     try {
@@ -1293,27 +1333,28 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
         body: JSON.stringify({
           packageId: selectedPackage,
-          packageName: pkg?.name,
+          packageName,
           country: selectedCountry,
           paymentMethod,
-          transactionId,
+          transactionId: isMobileBanking ? transactionId : '',
           amount
         })
       });
       const data = await response.json();
       if (response.ok) {
-        showToast(data.message || 'Order submitted successfully!', 'success');
-        setShowPremiumIPView(false);
+        // Show animated success screen
+        setVpnOrderDetails({ packageName, amount, country: selectedCountry, paymentMethod });
+        setVpnOrderSuccess(true);
         setIpStep(1);
         setSelectedPackage(null);
         setSelectedCountry('');
         setPaymentMethod('');
         setTransactionId('');
       } else {
-        showToast(data.message || 'Submission failed.', 'error');
+        showToast(data.message || 'Submission failed. Please check your details.', 'error');
       }
     } catch (err) {
-      showToast('Network error.', 'error');
+      showToast('Network error. Please try again.', 'error');
     } finally {
       setIpSubmitting(false);
     }
@@ -2647,7 +2688,14 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
         <div className="bg-[#f5f3ff] dark:bg-slate-900 text-slate-800 dark:text-white px-4 py-3 sm:px-6 sm:py-4 flex justify-center items-center gap-3 sm:gap-6 border-b border-purple-100 dark:border-slate-800">
             {/* Premium IP Indicator - Compact and Larger */}
             <button
-              onClick={() => { setShowPremiumIPView(true); setIpStep(1); }}
+              onClick={() => {
+                if (isPremium && !vpnActivatedShown) {
+                  setShowVpnActivated(true);
+                } else {
+                  setShowPremiumIPView(true);
+                  setIpStep(1);
+                }
+              }}
               className={`px-5 py-2 sm:px-6 sm:py-2.5 rounded-2xl flex items-center gap-2 border-2 shadow-sm transform-gpu ${
                 isPremium 
                   ? "bg-amber-500 border-amber-600 text-white" 
@@ -3315,6 +3363,174 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
 
       </main>
 
+      {/* ══════ VPN ORDER SUCCESS OVERLAY ══════ */}
+      {vpnOrderSuccess && showPremiumIPView && createPortal(
+        <div className="fixed inset-0 z-[999999] flex flex-col items-center justify-center overflow-hidden" style={{background: 'linear-gradient(135deg, #070B14 0%, #0B101D 50%, #0A1838 100%)'}}>
+          {/* Animated background rings */}
+          <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+            <div className="w-[500px] h-[500px] rounded-full border border-[#FACC15]/5 animate-ping" style={{animationDuration:'3s'}}></div>
+            <div className="absolute w-[350px] h-[350px] rounded-full border border-[#FACC15]/10 animate-ping" style={{animationDuration:'2s',animationDelay:'0.5s'}}></div>
+            <div className="absolute w-[200px] h-[200px] rounded-full border border-[#FACC15]/20 animate-ping" style={{animationDuration:'1.5s',animationDelay:'0.2s'}}></div>
+          </div>
+          {/* Glow blob */}
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-72 h-72 bg-[#FACC15] opacity-5 blur-[100px] rounded-full pointer-events-none"></div>
+
+          <div className="relative z-10 flex flex-col items-center px-8 text-center">
+            {/* Rocket icon with glow */}
+            <div className="relative mb-8">
+              <div className="absolute inset-0 bg-[#FACC15] blur-3xl opacity-20 rounded-full scale-150"></div>
+              <div className="relative w-32 h-32 rounded-[2.5rem] bg-gradient-to-br from-[#FACC15] to-[#F59E0B] flex items-center justify-center shadow-2xl shadow-[#FACC15]/20"
+                   style={{animation: 'float 3s ease-in-out infinite'}}>
+                <svg xmlns="http://www.w3.org/2000/svg" className="w-16 h-16 text-slate-900" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                </svg>
+              </div>
+              {/* Orbiting dots */}
+              <div className="absolute -top-2 -right-2 w-5 h-5 rounded-full bg-emerald-400 shadow-lg shadow-emerald-400/50"
+                   style={{animation:'orbit 2s linear infinite'}}></div>
+              <div className="absolute -bottom-2 -left-2 w-3 h-3 rounded-full bg-blue-400 shadow-lg shadow-blue-400/50"
+                   style={{animation:'orbit 2s linear infinite',animationDelay:'-1s'}}></div>
+            </div>
+
+            <h1 className="text-3xl font-black text-white mb-2 tracking-tight leading-tight">
+              Order Submitted! 🚀
+            </h1>
+            <p className="text-[#FACC15] font-bold text-base mb-6">
+              Your VPN order is under review
+            </p>
+
+            {/* Order details card */}
+            <div className="w-full max-w-xs bg-white/5 border border-white/10 rounded-2xl p-5 mb-8 text-left space-y-3">
+              <div className="flex justify-between items-center">
+                <span className="text-slate-400 text-sm">Package</span>
+                <span className="text-white font-bold text-sm">{vpnOrderDetails?.packageName}</span>
+              </div>
+              <div className="h-px bg-white/5"></div>
+              <div className="flex justify-between items-center">
+                <span className="text-slate-400 text-sm">Country</span>
+                <span className="text-white font-bold text-sm">{vpnOrderDetails?.country}</span>
+              </div>
+              <div className="h-px bg-white/5"></div>
+              <div className="flex justify-between items-center">
+                <span className="text-slate-400 text-sm">Amount</span>
+                <span className="text-[#FACC15] font-black">৳{vpnOrderDetails?.amount}</span>
+              </div>
+              <div className="h-px bg-white/5"></div>
+              <div className="flex justify-between items-center">
+                <span className="text-slate-400 text-sm">Status</span>
+                <span className="flex items-center gap-1.5 text-amber-400 font-bold text-sm">
+                  <span className="w-2 h-2 rounded-full bg-amber-400 animate-pulse inline-block"></span>
+                  Pending Review
+                </span>
+              </div>
+            </div>
+
+            <div className="w-full max-w-xs bg-emerald-500/10 border border-emerald-500/20 rounded-2xl p-4 mb-8">
+              <p className="text-emerald-400 text-sm font-bold text-center leading-relaxed">
+                🔔 You'll receive a notification when admin approves your order and your VPN is activated!
+              </p>
+            </div>
+
+            <button
+              onClick={() => {
+                setVpnOrderSuccess(false);
+                setShowPremiumIPView(false);
+              }}
+              className="w-full max-w-xs py-4 rounded-xl bg-gradient-to-r from-[#FACC15] to-[#EAB308] text-slate-900 font-black shadow-[0_5px_20px_rgba(250,204,21,0.3)] active:scale-95 transition-transform tracking-wider text-sm"
+            >
+              GOT IT! ✓
+            </button>
+          </div>
+
+          <style>{`
+            @keyframes float { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-12px)} }
+            @keyframes orbit { 0%{transform:rotate(0deg) translateX(45px) rotate(0deg)} 100%{transform:rotate(360deg) translateX(45px) rotate(-360deg)} }
+          `}</style>
+        </div>
+      , document.body)}
+
+      {/* ══════ VPN LEVEL 1 ACTIVATED CELEBRATION OVERLAY ══════ */}
+      {showVpnActivated && createPortal(
+        <div className="fixed inset-0 z-[999999] flex flex-col items-center justify-center overflow-hidden" style={{background: 'linear-gradient(135deg, #020408 0%, #050C18 50%, #06101F 100%)'}}>
+          {/* Particle stars */}
+          {[...Array(20)].map((_,i) => (
+            <div key={i} className="absolute rounded-full bg-[#FACC15]"
+              style={{
+                width: `${Math.random()*4+2}px`, height:`${Math.random()*4+2}px`,
+                top:`${Math.random()*100}%`, left:`${Math.random()*100}%`,
+                opacity: Math.random()*0.7+0.2,
+                animation:`twinkle ${Math.random()*2+1}s ease-in-out infinite`,
+                animationDelay:`${Math.random()*2}s`
+              }}
+            />
+          ))}
+          {/* Glow core */}
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-80 h-80 bg-[#FACC15] opacity-10 blur-[120px] rounded-full"></div>
+
+          <div className="relative z-10 flex flex-col items-center px-8 text-center max-w-sm">
+            {/* Level badge */}
+            <div className="relative mb-6">
+              <div className="absolute inset-0 bg-[#FACC15] blur-[40px] opacity-30 rounded-full scale-125" style={{animation:'pulse 2s infinite'}}></div>
+              <div className="relative w-36 h-36 rounded-full bg-gradient-to-br from-[#FACC15] via-[#F59E0B] to-[#D97706] flex flex-col items-center justify-center shadow-2xl shadow-[#FACC15]/30 border-4 border-[#FACC15]/30"
+                   style={{animation:'scaleIn 0.5s cubic-bezier(0.34,1.56,0.64,1)'}}>
+                <Crown className="w-10 h-10 text-slate-900 fill-slate-900" />
+                <span className="text-slate-900 font-black text-xs mt-1 uppercase tracking-widest">Level 1</span>
+              </div>
+            </div>
+
+            <div className="mb-2" style={{animation:'slideUp 0.6s ease 0.2s both'}}>
+              <span className="text-xs font-black text-[#FACC15] uppercase tracking-[0.3em] bg-[#FACC15]/10 px-4 py-1 rounded-full border border-[#FACC15]/20">
+                🎉 Unlocked
+              </span>
+            </div>
+
+            <h1 className="text-4xl font-black text-white mb-2 tracking-tighter leading-none" style={{animation:'slideUp 0.6s ease 0.3s both'}}>
+              VPN Activated!
+            </h1>
+            <p className="text-slate-400 font-medium text-base mb-2 leading-relaxed" style={{animation:'slideUp 0.6s ease 0.4s both'}}>
+              Your Premium VPN is now active.<br/>Level 1 has been unlocked!
+            </p>
+            <p className="text-[#FACC15] font-bold text-sm mb-8" style={{animation:'slideUp 0.6s ease 0.45s both'}}>
+              Enjoy access to all global servers 🌍
+            </p>
+
+            {/* Features unlocked */}
+            <div className="w-full bg-white/5 border border-white/10 rounded-2xl p-4 mb-8 space-y-2.5 text-left" style={{animation:'slideUp 0.6s ease 0.5s both'}}>
+              {[
+                {icon:'🔒', text:'Secure encrypted connection'},
+                {icon:'🌍', text:'30+ country servers unlocked'},
+                {icon:'⚡', text:'Ultra-fast speeds'},
+                {icon:'🛡️', text:'No-log privacy protection'},
+              ].map((f,i)=>(
+                <div key={i} className="flex items-center gap-3">
+                  <span className="text-lg">{f.icon}</span>
+                  <span className="text-white/80 font-bold text-sm">{f.text}</span>
+                  <Check className="w-4 h-4 text-emerald-400 ml-auto flex-shrink-0" strokeWidth={3} />
+                </div>
+              ))}
+            </div>
+
+            <button
+              onClick={() => {
+                setShowVpnActivated(false);
+                setVpnActivatedShown(true);
+                localStorage.setItem('vpnActivatedShown', 'true');
+              }}
+              className="w-full py-5 rounded-2xl font-black text-slate-900 tracking-wider text-base active:scale-95 transition-transform shadow-[0_8px_30px_rgba(250,204,21,0.4)]"
+              style={{background:'linear-gradient(135deg,#FACC15,#EAB308)', animation:'slideUp 0.6s ease 0.6s both'}}
+            >
+              ✓ ACCEPT &amp; CONTINUE
+            </button>
+          </div>
+
+          <style>{`
+            @keyframes twinkle { 0%,100%{opacity:0.2;transform:scale(1)} 50%{opacity:1;transform:scale(1.5)} }
+            @keyframes scaleIn { from{transform:scale(0)} to{transform:scale(1)} }
+            @keyframes slideUp { from{opacity:0;transform:translateY(20px)} to{opacity:1;transform:translateY(0)} }
+          `}</style>
+        </div>
+      , document.body)}
+
       {/* ══════ PREMIUM IP VIEW OVERLAY ══════ */}
       {showPremiumIPView && createPortal(
         <div className="fixed inset-0 z-[99999] bg-gradient-to-br from-[#070B14] via-[#0B101D] to-[#0A1838] flex flex-col animate-fade-in overflow-hidden">
@@ -3597,11 +3813,17 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
                    )}
                    {((!isPremium && ipStep === 3) || (isPremium && ipStep === 4)) && (
                       <button
-                         disabled={!paymentMethod || !transactionId || ipSubmitting}
+                         disabled={!paymentMethod || (['bkash', 'nagad', 'rocket'].includes(paymentMethod) && !transactionId) || ipSubmitting}
                          onClick={handlePremiumSubmit}
                          className="w-full flex items-center justify-center py-4 rounded-xl bg-gradient-to-r from-[#FACC15] to-[#EAB308] text-slate-900 font-black shadow-[0_5px_20px_rgba(250,204,21,0.3)] active:scale-95 transition-transform disabled:opacity-50 disabled:shadow-none tracking-wider text-sm gap-2"
                       >
-                         {ipSubmitting ? <span className="animate-pulse">PROCESSING...</span> : (
+                         {ipSubmitting ? <span className="flex items-center gap-2">
+                              <svg className="animate-spin h-5 w-5 text-slate-900" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                              </svg>
+                              SUBMITTING...
+                            </span> : (
                            <>
                              CONFIRM ORDER <Check strokeWidth={3} className="w-5 h-5" />
                            </>
