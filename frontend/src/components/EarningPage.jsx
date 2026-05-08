@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { AdMobService } from '../utils/admob';
@@ -93,16 +93,16 @@ const BigAdBanner = ({ globalSettings }) => {
   const bannerId = globalSettings?.admobConfig?.bannerAdUnitId;
   if (bannerId && bannerId.trim()) {
     return (
-      <div className="w-full flex justify-center mt-2">
-        <div className="w-[320px] h-[250px] bg-slate-100 dark:bg-slate-800 flex items-center justify-center">
+      <div className="w-full mt-2">
+        <div className="w-full h-[250px] bg-slate-100 dark:bg-slate-800 flex items-center justify-center rounded-2xl">
           <p className="text-xs text-slate-400">AdMob Banner: {bannerId}</p>
         </div>
       </div>
     );
   }
   return (
-    <div className="w-full flex justify-center mt-2">
-      <div className="w-[320px] h-[250px] bg-slate-50 dark:bg-slate-800/50 border-2 border-slate-200 dark:border-slate-700 relative rounded-2xl flex flex-col items-center justify-center overflow-hidden shadow-sm">
+    <div className="w-full mt-2">
+      <div className="w-full h-[250px] bg-slate-50 dark:bg-slate-800/50 border-2 border-slate-200 dark:border-slate-700 relative rounded-2xl flex flex-col items-center justify-center overflow-hidden shadow-sm">
         {/* AdMob Branding/UI mimic */}
         <div className="absolute top-0 left-0 right-0 h-7 bg-slate-100 dark:bg-slate-800 flex items-center px-4 justify-between border-b border-slate-200 dark:border-slate-700">
           <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest flex items-center gap-1.5">
@@ -159,10 +159,10 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
 
   const [toast, setToast] = React.useState({ visible: false, message: '', type: 'success' });
   const [refreshing, setRefreshing] = React.useState(false);
-  const showToast = (message, type = 'success') => {
+  const showToast = useCallback((message, type = 'success') => {
     setToast({ visible: true, message, type });
     setTimeout(() => setToast(prev => ({ ...prev, visible: false })), 3000);
-  };
+  }, []);
 
   const [withdrawAmount, setWithdrawAmount] = React.useState('');
   const [withdrawPhone, setWithdrawPhone] = React.useState('');
@@ -247,12 +247,13 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
     }
   };
 
-  const withdrawMethods = [
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const withdrawMethods = useMemo(() => [
     { id: 'bkash', name: 'bKash', logo: 'https://freelogopng.com/images/all_img/1656234745bkash-app-logo-png.png', available: true },
     { id: 'nagad', name: 'Nagad', logo: 'https://download.logo.wine/logo/Nagad/Nagad-Logo.wine.png', available: true },
     { id: 'rocket', name: 'Rocket', logo: 'https://freelogopng.com/images/all_img/1656235199rocket-app-logo.png', available: true },
     { id: 'upay', name: 'Upay', logo: 'https://freelogopng.com/images/all_img/1656235105upay-logo.png', available: false },
-  ];
+  ], []);
 
   const [showCheckinView, setShowCheckinView] = React.useState(false);
 
@@ -307,7 +308,7 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
   const [gkQuizScore, setGkQuizScore] = React.useState(0);
 
   // Featured options shown at top (Daily Checkin, Mystery Box, Refer)
-  const mainOptions = [
+  const mainOptions = useMemo(() => [
     {
       id: 'feat-checkin',
       name: 'Daily Checkin',
@@ -332,13 +333,15 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
       color: 'from-amber-400 to-orange-500',
       action: () => { if (typeof onReferralsClick === 'function') onReferralsClick(); else if (typeof setActiveTab === 'function') setActiveTab('referrals'); }
     }
-  ];
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  ], [onReferralsClick, setActiveTab]);
 
-  const rewardOptions = [
+  const rewardOptions = useMemo(() => [
     { id: 'reward-wallet', name: 'Wallet', icon: <Wallet className="w-7 h-7" />, color: 'from-blue-500 to-indigo-600', action: () => setActiveEarningTab('wallet') },
     { id: 'reward-history', name: 'History', icon: <History className="w-7 h-7" />, color: 'from-purple-500 to-pink-600', action: () => setActiveEarningTab('history') },
     { id: 'reward-tutorial', name: 'Tutorial', icon: <BookOpen className="w-7 h-7" />, color: 'from-emerald-500 to-teal-600', action: () => setActiveEarningTab('tutorial') },
-  ];
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  ], []);
   const [gkSelected, setGkSelected] = React.useState(null);
   const [gkAnswered, setGkAnswered] = React.useState(false);
 
@@ -441,63 +444,61 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
 
   const [activePromoBannerIndex, setActivePromoBannerIndex] = React.useState(0);
   
-  const getActiveBanners = () => {
+  const activeBanners = useMemo(() => {
     const banners = globalSettings?.promoBanners?.filter(b => b.isActive && b.imageUrl) || [];
     if (banners.length > 0) return banners;
     if (globalSettings?.promoBanner?.isActive && globalSettings?.promoBanner?.imageUrl) {
       return [globalSettings.promoBanner];
     }
     return [];
-  };
-
-  const activeBanners = getActiveBanners();
+  }, [globalSettings?.promoBanners, globalSettings?.promoBanner]);
 
   const activeBannersLengthRef = React.useRef(activeBanners.length);
   activeBannersLengthRef.current = activeBanners.length;
 
   React.useEffect(() => {
+    if (activeBannersLengthRef.current <= 1) return;
     const interval = setInterval(() => {
       if (activeBannersLengthRef.current > 1) {
         setActivePromoBannerIndex(prev => {
-          // If the length shrank, ensure we don't go out of bounds
           const nextIndex = (prev + 1) % activeBannersLengthRef.current;
           return Number.isNaN(nextIndex) ? 0 : nextIndex;
         });
       }
     }, 3000);
     return () => clearInterval(interval);
-  }, []);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeBanners.length]);
 
-  const handleBannerClick = (linkUrl) => {
+  const handleBannerClick = useCallback((linkUrl) => {
     if (!linkUrl) return;
     if (linkUrl.startsWith('http')) {
       window.open(linkUrl, '_blank');
     } else {
       const tabName = linkUrl.replace('/', '');
       if (tabName && setActiveTab) {
-         // Tab names are usually capitalized: Referrals, Leaderboard, Cart
          const formattedTab = tabName.charAt(0).toUpperCase() + tabName.slice(1);
          setActiveTab(formattedTab);
       }
     }
-  };
+  }, [setActiveTab]);
 
   const [showMultiAdView, setShowMultiAdView] = React.useState(false);
   const [multiAdConfig, setMultiAdConfig] = React.useState(null);
 
-  const getMultiAdCount = (key) => {
+  const getMultiAdCount = useCallback((key) => {
     const today = new Date().toDateString();
     const stored = JSON.parse(localStorage.getItem(`multi_ad_${key}`) || '{"date":"","count":0}');
     if (stored.date !== today) return 0;
     return stored.count;
-  };
+  }, []);
 
-  const incrementMultiAdCount = (key) => {
+  const incrementMultiAdCount = useCallback((key) => {
     const today = new Date().toDateString();
     const newCount = getMultiAdCount(key) + 1;
     localStorage.setItem(`multi_ad_${key}`, JSON.stringify({ date: today, count: newCount }));
     return newCount;
-  };
+  }, [getMultiAdCount]);
 
   const [showPremiumIPView, setShowPremiumIPView] = React.useState(false);
   const [isPremium, setIsPremium] = React.useState(false);
@@ -510,30 +511,7 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
   const [ipSubmitting, setIpSubmitting] = React.useState(false);
   const [showUpgradeOptions, setShowUpgradeOptions] = React.useState(false);
 
-  React.useEffect(() => {
-    let timer;
-    if (isPremium && premiumExpiryDate) {
-      const updateTimer = () => {
-        const now = new Date().getTime();
-        const expiry = new Date(premiumExpiryDate).getTime();
-        const difference = expiry - now;
-        if (difference > 0) {
-          setTimeLeft({
-            days: Math.floor(difference / (1000 * 60 * 60 * 24)),
-            hours: Math.floor((difference / (1000 * 60 * 60)) % 24),
-            minutes: Math.floor((difference / 1000 / 60) % 60),
-            seconds: Math.floor((difference / 1000) % 60),
-          });
-        } else {
-          setIsPremium(false);
-          setTimeLeft({ days: 0, hours: 0, minutes: 0, seconds: 0 });
-        }
-      };
-      updateTimer();
-      timer = setInterval(updateTimer, 1000);
-    }
-    return () => clearInterval(timer);
-  }, [isPremium, premiumExpiryDate]);
+  // Removed duplicate timer effect — single timer is at line ~728
 
 
   const [introItem, setIntroItem] = React.useState(null);
@@ -592,7 +570,7 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
     }
   };
 
-  const handleRefresh = async () => {
+  const handleRefresh = useCallback(async () => {
     setRefreshing(true);
     try {
       await Promise.all([
@@ -612,7 +590,8 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
     } finally {
       setRefreshing(false);
     }
-  };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [showToast]);
 
   const fetchMysteryBoxStatus = async () => {
     try {
@@ -650,16 +629,13 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
     try {
       const token = localStorage.getItem('token');
       if (!token) return;
-      const videoResp = await fetch(`${API_BASE}/api/earning/video-status?type=video`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      const videoData = await videoResp.json();
+      // Fetch both in parallel for speed
+      const [videoResp, viewAdsResp] = await Promise.all([
+        fetch(`${API_BASE}/api/earning/video-status?type=video`, { headers: { Authorization: `Bearer ${token}` } }),
+        fetch(`${API_BASE}/api/earning/video-status?type=view_ads`, { headers: { Authorization: `Bearer ${token}` } }),
+      ]);
+      const [videoData, viewAdsData] = await Promise.all([videoResp.json(), viewAdsResp.json()]);
       if (videoResp.ok) setVideoStatus({ lastVideoDate: videoData.lastAd, count: videoData.count });
-
-      const viewAdsResp = await fetch(`${API_BASE}/api/earning/video-status?type=view_ads`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      const viewAdsData = await viewAdsResp.json();
       if (viewAdsResp.ok) setViewAdsStatus({ lastAdDate: viewAdsData.lastAd, count: viewAdsData.count });
     } catch (err) {
       console.error('Failed to fetch video status:', err);
@@ -685,11 +661,11 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
   const [showStatusOverlay, setShowStatusOverlay] = React.useState(false);
   const [statusData, setStatusData] = React.useState({ name: '', type: 'upcoming' });
 
-  const handleStatusClick = (name, type) => {
+  const handleStatusClick = useCallback((name, type) => {
     setStatusData({ name, type });
     setShowStatusOverlay(true);
     AdMobService.showInterstitial();
-  };
+  }, []);
 
   const fetchScratchStatus = async () => {
     try {
@@ -900,9 +876,9 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
   // This prevents React from unmounting/remounting it on every parent re-render,
   // which was causing scroll position to reset to top every second.
 
-  const goBackWithAd = (closeFn) => {
+  const goBackWithAd = useCallback((closeFn) => {
     if (closeFn) closeFn();
-  };
+  }, []);
 
   const startAd = (type) => {
     const activeType = typeof type === 'string' ? type : 'daily';
@@ -1267,19 +1243,17 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
   };
 
   React.useEffect(() => {
-    let timer;
-    if (quizTimerActive && quizTimer > 0 && !quizAnswered) {
-      timer = setInterval(() => {
-        setQuizTimer(prev => prev - 1);
-      }, 1000);
-    } else if (quizTimer === 0 && !quizAnswered) {
+    if (!quizTimerActive || quizAnswered) return;
+    if (quizTimer <= 0) {
       setQuizAnswered(true);
       setQuizTimerActive(false);
-      alert("Time is up!");
       setShowQuizView(false);
+      showToast('Time is up!', 'error');
+      return;
     }
-    return () => clearInterval(timer);
-  }, [quizTimer, quizTimerActive, quizAnswered]);
+    const timer = setTimeout(() => setQuizTimer(prev => prev - 1), 1000);
+    return () => clearTimeout(timer);
+  }, [quizTimer, quizTimerActive, quizAnswered, showToast]);
 
   const handleAdOptionClick = async (adName, adType, coins) => {
     if (isLoading) return;
@@ -1407,10 +1381,10 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
     setShowIntroScreen(true);
   };
 
-  const openMultiAdView = (config) => {
+  const openMultiAdView = useCallback((config) => {
     setMultiAdConfig(config);
     setShowMultiAdView(true);
-  };
+  }, []);
 
   const closeSectionIntro = (callback) => {
     setShowIntroScreen(false);
@@ -1440,10 +1414,11 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
     });
   };
 
-  const OptionCard = ({ item, isLarge = false, count = null, maxCount = null, skipIntro = false }) => {
+  const itemsToSkipIntro = useMemo(() => new Set(['Premium IP', 'Refer & Earn', 'Wallet', 'History', 'Tutorial', 'Invite Friends', 'Daily Quiz', 'Math Quiz', 'Binary Quiz', 'Word Quiz', 'Meta']), []);
+
+  const OptionCard = useCallback(({ item, isLarge = false, count = null, maxCount = null, skipIntro = false }) => {
     const isCompleted = count !== null && count >= maxCount;
-    const itemsToSkipIntro = ['Premium IP', 'Refer & Earn', 'Wallet', 'History', 'Tutorial', 'Invite Friends', 'Daily Quiz', 'Math Quiz', 'Binary Quiz', 'Word Quiz', 'Meta'];
-    const shouldSkip = skipIntro || itemsToSkipIntro.includes(item?.name);
+    const shouldSkip = skipIntro || itemsToSkipIntro.has(item?.name);
 
     const handleClick = () => {
       if (shouldSkip || !item.action) {
@@ -1461,9 +1436,9 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
         className="flex flex-col items-center group w-full transition-transform duration-150 active:scale-95 hover:scale-105"
         style={{ transform: 'translateZ(0)' }}
       >
-        <div className={`w-14 h-14 md:w-${isLarge ? '20' : '16'} md:h-${isLarge ? '20' : '16'} rounded-2xl bg-gradient-to-br ${item.color || 'from-blue-500 to-indigo-600'} flex items-center justify-center shadow-lg relative`}>
+        <div className={`w-14 h-14 ${isLarge ? 'md:w-20 md:h-20' : 'md:w-16 md:h-16'} rounded-2xl bg-gradient-to-br ${item.color || 'from-blue-500 to-indigo-600'} flex items-center justify-center shadow-lg relative`}>
           {typeof item.icon === 'string' ? (
-            <img src={item.icon} alt={item.name} className="w-7 h-7 md:w-10 md:h-10 object-contain drop-shadow-md" />
+            <img src={item.icon} alt={item.name} className="w-7 h-7 md:w-10 md:h-10 object-contain drop-shadow-md" loading="lazy" />
           ) : React.isValidElement(item.icon) ? (
             <div className="text-white drop-shadow-md flex items-center justify-center">
               {React.cloneElement(item.icon, { 
@@ -1472,7 +1447,7 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
               })}
             </div>
           ) : item.logo ? (
-            <img src={item.logo} alt={item.name} className="w-8 h-8 md:w-11 md:h-11 object-contain drop-shadow-md" />
+            <img src={item.logo} alt={item.name} className="w-8 h-8 md:w-11 md:h-11 object-contain drop-shadow-md" loading="lazy" />
           ) : (
             <div className="w-8 h-8 md:w-10 md:h-10 bg-white/20 rounded-lg" />
           )}
@@ -1495,7 +1470,7 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
         )}
       </button>
     );
-  };
+  }, [itemsToSkipIntro]);
 
   const OptionIntroScreen = () => {
     const [moreOpen, setMoreOpen] = React.useState(false);
@@ -1715,16 +1690,16 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
   };
 
 
-  const getLevelInfo = (pts) => {
+  const levelInfo = useMemo(() => {
+    const pts = lifetimeCoins;
     if (pts < 1500) return { level: 1, current: pts, target: 1500, label: 'Level 1' };
     if (pts < 3500) return { level: 2, prev: 1500, current: pts, target: 3500, label: 'Level 2' };
     if (pts < 6000) return { level: 3, prev: 3500, current: pts, target: 6000, label: 'Level 3' };
     if (pts < 10000) return { level: 4, prev: 6000, current: pts, target: 10000, label: 'Level 4' };
     return { level: 5, prev: 10000, current: pts, target: 10000, label: 'Max Level', isMax: true };
-  };
+  }, [lifetimeCoins]);
 
-  const levelInfo = getLevelInfo(lifetimeCoins);
-  const progressPercent = levelInfo.isMax ? 100 : Math.min(100, Math.max(0, ((levelInfo.current - (levelInfo.prev || 0)) / (levelInfo.target - (levelInfo.prev || 0))) * 100));
+  const progressPercent = useMemo(() => levelInfo.isMax ? 100 : Math.min(100, Math.max(0, ((levelInfo.current - (levelInfo.prev || 0)) / (levelInfo.target - (levelInfo.prev || 0))) * 100)), [levelInfo]);
 
   return (
     <>

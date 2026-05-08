@@ -21,46 +21,112 @@
     color: var(--color-slate-900);
     font-family: 'Inter', system-ui, sans-serif;
     -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeSpeed;
     transition: background-color 0.3s ease, color 0.3s ease;
     scrollbar-gutter: stable;
+    /* Smooth momentum scrolling on iOS */
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior: none;
   }
 
   .dark body {
     background-color: var(--color-slate-950);
     color: var(--color-slate-100);
   }
+
+  /* GPU-accelerated images */
+  img {
+    backface-visibility: hidden;
+  }
+
+  /* Remove tap highlight on mobile for snappier feel */
+  button, a, [role="button"] {
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+  }
 }
 
 @layer utilities {
+  /* ── Animations ── */
   .animate-float {
     animation: float 4s ease-in-out infinite;
+    will-change: transform;
   }
   .animate-float-fast {
     animation: float 2s ease-in-out infinite;
+    will-change: transform;
   }
   .animate-spin-slow {
     animation: spin 8s linear infinite;
+    will-change: transform;
   }
   .animate-pulse-glow {
     animation: pulse-glow 3s ease-in-out infinite;
+    will-change: opacity, transform;
   }
   .animate-pulse-glow-fast {
     animation: pulse-glow-fast 1.5s ease-in-out infinite;
+    will-change: opacity, transform;
   }
   .animate-rotate-pulse {
     animation: rotate-pulse 4s ease-in-out infinite;
+    will-change: transform, opacity;
   }
   .animate-scale-pulse {
     animation: scale-pulse 3s ease-in-out infinite;
+    will-change: transform;
   }
   .animate-fade-in-up {
     animation: fade-in-up 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    will-change: opacity, transform;
   }
   .animate-fade-in {
     animation: fade-in 0.2s ease-out forwards;
+    will-change: opacity;
+  }
+  .animate-slide-up {
+    animation: slide-up 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    will-change: opacity, transform;
+  }
+
+  /* ── Performance ── */
+  /* Forces GPU compositing layer — use on elements with heavy transforms */
+  .gpu {
+    transform: translateZ(0);
+    backface-visibility: hidden;
+    perspective: 1000px;
+  }
+
+  /* Smooth touch scrolling + hide scrollbar */
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+  }
+  .scrollbar-hide::-webkit-scrollbar { display: none; }
+  .scrollbar-none {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  .scrollbar-none::-webkit-scrollbar { display: none; }
+
+  /* Contain layout reflows inside heavy sections */
+  .contain-content {
+    contain: content;
+  }
+  .contain-layout {
+    contain: layout;
+  }
+
+  /* Prevent text shimmer during animations */
+  .text-stable {
+    -webkit-font-smoothing: antialiased;
+    transform: translateZ(0);
   }
 }
 
+/* ── Keyframes ── */
 @keyframes fade-in-up {
   0% { opacity: 0; transform: translateY(40px); }
   100% { opacity: 1; transform: translateY(0); }
@@ -69,6 +135,11 @@
 @keyframes fade-in {
   0% { opacity: 0; }
   100% { opacity: 1; }
+}
+
+@keyframes slide-up {
+  0% { opacity: 0; transform: translateY(20px); }
+  100% { opacity: 1; transform: translateY(0); }
 }
 
 @keyframes float {
