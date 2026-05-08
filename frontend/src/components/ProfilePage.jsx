@@ -19,6 +19,7 @@ import PullToRefresh from './PullToRefresh';
 
 import BannerAd from './BannerAd';
 import VerifiedBadge from './VerifiedBadge';
+import EmailVerifyModal from './EmailVerifyModal';
 
 const ProfilePage = ({ onVerifyClick, onLanguageClick, onPasswordClick, onReferralsClick, onLeaderboardClick, onTermsClick, onDeleteClick, darkMode, onToggleDarkMode }) => {
   const [profilePic, setProfilePic] = useState('https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=facearea&facepad=2&w=256&h=256&q=80');
@@ -27,6 +28,9 @@ const ProfilePage = ({ onVerifyClick, onLanguageClick, onPasswordClick, onReferr
   const [isVerified, setIsVerified] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const [globalSettings, setGlobalSettings] = useState(null);
+  const [showEmailVerifyModal, setShowEmailVerifyModal] = useState(false);
+  const [isEmailVerified, setIsEmailVerified] = useState(false);
+  const [verifiedEmail, setVerifiedEmail] = useState('');
   const fileInputRef = useRef(null);
 
   const fetchProfile = async () => {
@@ -48,6 +52,14 @@ const ProfilePage = ({ onVerifyClick, onLanguageClick, onPasswordClick, onReferr
       if (verificationRes.ok) {
         const vData = await verificationRes.json();
         setIsVerified(vData.status === 'approved');
+      }
+
+      // Fetch email verification status
+      const emailRes = await fetch(`${API_BASE}/api/email-verify/status`, { headers: { Authorization: `Bearer ${token}` } });
+      if (emailRes.ok) {
+        const eData = await emailRes.json();
+        setIsEmailVerified(eData.isEmailVerified);
+        setVerifiedEmail(eData.verifiedEmail || '');
       }
     } catch (err) {
       console.error('Failed to fetch profile info:', err);
@@ -94,7 +106,7 @@ const ProfilePage = ({ onVerifyClick, onLanguageClick, onPasswordClick, onReferr
     { icon: History, label: 'Transaction History' },
     { icon: Users, label: 'My Referrals', action: onReferralsClick },
     { icon: Trophy, label: 'Leaderboard', action: onLeaderboardClick },
-    { icon: ShieldCheck, label: 'Verify Now', action: onVerifyClick },
+    { icon: ShieldCheck, label: 'Verify Now', action: () => setShowEmailVerifyModal(true) },
     { icon: Lock, label: 'Change Password', action: onPasswordClick },
     { icon: Globe, label: 'Language', action: onLanguageClick },
     { icon: HeadphonesIcon, label: 'Contact Support' },
@@ -185,6 +197,11 @@ const ProfilePage = ({ onVerifyClick, onLanguageClick, onPasswordClick, onReferr
                       Member
                     </span>
                   )}
+                  {isEmailVerified && (
+                    <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-[10px] sm:text-xs font-black bg-green-50 dark:bg-green-500/10 text-green-600 dark:text-green-400 border border-green-100 dark:border-green-500/20 uppercase tracking-wider">
+                      <ShieldCheck className="w-3 h-3" /> Email Verified
+                    </span>
+                  )}
                 </div>
               </div>
             </div>
@@ -234,6 +251,17 @@ const ProfilePage = ({ onVerifyClick, onLanguageClick, onPasswordClick, onReferr
       </div>
       </div>
     </PullToRefresh>
+
+    {/* Email Verification Modal */}
+    {showEmailVerifyModal && (
+      <EmailVerifyModal
+        onClose={() => setShowEmailVerifyModal(false)}
+        onSuccess={() => {
+          setIsEmailVerified(true);
+          fetchProfile();
+        }}
+      />
+    )}
   );
 };
 

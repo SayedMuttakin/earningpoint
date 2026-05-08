@@ -139,6 +139,23 @@ const UserSchema = new mongoose.Schema({
     type: Date,
     default: null,
   },
+  // Email Verification
+  verifiedEmail: {
+    type: String,
+    default: '',
+  },
+  isEmailVerified: {
+    type: Boolean,
+    default: false,
+  },
+  emailVerificationCode: {
+    type: String,
+    default: null,
+  },
+  emailVerificationExpiry: {
+    type: Date,
+    default: null,
+  },
 }, { timestamps: true });
 
 // Auto-generate referral code before saving if not set
