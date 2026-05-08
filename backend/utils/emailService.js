@@ -1,11 +1,28 @@
 const nodemailer = require('nodemailer');
 
 const createTransporter = () => {
+  // Supports both Gmail (service: 'gmail') and custom SMTP (host/port)
+  if (process.env.EMAIL_SERVICE === 'gmail') {
+    return nodemailer.createTransport({
+      service: 'gmail',
+      auth: {
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASS,
+      },
+    });
+  }
+
+  // Custom SMTP (cPanel, DirectAdmin, Hostinger, etc.)
   return nodemailer.createTransport({
-    service: 'gmail',
+    host: process.env.SMTP_HOST,
+    port: parseInt(process.env.SMTP_PORT) || 465,
+    secure: parseInt(process.env.SMTP_PORT) === 465, // true for 465, false for 587
     auth: {
       user: process.env.EMAIL_USER,
       pass: process.env.EMAIL_PASS,
+    },
+    tls: {
+      rejectUnauthorized: false, // allows self-signed certificates
     },
   });
 };
@@ -33,7 +50,7 @@ const sendVerificationEmail = async (toEmail, code) => {
                 <tr>
                   <td style="background:linear-gradient(135deg,#6366f1 0%,#8b5cf6 100%);padding:36px 40px;text-align:center;">
                     <h1 style="margin:0;color:#ffffff;font-size:28px;font-weight:800;letter-spacing:-0.5px;">Zenivio</h1>
-                    <p style="margin:6px 0 0;color:#e0e7ff;font-size:13px;">Earn & Grow</p>
+                    <p style="margin:6px 0 0;color:#e0e7ff;font-size:13px;">Earn &amp; Grow</p>
                   </td>
                 </tr>
                 <!-- Body -->
