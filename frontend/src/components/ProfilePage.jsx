@@ -134,6 +134,7 @@ const ProfilePage = ({ onVerifyClick, onLanguageClick, onPasswordClick, onReferr
   );
 
   return (
+    <>
     <PullToRefresh onRefresh={handleRefresh} refreshing={refreshing}>
       <div className="w-full bg-slate-50 dark:bg-slate-900 min-h-screen pb-24 flex flex-col">
         {/* Sticky Header for Ad */}
@@ -251,7 +252,6 @@ const ProfilePage = ({ onVerifyClick, onLanguageClick, onPasswordClick, onReferr
       </div>
       </div>
     </PullToRefresh>
-
     {/* Email Verification Modal */}
     {showEmailVerifyModal && (
       <EmailVerifyModal
@@ -262,6 +262,7 @@ const ProfilePage = ({ onVerifyClick, onLanguageClick, onPasswordClick, onReferr
         }}
       />
     )}
+    </>
   );
 };
 
