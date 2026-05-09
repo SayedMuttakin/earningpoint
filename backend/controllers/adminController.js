@@ -620,7 +620,7 @@ exports.createProduct = async (req, res) => {
     let imageUrl = req.body.image || '';
 
     if (req.file) {
-      imageUrl = `/api/image/${req.file.filename}`;
+      imageUrl = req.file.filename;
     }
 
     const product = new CartProduct({ 
@@ -653,7 +653,7 @@ exports.updateProduct = async (req, res) => {
     if (updateData.isActive !== undefined) updateData.isActive = updateData.isActive === 'true' || updateData.isActive === true;
 
     if (req.file) {
-      updateData.image = `/api/image/${req.file.filename}`;
+      updateData.image = req.file.filename;
     }
 
     const product = await CartProduct.findByIdAndUpdate(req.params.id, updateData, { new: true });

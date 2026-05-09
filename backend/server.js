@@ -29,13 +29,17 @@ app.use((req, res, next) => {
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ limit: '50mb', extended: true }));
 
-// Serve uploaded images via API route (Nginx proxies /api/* to backend)
-app.get('/api/image/:filename', (req, res) => {
-  const filePath = path.join(__dirname, 'uploads', req.params.filename);
+// Serve uploaded images via API route using query param to avoid Nginx static file interception
+app.get('/api/image', (req, res) => {
+  const filename = req.query.file;
+  if (!filename) return res.status(400).json({ message: 'Missing file parameter' });
+  // Sanitize filename to prevent directory traversal
+  const safeName = path.basename(filename);
+  const filePath = path.join(__dirname, 'uploads', safeName);
   if (fs.existsSync(filePath)) {
     return res.sendFile(filePath);
   }
-  res.status(404).json({ message: 'Image not found' });
+  res.status(404).json({ message: 'Image not found', requested: safeName });
 });
 
 // Database Connection

@@ -103,13 +103,10 @@ const CartPage = ({ onBuyNow }) => {
                   src={(() => {
                     const img = product.image;
                     if (!img) return "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300' viewBox='0 0 300 300'%3E%3Crect width='300' height='300' fill='%23f1f5f9'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' font-family='sans-serif' font-size='14' fill='%2394a3b8'%3ENo Image%3C/text%3E%3C/svg%3E";
-                    // Extract filename from any upload path and use /api/image/ route
-                    const match = img.match(/(?:\/uploads\/|\/api\/uploads\/|\/api\/image\/)(.+)/);
-                    if (match) return `${API_BASE}/api/image/${match[1]}`;
-                    // Handle bare filenames stored without path prefix
-                    if (img.startsWith('imageFile')) return `${API_BASE}/api/image/${img}`;
                     if (img.startsWith('http')) return img;
-                    return img;
+                    // Extract just the filename from any path format
+                    const filename = img.split('/').pop();
+                    return `${API_BASE}/api/image?file=${encodeURIComponent(filename)}`;
                   })()} 
                   alt={product.title} 
                   className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
