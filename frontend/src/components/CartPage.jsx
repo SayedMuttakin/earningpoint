@@ -106,6 +106,8 @@ const CartPage = ({ onBuyNow }) => {
                     // Extract filename from any upload path and use /api/image/ route
                     const match = img.match(/(?:\/uploads\/|\/api\/uploads\/|\/api\/image\/)(.+)/);
                     if (match) return `${API_BASE}/api/image/${match[1]}`;
+                    // Handle bare filenames stored without path prefix
+                    if (img.startsWith('imageFile')) return `${API_BASE}/api/image/${img}`;
                     if (img.startsWith('http')) return img;
                     return img;
                   })()} 

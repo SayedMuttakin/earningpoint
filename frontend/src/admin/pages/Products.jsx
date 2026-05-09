@@ -370,6 +370,8 @@ const Products = ({ authHeaders, ADMIN_API }) => {
                     if (!img) return "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300' viewBox='0 0 300 300'%3E%3Crect width='300' height='300' fill='%230f172a'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' font-family='sans-serif' font-size='14' fill='%23475569'%3ENo Image%3C/text%3E%3C/svg%3E";
                     const match = img.match(/(?:\/uploads\/|\/api\/uploads\/|\/api\/image\/)(.+)/);
                     if (match) return `${ADMIN_API.replace('/api/admin', '')}/api/image/${match[1]}`;
+                    // Handle bare filenames stored without path prefix
+                    if (img.startsWith('imageFile')) return `${ADMIN_API.replace('/api/admin', '')}/api/image/${img}`;
                     if (img.startsWith('http')) return img;
                     return img;
                   })()} 
