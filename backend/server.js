@@ -86,12 +86,26 @@ const startServer = async () => {
     app.get('/api/debug/uploads', (req, res) => {
       const fs = require('fs');
       const uploadDir = path.join(__dirname, 'uploads');
-      if (fs.existsSync(uploadDir)) {
-        const files = fs.readdirSync(uploadDir);
-        res.json({ uploadDir, files });
-      } else {
-        res.json({ message: 'Uploads directory does not exist', uploadDir });
+      const backendDir = __dirname;
+      
+      let debugInfo = {
+        backendDir,
+        uploadDir,
+        exists: fs.existsSync(uploadDir),
+        files: []
+      };
+
+      if (debugInfo.exists) {
+        debugInfo.files = fs.readdirSync(uploadDir);
+        try {
+          const stats = fs.statSync(uploadDir);
+          debugInfo.permissions = stats.mode.toString(8);
+        } catch (e) {
+          debugInfo.error = e.message;
+        }
       }
+      
+      res.json(debugInfo);
     });
 
     // Global Error Handler
