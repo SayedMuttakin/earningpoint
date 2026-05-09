@@ -182,12 +182,6 @@ const LoginForm = ({ onToggleForm, onLoginSuccess }) => {
       </div>
 
       <form onSubmit={handleSubmit} className="w-full space-y-4">
-        {error && (
-          <div className="bg-red-50 text-red-500 p-2 rounded-lg text-sm text-center border border-red-100">
-            {error}
-          </div>
-        )}
-        
         <div>
           <div className="relative">
             <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
@@ -239,6 +233,12 @@ const LoginForm = ({ onToggleForm, onLoginSuccess }) => {
             <a href="#" className="text-xs text-slate-600 font-semibold hover:text-[#087b7a]">Forgot Password?</a>
           </div>
         </div>
+
+        {error && (
+          <div className="bg-red-50 text-red-500 p-2 rounded-lg text-sm text-center border border-red-100 mt-2">
+            {error}
+          </div>
+        )}
 
         <div className="flex justify-center pt-2">
           <button

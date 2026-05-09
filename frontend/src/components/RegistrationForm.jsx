@@ -229,6 +229,13 @@ const RegistrationForm = ({ onToggleForm, onRegisterSuccess }) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
+  const hasMinLength = formData.password.length >= 8;
+  const hasUppercase = /[A-Z]/.test(formData.password);
+  const hasLowercase = /[a-z]/.test(formData.password);
+  const hasNumber = /\d/.test(formData.password);
+  const hasSpecial = /[@$!%*?&#]/.test(formData.password);
+  const isPasswordValid = hasMinLength && hasUppercase && hasLowercase && hasNumber && hasSpecial;
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!formData.username || !formData.username.trim()) {
@@ -245,9 +252,8 @@ const RegistrationForm = ({ onToggleForm, onRegisterSuccess }) => {
     }
     
     // Strong password validation
-    const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&#])[A-Za-z\d@$!%*?&#]{8,}$/;
-    if (!passwordRegex.test(formData.password)) {
-      setError('Password must be at least 8 characters and include uppercase, lowercase, number, and special character.');
+    if (!isPasswordValid) {
+      setError('Please fix the password requirements.');
       return;
     }
 
@@ -302,12 +308,6 @@ const RegistrationForm = ({ onToggleForm, onRegisterSuccess }) => {
       </div>
 
       <form onSubmit={handleSubmit} className="w-full space-y-4">
-        {error && (
-          <div className="bg-red-50 text-red-500 p-2 rounded-lg text-sm text-center border border-red-100">
-            {error}
-          </div>
-        )}
-
         <div>
           <div className="relative">
             <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
@@ -406,6 +406,15 @@ const RegistrationForm = ({ onToggleForm, onRegisterSuccess }) => {
               {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
             </button>
           </div>
+          {formData.password && !isPasswordValid && (
+            <div className="pl-4 mt-1.5 space-y-0.5">
+              {!hasMinLength && <p className="text-[10px] text-red-500 font-bold">• At least 8 characters</p>}
+              {!hasUppercase && <p className="text-[10px] text-red-500 font-bold">• At least 1 uppercase letter</p>}
+              {!hasLowercase && <p className="text-[10px] text-red-500 font-bold">• At least 1 lowercase letter</p>}
+              {!hasNumber && <p className="text-[10px] text-red-500 font-bold">• At least 1 number</p>}
+              {!hasSpecial && <p className="text-[10px] text-red-500 font-bold">• At least 1 special character (@$!%*?&#)</p>}
+            </div>
+          )}
         </div>
 
         <div>
@@ -434,6 +443,9 @@ const RegistrationForm = ({ onToggleForm, onRegisterSuccess }) => {
               {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
             </button>
           </div>
+          {formData.confirmPassword && formData.password !== formData.confirmPassword && (
+            <p className="text-[10px] text-red-500 font-bold pl-4 mt-1.5">• Passwords do not match</p>
+          )}
         </div>
 
         <div className="relative">
@@ -537,6 +549,12 @@ const RegistrationForm = ({ onToggleForm, onRegisterSuccess }) => {
             <p className="text-xs text-red-500 font-bold ml-4 mt-1.5">Invalid refer code</p>
           ) : null}
         </div>
+
+        {error && (
+          <div className="bg-red-50 text-red-500 p-2 rounded-lg text-sm text-center border border-red-100 mt-2">
+            {error}
+          </div>
+        )}
 
         <div className="flex justify-center pt-2">
           <button
