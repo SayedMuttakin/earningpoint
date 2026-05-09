@@ -29,7 +29,8 @@ app.use((req, res, next) => {
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ limit: '50mb', extended: true }));
 
-// Serve uploaded files statically under /api/uploads so Nginx proxies it correctly
+// Serve uploaded files statically on both paths to handle different Nginx proxy configurations
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 app.use('/api/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // Database Connection
