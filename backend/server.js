@@ -1,6 +1,8 @@
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
+const path = require('path');
+const fs = require('fs');
 require('dotenv').config();
 
 const app = express();
@@ -29,9 +31,20 @@ app.use((req, res, next) => {
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ limit: '50mb', extended: true }));
 
-// Serve uploaded files statically on both paths to handle different Nginx proxy configurations
-app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
-app.use('/api/uploads', express.static(path.join(__dirname, 'uploads')));
+// Serve uploaded files with debug logging
+app.use(['/uploads', '/api/uploads'], (req, res, next) => {
+  const fileName = req.path;
+  const filePath = path.join(__dirname, 'uploads', fileName);
+  
+  console.log(`[Static] Request: ${req.originalUrl} -> Looking for: ${filePath}`);
+  
+  if (fs.existsSync(filePath)) {
+    return res.sendFile(filePath);
+  } else {
+    console.log(`[Static] File NOT found: ${filePath}`);
+    next();
+  }
+});
 
 // Database Connection
 const startServer = async () => {
