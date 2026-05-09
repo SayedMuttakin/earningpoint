@@ -59,9 +59,24 @@ router.put('/settings/global', adminProtect, adminController.updateGlobalSetting
 const upload = require('../middleware/uploadMiddleware');
 
 // Products Management
+const uploadMiddleware = (req, res, next) => {
+  // Only apply multer if the content-type is multipart/form-data
+  const contentType = req.headers['content-type'] || '';
+  if (contentType.includes('multipart/form-data')) {
+    return upload.single('imageFile')(req, res, (err) => {
+      if (err) {
+        console.error('Multer Error:', err);
+        return res.status(400).json({ message: err.message });
+      }
+      next();
+    });
+  }
+  next();
+};
+
 router.get('/products', adminProtect, adminController.getProducts);
-router.post('/products', adminProtect, upload.single('imageFile'), adminController.createProduct);
-router.put('/products/:id', adminProtect, upload.single('imageFile'), adminController.updateProduct);
+router.post('/products', adminProtect, uploadMiddleware, adminController.createProduct);
+router.put('/products/:id', adminProtect, uploadMiddleware, adminController.updateProduct);
 router.delete('/products/:id', adminProtect, adminController.deleteProduct);
 
 module.exports = router;

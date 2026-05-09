@@ -81,6 +81,16 @@ const startServer = async () => {
       res.send('Zenivio API is running...');
     });
 
+    // Global Error Handler
+    app.use((err, req, res, next) => {
+      console.error('Global Error Handler:', err);
+      res.status(500).json({ 
+        message: 'Internal Server Error', 
+        error: err.message,
+        stack: process.env.NODE_ENV === 'development' ? err.stack : undefined
+      });
+    });
+
     const PORT = process.env.PORT || 5001;
     
     // Setup HTTP server and Socket.IO
