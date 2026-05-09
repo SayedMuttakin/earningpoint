@@ -29,19 +29,13 @@ app.use((req, res, next) => {
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ limit: '50mb', extended: true }));
 
-// Serve uploaded files with debug logging
-app.use(['/uploads', '/api/uploads'], (req, res, next) => {
-  const fileName = req.path;
-  const filePath = path.join(__dirname, 'uploads', fileName);
-  
-  console.log(`[Static] Request: ${req.originalUrl} -> Looking for: ${filePath}`);
-  
+// Serve uploaded images via API route (Nginx proxies /api/* to backend)
+app.get('/api/image/:filename', (req, res) => {
+  const filePath = path.join(__dirname, 'uploads', req.params.filename);
   if (fs.existsSync(filePath)) {
     return res.sendFile(filePath);
-  } else {
-    console.log(`[Static] File NOT found: ${filePath}`);
-    next();
   }
+  res.status(404).json({ message: 'Image not found' });
 });
 
 // Database Connection
