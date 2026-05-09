@@ -21,8 +21,8 @@ import BannerAd from './BannerAd';
 import VerifiedBadge from './VerifiedBadge';
 import EmailVerifyModal from './EmailVerifyModal';
 
-const ProfilePage = ({ onVerifyClick, onLanguageClick, onPasswordClick, onReferralsClick, onLeaderboardClick, onTermsClick, onDeleteClick, darkMode, onToggleDarkMode }) => {
-  const [profilePic, setProfilePic] = useState('https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=facearea&facepad=2&w=256&h=256&q=80');
+const ProfilePage = ({ onVerifyClick, onLanguageClick, onPasswordClick, onReferralsClick, onLeaderboardClick, onTermsClick, onDeleteClick, darkMode, onToggleDarkMode, onTransactionsClick, onSupportClick }) => {
+  const [profilePic, setProfilePic] = useState('');
   const [userName, setUserName] = useState('User');
   const [userEmail, setUserEmail] = useState('');
   const [isVerified, setIsVerified] = useState(false);
@@ -103,13 +103,13 @@ const ProfilePage = ({ onVerifyClick, onLanguageClick, onPasswordClick, onReferr
   };
 
   const menuItemsBlock1 = [
-    { icon: History, label: 'Transaction History' },
+    { icon: History, label: 'Transaction History', action: onTransactionsClick },
     { icon: Users, label: 'My Referrals', action: onReferralsClick },
     { icon: Trophy, label: 'Leaderboard', action: onLeaderboardClick },
     { icon: ShieldCheck, label: 'Verify Now', action: () => setShowEmailVerifyModal(true) },
     { icon: Lock, label: 'Change Password', action: onPasswordClick },
     { icon: Globe, label: 'Language', action: onLanguageClick },
-    { icon: HeadphonesIcon, label: 'Contact Support' },
+    { icon: HeadphonesIcon, label: 'Contact Support', action: onSupportClick },
     { icon: FileText, label: 'Terms & Privacy Policy', action: onTermsClick },
   ];
 
@@ -166,7 +166,7 @@ const ProfilePage = ({ onVerifyClick, onLanguageClick, onPasswordClick, onReferr
                   onClick={triggerFileInput}
                 >
                   <img 
-                    src={profilePic}
+                    src={profilePic || 'https://ui-avatars.com/api/?name=' + userName + '&background=random&size=256'}
                     alt="Profile" 
                     className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
                   />

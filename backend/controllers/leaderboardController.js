@@ -50,7 +50,20 @@ exports.getLeaderboard = async (req, res) => {
       },
       {
         $addFields: {
-          score: { $add: ['$totalEarnings', '$referralBonus'] },
+          score: { 
+            $add: [
+              { $multiply: ['$totalEarnings', 100] },
+              { $multiply: ['$referralBonus', 100] },
+              { $ifNull: ['$lifetimePoints', 0] },
+              { $multiply: [{ $ifNull: ['$videoAdCount', 0] }, 5] },
+              { $multiply: [{ $ifNull: ['$viewAdsCount', 0] }, 5] },
+              { $multiply: [{ $ifNull: ['$spinCount', 0] }, 5] },
+              { $multiply: [{ $ifNull: ['$scratchCount', 0] }, 5] },
+              { $multiply: [{ $ifNull: ['$quizCount', 0] }, 5] },
+              { $multiply: [{ $ifNull: ['$articleReadCount', 0] }, 5] },
+              { $multiply: ['$totalReferrals', 50] }
+            ] 
+          },
         },
       },
       { $sort: { score: -1 } },

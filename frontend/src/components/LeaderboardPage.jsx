@@ -1,31 +1,56 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { ChevronLeft, Crown, Zap } from 'lucide-react';
 import PullToRefresh from './PullToRefresh';
-
-const MOCK_DATA = [
-  { id: 1, name: 'Jordyn Kenter', score: 96239, avatar: 'https://i.pravatar.cc/150?u=12', rank: 1 },
-  { id: 2, name: 'Alena Bator', score: 84787, avatar: 'https://i.pravatar.cc/150?u=24', rank: 2 },
-  { id: 3, name: 'Carl Oliver', score: 82139, avatar: 'https://i.pravatar.cc/150?u=35', rank: 3 },
-  { id: 4, name: 'Davis Curtis', score: 80857, avatar: 'https://i.pravatar.cc/150?u=41', rank: 4 },
-  { id: 5, name: 'Isona Othid', score: 76128, avatar: 'https://i.pravatar.cc/150?u=52', rank: 5 },
-  { id: 6, name: 'Makenna George', score: 71667, avatar: 'https://i.pravatar.cc/150?u=69', rank: 6 },
-  { id: 7, name: 'Kianna Batista', score: 68439, avatar: 'https://i.pravatar.cc/150?u=73', rank: 7 },
-  { id: 8, name: 'Maxith Cullep', score: 66981, avatar: 'https://i.pravatar.cc/150?u=8', rank: 8 },
-  { id: 9, name: 'Zain Dias', score: 50546, avatar: 'https://i.pravatar.cc/150?u=91', rank: 9 },
-];
+import { API_BASE } from '../config';
 
 const LeaderboardPage = ({ onBack }) => {
+  const [leaderboard, setLeaderboard] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
-  const top3 = MOCK_DATA.slice(0, 3);
-  const rest = MOCK_DATA.slice(3);
 
-  const handleRefresh = () => {
-    setRefreshing(true);
-    setTimeout(() => setRefreshing(false), 1500);
+  const fetchLeaderboard = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const res = await fetch(`${API_BASE}/api/leaderboard?limit=15`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      if (res.ok) {
+        const data = await res.json();
+        const formattedData = data.map(user => ({
+          id: user._id,
+          name: user.name || user.phoneOrEmail || 'User',
+          score: user.score || 0,
+          avatar: user.profilePic || `https://ui-avatars.com/api/?name=${user.name || 'User'}&background=random`,
+          rank: user.rank
+        }));
+        setLeaderboard(formattedData);
+      }
+    } catch (err) {
+      console.error('Failed to fetch leaderboard:', err);
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
+    }
   };
 
-  // Reorder for podium: 2nd, 1st, 3rd
-  const podiumData = [top3[1], top3[0], top3[2]];
+  useEffect(() => {
+    fetchLeaderboard();
+  }, []);
+
+  const top3 = leaderboard.slice(0, 3);
+  const rest = leaderboard.slice(3);
+
+  const handleRefresh = async () => {
+    setRefreshing(true);
+    await fetchLeaderboard();
+  };
+
+  // Reorder for podium: 2nd, 1st, 3rd. Pad with nulls if fewer than 3 users
+  const podiumData = [
+    top3[1] || null, 
+    top3[0] || null, 
+    top3[2] || null
+  ];
 
   return (
     <PullToRefresh onRefresh={handleRefresh} refreshing={refreshing}>
@@ -47,6 +72,8 @@ const LeaderboardPage = ({ onBack }) => {
             <div className="w-full max-w-md">
               <div className="flex items-end justify-center gap-2 sm:gap-4 mb-8 h-64 lg:h-80 mt-10 lg:mt-0">
                 {podiumData.map((user, index) => {
+                  if (!user) return <div key={`empty-${index}`} className="w-28 sm:w-32 lg:w-40" />; // Empty placeholder for missing podium spots
+
                   const isFirst = index === 1;
                   const isSecond = index === 0;
                   const isThird = index === 2;

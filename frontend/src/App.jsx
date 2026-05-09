@@ -21,6 +21,7 @@ import SettingsPage from './components/SettingsPage';
 import SupportPage from './components/SupportPage';
 import SplashScreen from './components/SplashScreen';
 import OnboardingScreen from './components/OnboardingScreen';
+import TransactionHistoryPage from './components/TransactionHistoryPage';
 import { API_BASE } from './config';
 
 import { AdMob } from '@capacitor-community/admob';
@@ -131,6 +132,8 @@ function App() {
           onPasswordClick={() => setActiveTab('ChangePassword')}
           onReferralsClick={() => setActiveTab('Referrals')}
           onLeaderboardClick={() => setActiveTab('Leaderboard')}
+          onTransactionsClick={() => setActiveTab('TransactionHistory')}
+          onSupportClick={() => setActiveTab('Support')}
           onTermsClick={() => setActiveTab('TermsPrivacy')}
           onDeleteClick={() => setActiveTab('DeleteAccount')}
           darkMode={darkMode}
@@ -141,6 +144,7 @@ function App() {
         {activeTab === 'ChangePassword' && <ChangePasswordPage onBack={() => showBackAd(() => setActiveTab('Profile'))} />}
         {activeTab === 'Referrals' && <ReferralsPage onBack={() => showBackAd(() => setActiveTab('Profile'))} />}
         {activeTab === 'Leaderboard' && <LeaderboardPage onBack={() => showBackAd(() => setActiveTab('Profile'))} />}
+        {activeTab === 'TransactionHistory' && <TransactionHistoryPage onBack={() => showBackAd(() => setActiveTab('Profile'))} />}
         {activeTab === 'TermsPrivacy' && <TermsPrivacyPage onBack={() => showBackAd(() => setActiveTab('Profile'))} />}
         {activeTab === 'DeleteAccount' && <DeleteAccountPage onBack={() => showBackAd(() => setActiveTab('Profile'))} onLogout={handleLogout} />}
         {activeTab === 'Earning' && <EarningPage onReferralsClick={() => setActiveTab('Referrals')} setActiveTab={setActiveTab} />}
