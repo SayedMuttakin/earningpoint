@@ -82,6 +82,18 @@ const startServer = async () => {
       res.send('Zenivio API is running...');
     });
 
+    // Debug Route
+    app.get('/api/debug/uploads', (req, res) => {
+      const fs = require('fs');
+      const uploadDir = path.join(__dirname, 'uploads');
+      if (fs.existsSync(uploadDir)) {
+        const files = fs.readdirSync(uploadDir);
+        res.json({ uploadDir, files });
+      } else {
+        res.json({ message: 'Uploads directory does not exist', uploadDir });
+      }
+    });
+
     // Global Error Handler
     app.use((err, req, res, next) => {
       console.error('Global Error Handler:', err);
