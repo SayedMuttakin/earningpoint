@@ -165,11 +165,17 @@ const ProfilePage = ({ onVerifyClick, onLanguageClick, onPasswordClick, onReferr
                   className="w-20 h-20 sm:w-32 sm:h-32 rounded-3xl overflow-hidden border-2 border-slate-100 dark:border-slate-700 shadow-sm cursor-pointer group"
                   onClick={triggerFileInput}
                 >
-                  <img 
-                    src={profilePic || 'https://ui-avatars.com/api/?name=' + userName + '&background=random&size=256'}
-                    alt="Profile" 
-                    className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
-                  />
+                  {profilePic ? (
+                    <img 
+                      src={profilePic}
+                      alt="Profile" 
+                      className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                    />
+                  ) : (
+                    <div className="w-full h-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center group-hover:scale-110 transition-transform duration-500">
+                      <Users className="w-10 h-10 sm:w-16 sm:h-16 text-slate-400" />
+                    </div>
+                  )}
                   <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
                     <Camera className="w-6 h-6 sm:w-8 sm:h-8 text-white" />
                   </div>

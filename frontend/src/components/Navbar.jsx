@@ -110,7 +110,7 @@ const Navbar = ({ onLogout, activeTab, setActiveTab }) => {
                     <div 
                       className="absolute top-14 right-0 mt-2 w-48 bg-white dark:bg-slate-800 rounded-2xl shadow-xl border border-slate-100 dark:border-slate-700 py-2.5 z-50 overflow-hidden animate-fade-in-up"
                     >
-                      <button className="w-full text-left px-5 py-3 text-sm font-medium text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 hover:text-brand-600 flex items-center gap-3 transition-colors">
+                      <button onClick={() => { setIsMobileMenuOpen(false); setActiveTab && setActiveTab('Setting'); }} className="w-full text-left px-5 py-3 text-sm font-medium text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 hover:text-brand-600 flex items-center gap-3 transition-colors">
                         <Settings className="w-4.5 h-4.5" /> Setting
                       </button>
                       <div className="h-px bg-slate-100 dark:bg-slate-700 my-1 mx-3" />

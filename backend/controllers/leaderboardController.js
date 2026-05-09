@@ -52,8 +52,8 @@ exports.getLeaderboard = async (req, res) => {
         $addFields: {
           score: { 
             $add: [
-              { $multiply: ['$totalEarnings', 100] },
-              { $multiply: ['$referralBonus', 100] },
+              { $multiply: [{ $ifNull: ['$totalEarnings', 0] }, 100] },
+              { $multiply: [{ $ifNull: ['$referralBonus', 0] }, 100] },
               { $ifNull: ['$lifetimePoints', 0] },
               { $multiply: [{ $ifNull: ['$videoAdCount', 0] }, 5] },
               { $multiply: [{ $ifNull: ['$viewAdsCount', 0] }, 5] },
@@ -61,7 +61,7 @@ exports.getLeaderboard = async (req, res) => {
               { $multiply: [{ $ifNull: ['$scratchCount', 0] }, 5] },
               { $multiply: [{ $ifNull: ['$quizCount', 0] }, 5] },
               { $multiply: [{ $ifNull: ['$articleReadCount', 0] }, 5] },
-              { $multiply: ['$totalReferrals', 50] }
+              { $multiply: [{ $ifNull: ['$totalReferrals', 0] }, 50] }
             ] 
           },
         },

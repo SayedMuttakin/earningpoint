@@ -3020,9 +3020,9 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
 
           {/* Promotional Banner */}
           {activeBanners.length > 0 && (
-            <div className="w-full max-w-2xl mx-auto px-4 mb-8">
+            <div className="w-[calc(100%+2rem)] -ml-4 sm:w-full sm:ml-0 max-w-2xl sm:mx-auto mb-8">
               <div 
-                className="w-full aspect-[468/200] max-h-[200px] overflow-hidden rounded-2xl shadow-lg border border-slate-200 dark:border-slate-800 bg-slate-100 dark:bg-slate-900 relative cursor-pointer group"
+                className="w-full aspect-[468/200] max-h-[200px] overflow-hidden sm:rounded-2xl shadow-lg border-y sm:border-x border-slate-200 dark:border-slate-800 bg-slate-100 dark:bg-slate-900 relative cursor-pointer group"
                 onClick={() => handleBannerClick(activeBanners[activePromoBannerIndex]?.linkUrl)}
               >
                 <AnimatePresence>
