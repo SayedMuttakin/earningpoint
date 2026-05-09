@@ -20,8 +20,6 @@ app.use((req, res, next) => {
   next();
 });
 
-const path = require('path');
-
 // Request Logger
 app.use((req, res, next) => {
   console.log(`${new Date().toISOString()} - ${req.method} ${req.url} - Origin: ${req.get('Origin') || 'none'}`);
