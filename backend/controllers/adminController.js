@@ -637,6 +637,7 @@ exports.createProduct = async (req, res) => {
     await product.save();
     res.status(201).json(product);
   } catch (error) {
+    console.error('Create Product Error:', error);
     res.status(400).json({ message: error.message });
   }
 };
@@ -659,6 +660,7 @@ exports.updateProduct = async (req, res) => {
     if (!product) return res.status(404).json({ message: 'Product not found' });
     res.json(product);
   } catch (error) {
+    console.error('Update Product Error:', error);
     res.status(400).json({ message: error.message });
   }
 };

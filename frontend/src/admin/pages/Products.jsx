@@ -95,10 +95,14 @@ const Products = ({ authHeaders, ADMIN_API }) => {
         formData.append('imageFile', imageFile);
       }
 
+      // We must NOT set Content-Type header when sending FormData.
+      // The browser will automatically set it to multipart/form-data with the correct boundary.
+      const headers = { ...authHeaders };
+      delete headers['Content-Type'];
+
       const res = await fetch(url, {
         method,
-        // Don't set Content-Type header manually when sending FormData, browser will set it with boundary
-        headers: { ...authHeaders },
+        headers,
         body: formData,
       });
 
@@ -361,10 +365,10 @@ const Products = ({ authHeaders, ADMIN_API }) => {
               
               <div className="h-48 bg-slate-950 p-6 flex items-center justify-center relative overflow-hidden group-hover:scale-105 transition-transform duration-500">
                 <img 
-                  src={product.image ? (product.image.startsWith('/uploads') ? `${ADMIN_API.replace('/api/admin', '')}${product.image}` : product.image) : 'https://via.placeholder.com/300?text=No+Image'} 
+                  src={product.image ? (product.image.startsWith('/uploads') ? `${ADMIN_API.replace('/api/admin', '')}${product.image}` : product.image) : "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300' viewBox='0 0 300 300'%3E%3Crect width='300' height='300' fill='%230f172a'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' font-family='sans-serif' font-size='14' fill='%23475569'%3ENo Image%3C/text%3E%3C/svg%3E"} 
                   alt={product.title} 
                   className="w-full h-full object-contain drop-shadow-2xl z-10"
-                  onError={(e) => e.target.src = 'https://via.placeholder.com/300?text=Error'}
+                  onError={(e) => e.target.src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300' viewBox='0 0 300 300'%3E%3Crect width='300' height='300' fill='%230f172a'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' font-family='sans-serif' font-size='14' fill='%23475569'%3EError%3C/text%3E%3C/svg%3E"}
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-slate-900 via-transparent to-transparent z-0" />
               </div>

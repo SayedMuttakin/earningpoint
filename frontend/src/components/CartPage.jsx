@@ -100,10 +100,10 @@ const CartPage = ({ onBuyNow }) => {
               {/* Image Section */}
               <div className="relative h-40 sm:h-52 w-full flex items-center justify-center overflow-hidden border-b border-slate-50">
                 <img 
-                  src={product.image?.startsWith('/uploads') ? `${API_BASE}${product.image}` : product.image || 'https://via.placeholder.com/300?text=No+Image'} 
+                  src={product.image?.startsWith('/uploads') ? `${API_BASE}${product.image}` : product.image || "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300' viewBox='0 0 300 300'%3E%3Crect width='300' height='300' fill='%23f1f5f9'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' font-family='sans-serif' font-size='14' fill='%2394a3b8'%3ENo Image%3C/text%3E%3C/svg%3E"} 
                   alt={product.title} 
                   className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                  onError={(e) => e.target.src = 'https://via.placeholder.com/300?text=Error'}
+                  onError={(e) => e.target.src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300' viewBox='0 0 300 300'%3E%3Crect width='300' height='300' fill='%23f1f5f9'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' font-family='sans-serif' font-size='14' fill='%2394a3b8'%3EError%3C/text%3E%3C/svg%3E"}
                 />
                 {product.badge && (
                   <div className="absolute top-0 right-0 bg-[#FF3B30] text-white text-[10px] sm:text-xs font-semibold px-2.5 py-1.5 rounded-bl-xl flex items-center gap-1 shadow-sm font-sans tracking-wide">
