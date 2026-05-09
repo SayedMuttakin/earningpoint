@@ -1,12 +1,18 @@
 const multer = require('multer');
 const path = require('path');
 const crypto = require('crypto');
+const fs = require('fs');
 
 // Setup storage engine
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
     // Save files to the uploads directory
-    cb(null, path.join(__dirname, '../uploads'));
+    const uploadPath = path.join(__dirname, '../uploads');
+    // Ensure the directory exists
+    if (!fs.existsSync(uploadPath)) {
+      fs.mkdirSync(uploadPath, { recursive: true });
+    }
+    cb(null, uploadPath);
   },
   filename: function (req, file, cb) {
     // Generate a unique filename: prefix + hash + original extension
