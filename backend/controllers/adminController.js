@@ -616,8 +616,24 @@ exports.getProducts = async (req, res) => {
 
 exports.createProduct = async (req, res) => {
   try {
-    const { title, description, price, originalPrice, image, badge, inStock, isActive } = req.body;
-    const product = new CartProduct({ title, description, price, originalPrice, image, badge, inStock, isActive });
+    const { title, description, price, originalPrice, badge, inStock, isActive } = req.body;
+    let imageUrl = req.body.image || '';
+
+    if (req.file) {
+      imageUrl = `/uploads/${req.file.filename}`;
+    }
+
+    const product = new CartProduct({ 
+      title, 
+      description, 
+      price: Number(price), 
+      originalPrice: Number(originalPrice), 
+      image: imageUrl, 
+      badge, 
+      inStock: inStock === 'true' || inStock === true, 
+      isActive: isActive === 'true' || isActive === true 
+    });
+    
     await product.save();
     res.status(201).json(product);
   } catch (error) {
@@ -627,7 +643,19 @@ exports.createProduct = async (req, res) => {
 
 exports.updateProduct = async (req, res) => {
   try {
-    const product = await CartProduct.findByIdAndUpdate(req.params.id, req.body, { new: true });
+    const updateData = { ...req.body };
+    
+    // Parse numeric and boolean fields from FormData strings
+    if (updateData.price !== undefined) updateData.price = Number(updateData.price);
+    if (updateData.originalPrice !== undefined) updateData.originalPrice = Number(updateData.originalPrice);
+    if (updateData.inStock !== undefined) updateData.inStock = updateData.inStock === 'true' || updateData.inStock === true;
+    if (updateData.isActive !== undefined) updateData.isActive = updateData.isActive === 'true' || updateData.isActive === true;
+
+    if (req.file) {
+      updateData.image = `/uploads/${req.file.filename}`;
+    }
+
+    const product = await CartProduct.findByIdAndUpdate(req.params.id, updateData, { new: true });
     if (!product) return res.status(404).json({ message: 'Product not found' });
     res.json(product);
   } catch (error) {

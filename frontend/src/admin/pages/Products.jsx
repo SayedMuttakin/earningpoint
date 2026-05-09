@@ -18,6 +18,8 @@ const Products = ({ authHeaders, ADMIN_API }) => {
     inStock: true,
     isActive: true
   });
+  const [imageFile, setImageFile] = useState(null);
+  const [imagePreview, setImagePreview] = useState(null);
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(null);
 
@@ -52,6 +54,8 @@ const Products = ({ authHeaders, ADMIN_API }) => {
       inStock: true,
       isActive: true
     });
+    setImageFile(null);
+    setImagePreview(null);
     setIsAdding(false);
     setIsEditing(false);
     setEditingId(null);
@@ -65,17 +69,37 @@ const Products = ({ authHeaders, ADMIN_API }) => {
     setSuccess(null);
 
     if (!productForm.title.trim()) return setError('Title is required');
-    if (!productForm.image.trim()) return setError('Image URL is required');
+    if (!productForm.image.trim() && !imageFile && !isEditing) return setError('Image is required');
     if (productForm.price < 0) return setError('Price cannot be negative');
 
     try {
       const url = isEditing ? `${ADMIN_API}/products/${editingId}` : `${ADMIN_API}/products`;
       const method = isEditing ? 'PUT' : 'POST';
 
+      const formData = new FormData();
+      formData.append('title', productForm.title);
+      formData.append('description', productForm.description);
+      formData.append('price', productForm.price);
+      formData.append('originalPrice', productForm.originalPrice);
+      formData.append('badge', productForm.badge);
+      formData.append('inStock', productForm.inStock);
+      formData.append('isActive', productForm.isActive);
+      
+      // If user typed a URL but didn't pick a file, send the URL
+      if (!imageFile) {
+        formData.append('image', productForm.image);
+      }
+      
+      // If user picked a file, append it
+      if (imageFile) {
+        formData.append('imageFile', imageFile);
+      }
+
       const res = await fetch(url, {
         method,
-        headers: { ...authHeaders, 'Content-Type': 'application/json' },
-        body: JSON.stringify(productForm),
+        // Don't set Content-Type header manually when sending FormData, browser will set it with boundary
+        headers: { ...authHeaders },
+        body: formData,
       });
 
       if (res.ok) {
@@ -102,6 +126,11 @@ const Products = ({ authHeaders, ADMIN_API }) => {
       inStock: product.inStock,
       isActive: product.isActive
     });
+    setImagePreview(product.image ? `${ADMIN_API.replace('/api/admin', '')}${product.image.startsWith('/uploads') ? product.image : ''}` : null);
+    if (product.image && !product.image.startsWith('/uploads')) {
+      setImagePreview(product.image);
+    }
+    setImageFile(null);
     setEditingId(product._id);
     setIsEditing(true);
     setIsAdding(false);
@@ -184,16 +213,63 @@ const Products = ({ authHeaders, ADMIN_API }) => {
             </div>
 
             <div>
-              <label className="block text-slate-400 text-xs font-black uppercase tracking-widest mb-3 ml-1">Image URL</label>
-              <div className="relative">
-                 <ImageIcon className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-500" />
-                <input
-                  type="text"
-                  className="w-full bg-slate-950 border border-slate-800 rounded-2xl pl-12 pr-5 py-3 text-white focus:ring-2 focus:ring-indigo-500/50 outline-none transition-all placeholder:text-slate-600"
-                  placeholder="https://example.com/image.jpg"
-                  value={productForm.image}
-                  onChange={(e) => setProductForm({ ...productForm, image: e.target.value })}
-                />
+              <label className="block text-slate-400 text-xs font-black uppercase tracking-widest mb-3 ml-1">Product Image</label>
+              <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center">
+                <div className="relative flex-1 w-full">
+                  <div className="flex items-center justify-center w-full h-32 px-4 transition bg-slate-950 border-2 border-slate-800 border-dashed rounded-2xl appearance-none cursor-pointer hover:border-indigo-500/50 focus:outline-none overflow-hidden relative group">
+                    {imagePreview ? (
+                      <div className="relative w-full h-full flex items-center justify-center">
+                        <img src={imagePreview} alt="Preview" className="h-full object-contain z-0" />
+                        <div className="absolute inset-0 bg-slate-900/50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity z-10">
+                          <span className="text-white font-bold text-sm bg-slate-900/80 px-4 py-2 rounded-xl backdrop-blur-md">Change Image</span>
+                        </div>
+                      </div>
+                    ) : (
+                      <span className="flex items-center space-x-2">
+                        <ImageIcon className="w-6 h-6 text-slate-500" />
+                        <span className="font-medium text-slate-500">
+                          Click to upload from PC
+                        </span>
+                      </span>
+                    )}
+                    <input 
+                      type="file" 
+                      name="file_upload" 
+                      accept="image/*"
+                      className="absolute inset-0 opacity-0 cursor-pointer z-20"
+                      onChange={(e) => {
+                        const file = e.target.files[0];
+                        if (file) {
+                          setImageFile(file);
+                          setImagePreview(URL.createObjectURL(file));
+                          setProductForm({ ...productForm, image: '' });
+                        }
+                      }}
+                    />
+                  </div>
+                </div>
+                <div className="flex items-center gap-2 w-full sm:w-auto">
+                  <div className="h-[1px] w-8 bg-slate-800 hidden sm:block"></div>
+                  <span className="text-slate-500 text-xs font-black uppercase whitespace-nowrap hidden sm:block">OR URL</span>
+                  <div className="relative flex-1 sm:w-64">
+                    <ImageIcon className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-500" />
+                    <input
+                      type="text"
+                      className="w-full bg-slate-950 border border-slate-800 rounded-2xl pl-12 pr-5 py-3 text-white focus:ring-2 focus:ring-indigo-500/50 outline-none transition-all placeholder:text-slate-600 text-sm"
+                      placeholder="https://example.com/img.jpg"
+                      value={productForm.image}
+                      onChange={(e) => {
+                        setProductForm({ ...productForm, image: e.target.value });
+                        if (e.target.value) {
+                          setImagePreview(e.target.value);
+                          setImageFile(null);
+                        } else {
+                          setImagePreview(null);
+                        }
+                      }}
+                    />
+                  </div>
+                </div>
               </div>
             </div>
 
@@ -285,7 +361,7 @@ const Products = ({ authHeaders, ADMIN_API }) => {
               
               <div className="h-48 bg-slate-950 p-6 flex items-center justify-center relative overflow-hidden group-hover:scale-105 transition-transform duration-500">
                 <img 
-                  src={product.image || 'https://via.placeholder.com/300?text=No+Image'} 
+                  src={product.image ? (product.image.startsWith('/uploads') ? `${ADMIN_API.replace('/api/admin', '')}${product.image}` : product.image) : 'https://via.placeholder.com/300?text=No+Image'} 
                   alt={product.title} 
                   className="w-full h-full object-contain drop-shadow-2xl z-10"
                   onError={(e) => e.target.src = 'https://via.placeholder.com/300?text=Error'}

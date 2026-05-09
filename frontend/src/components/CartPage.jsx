@@ -100,9 +100,10 @@ const CartPage = ({ onBuyNow }) => {
               {/* Image Section */}
               <div className="relative h-40 sm:h-52 w-full flex items-center justify-center overflow-hidden border-b border-slate-50">
                 <img 
-                  src={product.image} 
+                  src={product.image?.startsWith('/uploads') ? `${API_BASE}${product.image}` : product.image || 'https://via.placeholder.com/300?text=No+Image'} 
                   alt={product.title} 
                   className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                  onError={(e) => e.target.src = 'https://via.placeholder.com/300?text=Error'}
                 />
                 {product.badge && (
                   <div className="absolute top-0 right-0 bg-[#FF3B30] text-white text-[10px] sm:text-xs font-semibold px-2.5 py-1.5 rounded-bl-xl flex items-center gap-1 shadow-sm font-sans tracking-wide">

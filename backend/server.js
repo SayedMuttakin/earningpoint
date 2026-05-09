@@ -18,6 +18,8 @@ app.use((req, res, next) => {
   next();
 });
 
+const path = require('path');
+
 // Request Logger
 app.use((req, res, next) => {
   console.log(`${new Date().toISOString()} - ${req.method} ${req.url} - Origin: ${req.get('Origin') || 'none'}`);
@@ -26,6 +28,9 @@ app.use((req, res, next) => {
 
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ limit: '50mb', extended: true }));
+
+// Serve uploaded files statically
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // Database Connection
 const startServer = async () => {

@@ -56,10 +56,12 @@ router.delete('/articles/:id', adminProtect, adminController.deleteArticle);
 router.get('/settings/global', adminProtect, adminController.getGlobalSettings);
 router.put('/settings/global', adminProtect, adminController.updateGlobalSettings);
 
+const upload = require('../middleware/uploadMiddleware');
+
 // Products Management
 router.get('/products', adminProtect, adminController.getProducts);
-router.post('/products', adminProtect, adminController.createProduct);
-router.put('/products/:id', adminProtect, adminController.updateProduct);
+router.post('/products', adminProtect, upload.single('imageFile'), adminController.createProduct);
+router.put('/products/:id', adminProtect, upload.single('imageFile'), adminController.updateProduct);
 router.delete('/products/:id', adminProtect, adminController.deleteProduct);
 
 module.exports = router;
