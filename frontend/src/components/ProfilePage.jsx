@@ -193,14 +193,10 @@ const ProfilePage = ({ onVerifyClick, onLanguageClick, onPasswordClick, onReferr
               </div>
               
               <div className="flex flex-col min-w-0">
-                <div className="flex items-center gap-2 mb-1">
-                  <h2 className="text-xl sm:text-3xl font-black text-slate-900 dark:text-white truncate">{userName}</h2>
+                <div className="flex items-center gap-2 mb-1 min-w-0">
+                  <h2 className="text-xl sm:text-3xl font-black text-slate-900 dark:text-white truncate min-w-0">{userName}</h2>
                   {isEmailVerified && (
-                    <div className="flex items-center justify-center text-blue-500" title="Verified User">
-                      <svg viewBox="0 0 24 24" aria-label="Verified account" className="w-6 h-6 fill-current">
-                        <g><path d="M22.25 12c0-1.43-.88-2.67-2.19-3.34.46-1.39.2-2.97-.81-3.99s-2.6-1.27-3.99-.81c-.67-1.31-1.91-2.19-3.34-2.19s-2.67.88-3.33 2.19c-1.4-.46-2.98-.2-4 .81s-1.27 2.6-.81 3.99c-1.31.67-2.19 1.91-2.19 3.34s.88 2.67 2.19 3.33c-.46 1.4-.2 2.98.81 4s2.6 1.27 3.99.81c.66 1.31 1.91 2.19 3.33 2.19s2.67-.88 3.34-2.19c1.39.46 2.97.2 3.99-.81s1.27-2.6.81-3.99c1.31-.66 2.19-1.91 2.19-3.33zM9.46 17.12l-3.93-3.93 1.42-1.41 2.51 2.52 6.13-6.12 1.41 1.41-7.54 7.53z"></path></g>
-                      </svg>
-                    </div>
+                    <VerifiedBadge size="w-6 h-6 sm:w-8 sm:h-8" />
                   )}
                 </div>
                 <p className="text-sm sm:text-lg text-slate-500 dark:text-slate-400 font-bold mb-3 truncate font-mono tracking-tight">{userEmail}</p>

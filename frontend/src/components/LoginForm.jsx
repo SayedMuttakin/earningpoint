@@ -122,7 +122,7 @@ const GoogleButton = ({ onSuccess }) => {
   );
 };
 
-const LoginForm = ({ onToggleForm, onLoginSuccess }) => {
+const LoginForm = ({ onToggleForm, onLoginSuccess, onForgotPassword }) => {
   const [formData, setFormData] = useState({ phoneOrEmail: '', password: '' });
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
@@ -230,7 +230,13 @@ const LoginForm = ({ onToggleForm, onLoginSuccess }) => {
             </button>
           </div>
           <div className="text-right mt-2">
-            <a href="#" className="text-xs text-slate-600 font-semibold hover:text-[#087b7a]">Forgot Password?</a>
+            <button
+              type="button"
+              onClick={onForgotPassword}
+              className="text-xs text-slate-600 font-semibold hover:text-[#087b7a] focus:outline-none"
+            >
+              Forgot Password?
+            </button>
           </div>
         </div>
 

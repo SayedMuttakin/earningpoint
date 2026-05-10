@@ -22,6 +22,7 @@ import SupportPage from './components/SupportPage';
 import SplashScreen from './components/SplashScreen';
 import OnboardingScreen from './components/OnboardingScreen';
 import TransactionHistoryPage from './components/TransactionHistoryPage';
+import ForgotPasswordPage from './components/ForgotPasswordPage';
 import { API_BASE } from './config';
 
 import { AdMob } from '@capacitor-community/admob';
@@ -34,6 +35,7 @@ function App() {
   const [isLogin, setIsLogin] = useState(true);
   const [isAuthenticated, setIsAuthenticated] = useState(() => !!localStorage.getItem('token'));
   const [activeTab, setActiveTab] = useState('Home');
+  const [showForgotPassword, setShowForgotPassword] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState('');
   const [darkMode, setDarkMode] = useState(() => localStorage.getItem('darkMode') === 'true');
@@ -171,10 +173,13 @@ function App() {
 
   return (
     <AuthLayout>
-      {isLogin ? (
+      {showForgotPassword ? (
+        <ForgotPasswordPage onBack={() => setShowForgotPassword(false)} />
+      ) : isLogin ? (
         <LoginForm
           onToggleForm={() => setIsLogin(false)}
           onLoginSuccess={() => setIsAuthenticated(true)}
+          onForgotPassword={() => setShowForgotPassword(true)}
         />
       ) : (
         <RegistrationForm

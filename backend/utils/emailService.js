@@ -99,4 +99,60 @@ const sendVerificationEmail = async (toEmail, code) => {
   await transporter.sendMail(mailOptions);
 };
 
-module.exports = { sendVerificationEmail };
+const sendPasswordResetEmail = async (toEmail, resetLink) => {
+  const transporter = createTransporter();
+
+  const mailOptions = {
+    from: `"Zenivio" <${process.env.EMAIL_USER}>`,
+    to: toEmail,
+    subject: 'Reset Your Zenivio Password',
+    html: `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      </head>
+      <body style="margin:0;padding:0;background-color:#f1f5f9;font-family:'Segoe UI',Arial,sans-serif;">
+        <table width="100%" cellpadding="0" cellspacing="0" style="background:#f1f5f9;padding:40px 0;">
+          <tr>
+            <td align="center">
+              <table width="520" cellpadding="0" cellspacing="0" style="background:#ffffff;border-radius:24px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,0.08);">
+                <tr>
+                  <td style="background:linear-gradient(135deg,#087b7a 0%,#0ea5a4 100%);padding:36px 40px;text-align:center;">
+                    <h1 style="margin:0;color:#ffffff;font-size:28px;font-weight:800;letter-spacing:-0.5px;">Zenivio</h1>
+                    <p style="margin:6px 0 0;color:#ccfbf1;font-size:13px;">Earn &amp; Grow</p>
+                  </td>
+                </tr>
+                <tr>
+                  <td style="padding:40px 40px 20px;">
+                    <h2 style="margin:0 0 10px;color:#1e293b;font-size:22px;font-weight:700;">Reset Your Password</h2>
+                    <p style="margin:0 0 28px;color:#64748b;font-size:15px;line-height:1.6;">
+                      We received a request to reset your password. Click the button below to set a new password. This link expires in <strong>1 hour</strong>.
+                    </p>
+                    <div style="text-align:center;margin-bottom:28px;">
+                      <a href="${resetLink}" style="display:inline-block;background:linear-gradient(135deg,#087b7a,#0ea5a4);color:#ffffff;text-decoration:none;padding:16px 40px;border-radius:50px;font-size:16px;font-weight:700;letter-spacing:0.5px;">Reset Password</a>
+                    </div>
+                    <p style="margin:0 0 8px;color:#94a3b8;font-size:13px;line-height:1.6;">
+                      If you didn't request this, you can safely ignore this email. Your password won't change.
+                    </p>
+                  </td>
+                </tr>
+                <tr>
+                  <td style="background:#f8fafc;padding:20px 40px;text-align:center;border-top:1px solid #f1f5f9;">
+                    <p style="margin:0;color:#94a3b8;font-size:12px;">&copy; 2026 Zenivio. All rights reserved.</p>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+        </table>
+      </body>
+      </html>
+    `,
+  };
+
+  await transporter.sendMail(mailOptions);
+};
+
+module.exports = { sendVerificationEmail, sendPasswordResetEmail };

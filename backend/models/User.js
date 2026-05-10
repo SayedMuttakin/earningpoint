@@ -156,6 +156,15 @@ const UserSchema = new mongoose.Schema({
     type: Date,
     default: null,
   },
+  // Password Reset
+  passwordResetToken: {
+    type: String,
+    default: null,
+  },
+  passwordResetExpiry: {
+    type: Date,
+    default: null,
+  },
 }, { timestamps: true });
 
 // Auto-generate referral code before saving if not set
