@@ -196,7 +196,7 @@ const ProfilePage = ({ onVerifyClick, onLanguageClick, onPasswordClick, onReferr
                 <div className="flex items-center gap-2 mb-1 min-w-0">
                   <h2 className="text-xl sm:text-3xl font-black text-slate-900 dark:text-white truncate min-w-0">{userName}</h2>
                   {isEmailVerified && (
-                    <VerifiedBadge size="w-6 h-6 sm:w-8 sm:h-8" />
+                    <VerifiedBadge type="user" size="w-5 h-5 sm:w-6 sm:h-6" />
                   )}
                 </div>
                 <p className="text-sm sm:text-lg text-slate-500 dark:text-slate-400 font-bold mb-3 truncate font-mono tracking-tight">{userEmail}</p>
