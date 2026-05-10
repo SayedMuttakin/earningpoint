@@ -78,6 +78,7 @@ const MultiAdViewPage = ({ config, onClose, onCoinsEarned }) => {
     };
 
     const onError = () => {
+      if (adType === 'native') AdMobService.hideNativeSimulatedAd();
       isAdLoading.current = false;
       setLoadingSlot(null);
       setIsPlaying(false);
@@ -99,6 +100,13 @@ const MultiAdViewPage = ({ config, onClose, onCoinsEarned }) => {
       } else if (adType === 'interstitial') {
         setIsPlaying(true);
         await AdMobService.showInterstitial(onSuccess);
+      } else if (adType === 'native') {
+        setIsPlaying(true);
+        await AdMobService.showNativeSimulatedAd();
+        setTimeout(async () => {
+          await AdMobService.hideNativeSimulatedAd();
+          onSuccess();
+        }, 8000);
       } else {
         // Simulated fallback
         setIsPlaying(true);

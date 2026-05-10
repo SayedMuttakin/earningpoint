@@ -103,7 +103,7 @@ const TransactionHistoryPage = ({ onBack }) => {
                       </div>
                     </div>
                     <div className={`font-black text-lg sm:text-xl ${tx.type === 'credit' ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-600 dark:text-red-400'}`}>
-                      {tx.type === 'credit' ? '+' : '-'}${tx.amount?.toFixed(2) || '0.00'}
+                      {tx.type === 'credit' ? '+' : '-'}{tx.amount || 0} Coins
                     </div>
                   </div>
                 </div>
