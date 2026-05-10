@@ -57,7 +57,8 @@ import {
   Download,
   ClipboardList,
   ShoppingBag,
-  Key
+  Key,
+  Lock
 } from 'lucide-react';
 
 const gkQuizDB = [
@@ -522,6 +523,8 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
   const [vpnOrderDetails, setVpnOrderDetails] = React.useState(null);
   const [showVpnActivated, setShowVpnActivated] = React.useState(false);
   const [vpnActivatedShown, setVpnActivatedShown] = React.useState(() => localStorage.getItem('vpnActivatedShown') === 'true');
+  const [showLockPopup, setShowLockPopup] = React.useState(false);
+  const [lockPopupLevel, setLockPopupLevel] = React.useState(1);
 
   // Removed duplicate timer effect — single timer is at line ~728
 
@@ -1465,11 +1468,15 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
 
   const itemsToSkipIntro = useMemo(() => new Set(['Premium IP', 'Refer & Earn', 'Wallet', 'History', 'Tutorial', 'Invite Friends', 'Daily Quiz', 'Math Quiz', 'Binary Quiz', 'Word Quiz', 'Meta']), []);
 
-  const OptionCard = useCallback(({ item, isLarge = false, count = null, maxCount = null, skipIntro = false }) => {
+  const OptionCard = useCallback(({ item, isLarge = false, count = null, maxCount = null, skipIntro = false, isLocked = false, onLockedClick = null }) => {
     const isCompleted = count !== null && count >= maxCount;
     const shouldSkip = skipIntro || itemsToSkipIntro.has(item?.name);
 
     const handleClick = () => {
+      if (isLocked) {
+        if (onLockedClick) onLockedClick();
+        return;
+      }
       if (shouldSkip || !item.action) {
         if (item.action) item.action();
         return;
@@ -1482,11 +1489,13 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
       <button
         key={item.id}
         onClick={handleClick}
-        className="flex flex-col items-center group w-full transition-transform duration-150 active:scale-95 hover:scale-105"
+        className={`flex flex-col items-center group w-full transition-transform duration-150 active:scale-95 hover:scale-105 ${isLocked ? 'opacity-60' : ''}`}
         style={{ transform: 'translateZ(0)' }}
       >
-        <div className={`w-14 h-14 ${isLarge ? 'md:w-20 md:h-20' : 'md:w-16 md:h-16'} rounded-2xl bg-gradient-to-br ${item.color || 'from-blue-500 to-indigo-600'} flex items-center justify-center shadow-lg relative`}>
-          {typeof item.icon === 'string' ? (
+        <div className={`w-14 h-14 ${isLarge ? 'md:w-20 md:h-20' : 'md:w-16 md:h-16'} rounded-2xl bg-gradient-to-br ${isLocked ? 'from-slate-500 to-slate-600' : (item.color || 'from-blue-500 to-indigo-600')} flex items-center justify-center shadow-lg relative overflow-hidden`}>
+          {isLocked ? (
+            <Lock className="w-7 h-7 text-white/80" strokeWidth={2.5} />
+          ) : typeof item.icon === 'string' ? (
             <img src={item.icon} alt={item.name} className="w-7 h-7 md:w-10 md:h-10 object-contain drop-shadow-md" loading="lazy" />
           ) : React.isValidElement(item.icon) ? (
             <div className="text-white drop-shadow-md flex items-center justify-center">
@@ -1501,7 +1510,7 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
             <div className="w-8 h-8 md:w-10 md:h-10 bg-white/20 rounded-lg" />
           )}
 
-          {count !== null && (
+          {count !== null && !isLocked && (
             <div className="absolute -top-1.5 -right-1.5 bg-white dark:bg-slate-800 rounded-full px-1.5 py-0.5 shadow-sm border border-slate-100 dark:border-slate-700 min-w-[20px] flex items-center justify-center">
               <span className={`text-[9px] font-black ${isCompleted ? 'text-emerald-500' : 'text-slate-600 dark:text-slate-300'}`}>
                 {count}/{maxCount}
@@ -1510,12 +1519,15 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
           )}
         </div>
         <span className="mt-2.5 text-[10px] md:text-xs font-black text-slate-700 dark:text-slate-300 text-center leading-tight">
-          {item.name}
+          {isLocked ? item.name : item.name}
         </span>
-        {item.coins && (
+        {!isLocked && item.coins && (
           <span className="text-[10px] font-bold text-emerald-500 mt-0.5">
             +{item.coins} Coins
           </span>
+        )}
+        {isLocked && (
+          <span className="text-[10px] font-bold text-slate-400 mt-0.5">Locked</span>
         )}
       </button>
     );
@@ -1760,6 +1772,68 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
         )}
 
       {showIntroScreen && introItem && <OptionIntroScreen />}
+
+      {/* ══════ LOCK POPUP ══════ */}
+      {showLockPopup && createPortal(
+        <div
+          className="fixed inset-0 z-[99999] flex items-end justify-center"
+          onClick={() => setShowLockPopup(false)}
+          style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
+        >
+          <div className="absolute inset-0 bg-black/75 backdrop-blur-sm" />
+          <div
+            className="relative w-full max-w-sm mx-4 mb-6 bg-[#0d1117] rounded-3xl overflow-hidden shadow-2xl border border-white/10 animate-slide-up"
+            onClick={e => e.stopPropagation()}
+          >
+            <div className="absolute top-0 left-0 right-0 h-40 bg-gradient-to-b from-rose-600/20 to-transparent pointer-events-none" />
+            <div className="flex flex-col items-center pt-10 pb-5 px-6 relative z-10">
+              <div className="relative mb-5">
+                <div className="absolute inset-0 bg-rose-500 blur-3xl opacity-30 scale-150" />
+                <div
+                  className="relative w-20 h-20 bg-gradient-to-br from-rose-500 to-rose-700 rounded-[1.5rem] flex items-center justify-center shadow-2xl shadow-rose-500/30"
+                  style={{ animation: 'float 3s ease-in-out infinite' }}
+                >
+                  <Lock className="w-10 h-10 text-white" strokeWidth={2.5} />
+                </div>
+              </div>
+              <h2 className="text-2xl font-black text-white mb-1">Level {lockPopupLevel} Locked!</h2>
+              <div className="px-3 py-1 rounded-full bg-rose-500/10 border border-rose-500/20 mb-4">
+                <span className="text-xs font-black text-rose-400 uppercase tracking-widest">🔒 Access Restricted</span>
+              </div>
+              <p className="text-slate-400 text-center font-medium mb-6 leading-relaxed text-sm">
+                {lockPopupLevel === 1
+                  ? 'This level requires an active VPN subscription. Buy VPN now to unlock all Level 1 earning features!'
+                  : `Complete Level ${lockPopupLevel - 1} to unlock Level ${lockPopupLevel} and access more earning options!`
+                }
+              </p>
+              {lockPopupLevel === 1 ? (
+                <button
+                  onClick={() => { setShowLockPopup(false); setShowPremiumIPView(true); }}
+                  className="w-full py-4 rounded-2xl bg-gradient-to-r from-[#FACC15] to-[#EAB308] text-slate-900 font-black text-sm shadow-lg shadow-amber-500/30 active:scale-95 transition-transform flex items-center justify-center gap-2 mb-3"
+                >
+                  <Shield className="w-5 h-5" />
+                  Buy VPN &amp; Unlock Level 1
+                </button>
+              ) : (
+                <button
+                  onClick={() => setShowLockPopup(false)}
+                  className="w-full py-4 rounded-2xl bg-gradient-to-r from-amber-500 to-orange-600 text-white font-black text-sm shadow-lg shadow-amber-500/20 active:scale-95 transition-transform mb-3"
+                >
+                  Keep Earning to Level Up 🚀
+                </button>
+              )}
+              <button onClick={() => setShowLockPopup(false)} className="text-slate-600 text-xs font-bold py-1">
+                Dismiss
+              </button>
+            </div>
+            <div className="px-4 pb-5 relative z-10">
+              <div className="text-[9px] font-black text-slate-700 uppercase tracking-widest text-center mb-2">Sponsored Ad</div>
+              <BigAdBanner globalSettings={globalSettings} />
+            </div>
+          </div>
+        </div>,
+        document.body
+      )}
       
       {showArticleListView && <ArticleListView />}
       {showArticleReader && currentArticle && createPortal(
@@ -3022,7 +3096,7 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
                   { id: 'l1-games', name: 'Games', icon: <Gamepad2 className="w-7 h-7" />, coins: 50, color: 'from-emerald-400 to-teal-500', action: () => setShowGamesView(true) },
                   { id: 'l1-wheel', name: 'Fortune Wheel', icon: <Aperture className="w-7 h-7" />, coins: null, color: 'from-amber-400 to-orange-500', action: () => setShowWheelView(true) },
                   { id: 'l1-ads', name: 'View Ads', icon: <MonitorPlay className="w-7 h-7" />, coins: 10, color: 'from-sky-400 to-cyan-500', action: () => openMultiAdView({ key: 'view_ads', name: 'View Ads', adType: 'interstitial', coins: 10, logo: 'https://img.icons8.com/color/96/monitor.png', color: 'from-sky-400 to-cyan-500' }), count: getMultiAdCount('view_ads'), maxCount: 5 },
-                ].map(item => <OptionCard key={item.id} item={item} count={item.count} maxCount={item.maxCount} />)}
+                ].map(item => <OptionCard key={item.id} item={item} count={item.count} maxCount={item.maxCount} isLocked={!isPremium} onLockedClick={() => { setLockPopupLevel(1); setShowLockPopup(true); }} />)}
               </div>
             </div>
           </div>
@@ -3093,7 +3167,7 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
                   { id: 'l2-binary', name: 'Binary Quiz', icon: <Binary className="w-7 h-7" />, coins: 30, color: 'from-purple-500 to-pink-600', action: () => launchQuiz('binary') },
                   { id: 'l2-word', name: 'Word Quiz', icon: <Type className="w-7 h-7" />, coins: 25, color: 'from-emerald-500 to-teal-600', action: () => launchQuiz('word') },
                   { id: 'l2-gk', name: 'Gen. Knowledge', icon: <HelpCircle className="w-7 h-7" />, coins: 40, color: 'from-amber-500 to-orange-600', action: () => launchQuiz('gk') },
-                ].map(item => <OptionCard key={item.id} item={item} />)}
+                ].map(item => <OptionCard key={item.id} item={item} isLocked={!isPremium || levelInfo.level < 2} onLockedClick={() => { setLockPopupLevel(!isPremium ? 1 : 2); setShowLockPopup(true); }} />)}
               </div>
             </div>
           </div>
@@ -3120,7 +3194,7 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
                   { id: 'l3-youtube', name: 'YouTube', icon: <Youtube className="w-7 h-7" />, coins: 30, color: 'from-red-500 to-rose-600', action: () => openMultiAdView({ key: 'youtube', name: 'YouTube', adType: 'rewarded', coins: 30, logo: 'https://img.icons8.com/color/96/youtube-play.png', color: 'from-red-500 to-rose-600' }) },
                   { id: 'l3-tiktok', name: 'TikTok', icon: <Music2 className="w-7 h-7" />, coins: 25, color: 'from-slate-800 to-slate-900', action: () => openMultiAdView({ key: 'tiktok', name: 'TikTok', adType: 'rewarded', coins: 25, logo: 'https://img.icons8.com/color/96/tiktok.png', color: 'from-slate-800 to-slate-900' }) },
                   { id: 'l3-facebook', name: 'Facebook', icon: <Facebook className="w-7 h-7" />, coins: 20, color: 'from-blue-500 to-blue-700', action: () => openMultiAdView({ key: 'facebook', name: 'Facebook', adType: 'rewarded', coins: 20, logo: 'https://img.icons8.com/color/96/facebook-new.png', color: 'from-blue-500 to-blue-700' }) },
-                ].map(item => <OptionCard key={item.id} item={item} count={getMultiAdCount(item.id.replace('l3-',''))} maxCount={5} />)}
+                ].map(item => <OptionCard key={item.id} item={item} count={getMultiAdCount(item.id.replace('l3-',''))} maxCount={5} isLocked={!isPremium || levelInfo.level < 3} onLockedClick={() => { setLockPopupLevel(!isPremium ? 1 : 3); setShowLockPopup(true); }} />)}
               </div>
             </div>
           </div>
@@ -3151,7 +3225,7 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
                   { id: 'l4-hourly', name: 'Hourly Ad', icon: <Clock className="w-7 h-7" />, coins: 20, color: 'from-teal-400 to-emerald-500', action: () => openMultiAdView({ key: 'hourly_ad', name: 'Hourly Ad', adType: 'interstitial', coins: 20, logo: 'https://img.icons8.com/color/96/hourglass.png', color: 'from-teal-400 to-emerald-500' }) },
                   { id: 'l4-weekly-refer', name: 'Meta', icon: <Hash className="w-7 h-7" />, coins: 50, color: 'from-purple-400 to-pink-500', action: () => openMultiAdView({ key: 'weekly_refer', name: 'Meta', adType: 'rewarded', coins: 50, logo: 'https://img.icons8.com/color/96/conference-call.png', color: 'from-purple-400 to-pink-500' }) },
                   { id: 'l4-surprise', name: 'Surprise Bonus', icon: <Star className="w-7 h-7" />, coins: 50, color: 'from-pink-400 to-rose-500', action: () => openMultiAdView({ key: 'surprise_bonus', name: 'Surprise Bonus', adType: 'rewarded', coins: 50, logo: 'https://img.icons8.com/color/96/confetti.png', color: 'from-pink-400 to-rose-500' }) },
-                ].map(item => <OptionCard key={item.id} item={item} count={getMultiAdCount(item.id.replace('l4-','').replace(/-/g,'_'))} maxCount={5} />)}
+                ].map(item => <OptionCard key={item.id} item={item} count={getMultiAdCount(item.id.replace('l4-','').replace(/-/g,'_'))} maxCount={5} isLocked={!isPremium || levelInfo.level < 4} onLockedClick={() => { setLockPopupLevel(!isPremium ? 1 : 4); setShowLockPopup(true); }} />)}
               </div>
             </div>
           </div>
@@ -3181,7 +3255,7 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
                   { id: 'l5-app', name: 'App Install', icon: <Download />, coins: 40, color: 'from-emerald-400 to-green-500', action: () => handleStatusClick('App Install', 'unavailable') },
                   { id: 'l5-affiliate', name: 'Affiliate Market', icon: <ShoppingBag />, coins: 75, color: 'from-amber-400 to-yellow-500', action: () => handleStatusClick('Affiliate Market', 'upcoming') },
                   { id: 'l5-trial', name: 'Trial Signup', icon: <Key />, coins: 60, color: 'from-rose-400 to-pink-500', action: () => handleStatusClick('Trial Signup', 'upcoming') },
-                ].map(item => <OptionCard key={item.id} item={item} />)}
+                ].map(item => <OptionCard key={item.id} item={item} isLocked={!isPremium || levelInfo.level < 5} onLockedClick={() => { setLockPopupLevel(!isPremium ? 1 : 5); setShowLockPopup(true); }} />)}
               </div>
             </div>
           </div>
