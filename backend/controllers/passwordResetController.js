@@ -3,7 +3,7 @@ const bcrypt = require('bcryptjs');
 const User = require('../models/User');
 const { sendPasswordResetEmail } = require('../utils/emailService');
 
-const FRONTEND_URL = process.env.FRONTEND_URL || 'https://earningpoint.netlify.app';
+const FRONTEND_URL = process.env.FRONTEND_URL || 'https://zenivio.it.com';
 
 // POST /api/auth/forgot-password
 exports.forgotPassword = async (req, res) => {
@@ -29,7 +29,7 @@ exports.forgotPassword = async (req, res) => {
     user.passwordResetExpiry = expiry;
     await user.save();
 
-    const resetLink = `${FRONTEND_URL}/reset-password?token=${token}`;
+    const resetLink = `${FRONTEND_URL}/?token=${token}`;
     await sendPasswordResetEmail(user.phoneOrEmail, resetLink);
 
     res.json({ message: 'If this email is registered, a reset link has been sent.' });
