@@ -61,18 +61,26 @@ import {
 } from 'lucide-react';
 
 const gkQuizDB = [
-  { id: 1, image: 'https://upload.wikimedia.org/wikipedia/commons/b/b4/Lionel-Messi-Argentina-2022-FIFA-World-Cup_%28cropped%29.jpg', answer: 'Lionel Messi', options: ['Lionel Messi', 'Cristiano Ronaldo', 'Neymar Jr', 'Angel Di Maria'] },
-  { id: 2, image: 'https://upload.wikimedia.org/wikipedia/commons/8/8c/Cristiano_Ronaldo_2018.jpg', answer: 'Cristiano Ronaldo', options: ['Lionel Messi', 'Cristiano Ronaldo', 'Gareth Bale', 'Karim Benzema'] },
-  { id: 3, image: 'https://upload.wikimedia.org/wikipedia/commons/7/7e/Virat_Kohli.jpg', answer: 'Virat Kohli', options: ['Virat Kohli', 'MS Dhoni', 'Rohit Sharma', 'Steve Smith'] },
-  { id: 4, image: 'https://upload.wikimedia.org/wikipedia/commons/c/c3/MS_Dhoni_%281%29.jpg', answer: 'MS Dhoni', options: ['Virat Kohli', 'MS Dhoni', 'Sachin Tendulkar', 'Gautam Gambhir'] },
-  { id: 5, image: 'https://upload.wikimedia.org/wikipedia/commons/b/bb/Neymar_Jr._with_Al_Hilal%2C_3_October_2023_-_03_%28cropped%29.jpg', answer: 'Neymar Jr', options: ['Lionel Messi', 'Neymar Jr', 'Vinicius Jr', 'Rodrygo'] },
-  { id: 6, image: 'https://upload.wikimedia.org/wikipedia/commons/1/1a/Rohit_Sharma_with_the_T20_World_Cup.jpg', answer: 'Rohit Sharma', options: ['Shikhar Dhawan', 'KL Rahul', 'Rohit Sharma', 'Hardik Pandya'] },
-  { id: 7, image: 'https://upload.wikimedia.org/wikipedia/commons/6/67/Shakib_Al_Hasan_2018.jpg', answer: 'Shakib Al Hasan', options: ['Mashrafe Mortaza', 'Tamim Iqbal', 'Shakib Al Hasan', 'Mushfiqur Rahim'] },
-  { id: 8, image: 'https://upload.wikimedia.org/wikipedia/commons/b/b8/Sachin-Tendulkar_%28cropped%29.jpg', answer: 'Sachin Tendulkar', options: ['Virender Sehwag', 'Sachin Tendulkar', 'Rahul Dravid', 'VVS Laxman'] },
-  { id: 9, image: 'https://upload.wikimedia.org/wikipedia/commons/b/b9/Luka_Modri%C4%87_2022_%28cropped%29.jpg', answer: 'Luka Modric', options: ['Toni Kroos', 'Casemiro', 'Luka Modric', 'Federico Valverde'] },
-  { id: 10, image: 'https://upload.wikimedia.org/wikipedia/commons/5/57/2019-07-17_SG_Dynamo_Dresden_vs._Paris_Saint-Germain_by_Sandro_Halank%E2%80%93129_%28cropped%29.jpg', answer: 'Kylian Mbappe', options: ['Ousmane Dembele', 'Kylian Mbappe', 'Antoine Griezmann', 'Olivier Giroud'] },
-  { id: 11, image: 'https://upload.wikimedia.org/wikipedia/commons/2/22/Babar_Azam.jpg', answer: 'Babar Azam', options: ['Babar Azam', 'Mohammad Rizwan', 'Shaheen Afridi', 'Fakhar Zaman'] },
-  { id: 12, image: 'https://upload.wikimedia.org/wikipedia/commons/9/90/Kevin_De_Bruyne_201807092.jpg', answer: 'Kevin De Bruyne', options: ['Erling Haaland', 'Phil Foden', 'Bernardo Silva', 'Kevin De Bruyne'] }
+  { id: 1, image: 'https://wsrv.nl/?url=https://upload.wikimedia.org/wikipedia/commons/b/b4/Lionel-Messi-Argentina-2022-FIFA-World-Cup_%28cropped%29.jpg', answer: 'Lionel Messi', options: ['Lionel Messi', 'Cristiano Ronaldo', 'Neymar Jr', 'Angel Di Maria'] },
+  { id: 2, image: 'https://wsrv.nl/?url=https://upload.wikimedia.org/wikipedia/commons/8/8c/Cristiano_Ronaldo_2018.jpg', answer: 'Cristiano Ronaldo', options: ['Lionel Messi', 'Cristiano Ronaldo', 'Gareth Bale', 'Karim Benzema'] },
+  { id: 3, image: 'https://wsrv.nl/?url=https://upload.wikimedia.org/wikipedia/commons/thumb/9/9b/Virat_Kohli_in_PMO_New_Delhi.jpg/500px-Virat_Kohli_in_PMO_New_Delhi.jpg', answer: 'Virat Kohli', options: ['Virat Kohli', 'MS Dhoni', 'Rohit Sharma', 'Steve Smith'] },
+  { id: 4, image: 'https://wsrv.nl/?url=https://upload.wikimedia.org/wikipedia/commons/thumb/d/d5/MS_Dhoni_%28Prabhav_%2723_-_RiGI_2023%29.jpg/500px-MS_Dhoni_%28Prabhav_%2723_-_RiGI_2023%29.jpg', answer: 'MS Dhoni', options: ['Virat Kohli', 'MS Dhoni', 'Sachin Tendulkar', 'Gautam Gambhir'] },
+  { id: 5, image: 'https://wsrv.nl/?url=https://upload.wikimedia.org/wikipedia/commons/b/bb/Neymar_Jr._with_Al_Hilal%2C_3_October_2023_-_03_%28cropped%29.jpg', answer: 'Neymar Jr', options: ['Lionel Messi', 'Neymar Jr', 'Vinicius Jr', 'Rodrygo'] },
+  { id: 6, image: 'https://wsrv.nl/?url=https://upload.wikimedia.org/wikipedia/commons/thumb/1/1e/Prime_Minister_Of_Bharat_Shri_Narendra_Damodardas_Modi_with_Shri_Rohit_Gurunath_Sharma_%28Cropped%29.jpg/500px-Prime_Minister_Of_Bharat_Shri_Narendra_Damodardas_Modi_with_Shri_Rohit_Gurunath_Sharma_%28Cropped%29.jpg', answer: 'Rohit Sharma', options: ['Shikhar Dhawan', 'KL Rahul', 'Rohit Sharma', 'Hardik Pandya'] },
+  { id: 7, image: 'https://wsrv.nl/?url=https://upload.wikimedia.org/wikipedia/commons/thumb/c/c0/Shakib_Al_Hasan_%284%29_%28cropped%29.jpg/500px-Shakib_Al_Hasan_%284%29_%28cropped%29.jpg', answer: 'Shakib Al Hasan', options: ['Mashrafe Mortaza', 'Tamim Iqbal', 'Shakib Al Hasan', 'Mushfiqur Rahim'] },
+  { id: 8, image: 'https://wsrv.nl/?url=https://upload.wikimedia.org/wikipedia/commons/thumb/3/3e/The_cricket_legend_Sachin_Tendulkar_at_the_Oval_Maidan_in_Mumbai_During_the_Duke_and_Duchess_of_Cambridge_Visit%2826271019082%29.jpg/500px-The_cricket_legend_Sachin_Tendulkar_at_the_Oval_Maidan_in_Mumbai_During_the_Duke_and_Duchess_of_Cambridge_Visit%2826271019082%29.jpg', answer: 'Sachin Tendulkar', options: ['Virender Sehwag', 'Sachin Tendulkar', 'Rahul Dravid', 'VVS Laxman'] },
+  { id: 9, image: 'https://wsrv.nl/?url=https://upload.wikimedia.org/wikipedia/commons/thumb/1/1b/Ofrenda_de_la_Liga_y_la_Champions-57-L.Mill%C3%A1n_%2852109310843%29_%28Luka_Modri%C4%87%29.jpg/500px-Ofrenda_de_la_Liga_y_la_Champions-57-L.Mill%C3%A1n_%2852109310843%29_%28Luka_Modri%C4%87%29.jpg', answer: 'Luka Modric', options: ['Toni Kroos', 'Casemiro', 'Luka Modric', 'Federico Valverde'] },
+  { id: 10, image: 'https://wsrv.nl/?url=https://upload.wikimedia.org/wikipedia/commons/thumb/6/66/Picture_with_Mbapp%C3%A9_%28cropped_and_rotated%29.jpg/500px-Picture_with_Mbapp%C3%A9_%28cropped_and_rotated%29.jpg', answer: 'Kylian Mbappe', options: ['Ousmane Dembele', 'Kylian Mbappe', 'Antoine Griezmann', 'Olivier Giroud'] },
+  { id: 11, image: 'https://wsrv.nl/?url=https://upload.wikimedia.org/wikipedia/commons/thumb/e/e2/Babar_Azam_%28cropped%29.jpg/500px-Babar_Azam_%28cropped%29.jpg', answer: 'Babar Azam', options: ['Babar Azam', 'Mohammad Rizwan', 'Shaheen Afridi', 'Fakhar Zaman'] },
+  { id: 12, image: 'https://wsrv.nl/?url=https://upload.wikimedia.org/wikipedia/commons/thumb/8/83/Kevin_De_Bruyne_in_2019.jpg/500px-Kevin_De_Bruyne_in_2019.jpg', answer: 'Kevin De Bruyne', options: ['Erling Haaland', 'Phil Foden', 'Bernardo Silva', 'Kevin De Bruyne'] },
+  { id: 13, image: 'https://wsrv.nl/?url=https://upload.wikimedia.org/wikipedia/commons/thumb/4/45/A_small_cup_of_coffee.JPG/640px-A_small_cup_of_coffee.JPG', answer: 'Coffee', options: ['Tea', 'Coffee', 'Cocoa', 'Espresso'] },
+  { id: 14, image: 'https://wsrv.nl/?url=https://upload.wikimedia.org/wikipedia/commons/thumb/a/a7/Camponotus_flavomarginatus_ant.jpg/640px-Camponotus_flavomarginatus_ant.jpg', answer: 'Ant', options: ['Bee', 'Wasp', 'Ant', 'Beetle'] },
+  { id: 15, image: 'https://wsrv.nl/?url=https://upload.wikimedia.org/wikipedia/commons/thumb/1/18/Dog_Breeds.jpg/640px-Dog_Breeds.jpg', answer: 'Dog', options: ['Wolf', 'Fox', 'Cat', 'Dog'] },
+  { id: 16, image: 'https://wsrv.nl/?url=https://upload.wikimedia.org/wikipedia/commons/thumb/3/3a/Cat03.jpg/640px-Cat03.jpg', answer: 'Cat', options: ['Cat', 'Rabbit', 'Fox', 'Ferret'] },
+  { id: 17, image: 'https://wsrv.nl/?url=https://upload.wikimedia.org/wikipedia/commons/thumb/1/1a/24701-nature-natural-beauty.jpg/640px-24701-nature-natural-beauty.jpg', answer: 'Mountain', options: ['Valley', 'Hill', 'Mountain', 'Cliff'] },
+  { id: 18, image: 'https://wsrv.nl/?url=https://upload.wikimedia.org/wikipedia/commons/thumb/1/10/Empire_State_Building_%28aerial_view%29.jpg/500px-Empire_State_Building_%28aerial_view%29.jpg', answer: 'Empire State Building', options: ['Burj Khalifa', 'Empire State Building', 'Eiffel Tower', 'Big Ben'] },
+  { id: 19, image: 'https://wsrv.nl/?url=https://upload.wikimedia.org/wikipedia/commons/thumb/a/a0/Eiffel_Tower%2C_Paris%2C_01_October_2010.jpg/500px-Eiffel_Tower%2C_Paris%2C_01_October_2010.jpg', answer: 'Eiffel Tower', options: ['Burj Khalifa', 'Empire State Building', 'Eiffel Tower', 'Big Ben'] },
+  { id: 20, image: 'https://wsrv.nl/?url=https://upload.wikimedia.org/wikipedia/commons/thumb/d/de/Colosseo_2020.jpg/640px-Colosseo_2020.jpg', answer: 'Colosseum', options: ['Parthenon', 'Colosseum', 'Pantheon', 'Acropolis'] },
 ];
 
 
@@ -2593,16 +2601,17 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
 
             <div className="flex-1 overflow-y-auto p-6 flex flex-col gap-6">
               <p className="text-center text-slate-500 dark:text-slate-400 font-semibold text-lg">
-                Who is this athlete? 🏆
+                Who or what is this? 🏆
               </p>
 
               <div className="flex justify-center">
                 <div className="w-56 h-56 rounded-3xl overflow-hidden shadow-2xl border-4 border-white dark:border-slate-800 ring-8 ring-amber-500/10">
                   <img
                     src={gkQuizQuestions[currentGkIndex].image}
-                    alt="Athlete"
-                    className="w-full h-full object-cover object-top"
+                    alt="Quiz"
+                    className="w-full h-full object-cover object-center"
                     onError={(e) => {
+                      e.target.onerror = null;
                       e.target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(gkQuizQuestions[currentGkIndex].answer)}&size=300&background=f59e0b&color=fff&bold=true`;
                     }}
                   />
