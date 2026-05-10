@@ -17,6 +17,7 @@ const NotificationPage = ({ onBack }) => {
   const [notifications, setNotifications] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [selectedNotification, setSelectedNotification] = useState(null);
 
   // Fetch notifications from the backend
   useEffect(() => {
@@ -203,7 +204,13 @@ const NotificationPage = ({ onBack }) => {
                     {getIcon(n.type)}
                   </div>
 
-                  <div className="flex-1 min-w-0 py-0.5 sm:py-1" onClick={() => !n.isRead && markAsRead(n._id)}>
+                  <div 
+                    className="flex-1 min-w-0 py-0.5 sm:py-1 cursor-pointer" 
+                    onClick={() => {
+                      if (!n.isRead) markAsRead(n._id);
+                      setSelectedNotification(n);
+                    }}
+                  >
                     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1.5 sm:gap-2 mb-1 sm:mb-1.5">
                       <h4 className={`text-[15px] sm:text-base font-black tracking-tight truncate pr-6 sm:pr-8 ${
                         n.isRead ? 'text-slate-600 dark:text-slate-400' : 'text-slate-900 dark:text-white'
@@ -236,12 +243,48 @@ const NotificationPage = ({ onBack }) => {
 
         {/* Footer Info */}
         <div className="mt-16 text-center pb-12">
-          <div className="w-16 h-1 w-16 bg-slate-100 dark:bg-slate-800 rounded-full mx-auto mb-6" />
+          <div className="h-1 w-16 bg-slate-100 dark:bg-slate-800 rounded-full mx-auto mb-6" />
           <p className="text-[11px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-[0.3em]">
              Zenivio Notifications Center
           </p>
         </div>
         </div>
+
+        {/* Notification Details Modal */}
+        {selectedNotification && (
+          <div className="fixed inset-0 z-[10000] flex items-center justify-center p-4">
+            <div 
+              className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm animate-fade-in"
+              onClick={() => setSelectedNotification(null)}
+            />
+            <div className="relative w-full max-w-sm bg-white dark:bg-slate-800 rounded-3xl shadow-2xl p-6 sm:p-8 animate-fade-in-up border border-slate-100 dark:border-slate-700">
+              <div className="absolute -top-10 -right-10 w-40 h-40 bg-indigo-600/5 rounded-full blur-3xl opacity-50 pointer-events-none" />
+              
+              <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl flex items-center justify-center mb-6 shadow-inner mx-auto bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600">
+                {getIcon(selectedNotification.type)}
+              </div>
+              
+              <h3 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white mb-2 text-center">
+                {selectedNotification.title}
+              </h3>
+              
+              <div className="flex items-center justify-center gap-1.5 mb-6 text-xs font-black text-slate-400 uppercase tracking-widest">
+                <Clock size={12} /> {formatTime(selectedNotification.createdAt)}
+              </div>
+              
+              <div className="bg-slate-50 dark:bg-slate-900/50 rounded-2xl p-4 sm:p-5 mb-6 text-sm sm:text-base text-slate-600 dark:text-slate-300 leading-relaxed text-center font-medium border border-slate-100 dark:border-slate-800">
+                {selectedNotification.message}
+              </div>
+              
+              <button
+                onClick={() => setSelectedNotification(null)}
+                className="w-full py-3.5 bg-indigo-600 hover:bg-indigo-700 text-white font-black rounded-xl transition-all shadow-lg shadow-indigo-600/20 active:scale-95 text-sm sm:text-base"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        )}
       </div>
     </PullToRefresh>
   </div>
