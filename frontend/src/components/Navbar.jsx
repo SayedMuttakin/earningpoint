@@ -9,7 +9,6 @@ const navItems = [
   { name: 'Cart', icon: ShoppingCart },
   { name: 'Profile', icon: User },
   { name: 'Setting', icon: Settings },
-  { name: 'Support', icon: HelpCircle },
 ];
 
 const mobileNavItems = navItems.filter(item => item.name !== 'Setting');
