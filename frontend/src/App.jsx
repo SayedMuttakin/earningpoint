@@ -23,6 +23,7 @@ import SplashScreen from './components/SplashScreen';
 import OnboardingScreen from './components/OnboardingScreen';
 import TransactionHistoryPage from './components/TransactionHistoryPage';
 import ForgotPasswordPage from './components/ForgotPasswordPage';
+import ResetPasswordPage from './components/ResetPasswordPage';
 import { API_BASE } from './config';
 
 import { AdMob } from '@capacitor-community/admob';
@@ -30,6 +31,11 @@ import { App as CapacitorApp } from '@capacitor/app';
 import { AdMobService } from './utils/admob';
 
 function App() {
+  // Check if URL has a password reset token (from email link)
+  const urlParams = new URLSearchParams(window.location.search);
+  const resetToken = urlParams.get('token');
+  const [resetPasswordToken, setResetPasswordToken] = useState(resetToken || null);
+
   const [showSplash, setShowSplash] = useState(true);
   const [showOnboarding, setShowOnboarding] = useState(() => !localStorage.getItem('hasSeenOnboarding'));
   const [isLogin, setIsLogin] = useState(true);
@@ -103,6 +109,19 @@ function App() {
     setSelectedProduct(product);
     setActiveTab('Checkout');
   };
+
+  // If user clicked a password reset link from email, show reset page immediately
+  if (resetPasswordToken) {
+    return (
+      <ResetPasswordPage
+        token={resetPasswordToken}
+        onDone={() => {
+          setResetPasswordToken(null);
+          setIsLogin(true);
+        }}
+      />
+    );
+  }
 
   if (showSplash) {
     return <SplashScreen onFinish={() => setShowSplash(false)} />;
