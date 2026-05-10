@@ -523,6 +523,7 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
   const [vpnOrderDetails, setVpnOrderDetails] = React.useState(null);
   const [showVpnActivated, setShowVpnActivated] = React.useState(false);
   const [vpnActivatedShown, setVpnActivatedShown] = React.useState(() => localStorage.getItem('vpnActivatedShown') === 'true');
+  const [showPremiumFeaturesWelcome, setShowPremiumFeaturesWelcome] = React.useState(false);
   const [showLockPopup, setShowLockPopup] = React.useState(false);
   const [lockPopupLevel, setLockPopupLevel] = React.useState(1);
 
@@ -3596,8 +3597,7 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
             <button
               onClick={() => {
                 setShowVpnActivated(false);
-                setVpnActivatedShown(true);
-                localStorage.setItem('vpnActivatedShown', 'true');
+                setShowPremiumFeaturesWelcome(true);
               }}
               className="w-full py-5 rounded-2xl font-black text-slate-900 tracking-wider text-base active:scale-95 transition-transform shadow-[0_8px_30px_rgba(250,204,21,0.4)]"
               style={{background:'linear-gradient(135deg,#FACC15,#EAB308)', animation:'slideUp 0.6s ease 0.6s both'}}
@@ -3611,6 +3611,61 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
             @keyframes scaleIn { from{transform:scale(0)} to{transform:scale(1)} }
             @keyframes slideUp { from{opacity:0;transform:translateY(20px)} to{opacity:1;transform:translateY(0)} }
           `}</style>
+        </div>
+      , document.body)}
+
+      {/* ══════ PREMIUM FEATURES WELCOME OVERLAY ══════ */}
+      {showPremiumFeaturesWelcome && createPortal(
+        <div className="fixed inset-0 z-[999999] flex flex-col items-center justify-center overflow-hidden" style={{background: 'linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%)'}}>
+          <div className="absolute inset-0 bg-black/40 backdrop-blur-md" />
+          
+          <div className="relative z-10 w-full max-w-md max-h-[90vh] overflow-y-auto px-6 py-8 flex flex-col items-center text-center animate-slide-up no-scrollbar">
+            <div className="w-20 h-20 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-full flex items-center justify-center shadow-[0_0_40px_rgba(99,102,241,0.5)] mb-6">
+              <Star className="w-10 h-10 text-white fill-white" />
+            </div>
+            
+            <h2 className="text-3xl font-black text-white mb-2">Premium Member!</h2>
+            <p className="text-indigo-200 font-medium text-sm mb-8 leading-relaxed">
+              As a Premium user, you can now unlock amazing high-paying tasks by leveling up. Here's your journey ahead:
+            </p>
+
+            <div className="w-full space-y-4 mb-8">
+              {[
+                { level: 2, coins: '1,500', title: 'Scratch & Quiz', desc: 'Unlock Scratch Cards and Quizzes', color: 'from-sky-400 to-blue-600' },
+                { level: 3, coins: '3,500', title: 'Social Rewards', desc: 'YouTube, TikTok & Facebook Ads', color: 'from-emerald-400 to-green-600' },
+                { level: 4, coins: '6,000', title: 'High Ads & Bonus', desc: 'Reward Videos & Big Surprises', color: 'from-purple-500 to-violet-600' },
+                { level: 5, coins: '10,000+', title: 'Massive Payouts', desc: 'Surveys, App Installs & Trials', color: 'from-rose-500 to-pink-600' },
+              ].map((lvl, i) => (
+                <div key={i} className="bg-white/5 border border-white/10 rounded-2xl p-4 flex items-center gap-4 text-left relative overflow-hidden" style={{animation: `slideUp 0.5s ease ${0.2 + i * 0.1}s both`}}>
+                  <div className={`absolute top-0 left-0 w-1.5 h-full bg-gradient-to-b ${lvl.color}`} />
+                  <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${lvl.color} flex flex-col items-center justify-center shrink-0 shadow-lg`}>
+                    <span className="text-[10px] text-white/80 font-black leading-none uppercase">Lvl</span>
+                    <span className="text-xl font-black text-white leading-none">{lvl.level}</span>
+                  </div>
+                  <div className="flex-1">
+                    <h4 className="text-white font-bold text-sm">{lvl.title}</h4>
+                    <p className="text-slate-400 text-[11px]">{lvl.desc}</p>
+                  </div>
+                  <div className="text-right">
+                    <span className="text-emerald-400 font-black text-xs block">{lvl.coins}</span>
+                    <span className="text-[9px] text-slate-500 font-bold uppercase">Coins req.</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            <button
+              onClick={() => {
+                setShowPremiumFeaturesWelcome(false);
+                setVpnActivatedShown(true);
+                localStorage.setItem('vpnActivatedShown', 'true');
+              }}
+              className="w-full py-4 rounded-2xl font-black text-white tracking-wide text-sm active:scale-95 transition-transform shadow-[0_10px_30px_rgba(99,102,241,0.4)]"
+              style={{background:'linear-gradient(to right, #6366f1, #a855f7)', animation: 'slideUp 0.5s ease 0.6s both'}}
+            >
+              Let's Start Earning! 🚀
+            </button>
+          </div>
         </div>
       , document.body)}
 
