@@ -260,8 +260,12 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
   const withdrawMethods = useMemo(() => [
     { id: 'bkash', name: 'bKash', logo: 'https://freelogopng.com/images/all_img/1656234745bkash-app-logo-png.png', available: true },
     { id: 'nagad', name: 'Nagad', logo: 'https://download.logo.wine/logo/Nagad/Nagad-Logo.wine.png', available: true },
-    { id: 'rocket', name: 'Rocket', logo: 'https://freelogopng.com/images/all_img/1656235199rocket-app-logo.png', available: true },
+    { id: 'rocket', name: 'Rocket', logo: 'https://seeklogo.com/images/D/dutch-bangla-rocket-logo-B4D10478AB-seeklogo.com.png', available: false },
     { id: 'upay', name: 'Upay', logo: 'https://freelogopng.com/images/all_img/1656235105upay-logo.png', available: false },
+    { id: 'binance', name: 'Binance', logo: 'https://upload.wikimedia.org/wikipedia/commons/e/e8/Binance_Logo.svg', available: false },
+    { id: 'bybit', name: 'Bybit', logo: 'https://seeklogo.com/images/B/bybit-logo-4C31FD6A08-seeklogo.com.png', available: false },
+    { id: 'paypal', name: 'PayPal', logo: 'https://upload.wikimedia.org/wikipedia/commons/b/b5/PayPal.svg', available: false },
+    { id: 'card', name: 'Bank Card', logo: 'https://upload.wikimedia.org/wikipedia/commons/2/2a/Mastercard-logo.svg', available: false },
   ], []);
 
   const [showCheckinView, setShowCheckinView] = React.useState(false);
@@ -3023,32 +3027,47 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
             {/* Payment Methods */}
             <div className="space-y-3">
               <label className="text-sm font-bold text-slate-700 dark:text-slate-300">Select Payment Method</label>
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-4 gap-3 sm:gap-4">
                 {withdrawMethods.map(m => (
                   <button
                     key={m.id}
-                    onClick={() => m.available && setWithdrawMethod(m.id)}
-                    disabled={!m.available}
-                    className={`relative flex flex-col items-center gap-2 p-4 rounded-2xl border-2 font-bold transform-gpu will-change-transform ${
+                    onClick={() => {
+                      if (m.available) setWithdrawMethod(m.id);
+                      else showToast('Currently unavailable', 'error');
+                    }}
+                    className={`relative flex flex-col items-center justify-center p-3 sm:p-4 rounded-2xl border-2 transition-all duration-300 transform-gpu ${
                       !m.available
-                        ? 'border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 opacity-60 cursor-not-allowed'
+                        ? 'border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/20 opacity-60 hover:opacity-80'
                         : withdrawMethod === m.id
-                          ? 'border-brand-500 bg-brand-50 dark:bg-brand-900/20 shadow-md shadow-brand-500/20'
-                          : 'border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800'
+                          ? 'border-brand-500 bg-gradient-to-b from-brand-50 to-white dark:from-brand-900/30 dark:to-slate-800 shadow-xl shadow-brand-500/20 scale-105 z-10 ring-4 ring-brand-500/10'
+                          : 'border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:border-brand-300 dark:hover:border-brand-700 hover:shadow-md'
                     }`}
                   >
                     {!m.available && (
-                      <span className="absolute top-1.5 right-1.5 bg-red-500 text-white text-[9px] font-black px-1.5 py-0.5 rounded-full">Not Available</span>
-                    )}
-                    {m.logo ? (
-                      <img src={m.logo} alt={m.name} className="h-8 object-contain" />
-                    ) : (
-                      <div className="w-8 h-8 bg-slate-300 dark:bg-slate-600 rounded-lg flex items-center justify-center">
-                        <Wallet className="w-4 h-4 text-slate-500" />
+                      <div className="absolute inset-0 bg-slate-100/40 dark:bg-slate-900/40 rounded-xl backdrop-blur-[1px] flex items-center justify-center z-10">
+                        <span className="bg-slate-800/80 text-white text-[8px] sm:text-[9px] font-black px-2 py-1 rounded-full backdrop-blur-md shadow-sm transform -rotate-12 whitespace-nowrap">UNAVAILABLE</span>
                       </div>
                     )}
-                    <span className={`text-xs ${!m.available ? 'text-slate-400' : 'text-slate-700 dark:text-slate-300'}`}>{m.name}</span>
-                    {withdrawMethod === m.id && <Check className="absolute top-2 right-2 w-4 h-4 text-brand-500" />}
+                    
+                    <div className={`w-10 h-10 sm:w-12 sm:h-12 mb-2 rounded-xl flex items-center justify-center bg-white dark:bg-slate-900 shadow-sm border border-slate-100 dark:border-slate-700 p-1.5 sm:p-2 transition-transform ${withdrawMethod === m.id ? 'scale-110 shadow-brand-500/30' : ''}`}>
+                      {m.logo ? (
+                        <img src={m.logo} alt={m.name} className="w-full h-full object-contain drop-shadow-sm" />
+                      ) : (
+                        <Wallet className="w-5 h-5 text-slate-400" />
+                      )}
+                    </div>
+                    
+                    <span className={`text-[10px] sm:text-xs font-black tracking-tight text-center ${
+                      !m.available ? 'text-slate-400' : withdrawMethod === m.id ? 'text-brand-600 dark:text-brand-400' : 'text-slate-600 dark:text-slate-300'
+                    }`}>
+                      {m.name}
+                    </span>
+                    
+                    {withdrawMethod === m.id && (
+                      <div className="absolute -top-2 -right-2 w-5 h-5 sm:w-6 sm:h-6 bg-brand-500 rounded-full flex items-center justify-center shadow-lg shadow-brand-500/40 border-2 border-white dark:border-slate-900 animate-bounce-subtle">
+                        <Check className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-white" />
+                      </div>
+                    )}
                   </button>
                 ))}
               </div>
