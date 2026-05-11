@@ -167,24 +167,6 @@ const SettingsPage = ({
         </div>
 
         <div className="max-w-4xl mx-auto px-4 pt-8">
-        <div 
-          className="bg-white dark:bg-slate-800 rounded-3xl p-6 mb-8 border border-slate-200 dark:border-slate-700 shadow-sm flex items-center gap-4 animate-fade-in"
-        >
-          <div className="relative">
-            <img 
-              src={user?.profilePic || "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=facearea&facepad=2&w=256&h=256&q=80"} 
-              alt="Avatar" 
-              className="w-16 h-16 rounded-full border-2 border-indigo-500"
-            />
-            <div className="absolute -bottom-1 -right-1 bg-green-500 w-5 h-5 rounded-full border-2 border-white dark:border-slate-800 flex items-center justify-center">
-              <CheckCircle2 className="w-3 h-3 text-white" />
-            </div>
-          </div>
-          <div className="flex-1 overflow-hidden">
-            <h2 className="text-xl font-bold text-slate-900 dark:text-white truncate">{user?.name || 'User'}</h2>
-            <p className="text-slate-500 dark:text-slate-400 text-sm truncate">{user?.phoneOrEmail}</p>
-          </div>
-        </div>
 
         <div className="space-y-8">
           {sections.map((group) => (
