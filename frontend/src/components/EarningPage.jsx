@@ -7,7 +7,8 @@ import MultiAdViewPage from './MultiAdViewPage';
 import BannerAd from './BannerAd';
 import { 
   Check, 
-  ArrowLeft, 
+  ArrowLeft,
+  ArrowRight, 
   ChevronRight, 
   Clock, 
   Medal, 
@@ -2931,98 +2932,155 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
                </button>
                <h2 className="text-xl font-black text-slate-800 dark:text-white">Wallet</h2>
             </div>
-            {/* ═══ Combined Balance Dashboard ═══ */}
+            {/* ═══ Premium Balance Dashboard ═══ */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-               {/* Cash Balance Card */}
-               <div className="bg-gradient-to-br from-slate-800 to-slate-900 rounded-3xl p-6 text-white shadow-xl border border-slate-700/50 relative overflow-hidden group transform-gpu">
-                 <div className="absolute inset-0 bg-gradient-to-br from-brand-600/10 to-purple-600/10 opacity-50 group-hover:opacity-100 transition-opacity" />
-                 <div className="relative">
-                   <div className="flex items-center gap-2 mb-3">
-                      <div className="w-8 h-8 bg-yellow-400 rounded-full flex items-center justify-center shadow-lg">
-                        <span className="text-black text-xs font-black">৳</span>
+               {/* Cash Balance Card - Premium Fintech Style */}
+               <div className="relative rounded-[2rem] p-6 text-white overflow-hidden group transform-gpu transition-transform hover:scale-[1.02] shadow-2xl shadow-brand-500/20">
+                 {/* Premium Background */}
+                 <div className="absolute inset-0 bg-gradient-to-br from-slate-900 via-slate-800 to-brand-900" />
+                 <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-10" />
+                 <div className="absolute -top-24 -right-24 w-48 h-48 bg-brand-500 rounded-full blur-3xl opacity-20" />
+                 <div className="absolute -bottom-24 -left-24 w-48 h-48 bg-purple-500 rounded-full blur-3xl opacity-20" />
+                 
+                 <div className="relative z-10 flex flex-col h-full justify-between">
+                   <div className="flex items-center justify-between mb-6">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 bg-gradient-to-br from-yellow-400 to-amber-600 rounded-xl flex items-center justify-center shadow-lg shadow-amber-500/30">
+                          <span className="text-white text-lg font-black drop-shadow-md">৳</span>
+                        </div>
+                        <p className="text-slate-300 text-xs font-bold uppercase tracking-widest">Available Balance</p>
                       </div>
-                      <p className="text-slate-400 text-sm font-bold uppercase tracking-wider">Balance</p>
+                      <Shield className="w-5 h-5 text-brand-400 opacity-80" />
                    </div>
-                   <p className="text-4xl font-black text-white mb-2 leading-none">৳ {balance.toLocaleString()}</p>
-                   <p className="text-slate-500 text-[10px] font-bold">MIN. WITHDRAW: <span className="text-amber-400">1,000 ৳</span></p>
+                   
+                   <div>
+                     <div className="flex items-baseline gap-1">
+                       <span className="text-2xl font-medium text-slate-300">৳</span>
+                       <p className="text-5xl font-black text-transparent bg-clip-text bg-gradient-to-r from-white to-slate-300 tracking-tight leading-none">
+                         {balance.toLocaleString()}
+                       </p>
+                     </div>
+                     <div className="mt-4 flex items-center gap-2">
+                       <span className="bg-slate-800/80 border border-slate-700 backdrop-blur-md text-slate-300 text-[10px] font-bold px-3 py-1.5 rounded-full uppercase tracking-wider">
+                         Min. Withdraw: <span className="text-amber-400">1,000 ৳</span>
+                       </span>
+                     </div>
+                   </div>
                  </div>
                  {withdrawSuccess && (
-                   <div
-                     className="absolute bottom-4 right-4 bg-emerald-500 text-white text-[10px] font-bold px-3 py-1 rounded-full shadow-lg flex items-center gap-1">
-                     <Check className="w-3 h-3" /> Requested!
+                   <div className="absolute top-4 right-4 bg-emerald-500 text-white text-[10px] font-black px-3 py-1 rounded-full shadow-lg flex items-center gap-1 animate-pulse">
+                     <Check className="w-3 h-3" /> REQUESTED
                    </div>
                  )}
                </div>
 
-               {/* Coin Balance Card */}
-               <div className="bg-gradient-to-br from-[#1a362d] to-[#0a1f18] rounded-3xl p-6 text-white shadow-xl border border-emerald-900/30 relative overflow-hidden group">
-                 <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/10 to-teal-500/10 opacity-50 group-hover:opacity-100 transition-opacity" />
-                 <div className="relative">
-                    <div className="flex justify-between items-start mb-3">
-                       <div className="flex items-center gap-2">
-                          <div className="w-8 h-8 bg-emerald-500 rounded-full flex items-center justify-center shadow-lg shadow-emerald-500/20">
-                            <Medal className="w-4 h-4 text-white" />
+               {/* Coin Balance Card - Premium Style */}
+               <div className="relative rounded-[2rem] p-6 text-white overflow-hidden group transform-gpu transition-transform hover:scale-[1.02] shadow-2xl shadow-emerald-500/10">
+                 {/* Premium Background */}
+                 <div className="absolute inset-0 bg-gradient-to-br from-emerald-950 via-slate-900 to-emerald-900" />
+                 <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] opacity-20" />
+                 <div className="absolute -top-20 -right-20 w-40 h-40 bg-emerald-500 rounded-full blur-3xl opacity-20" />
+                 <div className="absolute -bottom-20 -left-20 w-40 h-40 bg-teal-500 rounded-full blur-3xl opacity-20" />
+                 
+                 <div className="relative z-10 flex flex-col h-full justify-between">
+                    <div className="flex items-center justify-between mb-6">
+                       <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 bg-gradient-to-br from-emerald-400 to-teal-600 rounded-xl flex items-center justify-center shadow-lg shadow-emerald-500/30">
+                            <Medal className="w-5 h-5 text-white drop-shadow-md" />
                           </div>
-                          <p className="text-emerald-400/80 text-sm font-bold uppercase tracking-wider">Coins</p>
+                          <p className="text-emerald-200/80 text-xs font-bold uppercase tracking-widest">Earning Coins</p>
                        </div>
+                       <TrendingUp className="w-5 h-5 text-emerald-400 opacity-80" />
                     </div>
-                    <p className="text-4xl font-black text-white mb-2 leading-none">{coins.toLocaleString()}</p>
-                    <p className="text-emerald-500/60 text-[10px] font-bold">LIFETIME: {lifetimeCoins.toLocaleString()}</p>
+                    
+                    <div>
+                      <p className="text-5xl font-black text-transparent bg-clip-text bg-gradient-to-r from-emerald-100 to-teal-100 tracking-tight leading-none mb-4">
+                        {coins.toLocaleString()}
+                      </p>
+                      <div className="flex items-center gap-2">
+                        <span className="bg-emerald-950/80 border border-emerald-800/50 backdrop-blur-md text-emerald-200/80 text-[10px] font-bold px-3 py-1.5 rounded-full uppercase tracking-wider">
+                          Lifetime: <span className="text-emerald-400">{lifetimeCoins.toLocaleString()}</span>
+                        </span>
+                      </div>
+                    </div>
                  </div>
                </div>
             </div>
 
-            {/* ═══ Coin Conversion Section ═══ */}
-            <div className="bg-white dark:bg-slate-800/50 rounded-3xl p-5 border-2 border-dashed border-slate-200 dark:border-slate-700 flex flex-col sm:flex-row items-center justify-between gap-4">
-               <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 bg-amber-100 dark:bg-amber-900/30 rounded-2xl flex items-center justify-center shrink-0">
-                     <TrendingUp className="w-6 h-6 text-amber-500" />
-                  </div>
-                  <div>
-                     <p className="text-sm font-black text-slate-800 dark:text-white">Convert Coins to Cash</p>
-                     <p className="text-xs text-slate-500 font-medium">1000 Coins = 50 ৳ Balance</p>
-                  </div>
+            {/* ═══ Premium Coin Conversion Section ═══ */}
+            <div className="relative overflow-hidden bg-gradient-to-r from-amber-50 to-orange-50 dark:from-slate-800 dark:to-slate-800/80 rounded-3xl p-1 shadow-inner border border-amber-100 dark:border-slate-700 mt-2">
+               <div className="absolute inset-0 bg-white/40 dark:bg-white/5 backdrop-blur-xl" />
+               <div className="relative bg-white/60 dark:bg-slate-900/50 backdrop-blur-md rounded-[1.35rem] p-5 border border-white/50 dark:border-slate-700/50 flex flex-col sm:flex-row items-center justify-between gap-4 shadow-sm">
+                 <div className="flex items-center gap-4">
+                    <div className="w-14 h-14 bg-gradient-to-br from-amber-400 to-orange-500 rounded-2xl flex items-center justify-center shrink-0 shadow-lg shadow-orange-500/20 transform-gpu transition-transform hover:rotate-12">
+                       <TrendingUp className="w-7 h-7 text-white" />
+                    </div>
+                    <div>
+                       <p className="text-base font-black text-slate-800 dark:text-white tracking-tight">Convert Coins to Cash</p>
+                       <div className="flex items-center gap-2 mt-1">
+                         <span className="bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 text-[10px] font-black px-2 py-0.5 rounded-md uppercase tracking-wider">Rate</span>
+                         <p className="text-xs text-slate-500 font-bold">1000 Coins = 50 ৳</p>
+                       </div>
+                    </div>
+                 </div>
+                 <button
+                   onClick={handleConvertCoins}
+                   disabled={coins < 1000 || isLoading}
+                   className={`relative overflow-hidden px-8 py-3.5 rounded-xl font-black text-sm shadow-xl transition-all duration-300 transform-gpu group ${
+                     coins < 1000 
+                       ? 'bg-slate-200 dark:bg-slate-800 text-slate-400 cursor-not-allowed shadow-none'
+                       : 'bg-gradient-to-r from-amber-500 to-orange-600 text-white hover:scale-105 shadow-orange-500/30'
+                   }`}
+                 >
+                   {coins >= 1000 && (
+                     <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300 ease-out" />
+                   )}
+                   <span className="relative z-10">{isLoading ? 'Converting...' : 'Convert Now'}</span>
+                 </button>
                </div>
-               <button
-                 onClick={handleConvertCoins}
-                 disabled={coins < 1000 || isLoading}
-                 className={`px-6 py-3 rounded-2xl font-black text-sm shadow-lg transition-all ${
-                   coins < 1000 
-                     ? 'bg-slate-200 dark:bg-slate-700 text-slate-400 cursor-not-allowed'
-                     : 'bg-amber-500 text-white hover:bg-amber-600 shadow-amber-500/20'
-                 }`}
-               >
-                 {isLoading ? 'Converting...' : 'Convert Now'}
-               </button>
             </div>
 
 
-            {/* Amount Input */}
-            <div className="space-y-2">
-              <label className="text-sm font-bold text-slate-700 dark:text-slate-300">Withdrawal Amount (৳)</label>
-              <div className="relative">
-                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 font-bold text-lg">৳</span>
-                <input
-                  type="number"
-                  value={withdrawAmount}
-                  onChange={e => setWithdrawAmount(e.target.value)}
-                  placeholder="Minimum 1,000 ৳"
-                  className="w-full pl-10 pr-4 py-3.5 rounded-2xl border-2 border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-white font-bold text-lg focus:outline-none focus:border-brand-500 transition-colors"
-                />
+            {/* ═══ Premium Inputs ═══ */}
+            <div className="bg-white dark:bg-slate-800 rounded-[2rem] p-6 shadow-lg shadow-slate-200/50 dark:shadow-none border border-slate-100 dark:border-slate-700 space-y-6 mt-4">
+              
+              {/* Amount Input */}
+              <div className="space-y-2.5">
+                <label className="text-xs font-black text-slate-500 dark:text-slate-400 uppercase tracking-widest ml-1">Withdrawal Amount</label>
+                <div className="relative group">
+                  <div className="absolute inset-y-0 left-0 pl-5 flex items-center pointer-events-none">
+                    <div className="w-8 h-8 bg-slate-100 dark:bg-slate-700 rounded-lg flex items-center justify-center">
+                      <span className="text-slate-600 dark:text-slate-300 font-black text-sm">৳</span>
+                    </div>
+                  </div>
+                  <input
+                    type="number"
+                    value={withdrawAmount}
+                    onChange={e => setWithdrawAmount(e.target.value)}
+                    placeholder="Min. 1,000 ৳"
+                    className="w-full pl-16 pr-5 py-4 rounded-2xl border-2 border-slate-100 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-900/50 text-slate-800 dark:text-white font-black text-xl focus:outline-none focus:border-brand-500 focus:bg-white dark:focus:bg-slate-800 transition-all shadow-sm group-hover:border-slate-200 dark:group-hover:border-slate-600 placeholder:text-slate-300 dark:placeholder:text-slate-600"
+                  />
+                </div>
               </div>
-            </div>
 
-            {/* Phone Input */}
-            <div className="space-y-2">
-              <label className="text-sm font-bold text-slate-700 dark:text-slate-300">Account Phone Number</label>
-              <input
-                type="tel"
-                value={withdrawPhone}
-                onChange={e => setWithdrawPhone(e.target.value)}
-                placeholder="01X XXXX XXXX"
-                className="w-full px-4 py-3.5 rounded-2xl border-2 border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-white font-semibold focus:outline-none focus:border-brand-500 transition-colors"
-              />
-            </div>
+              {/* Phone Input */}
+              <div className="space-y-2.5">
+                <label className="text-xs font-black text-slate-500 dark:text-slate-400 uppercase tracking-widest ml-1">Account Phone Number</label>
+                <div className="relative group">
+                  <div className="absolute inset-y-0 left-0 pl-5 flex items-center pointer-events-none">
+                    <div className="w-8 h-8 bg-slate-100 dark:bg-slate-700 rounded-lg flex items-center justify-center">
+                      <Wallet className="w-4 h-4 text-slate-500 dark:text-slate-400" />
+                    </div>
+                  </div>
+                  <input
+                    type="tel"
+                    value={withdrawPhone}
+                    onChange={e => setWithdrawPhone(e.target.value)}
+                    placeholder="01X XXXX XXXX"
+                    className="w-full pl-16 pr-5 py-4 rounded-2xl border-2 border-slate-100 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-900/50 text-slate-800 dark:text-white font-black text-lg tracking-wide focus:outline-none focus:border-brand-500 focus:bg-white dark:focus:bg-slate-800 transition-all shadow-sm group-hover:border-slate-200 dark:group-hover:border-slate-600 placeholder:text-slate-300 dark:placeholder:text-slate-600"
+                  />
+                </div>
+              </div>
 
             {/* Payment Methods */}
             <div className="space-y-3">
@@ -3074,17 +3132,31 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
             </div>
 
             {/* Submit Button */}
-            <button
-              onClick={handleWithdraw}
-              disabled={withdrawLoading}
-              className="w-full py-4 rounded-2xl bg-gradient-to-r from-brand-500 to-brand-700 text-white font-black text-base shadow-lg shadow-brand-500/30 transform-gpu disabled:opacity-70 disabled:cursor-not-allowed"
-            >
-              {withdrawLoading ? (
-                <span className="flex items-center justify-center gap-2"><span className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent" />Processing...</span>
-              ) : 'Request Withdrawal'}
-            </button>
-
-            <p className="text-center text-xs text-slate-400">Withdrawals are processed within 1–3 business days. Secure and encrypted.</p>
+              <div className="pt-2">
+                <button
+                  onClick={handleWithdraw}
+                  disabled={withdrawLoading}
+                  className="relative w-full overflow-hidden group rounded-2xl p-[2px] disabled:opacity-70 disabled:cursor-not-allowed"
+                >
+                  <div className="absolute inset-0 bg-gradient-to-r from-brand-400 via-indigo-500 to-brand-600 rounded-2xl animate-gradient-xy opacity-80 group-hover:opacity-100 transition-opacity" />
+                  <div className="relative bg-gradient-to-r from-brand-600 to-indigo-600 py-4 px-6 rounded-[14px] flex items-center justify-center gap-2 shadow-xl">
+                    {withdrawLoading ? (
+                      <span className="flex items-center justify-center gap-2 text-white font-black text-base tracking-wide">
+                        <span className="animate-spin rounded-full h-5 w-5 border-2 border-white/30 border-t-white" />
+                        Processing...
+                      </span>
+                    ) : (
+                      <span className="text-white font-black text-lg tracking-wide flex items-center gap-2">
+                        Request Withdrawal <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                      </span>
+                    )}
+                  </div>
+                </button>
+                <p className="text-center text-[11px] font-bold text-slate-400 mt-4 uppercase tracking-widest">
+                  Secure & Encrypted • 1–3 Business Days
+                </p>
+              </div>
+            </div>
 
             {/* ═══ Withdrawal History Section ═══ */}
             <div className="mt-8 pt-8 border-t border-slate-200 dark:border-slate-700">
