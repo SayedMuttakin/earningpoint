@@ -129,35 +129,33 @@ const NotificationPage = ({ onBack }) => {
     <div className="fixed inset-0 z-[9999] bg-slate-50 dark:bg-slate-900 flex flex-col">
       <PullToRefresh onRefresh={handleRefresh} refreshing={refreshing}>
         <div className="w-full h-full pb-32">
-          <div className="max-w-4xl mx-auto pt-safe px-4 py-8 sm:py-12">
-            {/* Header */}
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 sm:gap-6 mb-8">
-            <div className="flex items-center gap-4">
-              <button 
-                onClick={onBack}
-                className="p-2 sm:p-2.5 bg-white dark:bg-slate-800 rounded-xl border border-slate-100 dark:border-slate-700 text-slate-500 hover:text-indigo-600 transition-all shadow-sm group"
-              >
-                <ArrowLeft size={18} className="group-hover:-translate-x-1 transition-transform" />
-              </button>
-              <div>
-                <h1 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white flex items-center gap-2">
-                  <Bell className="w-6 h-6 text-indigo-600" /> Notifications
-                </h1>
-                <p className="text-[10px] sm:text-xs text-slate-500 font-bold uppercase tracking-widest mt-0.5">Your Platform Activity</p>
+          <div className="w-full max-w-3xl mx-auto pt-safe px-3 sm:px-4 py-4 sm:py-8">
+            {/* Header - Premium Minimal */}
+            <div className="flex items-center justify-between mb-6 sticky top-0 bg-slate-50/90 dark:bg-slate-900/90 backdrop-blur-xl z-50 py-3 -mx-3 px-3 sm:mx-0 sm:px-0 border-b border-slate-200/50 dark:border-slate-800/50">
+              <div className="flex items-center gap-3">
+                <button 
+                  onClick={onBack}
+                  className="w-8 h-8 sm:w-10 sm:h-10 flex items-center justify-center bg-white dark:bg-slate-800 rounded-full border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 shadow-sm active:scale-95 transition-all"
+                >
+                  <ArrowLeft size={18} />
+                </button>
+                <div>
+                  <h1 className="text-lg sm:text-xl font-black text-slate-900 dark:text-white flex items-center gap-1.5 tracking-tight">
+                    <Bell className="w-4 h-4 sm:w-5 sm:h-5 text-indigo-600" /> Notifications
+                  </h1>
+                  <p className="text-[9px] sm:text-[10px] text-slate-500 font-bold uppercase tracking-[0.2em] mt-0.5">Your Activity</p>
+                </div>
               </div>
-            </div>
-            
-            <div className="flex items-center gap-3">
+              
               {notifications.length > 0 && (
                 <button
                   onClick={markAllAsRead}
-                  className="text-[11px] sm:text-xs font-black bg-indigo-600 text-white px-4 py-2 sm:px-5 sm:py-2.5 rounded-xl flex items-center justify-center gap-1.5 hover:bg-indigo-700 transition-all shadow shadow-indigo-600/20 active:scale-95"
+                  className="text-[10px] sm:text-xs font-black text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-900/30 px-3 py-1.5 rounded-full flex items-center gap-1 hover:bg-indigo-100 transition-colors shadow-sm"
                 >
-                  <CheckCircle2 size={14} /> Mark all read
+                  <CheckCircle2 size={12} /> Mark Read
                 </button>
               )}
             </div>
-          </div>
 
         {/* Notification List */}
         <div className="animate-fade-in">
@@ -183,11 +181,11 @@ const NotificationPage = ({ onBack }) => {
               {notifications.map((n, idx) => (
                 <div
                   key={n._id}
-                  className={`group relative p-4 sm:p-5 rounded-3xl border transition-all flex gap-3 sm:gap-4 animate-fade-in-up ${
+                  className={`group relative p-4 sm:p-5 rounded-3xl border transition-all flex gap-3 sm:gap-4 animate-fade-in ${
                     n.isRead 
                       ? 'bg-white/50 dark:bg-slate-800/50 border-slate-100 dark:border-slate-700 opacity-80' 
                       : n.type === 'announcement'
-                        ? 'bg-gradient-to-r from-amber-50 dark:from-amber-500/10 to-orange-50 dark:to-orange-500/10 border-amber-500/30 dark:border-amber-500/50 shadow-lg shadow-amber-500/10 ring-1 ring-amber-500/20'
+                        ? 'bg-[#FFF7ED] dark:bg-amber-900/20 border-orange-200 dark:border-amber-500/50 shadow-[0_4px_20px_rgba(251,146,60,0.15)] ring-1 ring-orange-400/30'
                         : 'bg-white dark:bg-slate-800 border-indigo-600/10 dark:border-indigo-600/20 shadow-lg shadow-indigo-600/5 ring-1 ring-indigo-600/5'
                   }`}
                   style={{ animationDelay: `${idx * 0.05}s` }}
@@ -263,7 +261,7 @@ const NotificationPage = ({ onBack }) => {
               className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm animate-fade-in"
               onClick={() => setSelectedNotification(null)}
             />
-            <div className="relative w-full max-w-sm bg-white dark:bg-slate-800 rounded-3xl shadow-2xl p-6 sm:p-8 animate-fade-in-up border border-slate-100 dark:border-slate-700">
+            <div className="relative w-full max-w-sm bg-white dark:bg-slate-800 rounded-3xl shadow-2xl p-6 sm:p-8 border border-slate-100 dark:border-slate-700 animate-fade-in">
               <div className="absolute -top-10 -right-10 w-40 h-40 bg-indigo-600/5 rounded-full blur-3xl opacity-50 pointer-events-none" />
               
               <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl flex items-center justify-center mb-6 shadow-inner mx-auto bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600">
