@@ -253,7 +253,7 @@ const NotificationPage = ({ onBack }) => {
           </p>
         </div>
         </div>
-
+        </div>
       </PullToRefresh>
 
       {/* Notification Details Modal */}
