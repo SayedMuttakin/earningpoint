@@ -307,7 +307,7 @@ const RegistrationForm = ({ onToggleForm, onRegisterSuccess }) => {
         <p className="text-slate-500 text-sm">Join us today to get started.</p>
       </div>
 
-      <form onSubmit={handleSubmit} className="w-full space-y-4">
+      <form onSubmit={handleSubmit} action="#" autoComplete="on" className="w-full space-y-4">
         <div>
           <div className="relative">
             <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">

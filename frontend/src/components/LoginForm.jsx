@@ -181,7 +181,7 @@ const LoginForm = ({ onToggleForm, onLoginSuccess, onForgotPassword }) => {
         <p className="text-slate-500 text-sm">Sign in to your existing account</p>
       </div>
 
-      <form onSubmit={handleSubmit} className="w-full space-y-4">
+      <form onSubmit={handleSubmit} action="#" autoComplete="on" className="w-full space-y-4">
         <div>
           <div className="relative">
             <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
