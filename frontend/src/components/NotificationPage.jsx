@@ -254,44 +254,44 @@ const NotificationPage = ({ onBack }) => {
         </div>
         </div>
 
-        {/* Notification Details Modal */}
-        {selectedNotification && (
-          <div className="fixed inset-0 z-[10000] flex items-center justify-center p-4">
-            <div 
-              className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm animate-fade-in"
-              onClick={() => setSelectedNotification(null)}
-            />
-            <div className="relative w-full max-w-sm bg-white dark:bg-slate-800 rounded-3xl shadow-2xl p-6 sm:p-8 border border-slate-100 dark:border-slate-700 animate-fade-in">
-              <div className="absolute -top-10 -right-10 w-40 h-40 bg-indigo-600/5 rounded-full blur-3xl opacity-50 pointer-events-none" />
-              
-              <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl flex items-center justify-center mb-6 shadow-inner mx-auto bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600">
-                {getIcon(selectedNotification.type)}
-              </div>
-              
-              <h3 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white mb-2 text-center">
-                {selectedNotification.title}
-              </h3>
-              
-              <div className="flex items-center justify-center gap-1.5 mb-6 text-xs font-black text-slate-400 uppercase tracking-widest">
-                <Clock size={12} /> {formatTime(selectedNotification.createdAt)}
-              </div>
-              
-              <div className="bg-slate-50 dark:bg-slate-900/50 rounded-2xl p-4 sm:p-5 mb-6 text-sm sm:text-base text-slate-600 dark:text-slate-300 leading-relaxed text-center font-medium border border-slate-100 dark:border-slate-800">
-                {selectedNotification.message}
-              </div>
-              
-              <button
-                onClick={() => setSelectedNotification(null)}
-                className="w-full py-3.5 bg-indigo-600 hover:bg-indigo-700 text-white font-black rounded-xl transition-all shadow-lg shadow-indigo-600/20 active:scale-95 text-sm sm:text-base"
-              >
-                Close
-              </button>
+      </PullToRefresh>
+
+      {/* Notification Details Modal */}
+      {selectedNotification && (
+        <div className="fixed inset-0 z-[10000] flex items-center justify-center p-4">
+          <div 
+            className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm animate-fade-in"
+            onClick={() => setSelectedNotification(null)}
+          />
+          <div className="relative w-full max-w-sm bg-white dark:bg-slate-800 rounded-3xl shadow-2xl p-6 sm:p-8 border border-slate-100 dark:border-slate-700 animate-fade-in">
+            <div className="absolute -top-10 -right-10 w-40 h-40 bg-indigo-600/5 rounded-full blur-3xl opacity-50 pointer-events-none" />
+            
+            <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl flex items-center justify-center mb-6 shadow-inner mx-auto bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600">
+              {getIcon(selectedNotification.type)}
             </div>
+            
+            <h3 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white mb-2 text-center">
+              {selectedNotification.title}
+            </h3>
+            
+            <div className="flex items-center justify-center gap-1.5 mb-6 text-xs font-black text-slate-400 uppercase tracking-widest">
+              <Clock size={12} /> {formatTime(selectedNotification.createdAt)}
+            </div>
+            
+            <div className="bg-slate-50 dark:bg-slate-900/50 rounded-2xl p-4 sm:p-5 mb-6 text-sm sm:text-base text-slate-600 dark:text-slate-300 leading-relaxed text-center font-medium border border-slate-100 dark:border-slate-800">
+              {selectedNotification.message}
+            </div>
+            
+            <button
+              onClick={() => setSelectedNotification(null)}
+              className="w-full py-3.5 bg-indigo-600 hover:bg-indigo-700 text-white font-black rounded-xl transition-all shadow-lg shadow-indigo-600/20 active:scale-95 text-sm sm:text-base"
+            >
+              Close
+            </button>
           </div>
-        )}
-      </div>
-    </PullToRefresh>
-  </div>
+        </div>
+      )}
+    </div>
   );
 };
 
