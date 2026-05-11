@@ -179,6 +179,10 @@ exports.googleAuth = async (req, res) => {
         // Link existing account to Google
         user.googleId = googleId;
         user.googleAvatar = picture || '';
+        // Only set Google name if user has no name yet
+        if (!user.name || user.name.trim() === '') {
+          user.name = name || '';
+        }
         await user.save();
       }
     }
