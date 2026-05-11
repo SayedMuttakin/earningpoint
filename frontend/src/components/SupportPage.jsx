@@ -45,6 +45,22 @@ const SupportPage = ({ onBack }) => {
     newSocket.on('connect', () => {
       setSocketConnected(true);
       setConnectionError(false);
+      
+      // Check for existing session
+      const savedSession = localStorage.getItem('zenivio_support_session');
+      if (savedSession) {
+        try {
+          const parsed = JSON.parse(savedSession);
+          // 10 minutes expiry
+          if (Date.now() - parsed.timestamp < 10 * 60 * 1000) {
+            setSessionId(parsed.sessionId);
+            setStep(2);
+            newSocket.emit('rejoin_session', { sessionId: parsed.sessionId });
+          } else {
+            localStorage.removeItem('zenivio_support_session');
+          }
+        } catch (e) {}
+      }
     });
 
     newSocket.on('connect_error', () => {
@@ -69,13 +85,28 @@ const SupportPage = ({ onBack }) => {
 
     socket.on('session_created', (data) => {
       setSessionId(data.sessionId);
+      localStorage.setItem('zenivio_support_session', JSON.stringify({ 
+        sessionId: data.sessionId, 
+        timestamp: Date.now() 
+      }));
       setStep(2); // Move to waiting screen
       setIsSubmitting(false);
+      if (submitTimeoutRef.current) clearTimeout(submitTimeoutRef.current);
     });
 
     socket.on('admin_joined', (data) => {
       setIsAdminJoined(true);
       setStep(3); // Move to chat screen
+    });
+    
+    socket.on('previous_messages', (msgs) => {
+      setMessages(msgs);
+    });
+    
+    socket.on('session_expired', () => {
+      localStorage.removeItem('zenivio_support_session');
+      setStep(1);
+      setSessionId(null);
     });
 
     socket.on('receive_message', (message) => {
@@ -143,6 +174,7 @@ const SupportPage = ({ onBack }) => {
     setIsAdminJoined(false);
     setIsSubmitting(false);
     setConnectionError(false);
+    localStorage.removeItem('zenivio_support_session');
     if (submitTimeoutRef.current) clearTimeout(submitTimeoutRef.current);
     await new Promise(resolve => setTimeout(resolve, 800));
     setRefreshing(false);
@@ -240,7 +272,7 @@ const SupportPage = ({ onBack }) => {
                 </div>
                 <h2 className="text-xl font-black text-slate-800 dark:text-white mb-3">Please Wait</h2>
                 <p className="text-slate-600 dark:text-slate-400 font-medium">
-                  আমাদের একজন এডমিন দ্রুত আপনার সাথে যোগাযোগ করছে, দয়া করে একটু অপেক্ষা করুন।
+                  One of our admins is contacting you shortly, please wait a moment.
                 </p>
               </div>
             )}

@@ -7,6 +7,7 @@ const Verification = require('../models/Verification');
 const PremiumOrder = require('../models/PremiumOrder');
 const GlobalSetting = require('../models/GlobalSetting');
 const CartProduct = require('../models/CartProduct');
+const ChatSession = require('../models/ChatSession');
 const jwt = require('jsonwebtoken');
 const { createNotification } = require('./notificationController');
 

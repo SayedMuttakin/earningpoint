@@ -41,6 +41,29 @@ module.exports = {
         }
       });
 
+      // User rejoins an existing session
+      socket.on('rejoin_session', async (data) => {
+        try {
+          const { sessionId } = data;
+          const session = await ChatSession.findById(sessionId);
+          if (session && session.status !== 'closed') {
+            socket.join(sessionId);
+            // If admin already joined, notify frontend
+            if (session.adminJoined) {
+              socket.emit('admin_joined', { message: 'Admin is in the chat' });
+            }
+            // Send existing messages
+            if (session.messages && session.messages.length > 0) {
+               socket.emit('previous_messages', session.messages);
+            }
+          } else {
+            socket.emit('session_expired');
+          }
+        } catch (err) {
+          console.error('Socket error rejoin_session:', err);
+        }
+      });
+
       // Admin joins the session
       socket.on('admin_join', async (data) => {
         try {
