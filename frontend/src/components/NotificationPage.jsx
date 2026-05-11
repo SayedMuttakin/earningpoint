@@ -8,7 +8,8 @@ import {
   Trash2,
   Clock,
   ArrowLeft,
-  Info
+  Info,
+  Megaphone
 } from 'lucide-react';
 import { API_BASE } from '../config';
 import PullToRefresh from './PullToRefresh';
@@ -93,6 +94,7 @@ const NotificationPage = ({ onBack }) => {
       case 'premium': return <Star className="w-4 h-4 sm:w-5 sm:h-5" />;
       case 'post': return <Bell className="w-4 h-4 sm:w-5 sm:h-5" />;
       case 'conversion': return <DollarSign className="w-4 h-4 sm:w-5 sm:h-5" />;
+      case 'announcement': return <Megaphone className="w-4 h-4 sm:w-5 sm:h-5" />;
       default: return <Bell className="w-4 h-4 sm:w-5 sm:h-5" />;
     }
   };
@@ -184,14 +186,16 @@ const NotificationPage = ({ onBack }) => {
                   className={`group relative p-4 sm:p-5 rounded-3xl border transition-all flex gap-3 sm:gap-4 animate-fade-in-up ${
                     n.isRead 
                       ? 'bg-white/50 dark:bg-slate-800/50 border-slate-100 dark:border-slate-700 opacity-80' 
-                      : 'bg-white dark:bg-slate-800 border-indigo-600/10 dark:border-indigo-600/20 shadow-lg shadow-indigo-600/5 ring-1 ring-indigo-600/5'
+                      : n.type === 'announcement'
+                        ? 'bg-gradient-to-r from-amber-50 dark:from-amber-500/10 to-orange-50 dark:to-orange-500/10 border-amber-500/30 dark:border-amber-500/50 shadow-lg shadow-amber-500/10 ring-1 ring-amber-500/20'
+                        : 'bg-white dark:bg-slate-800 border-indigo-600/10 dark:border-indigo-600/20 shadow-lg shadow-indigo-600/5 ring-1 ring-indigo-600/5'
                   }`}
                   style={{ animationDelay: `${idx * 0.05}s` }}
                 >
                   {!n.isRead && (
-                    <div className="absolute top-4 right-4 sm:top-5 sm:right-5 w-2 h-2 sm:w-2.5 sm:h-2.5 bg-indigo-600 rounded-full shadow-[0_0_15px_rgba(79,70,229,0.5)]">
+                    <div className={`absolute top-4 right-4 sm:top-5 sm:right-5 w-2 h-2 sm:w-2.5 sm:h-2.5 rounded-full ${n.type === 'announcement' ? 'bg-amber-500 shadow-[0_0_15px_rgba(245,158,11,0.5)]' : 'bg-indigo-600 shadow-[0_0_15px_rgba(79,70,229,0.5)]'}`}>
                     <div 
-                      className="absolute inset-0 bg-indigo-600 rounded-full animate-pulse"
+                      className={`absolute inset-0 rounded-full animate-pulse ${n.type === 'announcement' ? 'bg-amber-500' : 'bg-indigo-600'}`}
                     />
                     </div>
                   )}
@@ -199,7 +203,9 @@ const NotificationPage = ({ onBack }) => {
                   <div className={`w-12 h-12 sm:w-14 sm:h-14 rounded-2xl flex items-center justify-center shrink-0 transition-all duration-300 ${
                     n.isRead 
                       ? 'bg-slate-50 dark:bg-slate-900 text-slate-400' 
-                      : 'bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 shadow-inner'
+                      : n.type === 'announcement'
+                        ? 'bg-gradient-to-br from-amber-400 to-orange-500 text-white shadow-inner shadow-white/20'
+                        : 'bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 shadow-inner'
                   }`}>
                     {getIcon(n.type)}
                   </div>

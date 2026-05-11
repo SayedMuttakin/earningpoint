@@ -62,6 +62,10 @@ router.post('/weekly-missions', adminProtect, adminController.createWeeklyMissio
 router.put('/weekly-missions/:id', adminProtect, adminController.updateWeeklyMission);
 router.delete('/weekly-missions/:id', adminProtect, adminController.deleteWeeklyMission);
 
+// Announcements Management
+router.post('/announcements', adminProtect, adminController.sendAnnouncement);
+
+
 const upload = require('../middleware/uploadMiddleware');
 
 // Products Management

@@ -9,6 +9,7 @@ const GlobalSetting = require('../models/GlobalSetting');
 const CartProduct = require('../models/CartProduct');
 const ChatSession = require('../models/ChatSession');
 const WeeklyMission = require('../models/WeeklyMission');
+const Notification = require('../models/Notification');
 const jwt = require('jsonwebtoken');
 const { createNotification } = require('./notificationController');
 
@@ -715,5 +716,38 @@ exports.deleteWeeklyMission = async (req, res) => {
     res.json({ message: 'Mission deleted' });
   } catch (error) {
     res.status(500).json({ message: error.message });
+  }
+};
+
+// ─── Announcements ────────────────────────────────────────────────────────────
+exports.sendAnnouncement = async (req, res) => {
+  try {
+    const { title, message } = req.body;
+    if (!title || !message) {
+      return res.status(400).json({ message: 'Title and message are required' });
+    }
+
+    // Fetch all user IDs
+    const users = await User.find({}, '_id').lean();
+    if (users.length === 0) {
+      return res.status(404).json({ message: 'No users found to send announcement' });
+    }
+
+    // Create notifications array
+    const notifications = users.map(user => ({
+      userId: user._id,
+      title,
+      message,
+      type: 'announcement',
+      isRead: false
+    }));
+
+    // Bulk insert
+    await Notification.insertMany(notifications);
+
+    res.status(201).json({ message: `Announcement sent to ${users.length} users successfully` });
+  } catch (error) {
+    console.error('Error sending announcement:', error);
+    res.status(500).json({ message: 'Failed to send announcement' });
   }
 };
