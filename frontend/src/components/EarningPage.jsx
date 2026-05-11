@@ -2932,77 +2932,62 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
                </button>
                <h2 className="text-xl font-black text-slate-800 dark:text-white">Wallet</h2>
             </div>
-            {/* ═══ Premium Balance Dashboard ═══ */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-               {/* Cash Balance Card - Premium Fintech Style */}
-               <div className="relative rounded-[2rem] p-6 text-white overflow-hidden group transform-gpu transition-transform hover:scale-[1.02] shadow-2xl shadow-brand-500/20">
-                 {/* Premium Background */}
-                 <div className="absolute inset-0 bg-gradient-to-br from-slate-900 via-slate-800 to-brand-900" />
-                 <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-10" />
-                 <div className="absolute -top-24 -right-24 w-48 h-48 bg-brand-500 rounded-full blur-3xl opacity-20" />
-                 <div className="absolute -bottom-24 -left-24 w-48 h-48 bg-purple-500 rounded-full blur-3xl opacity-20" />
-                 
-                 <div className="relative z-10 flex flex-col h-full justify-between">
-                   <div className="flex items-center justify-between mb-6">
-                      <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 bg-gradient-to-br from-yellow-400 to-amber-600 rounded-xl flex items-center justify-center shadow-lg shadow-amber-500/30">
-                          <span className="text-white text-lg font-black drop-shadow-md">৳</span>
-                        </div>
-                        <p className="text-slate-300 text-xs font-bold uppercase tracking-widest">Available Balance</p>
-                      </div>
-                      <Shield className="w-5 h-5 text-brand-400 opacity-80" />
-                   </div>
-                   
-                   <div>
-                     <div className="flex items-baseline gap-1">
-                       <span className="text-2xl font-medium text-slate-300">৳</span>
-                       <p className="text-5xl font-black text-transparent bg-clip-text bg-gradient-to-r from-white to-slate-300 tracking-tight leading-none">
-                         {balance.toLocaleString()}
-                       </p>
+            {/* ═══ Professional Balance Dashboard ═══ */}
+            <div className="grid grid-cols-2 gap-3">
+               {/* Cash Balance Card */}
+               <div className="relative rounded-[1.25rem] p-4 overflow-hidden bg-white dark:bg-slate-800 border border-slate-200/60 dark:border-slate-700/50 shadow-sm transition-all hover:shadow-md group">
+                 <div className="flex items-center justify-between mb-3">
+                   <div className="flex items-center gap-2">
+                     <div className="w-8 h-8 rounded-full bg-gradient-to-br from-indigo-500 to-blue-600 flex items-center justify-center shadow-inner shadow-blue-500/20 transform group-hover:scale-105 transition-transform">
+                       <Wallet className="w-4 h-4 text-white" />
                      </div>
-                     <div className="mt-4 flex items-center gap-2">
-                       <span className="bg-slate-800/80 border border-slate-700 backdrop-blur-md text-slate-300 text-[10px] font-bold px-3 py-1.5 rounded-full uppercase tracking-wider">
-                         Min. Withdraw: <span className="text-amber-400">1,000 ৳</span>
-                       </span>
-                     </div>
+                     <p className="text-slate-500 dark:text-slate-400 text-[11px] font-bold uppercase tracking-wider">Balance</p>
                    </div>
                  </div>
+                 
+                 <div className="flex items-baseline gap-1">
+                   <span className="text-lg font-semibold text-slate-400 dark:text-slate-500">৳</span>
+                   <p className="text-3xl font-black text-slate-800 dark:text-white tracking-tight">
+                     {balance.toLocaleString()}
+                   </p>
+                 </div>
+                 
+                 <div className="mt-2">
+                   <p className="text-[10px] font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wide">
+                     Min. Withdraw <span className="text-blue-500 dark:text-blue-400">1,000 ৳</span>
+                   </p>
+                 </div>
                  {withdrawSuccess && (
-                   <div className="absolute top-4 right-4 bg-emerald-500 text-white text-[10px] font-black px-3 py-1 rounded-full shadow-lg flex items-center gap-1 animate-pulse">
-                     <Check className="w-3 h-3" /> REQUESTED
+                   <div className="absolute top-4 right-4">
+                     <span className="flex h-2.5 w-2.5">
+                       <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                       <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
+                     </span>
                    </div>
                  )}
                </div>
 
-               {/* Coin Balance Card - Premium Style */}
-               <div className="relative rounded-[2rem] p-6 text-white overflow-hidden group transform-gpu transition-transform hover:scale-[1.02] shadow-2xl shadow-emerald-500/10">
-                 {/* Premium Background */}
-                 <div className="absolute inset-0 bg-gradient-to-br from-emerald-950 via-slate-900 to-emerald-900" />
-                 <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] opacity-20" />
-                 <div className="absolute -top-20 -right-20 w-40 h-40 bg-emerald-500 rounded-full blur-3xl opacity-20" />
-                 <div className="absolute -bottom-20 -left-20 w-40 h-40 bg-teal-500 rounded-full blur-3xl opacity-20" />
+               {/* Coin Balance Card */}
+               <div className="relative rounded-[1.25rem] p-4 overflow-hidden bg-white dark:bg-slate-800 border border-slate-200/60 dark:border-slate-700/50 shadow-sm transition-all hover:shadow-md group">
+                 <div className="flex items-center justify-between mb-3">
+                   <div className="flex items-center gap-2">
+                     <div className="w-8 h-8 rounded-full bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center shadow-inner shadow-orange-500/20 transform group-hover:scale-105 transition-transform">
+                       <Medal className="w-4 h-4 text-white" />
+                     </div>
+                     <p className="text-slate-500 dark:text-slate-400 text-[11px] font-bold uppercase tracking-wider">Coins</p>
+                   </div>
+                 </div>
                  
-                 <div className="relative z-10 flex flex-col h-full justify-between">
-                    <div className="flex items-center justify-between mb-6">
-                       <div className="flex items-center gap-3">
-                          <div className="w-10 h-10 bg-gradient-to-br from-emerald-400 to-teal-600 rounded-xl flex items-center justify-center shadow-lg shadow-emerald-500/30">
-                            <Medal className="w-5 h-5 text-white drop-shadow-md" />
-                          </div>
-                          <p className="text-emerald-200/80 text-xs font-bold uppercase tracking-widest">Earning Coins</p>
-                       </div>
-                       <TrendingUp className="w-5 h-5 text-emerald-400 opacity-80" />
-                    </div>
-                    
-                    <div>
-                      <p className="text-5xl font-black text-transparent bg-clip-text bg-gradient-to-r from-emerald-100 to-teal-100 tracking-tight leading-none mb-4">
-                        {coins.toLocaleString()}
-                      </p>
-                      <div className="flex items-center gap-2">
-                        <span className="bg-emerald-950/80 border border-emerald-800/50 backdrop-blur-md text-emerald-200/80 text-[10px] font-bold px-3 py-1.5 rounded-full uppercase tracking-wider">
-                          Lifetime: <span className="text-emerald-400">{lifetimeCoins.toLocaleString()}</span>
-                        </span>
-                      </div>
-                    </div>
+                 <div className="flex items-baseline gap-1">
+                   <p className="text-3xl font-black text-slate-800 dark:text-white tracking-tight">
+                     {coins.toLocaleString()}
+                   </p>
+                 </div>
+                 
+                 <div className="mt-2">
+                   <p className="text-[10px] font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wide">
+                     Lifetime <span className="text-amber-500 dark:text-amber-400">{lifetimeCoins.toLocaleString()}</span>
+                   </p>
                  </div>
                </div>
             </div>
