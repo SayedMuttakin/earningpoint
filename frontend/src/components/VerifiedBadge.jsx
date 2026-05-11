@@ -74,7 +74,7 @@ const VerifiedBadge = ({ className = "", size, iconClassName, type = "company" }
                 )}
 
                 <h3 className="text-xl font-bold text-slate-900 dark:text-white text-center mb-2">
-                  ✅ Verified Account
+                  Verified Account
                 </h3>
                 <p className="text-[#536471] dark:text-slate-400 text-[15px] text-center mb-8 leading-relaxed">
                   This account has been verified by Zenivio. The badge confirms the authenticity and trustworthiness of this {isCompany ? 'official entity' : 'user'}.

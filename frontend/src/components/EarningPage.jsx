@@ -1787,6 +1787,12 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
             onClick={e => e.stopPropagation()}
           >
             <div className="absolute top-0 left-0 right-0 h-40 bg-gradient-to-b from-rose-600/20 to-transparent pointer-events-none" />
+            <button
+              onClick={() => setShowLockPopup(false)}
+              className="absolute top-4 left-4 w-10 h-10 flex items-center justify-center rounded-full bg-white/5 border border-white/10 text-slate-300 hover:bg-white/10 hover:text-white transition-colors z-20"
+            >
+              <ArrowLeft className="w-5 h-5" />
+            </button>
             <div className="flex flex-col items-center pt-10 pb-5 px-6 relative z-10">
               <div className="relative mb-5">
                 <div className="absolute inset-0 bg-rose-500 blur-3xl opacity-30 scale-150" />

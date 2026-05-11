@@ -148,6 +148,7 @@ function App() {
         {activeTab === 'Notification' && <NotificationPage onBack={() => setActiveTab('Home')} />}
         {activeTab === 'PaymentSuccess' && <PaymentSuccess paymentMethod={selectedPaymentMethod} onBack={() => showBackAd(() => setActiveTab('Home'))} />}
         {activeTab === 'Profile' && <ProfilePage 
+          onBack={() => setActiveTab('Home')}
           onVerifyClick={() => setActiveTab('Verify')} 
           onLanguageClick={() => setActiveTab('Language')} 
           onPasswordClick={() => setActiveTab('ChangePassword')}

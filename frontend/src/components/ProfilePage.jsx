@@ -13,7 +13,8 @@ import {
   Moon,
   ChevronRight,
   Camera,
-  Trophy
+  Trophy,
+  ArrowLeft
 } from 'lucide-react';
 import PullToRefresh from './PullToRefresh';
 
@@ -21,7 +22,7 @@ import BannerAd from './BannerAd';
 import VerifiedBadge from './VerifiedBadge';
 import EmailVerifyModal from './EmailVerifyModal';
 
-const ProfilePage = ({ onVerifyClick, onLanguageClick, onPasswordClick, onReferralsClick, onLeaderboardClick, onTermsClick, onDeleteClick, darkMode, onToggleDarkMode, onTransactionsClick, onSupportClick }) => {
+const ProfilePage = ({ onBack, onVerifyClick, onLanguageClick, onPasswordClick, onReferralsClick, onLeaderboardClick, onTermsClick, onDeleteClick, darkMode, onToggleDarkMode, onTransactionsClick, onSupportClick }) => {
   const [profilePic, setProfilePic] = useState('');
   const [userName, setUserName] = useState('User');
   const [userEmail, setUserEmail] = useState('');
@@ -147,8 +148,16 @@ const ProfilePage = ({ onVerifyClick, onLanguageClick, onPasswordClick, onReferr
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 sm:pt-10 w-full">
           {/* Header */}
           <div className="flex items-center justify-between pb-6 sm:pb-10 mb-6 sm:mb-10 text-center relative border-b border-slate-100 dark:border-slate-700">
+            <div className="w-full flex justify-start gap-2 z-10">
+              <button 
+                onClick={onBack}
+                className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-slate-50 dark:bg-slate-800 flex items-center justify-center hover:bg-slate-100 dark:hover:bg-slate-700 transition-transform hover:scale-105"
+              >
+                <ArrowLeft className="w-5 h-5 sm:w-6 sm:h-6 text-slate-700 dark:text-slate-300" />
+              </button>
+            </div>
             <h1 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white absolute left-1/2 -translate-x-1/2">Profile</h1>
-            <div className="w-full flex justify-end gap-2">
+            <div className="w-full flex justify-end gap-2 z-10">
               <button className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-slate-50 dark:bg-slate-800 flex items-center justify-center hover:bg-slate-100 dark:hover:bg-slate-700 transition-transform hover:scale-105">
                 <Settings className="w-5 h-5 sm:w-6 sm:h-6 text-slate-700 dark:text-slate-300" />
               </button>
