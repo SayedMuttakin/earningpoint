@@ -271,6 +271,9 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
   const [mysteryBoxReward, setMysteryBoxReward] = React.useState(null);
   const [isOpeningBox, setIsOpeningBox] = React.useState(false);
 
+  const [showWeeklyMissionsView, setShowWeeklyMissionsView] = React.useState(false);
+  const [weeklyMissions, setWeeklyMissions] = React.useState([]);
+
   const [showAdOverlay, setShowAdOverlay] = React.useState(false);
   const [adCountdown, setAdCountdown] = React.useState(40);
   const [canCloseAd, setCanCloseAd] = React.useState(false);
@@ -333,6 +336,14 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
       coins: '1-45',
       color: 'from-rose-400 to-pink-500',
       action: () => setShowMysteryBoxView(true)
+    },
+    {
+      id: 'feat-weekly',
+      name: 'Weekly Missions',
+      icon: <ClipboardList className="w-6 h-6" />,
+      coins: 'Extra',
+      color: 'from-blue-400 to-indigo-500',
+      action: () => { setShowWeeklyMissionsView(true); fetchWeeklyMissions(); }
     },
     {
       id: 'feat-refer',
@@ -593,6 +604,7 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
         fetchBalance(),
         fetchCheckinStatus(),
         fetchMysteryBoxStatus(),
+        fetchWeeklyMissions(),
         fetchVideoStatus(),
         fetchWheelStatus(),
         fetchScratchStatus(),
@@ -622,6 +634,22 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
       }
     } catch (err) {
       console.error('Failed to fetch mystery box status:', err);
+    }
+  };
+
+  const fetchWeeklyMissions = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) return;
+      const response = await fetch(`${API_BASE}/api/earning/weekly-missions`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (response.ok) {
+        const data = await response.json();
+        setWeeklyMissions(data);
+      }
+    } catch (err) {
+      console.error('Failed to fetch weekly missions:', err);
     }
   };
 
@@ -2601,6 +2629,86 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
             <div className="mt-auto pt-8">
               <BigAdBanner globalSettings={globalSettings} />
             </div>
+          </div>
+        </div>
+      )}
+
+      {showWeeklyMissionsView && (
+        <div className="fixed inset-0 z-[9999] bg-slate-50 dark:bg-slate-950 flex flex-col h-screen w-full">
+          <div className="bg-slate-50 dark:bg-slate-950 pt-safe px-6 py-5 flex justify-between items-center border-b border-slate-200 dark:border-slate-800 shrink-0">
+            <h3 className="text-xl font-bold text-slate-800 dark:text-white">Weekly Missions</h3>
+            <button onClick={() => goBackWithAd(() => setShowWeeklyMissionsView(false))} className="text-slate-400 hover:text-slate-600 dark:hover:text-white transition-colors">
+              <ArrowLeft className="w-6 h-6 hover:-translate-x-1 transition-transform" />
+            </button>
+          </div>
+          <div className="flex-1 overflow-y-auto p-4 md:p-8 space-y-4">
+            <div className="text-center space-y-2 mb-6">
+              <p className="text-slate-500 dark:text-slate-400 font-medium">Complete tasks to earn huge rewards!</p>
+              <p className="text-xs text-slate-400">Missions reset weekly</p>
+            </div>
+
+            {weeklyMissions.length === 0 ? (
+              <div className="text-center py-10">
+                <ClipboardList className="w-12 h-12 text-slate-300 dark:text-slate-700 mx-auto mb-3" />
+                <p className="text-slate-500 dark:text-slate-400">No active missions this week.</p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {weeklyMissions.map(mission => (
+                  <div key={mission._id} className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-5 rounded-2xl flex flex-col relative overflow-hidden shadow-sm">
+                    {mission.isCompleted && (
+                      <div className="absolute top-0 right-0 bg-emerald-500 text-white text-[10px] font-bold px-3 py-1 rounded-bl-lg uppercase tracking-wider">
+                        Completed
+                      </div>
+                    )}
+                    <h4 className="text-lg font-bold text-slate-800 dark:text-white pr-16">{mission.title}</h4>
+                    <p className="text-sm text-slate-500 dark:text-slate-400 mt-1 flex-1">{mission.description}</p>
+                    <div className="mt-4 flex items-center justify-between">
+                      <div className="flex items-center gap-1.5 bg-amber-100 dark:bg-amber-900/30 px-3 py-1.5 rounded-full">
+                        <span className="text-amber-500 text-lg">💰</span>
+                        <span className="font-bold text-amber-600 dark:text-amber-400 text-sm">+{mission.reward} Coins</span>
+                      </div>
+                      <button
+                        onClick={async () => {
+                          if (mission.isCompleted) return;
+                          
+                          AdMobService.showInterstitial(async () => {
+                            setIsLoading(true);
+                            try {
+                              const token = localStorage.getItem('token');
+                              const response = await fetch(`${API_BASE}/api/earning/weekly-missions/${mission._id}/complete`, {
+                                method: 'POST',
+                                headers: { Authorization: `Bearer ${token}` }
+                              });
+                              const data = await response.json();
+                              setIsLoading(false);
+                              if (response.ok) {
+                                showToast(data.message || 'Mission completed!', 'success');
+                                fetchBalance();
+                                fetchWeeklyMissions();
+                              } else {
+                                showToast(data.message || 'Failed to complete mission', 'error');
+                              }
+                            } catch (err) {
+                              setIsLoading(false);
+                              showToast('Network error', 'error');
+                            }
+                          });
+                        }}
+                        disabled={mission.isCompleted || isLoading}
+                        className={`px-4 py-2 rounded-xl text-sm font-bold transition-all ${
+                          mission.isCompleted
+                            ? 'bg-slate-100 dark:bg-slate-800 text-slate-400 cursor-not-allowed'
+                            : 'bg-brand-500 hover:bg-brand-600 text-white shadow-md shadow-brand-500/20 active:scale-95'
+                        }`}
+                      >
+                        {mission.isCompleted ? 'Claimed' : 'Complete'}
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         </div>
       )}

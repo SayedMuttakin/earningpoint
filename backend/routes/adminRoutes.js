@@ -56,6 +56,12 @@ router.delete('/articles/:id', adminProtect, adminController.deleteArticle);
 router.get('/settings/global', adminProtect, adminController.getGlobalSettings);
 router.put('/settings/global', adminProtect, adminController.updateGlobalSettings);
 
+// Weekly Missions Management
+router.get('/weekly-missions', adminProtect, adminController.getWeeklyMissions);
+router.post('/weekly-missions', adminProtect, adminController.createWeeklyMission);
+router.put('/weekly-missions/:id', adminProtect, adminController.updateWeeklyMission);
+router.delete('/weekly-missions/:id', adminProtect, adminController.deleteWeeklyMission);
+
 const upload = require('../middleware/uploadMiddleware');
 
 // Products Management

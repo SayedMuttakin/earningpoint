@@ -33,6 +33,9 @@ router.get('/withdrawals', protect, earningController.getWithdrawals);
 router.get('/all-withdrawals', protect, earningController.getAllWithdrawals);
 router.post('/premium-order', protect, earningController.submitPremiumOrder);
 
+router.get('/weekly-missions', protect, earningController.getWeeklyMissions);
+router.post('/weekly-missions/complete/:id', protect, earningController.completeWeeklyMission);
+
 router.get('/settings', earningController.getGlobalSettings);
 router.get('/products', protect, earningController.getProducts);
 

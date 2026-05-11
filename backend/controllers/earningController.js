@@ -3,6 +3,8 @@ const Article = require('../models/Article');
 const Transaction = require('../models/Transaction');
 const GlobalSetting = require('../models/GlobalSetting');
 const CartProduct = require('../models/CartProduct');
+const WeeklyMission = require('../models/WeeklyMission');
+const MissionCompletion = require('../models/MissionCompletion');
 const { createNotification } = require('./notificationController');
 
 const processPoints = (user, reward) => {
@@ -825,6 +827,75 @@ exports.claimArticleReward = async (req, res) => {
       balance: user.balance,
       points: user.points,
       count: user.articleReadCount
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: error.message });
+  }
+};
+
+// ─── Weekly Missions ────────────────────────────────────────────────────────
+exports.getWeeklyMissions = async (req, res) => {
+  try {
+    const missions = await WeeklyMission.find({ isActive: true }).sort({ createdAt: -1 });
+    const completions = await MissionCompletion.find({ userId: req.user._id });
+    
+    const completedMissionIds = completions.map(c => c.missionId.toString());
+    
+    // Add completed flag to missions for the current user
+    const missionsWithStatus = missions.map(mission => {
+      return {
+        ...mission.toObject(),
+        isCompleted: completedMissionIds.includes(mission._id.toString())
+      };
+    });
+
+    res.json(missionsWithStatus);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+exports.completeWeeklyMission = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const user = await User.findById(req.user._id);
+    
+    const mission = await WeeklyMission.findById(id);
+    if (!mission) return res.status(404).json({ message: 'Mission not found' });
+    if (!mission.isActive) return res.status(400).json({ message: 'This mission is no longer active' });
+
+    // Check if already completed
+    const existingCompletion = await MissionCompletion.findOne({ userId: user._id, missionId: mission._id });
+    if (existingCompletion) {
+      return res.status(400).json({ message: 'You have already completed this mission' });
+    }
+
+    // Mark as completed
+    await MissionCompletion.create({ userId: user._id, missionId: mission._id });
+
+    // Grant reward
+    const reward = mission.rewardCoins || 0;
+    if (reward > 0) {
+      processPoints(user, reward);
+      await user.save();
+
+      await Transaction.create({
+        userId: user._id,
+        type: 'earning',
+        amount: reward,
+        description: `Weekly Mission: ${mission.title}`,
+        status: 'completed'
+      });
+
+      createNotification(user._id, 'Mission Complete! 🎯', `You earned ${reward} points for completing "${mission.title}"`, 'earning');
+    }
+
+    res.json({
+      message: `Mission completed! Rewarded ${reward} coins.`,
+      balance: user.balance,
+      points: user.points,
+      missionId: mission._id
     });
   } catch (error) {
     console.error(error);

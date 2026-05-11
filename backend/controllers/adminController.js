@@ -8,6 +8,7 @@ const PremiumOrder = require('../models/PremiumOrder');
 const GlobalSetting = require('../models/GlobalSetting');
 const CartProduct = require('../models/CartProduct');
 const ChatSession = require('../models/ChatSession');
+const WeeklyMission = require('../models/WeeklyMission');
 const jwt = require('jsonwebtoken');
 const { createNotification } = require('./notificationController');
 
@@ -671,6 +672,47 @@ exports.deleteProduct = async (req, res) => {
     const product = await CartProduct.findByIdAndDelete(req.params.id);
     if (!product) return res.status(404).json({ message: 'Product not found' });
     res.json({ message: 'Product deleted' });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+// ─── Weekly Missions MANAGEMENT ──────────────────────────────────────────────
+exports.getWeeklyMissions = async (req, res) => {
+  try {
+    const missions = await WeeklyMission.find().sort({ createdAt: -1 });
+    res.json(missions);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+exports.createWeeklyMission = async (req, res) => {
+  try {
+    const { title, description, rewardCoins, actionUrl, isActive } = req.body;
+    const mission = new WeeklyMission({ title, description, rewardCoins, actionUrl, isActive });
+    await mission.save();
+    res.status(201).json(mission);
+  } catch (error) {
+    res.status(400).json({ message: error.message });
+  }
+};
+
+exports.updateWeeklyMission = async (req, res) => {
+  try {
+    const mission = await WeeklyMission.findByIdAndUpdate(req.params.id, req.body, { new: true });
+    if (!mission) return res.status(404).json({ message: 'Mission not found' });
+    res.json(mission);
+  } catch (error) {
+    res.status(400).json({ message: error.message });
+  }
+};
+
+exports.deleteWeeklyMission = async (req, res) => {
+  try {
+    const mission = await WeeklyMission.findByIdAndDelete(req.params.id);
+    if (!mission) return res.status(404).json({ message: 'Mission not found' });
+    res.json({ message: 'Mission deleted' });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
