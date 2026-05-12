@@ -1,21 +1,36 @@
 const Referral = require('../models/Referral');
 const User = require('../models/User');
+const Transaction = require('../models/Transaction');
+const { createNotification } = require('./notificationController');
 
-// GET /api/referrals — Get user's referral data
+// GET /api/referrals — Get user's referral data with VPN status per referred user
 exports.getReferrals = async (req, res) => {
   try {
     const user = await User.findById(req.user._id).select('referralCode');
     const referrals = await Referral.find({ referrerId: req.user._id })
-      .populate('referredUserId', 'phoneOrEmail name createdAt')
+      .populate('referredUserId', 'phoneOrEmail name createdAt isPremium premiumExpiry')
       .sort({ createdAt: -1 });
 
     const totalEarned = referrals.reduce((sum, r) => sum + (r.bonusAwarded || 0), 0);
+    const completedReferrals = referrals.filter(r => r.status === 'completed').length;
+
+    // Format referral list with VPN status
+    const referralList = referrals.map(r => ({
+      id: r._id,
+      name: r.referredUserId?.name || 'User',
+      phone: r.referredUserId?.phoneOrEmail || '',
+      joinedAt: r.createdAt,
+      vpnPurchased: r.status === 'completed',
+      vpnPurchasedAt: r.vpnPurchasedAt,
+      bonusAwarded: r.bonusAwarded,
+    }));
 
     res.json({
       referralCode: user.referralCode,
       friendsInvited: referrals.length,
+      completedReferrals, // VPN-activated referrals
       totalEarned,
-      referrals,
+      referrals: referralList,
     });
   } catch (error) {
     console.error(error);
@@ -23,7 +38,8 @@ exports.getReferrals = async (req, res) => {
   }
 };
 
-// POST /api/referrals/apply — Apply a referral code during registration
+// POST /api/referrals/apply — Apply referral code at registration
+// NOTE: Bonus is NOT given immediately — only after referred user buys VPN
 exports.applyReferralCode = async (req, res) => {
   try {
     const { referralCode } = req.body;
@@ -47,38 +63,76 @@ exports.applyReferralCode = async (req, res) => {
       return res.status(400).json({ message: 'You have already used a referral code' });
     }
 
-    const referral = await Referral.create({
+    // Create referral in PENDING state — no bonus until VPN purchase
+    await Referral.create({
       referrerId: referrer._id,
       referredUserId: req.user._id,
-      bonusAwarded: 60, // 60 TK bonus as requested
-      status: 'completed',
+      bonusAwarded: 0,
+      status: 'pending',
     });
 
-    const Transaction = require('../models/Transaction');
-
-    // Give 60 TK to the referrer
-    await User.findByIdAndUpdate(referrer._id, { $inc: { balance: 60 } });
-    await Transaction.create({
-      userId: referrer._id,
-      type: 'referral_bonus',
-      amount: 60,
-      description: 'Friend registered using your referral code',
-      status: 'completed'
+    res.status(201).json({
+      message: 'Referral code applied! Your referrer will earn a bonus when you purchase a VPN plan.',
     });
-
-    // Give 60 TK to the referred user
-    await User.findByIdAndUpdate(req.user._id, { $inc: { balance: 60 } });
-    await Transaction.create({
-      userId: req.user._id,
-      type: 'referral_bonus',
-      amount: 60,
-      description: 'Sign up bonus from referral code',
-      status: 'completed'
-    });
-
-    res.status(201).json({ message: 'Referral code applied successfully. You earned 60 TK!', referral });
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: error.message || 'Server Error' });
+  }
+};
+
+// Internal: Called when a user's premium/VPN is approved
+// activatedUserId = the user who just got premium
+exports.activateReferralBonus = async (activatedUserId) => {
+  try {
+    // Find pending referral for this user
+    const referral = await Referral.findOne({
+      referredUserId: activatedUserId,
+      status: 'pending',
+    });
+
+    if (!referral) return; // No pending referral
+
+    // Activate bonus
+    referral.status = 'completed';
+    referral.bonusAwarded = 60;
+    referral.vpnPurchasedAt = new Date();
+    await referral.save();
+
+    // Give 60 TK bonus to referrer
+    await User.findByIdAndUpdate(referral.referrerId, { $inc: { balance: 60 } });
+    await Transaction.create({
+      userId: referral.referrerId,
+      type: 'referral_bonus',
+      amount: 60,
+      description: 'Referral bonus — your friend purchased a VPN plan!',
+      status: 'completed',
+    });
+
+    // Notify referrer
+    createNotification(
+      referral.referrerId,
+      'Referral Bonus! 🎉',
+      'Your referred friend just purchased a VPN plan. You earned 60৳ bonus!',
+      'earning'
+    );
+
+    // Give 60 TK signup bonus to referred user too
+    await User.findByIdAndUpdate(activatedUserId, { $inc: { balance: 60 } });
+    await Transaction.create({
+      userId: activatedUserId,
+      type: 'referral_bonus',
+      amount: 60,
+      description: 'Referral bonus — you purchased a VPN plan via referral!',
+      status: 'completed',
+    });
+
+    createNotification(
+      activatedUserId,
+      'Welcome Bonus! 🎁',
+      'You earned 60৳ referral bonus for purchasing a VPN plan through a referral!',
+      'earning'
+    );
+  } catch (error) {
+    console.error('activateReferralBonus error:', error);
   }
 };

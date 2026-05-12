@@ -2640,83 +2640,217 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
 
       {showWeeklyMissionsView && (
         <div className="fixed inset-0 z-[9999] bg-slate-50 dark:bg-slate-950 flex flex-col h-screen w-full">
-          <div className="bg-slate-50 dark:bg-slate-950 pt-safe px-6 py-5 flex justify-between items-center border-b border-slate-200 dark:border-slate-800 shrink-0">
-            <h3 className="text-xl font-bold text-slate-800 dark:text-white">Weekly Missions</h3>
-            <button onClick={() => goBackWithAd(() => setShowWeeklyMissionsView(false))} className="text-slate-400 hover:text-slate-600 dark:hover:text-white transition-colors">
-              <ArrowLeft className="w-6 h-6 hover:-translate-x-1 transition-transform" />
+          {/* Header */}
+          <div className="bg-gradient-to-r from-indigo-600 to-blue-600 pt-safe px-6 py-5 flex justify-between items-center shrink-0 shadow-lg">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-2xl bg-white/20 flex items-center justify-center">
+                <ClipboardList className="w-5 h-5 text-white" />
+              </div>
+              <div>
+                <h3 className="text-xl font-black text-white tracking-tight">Weekly Missions</h3>
+                <p className="text-indigo-200 text-xs font-medium">Complete missions to earn rewards!</p>
+              </div>
+            </div>
+            <button onClick={() => goBackWithAd(() => setShowWeeklyMissionsView(false))} className="w-10 h-10 rounded-2xl bg-white/20 flex items-center justify-center text-white hover:bg-white/30 transition-colors">
+              <ArrowLeft className="w-5 h-5" />
             </button>
           </div>
-          <div className="flex-1 overflow-y-auto p-4 md:p-8 space-y-4">
-            <div className="text-center space-y-2 mb-6">
-              <p className="text-slate-500 dark:text-slate-400 font-medium">Complete tasks to earn huge rewards!</p>
-              <p className="text-xs text-slate-400">Missions reset weekly</p>
-            </div>
 
+          {/* Progress bar showing missions cleared */}
+          {weeklyMissions.length > 0 && (
+            <div className="bg-indigo-600 px-6 pb-4 shrink-0">
+              <div className="flex items-center justify-between text-indigo-200 text-xs font-bold mb-2">
+                <span>MISSIONS CLEARED</span>
+                <span>{weeklyMissions.filter(m => m.isCompleted).length}/{weeklyMissions.length}</span>
+              </div>
+              <div className="h-2 bg-indigo-800/50 rounded-full overflow-hidden">
+                <div
+                  className="h-full bg-white rounded-full transition-all duration-500"
+                  style={{ width: `${weeklyMissions.length > 0 ? (weeklyMissions.filter(m => m.isCompleted).length / weeklyMissions.length) * 100 : 0}%` }}
+                />
+              </div>
+            </div>
+          )}
+
+          <div className="flex-1 overflow-y-auto p-4 md:p-6 space-y-4">
             {weeklyMissions.length === 0 ? (
-              <div className="text-center py-10">
-                <ClipboardList className="w-12 h-12 text-slate-300 dark:text-slate-700 mx-auto mb-3" />
-                <p className="text-slate-500 dark:text-slate-400">No active missions this week.</p>
+              <div className="flex flex-col items-center justify-center py-20 text-center">
+                <div className="w-20 h-20 rounded-full bg-indigo-100 dark:bg-indigo-900/30 flex items-center justify-center mx-auto mb-4">
+                  <ClipboardList className="w-10 h-10 text-indigo-400" />
+                </div>
+                <p className="text-slate-600 dark:text-slate-400 font-bold text-lg">No Active Missions</p>
+                <p className="text-slate-400 text-sm mt-1">Check back later for new missions!</p>
               </div>
             ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {weeklyMissions.map(mission => (
-                  <div key={mission._id} className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-5 rounded-2xl flex flex-col relative overflow-hidden shadow-sm">
+              weeklyMissions.map((mission, idx) => {
+                const isReferType = mission.missionType === 'refer';
+                const progress = isReferType ? (mission.currentProgress || 0) : 0;
+                const target = isReferType ? (mission.targetCount || 5) : 1;
+                const progressPct = isReferType ? Math.min((progress / target) * 100, 100) : (mission.isCompleted ? 100 : 0);
+                const canClaim = mission.canClaim !== undefined ? mission.canClaim : !mission.isCompleted;
+
+                return (
+                  <div
+                    key={mission._id}
+                    className={`relative bg-white dark:bg-slate-900 rounded-3xl overflow-hidden shadow-sm border transition-all ${
+                      mission.isCompleted
+                        ? 'border-emerald-300 dark:border-emerald-700/50 opacity-80'
+                        : 'border-slate-200 dark:border-slate-800'
+                    }`}
+                  >
+                    {/* Completed badge */}
                     {mission.isCompleted && (
-                      <div className="absolute top-0 right-0 bg-emerald-500 text-white text-[10px] font-bold px-3 py-1 rounded-bl-lg uppercase tracking-wider">
-                        Completed
+                      <div className="absolute top-3 right-3 z-10 bg-emerald-500 text-white text-[10px] font-black px-2.5 py-1 rounded-full uppercase tracking-wider flex items-center gap-1">
+                        <Check className="w-3 h-3" /> Claimed
                       </div>
                     )}
-                    <h4 className="text-lg font-bold text-slate-800 dark:text-white pr-16">{mission.title}</h4>
-                    <p className="text-sm text-slate-500 dark:text-slate-400 mt-1 flex-1">{mission.description}</p>
-                    <div className="mt-4 flex items-center justify-between">
-                      <div className="flex items-center gap-1.5 bg-amber-100 dark:bg-amber-900/30 px-3 py-1.5 rounded-full">
-                        <span className="text-amber-500 text-lg">💰</span>
-                        <span className="font-bold text-amber-600 dark:text-amber-400 text-sm">+{mission.reward} Coins</span>
+
+                    <div className="p-5">
+                      {/* Mission type badge */}
+                      <div className="flex items-start gap-4 mb-4">
+                        <div className={`w-14 h-14 rounded-2xl flex items-center justify-center shrink-0 text-2xl ${
+                          isReferType
+                            ? 'bg-gradient-to-br from-amber-400 to-orange-500 shadow-lg shadow-amber-500/30'
+                            : 'bg-gradient-to-br from-blue-400 to-indigo-600 shadow-lg shadow-blue-500/30'
+                        }`}>
+                          {isReferType ? '👥' : '🎯'}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 flex-wrap mb-1">
+                            <span className={`text-[10px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full ${
+                              isReferType
+                                ? 'bg-amber-100 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400'
+                                : 'bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400'
+                            }`}>
+                              {isReferType ? '🔗 Refer Mission' : '📋 Task Mission'}
+                            </span>
+                          </div>
+                          <h4 className="font-black text-slate-800 dark:text-white text-base leading-tight">{mission.title}</h4>
+                          <p className="text-sm text-slate-500 dark:text-slate-400 mt-1 leading-relaxed">{mission.description}</p>
+                        </div>
                       </div>
-                      <button
-                        onClick={async () => {
-                          if (mission.isCompleted) return;
-                          
-                          AdMobService.showInterstitial(async () => {
-                            setIsLoading(true);
-                            try {
-                              const token = localStorage.getItem('token');
-                              const response = await fetch(`${API_BASE}/api/earning/weekly-missions/${mission._id}/complete`, {
-                                method: 'POST',
-                                headers: { Authorization: `Bearer ${token}` }
+
+                      {/* Progress bar for refer-type missions */}
+                      {isReferType && (
+                        <div className="mb-4">
+                          <div className="flex items-center justify-between text-xs font-bold mb-2">
+                            <span className="text-slate-500 dark:text-slate-400">Progress</span>
+                            <span className={`${progress >= target ? 'text-emerald-500' : 'text-amber-500'} font-black`}>
+                              {progress}/{target} Referrals with VPN
+                            </span>
+                          </div>
+                          <div className="h-3 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
+                            <div
+                              className={`h-full rounded-full transition-all duration-700 ${
+                                progressPct >= 100
+                                  ? 'bg-gradient-to-r from-emerald-400 to-green-500'
+                                  : 'bg-gradient-to-r from-amber-400 to-orange-500'
+                              }`}
+                              style={{ width: `${Math.max(progressPct, 3)}%` }}
+                            />
+                          </div>
+                          {progress < target && (
+                            <p className="text-xs text-slate-400 dark:text-slate-500 mt-1.5 font-medium">
+                              💡 Invite {target - progress} more friend{target - progress > 1 ? 's' : ''} who purchase a VPN plan
+                            </p>
+                          )}
+                        </div>
+                      )}
+
+                      {/* Bottom row: reward + action */}
+                      <div className="flex items-center justify-between gap-3">
+                        <div className="flex items-center gap-2 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800/50 px-3 py-2 rounded-2xl">
+                          <span className="text-lg">💰</span>
+                          <span className="font-black text-amber-600 dark:text-amber-400 text-sm">+{mission.rewardCoins} Coins</span>
+                        </div>
+
+                        {mission.isCompleted ? (
+                          <div className="flex items-center gap-1.5 bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400 px-4 py-2 rounded-2xl font-black text-sm">
+                            <Check className="w-4 h-4" /> Claimed!
+                          </div>
+                        ) : isReferType ? (
+                          <button
+                            onClick={async () => {
+                              if (!canClaim) return;
+                              AdMobService.showInterstitial(async () => {
+                                setIsLoading(true);
+                                try {
+                                  const token = localStorage.getItem('token');
+                                  const response = await fetch(`${API_BASE}/api/earning/weekly-missions/complete/${mission._id}`, {
+                                    method: 'POST',
+                                    headers: { Authorization: `Bearer ${token}` }
+                                  });
+                                  const data = await response.json();
+                                  setIsLoading(false);
+                                  if (response.ok) {
+                                    showToast(data.message || 'Mission completed!', 'success');
+                                    fetchBalance();
+                                    fetchWeeklyMissions();
+                                  } else {
+                                    showToast(data.message || 'Failed', 'error');
+                                  }
+                                } catch (err) {
+                                  setIsLoading(false);
+                                  showToast('Network error', 'error');
+                                }
                               });
-                              const data = await response.json();
-                              setIsLoading(false);
-                              if (response.ok) {
-                                showToast(data.message || 'Mission completed!', 'success');
-                                fetchBalance();
-                                fetchWeeklyMissions();
-                              } else {
-                                showToast(data.message || 'Failed to complete mission', 'error');
-                              }
-                            } catch (err) {
-                              setIsLoading(false);
-                              showToast('Network error', 'error');
-                            }
-                          });
-                        }}
-                        disabled={mission.isCompleted || isLoading}
-                        className={`px-4 py-2 rounded-xl text-sm font-bold transition-all ${
-                          mission.isCompleted
-                            ? 'bg-slate-100 dark:bg-slate-800 text-slate-400 cursor-not-allowed'
-                            : 'bg-brand-500 hover:bg-brand-600 text-white shadow-md shadow-brand-500/20 active:scale-95'
-                        }`}
-                      >
-                        {mission.isCompleted ? 'Claimed' : 'Complete'}
-                      </button>
+                            }}
+                            disabled={!canClaim || isLoading}
+                            className={`px-5 py-2 rounded-2xl text-sm font-black transition-all active:scale-95 ${
+                              canClaim
+                                ? 'bg-gradient-to-r from-emerald-500 to-green-600 text-white shadow-lg shadow-emerald-500/30 hover:shadow-emerald-500/50'
+                                : 'bg-slate-100 dark:bg-slate-800 text-slate-400 cursor-not-allowed'
+                            }`}
+                          >
+                            {canClaim ? '🎁 Claim Reward' : `${progress}/${target} Done`}
+                          </button>
+                        ) : (
+                          <button
+                            onClick={async () => {
+                              if (mission.actionUrl) window.open(mission.actionUrl, '_blank');
+                              AdMobService.showInterstitial(async () => {
+                                setIsLoading(true);
+                                try {
+                                  const token = localStorage.getItem('token');
+                                  const response = await fetch(`${API_BASE}/api/earning/weekly-missions/complete/${mission._id}`, {
+                                    method: 'POST',
+                                    headers: { Authorization: `Bearer ${token}` }
+                                  });
+                                  const data = await response.json();
+                                  setIsLoading(false);
+                                  if (response.ok) {
+                                    showToast(data.message || 'Mission completed!', 'success');
+                                    fetchBalance();
+                                    fetchWeeklyMissions();
+                                  } else {
+                                    showToast(data.message || 'Failed', 'error');
+                                  }
+                                } catch (err) {
+                                  setIsLoading(false);
+                                  showToast('Network error', 'error');
+                                }
+                              });
+                            }}
+                            disabled={isLoading}
+                            className="px-5 py-2 rounded-2xl text-sm font-black bg-gradient-to-r from-indigo-500 to-blue-600 text-white shadow-lg shadow-indigo-500/30 hover:shadow-indigo-500/50 active:scale-95 transition-all"
+                          >
+                            🎯 Complete
+                          </button>
+                        )}
+                      </div>
                     </div>
                   </div>
-                ))}
-              </div>
+                );
+              })
             )}
+
+            <div className="mt-4 pb-6">
+              <BigAdBanner globalSettings={globalSettings} />
+            </div>
           </div>
         </div>
       )}
+
 
       {showCheckinView && !showAdOverlay && (
           <div className="fixed inset-0 z-[9999] bg-slate-50 dark:bg-slate-950 flex flex-col h-screen w-full">

@@ -10,7 +10,9 @@ const Missions = ({ authHeaders, ADMIN_API }) => {
     description: '', 
     rewardCoins: 50, 
     actionUrl: '',
-    isActive: true 
+    isActive: true,
+    missionType: 'custom',
+    targetCount: 5,
   });
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(null);
@@ -42,7 +44,7 @@ const Missions = ({ authHeaders, ADMIN_API }) => {
 
     if (!newMission.title.trim()) return setError('Title is required');
     if (!newMission.description.trim()) return setError('Description is required');
-    if (!newMission.actionUrl.trim()) return setError('Action URL is required');
+    if (newMission.missionType === 'custom' && !newMission.actionUrl.trim()) return setError('Action URL is required for custom missions');
 
     try {
       const res = await fetch(`${ADMIN_API}/weekly-missions`, {
@@ -58,7 +60,9 @@ const Missions = ({ authHeaders, ADMIN_API }) => {
           description: '', 
           rewardCoins: 50, 
           actionUrl: '',
-          isActive: true
+          isActive: true,
+          missionType: 'custom',
+          targetCount: 5,
         });
         setIsAdding(false);
         fetchMissions();
@@ -133,32 +137,62 @@ const Missions = ({ authHeaders, ADMIN_API }) => {
               />
             </div>
 
+            {/* Coins Reward */}
+            <div>
+              <label className="block text-slate-400 text-xs font-black uppercase tracking-widest mb-3 ml-1">Coins Reward</label>
+              <div className="relative">
+                <Coins className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-500" />
+                <input
+                  type="number"
+                  className="w-full bg-slate-950 border border-slate-800 rounded-2xl pl-12 pr-5 py-3 text-white focus:ring-2 focus:ring-emerald-500/50 outline-none transition-all"
+                  value={newMission.rewardCoins}
+                  onChange={(e) => setNewMission({ ...newMission, rewardCoins: Number(e.target.value) })}
+                />
+              </div>
+            </div>
+
+            {/* Mission Type + Target/URL row */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
               <div>
-                <label className="block text-slate-400 text-xs font-black uppercase tracking-widest mb-3 ml-1">Coins Reward</label>
-                <div className="relative">
-                  <Coins className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-500" />
+                <label className="block text-slate-400 text-xs font-black uppercase tracking-widest mb-3 ml-1">Mission Type</label>
+                <select
+                  className="w-full bg-slate-950 border border-slate-800 rounded-2xl px-5 py-3 text-white focus:ring-2 focus:ring-emerald-500/50 outline-none transition-all"
+                  value={newMission.missionType}
+                  onChange={(e) => setNewMission({ ...newMission, missionType: e.target.value })}
+                >
+                  <option value="custom">📋 Custom Task (with link)</option>
+                  <option value="refer">👥 Refer Friends (VPN required)</option>
+                </select>
+              </div>
+              {newMission.missionType === 'refer' ? (
+                <div>
+                  <label className="block text-slate-400 text-xs font-black uppercase tracking-widest mb-3 ml-1">Target Referrals</label>
                   <input
                     type="number"
-                    className="w-full bg-slate-950 border border-slate-800 rounded-2xl pl-12 pr-5 py-3 text-white focus:ring-2 focus:ring-emerald-500/50 outline-none transition-all"
-                    value={newMission.rewardCoins}
-                    onChange={(e) => setNewMission({ ...newMission, rewardCoins: Number(e.target.value) })}
+                    min="1"
+                    max="100"
+                    className="w-full bg-slate-950 border border-slate-800 rounded-2xl px-5 py-3 text-white focus:ring-2 focus:ring-emerald-500/50 outline-none transition-all"
+                    value={newMission.targetCount}
+                    onChange={(e) => setNewMission({ ...newMission, targetCount: Number(e.target.value) })}
+                    placeholder="e.g., 5"
                   />
+                  <p className="text-xs text-slate-500 mt-1 ml-1">Number of VPN-purchasing friends required</p>
                 </div>
-              </div>
-              <div>
-                <label className="block text-slate-400 text-xs font-black uppercase tracking-widest mb-3 ml-1">Action URL</label>
-                <div className="relative">
-                  <Target className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-500" />
-                  <input
-                    type="url"
-                    className="w-full bg-slate-950 border border-slate-800 rounded-2xl pl-12 pr-5 py-3 text-white focus:ring-2 focus:ring-emerald-500/50 outline-none transition-all placeholder:text-slate-600"
-                    placeholder="https://..."
-                    value={newMission.actionUrl}
-                    onChange={(e) => setNewMission({ ...newMission, actionUrl: e.target.value })}
-                  />
+              ) : (
+                <div>
+                  <label className="block text-slate-400 text-xs font-black uppercase tracking-widest mb-3 ml-1">Action URL</label>
+                  <div className="relative">
+                    <Target className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-500" />
+                    <input
+                      type="url"
+                      className="w-full bg-slate-950 border border-slate-800 rounded-2xl pl-12 pr-5 py-3 text-white focus:ring-2 focus:ring-emerald-500/50 outline-none transition-all placeholder:text-slate-600"
+                      placeholder="https://..."
+                      value={newMission.actionUrl}
+                      onChange={(e) => setNewMission({ ...newMission, actionUrl: e.target.value })}
+                    />
+                  </div>
                 </div>
-              </div>
+              )}
             </div>
 
             <div>
@@ -218,6 +252,15 @@ const Missions = ({ authHeaders, ADMIN_API }) => {
                     <span className="flex items-center gap-1 text-[10px] font-black text-amber-500 bg-amber-500/10 px-2 py-0.5 rounded-full uppercase">
                       <Coins className="w-3 h-3" /> +{mission.rewardCoins} Coins
                     </span>
+                    {mission.missionType === 'refer' ? (
+                      <span className="text-[10px] font-black text-orange-400 bg-orange-500/10 px-2 py-0.5 rounded-full uppercase">
+                        👥 Refer {mission.targetCount || 5} Friends
+                      </span>
+                    ) : (
+                      <span className="text-[10px] font-black text-blue-400 bg-blue-500/10 px-2 py-0.5 rounded-full uppercase">
+                        📋 Task
+                      </span>
+                    )}
                     <span className={`text-[10px] font-black px-2 py-0.5 rounded-full uppercase ${mission.isActive ? 'bg-emerald-500/10 text-emerald-500' : 'bg-rose-500/10 text-rose-500'}`}>
                       {mission.isActive ? 'Active' : 'Inactive'}
                     </span>

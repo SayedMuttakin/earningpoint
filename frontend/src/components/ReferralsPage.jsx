@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { API_BASE } from '../config';
-import { ChevronLeft, Share2, Copy, Check, Users, X, Link } from 'lucide-react';
+import { ChevronLeft, Share2, Copy, Check, Users, X, Link, ShieldCheck, Clock } from 'lucide-react';
 import PullToRefresh from './PullToRefresh';
 import BannerAd from './BannerAd';
 import { Share } from '@capacitor/share';
@@ -40,6 +40,12 @@ const BigAdBanner = ({ globalSettings }) => {
   );
 };
 
+// Mask phone/email for privacy: show first 3 and last 2 chars
+const maskPhone = (phone) => {
+  if (!phone || phone.length < 6) return phone || '—';
+  return phone.slice(0, 3) + '••••' + phone.slice(-2);
+};
+
 const ReferralsPage = ({ onBack, globalSettings }) => {
   const [refreshing, setRefreshing] = useState(false);
   const [copied, setCopied] = useState(false);
@@ -48,7 +54,9 @@ const ReferralsPage = ({ onBack, globalSettings }) => {
   const [referralData, setReferralData] = useState({
     referralCode: 'Loading...',
     friendsInvited: 0,
-    totalEarned: 0
+    completedReferrals: 0,
+    totalEarned: 0,
+    referrals: [],
   });
 
   const fetchReferrals = useCallback(async () => {
@@ -63,7 +71,9 @@ const ReferralsPage = ({ onBack, globalSettings }) => {
         setReferralData({
           referralCode: data.referralCode,
           friendsInvited: data.friendsInvited,
-          totalEarned: data.totalEarned
+          completedReferrals: data.completedReferrals || 0,
+          totalEarned: data.totalEarned,
+          referrals: data.referrals || [],
         });
       }
     } catch (err) {
@@ -135,6 +145,9 @@ const ReferralsPage = ({ onBack, globalSettings }) => {
     setShowShareSheet(false);
   };
 
+  const pendingReferrals = referralData.referrals.filter(r => !r.vpnPurchased);
+  const completedReferralsList = referralData.referrals.filter(r => r.vpnPurchased);
+
   return (
     <PullToRefresh onRefresh={handleRefresh} refreshing={refreshing}>
       <div className="w-full min-h-screen bg-slate-50 flex flex-col pb-24">
@@ -148,7 +161,9 @@ const ReferralsPage = ({ onBack, globalSettings }) => {
         </div>
 
         <div className="max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-8 flex justify-center">
-          <div className="w-full max-w-xl flex flex-col items-center">
+          <div className="w-full max-w-xl flex flex-col items-center gap-6">
+
+            {/* Main invite card */}
             <div className="bg-white w-full rounded-3xl p-6 sm:p-8 shadow-sm border border-slate-200 text-center relative overflow-hidden animate-fade-in-up">
               <div className="absolute top-0 right-0 -mr-8 -mt-8 w-32 h-32 bg-brand-50 rounded-full opacity-50 pointer-events-none" />
               <div className="absolute bottom-0 left-0 -ml-8 -mb-8 w-24 h-24 bg-brand-100 rounded-full opacity-50 pointer-events-none" />
@@ -157,7 +172,7 @@ const ReferralsPage = ({ onBack, globalSettings }) => {
               </div>
               <h2 className="text-2xl sm:text-3xl font-black text-slate-900 mb-2 sm:mb-3 relative z-10">Invite Friends &amp; Earn</h2>
               <p className="text-sm sm:text-base text-slate-600 mb-6 sm:mb-8 max-w-sm mx-auto relative z-10 font-medium">
-                Share your unique code. When your friends register using your link and complete verification, you both earn a <span className="text-brand-600 font-bold">60 TK Bonus!</span>
+                Share your code. When your friend purchases a <span className="text-brand-600 font-bold">VPN plan</span>, you <strong>both</strong> earn a <span className="text-brand-600 font-bold">60 TK Bonus!</span>
               </p>
 
               <div className="bg-slate-50 border border-slate-200 rounded-2xl p-4 sm:p-6 relative z-10 mb-4 sm:mb-6">
@@ -182,20 +197,92 @@ const ReferralsPage = ({ onBack, globalSettings }) => {
               </button>
             </div>
 
-            <div className="w-full mt-4 sm:mt-6 grid grid-cols-2 gap-3 sm:gap-4 animate-fade-in-up" style={{ animationDelay: '0.1s' }}>
-              <div className="bg-white rounded-2xl p-4 sm:p-6 border border-slate-200 shadow-sm text-center">
-                <span className="text-2xl sm:text-3xl font-black text-slate-900 block mb-1">{referralData.friendsInvited}</span>
-                <span className="text-xs sm:text-sm font-medium text-slate-500">Friends Invited</span>
+            {/* Stats row */}
+            <div className="w-full grid grid-cols-3 gap-3 sm:gap-4 animate-fade-in-up" style={{ animationDelay: '0.1s' }}>
+              <div className="bg-white rounded-2xl p-4 border border-slate-200 shadow-sm text-center">
+                <span className="text-2xl font-black text-slate-900 block mb-1">{referralData.friendsInvited}</span>
+                <span className="text-xs font-medium text-slate-500">Invited</span>
               </div>
-              <div className="bg-white rounded-2xl p-4 sm:p-6 border border-slate-200 shadow-sm text-center">
-                <span className="text-2xl sm:text-3xl font-black text-brand-600 block mb-1">৳{referralData.totalEarned}</span>
-                <span className="text-xs sm:text-sm font-medium text-slate-500">Total Earned</span>
+              <div className="bg-white rounded-2xl p-4 border border-emerald-200 shadow-sm text-center">
+                <span className="text-2xl font-black text-emerald-600 block mb-1">{referralData.completedReferrals}</span>
+                <span className="text-xs font-medium text-slate-500">VPN Bought</span>
+              </div>
+              <div className="bg-white rounded-2xl p-4 border border-slate-200 shadow-sm text-center">
+                <span className="text-2xl font-black text-brand-600 block mb-1">৳{referralData.totalEarned}</span>
+                <span className="text-xs font-medium text-slate-500">Earned</span>
               </div>
             </div>
 
             <BannerAd globalSettings={globalSettings} />
 
-            <div className="w-full mt-4 sm:mt-6 bg-gradient-to-r from-brand-600 to-indigo-600 rounded-2xl p-5 sm:p-6 text-white text-center shadow-lg relative overflow-hidden animate-fade-in-up" style={{ animationDelay: '0.2s' }}>
+            {/* ─── Referral List ──────────────────────────────────────────── */}
+            {referralData.referrals.length > 0 && (
+              <div className="w-full animate-fade-in-up" style={{ animationDelay: '0.15s' }}>
+                <h3 className="text-base font-black text-slate-800 mb-3 flex items-center gap-2">
+                  <Users className="w-5 h-5 text-brand-500" /> Referral List
+                </h3>
+
+                {/* Completed (VPN purchased) */}
+                {completedReferralsList.length > 0 && (
+                  <div className="mb-4">
+                    <div className="flex items-center gap-2 mb-2">
+                      <ShieldCheck className="w-4 h-4 text-emerald-500" />
+                      <span className="text-xs font-black text-emerald-600 uppercase tracking-wider">VPN Purchased ({completedReferralsList.length})</span>
+                    </div>
+                    <div className="flex flex-col gap-2">
+                      {completedReferralsList.map((r) => (
+                        <div key={r.id} className="bg-white border border-emerald-200 rounded-2xl px-4 py-3 flex items-center gap-3 shadow-sm">
+                          <div className="w-10 h-10 rounded-full bg-emerald-100 flex items-center justify-center flex-shrink-0">
+                            <ShieldCheck className="w-5 h-5 text-emerald-500" />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-bold text-slate-800 truncate">{r.name || 'User'}</p>
+                            <p className="text-xs text-slate-400 font-mono">{maskPhone(r.phone)}</p>
+                          </div>
+                          <div className="text-right shrink-0">
+                            <span className="text-xs font-black text-emerald-600 bg-emerald-50 px-2 py-1 rounded-full block mb-0.5">✅ Verified</span>
+                            <span className="text-[10px] text-slate-400">+{r.bonusAwarded}৳</span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Pending (no VPN yet) */}
+                {pendingReferrals.length > 0 && (
+                  <div>
+                    <div className="flex items-center gap-2 mb-2">
+                      <Clock className="w-4 h-4 text-amber-500" />
+                      <span className="text-xs font-black text-amber-600 uppercase tracking-wider">Waiting for VPN ({pendingReferrals.length})</span>
+                    </div>
+                    <div className="flex flex-col gap-2">
+                      {pendingReferrals.map((r) => (
+                        <div key={r.id} className="bg-white border border-amber-200 rounded-2xl px-4 py-3 flex items-center gap-3 shadow-sm opacity-80">
+                          <div className="w-10 h-10 rounded-full bg-amber-100 flex items-center justify-center flex-shrink-0">
+                            <Clock className="w-5 h-5 text-amber-500" />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-bold text-slate-700 truncate">{r.name || 'User'}</p>
+                            <p className="text-xs text-slate-400 font-mono">{maskPhone(r.phone)}</p>
+                          </div>
+                          <div className="text-right shrink-0">
+                            <span className="text-xs font-bold text-amber-600 bg-amber-50 px-2 py-1 rounded-full block mb-0.5">⏳ Pending</span>
+                            <span className="text-[10px] text-slate-400">No VPN yet</span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                    <p className="text-xs text-slate-400 text-center mt-3 font-medium">
+                      💡 Ask your pending friends to purchase a VPN plan to unlock your 60৳ bonus!
+                    </p>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Promo banner */}
+            <div className="w-full bg-gradient-to-r from-brand-600 to-indigo-600 rounded-2xl p-5 sm:p-6 text-white text-center shadow-lg relative overflow-hidden animate-fade-in-up" style={{ animationDelay: '0.2s' }}>
                <div className="relative z-10">
                  <h3 className="text-lg sm:text-xl font-black mb-1 sm:mb-2">Earn Without Limits!</h3>
                  <p className="text-xs sm:text-sm font-medium opacity-90">Invite as many friends as you want. There is no cap on how much you can earn from referrals.</p>

@@ -837,17 +837,34 @@ exports.claimArticleReward = async (req, res) => {
 // ─── Weekly Missions ────────────────────────────────────────────────────────
 exports.getWeeklyMissions = async (req, res) => {
   try {
+    const Referral = require('../models/Referral');
     const missions = await WeeklyMission.find({ isActive: true }).sort({ createdAt: -1 });
     const completions = await MissionCompletion.find({ userId: req.user._id });
     
     const completedMissionIds = completions.map(c => c.missionId.toString());
+
+    // Count user's VPN-activated referrals (for refer-type mission progress)
+    const userCompletedReferrals = await Referral.countDocuments({
+      referrerId: req.user._id,
+      status: 'completed',
+    });
     
-    // Add completed flag to missions for the current user
+    // Add completed flag and referral progress to missions for the current user
     const missionsWithStatus = missions.map(mission => {
-      return {
-        ...mission.toObject(),
-        isCompleted: completedMissionIds.includes(mission._id.toString())
-      };
+      const missionObj = mission.toObject();
+      const isCompleted = completedMissionIds.includes(mission._id.toString());
+      
+      // For refer-type missions, include progress info
+      if (missionObj.missionType === 'refer') {
+        return {
+          ...missionObj,
+          isCompleted,
+          currentProgress: userCompletedReferrals,
+          canClaim: !isCompleted && userCompletedReferrals >= (missionObj.targetCount || 5),
+        };
+      }
+      
+      return { ...missionObj, isCompleted, currentProgress: null, canClaim: !isCompleted };
     });
 
     res.json(missionsWithStatus);

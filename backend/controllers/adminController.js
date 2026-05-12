@@ -12,6 +12,7 @@ const WeeklyMission = require('../models/WeeklyMission');
 const Notification = require('../models/Notification');
 const jwt = require('jsonwebtoken');
 const { createNotification } = require('./notificationController');
+const { activateReferralBonus } = require('./referralController');
 
 // ─── Admin Login ──────────────────────────────────────────────────────────────
 exports.adminLogin = async (req, res) => {
@@ -433,6 +434,9 @@ exports.updatePremiumOrder = async (req, res) => {
         premiumPackageName: order.packageName || ''
       });
 
+      // Activate referral bonus for the user who purchased VPN (if they were referred)
+      activateReferralBonus(order.userId._id);
+
       // Notify user about approval
       createNotification(
         order.userId._id, 
@@ -690,8 +694,14 @@ exports.getWeeklyMissions = async (req, res) => {
 
 exports.createWeeklyMission = async (req, res) => {
   try {
-    const { title, description, rewardCoins, actionUrl, isActive } = req.body;
-    const mission = new WeeklyMission({ title, description, rewardCoins, actionUrl, isActive });
+    const { title, description, rewardCoins, actionUrl, isActive, missionType, targetCount } = req.body;
+    const mission = new WeeklyMission({ 
+      title, description, rewardCoins, 
+      actionUrl: actionUrl || '', 
+      isActive,
+      missionType: missionType || 'custom',
+      targetCount: targetCount ? Number(targetCount) : 5
+    });
     await mission.save();
     res.status(201).json(mission);
   } catch (error) {
