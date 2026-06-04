@@ -20,7 +20,11 @@ const LeaderboardPage = ({ onBack }) => {
           id: user._id,
           name: user.name || user.phoneOrEmail || 'User',
           score: user.score || 0,
-          avatar: user.profilePic || `https://ui-avatars.com/api/?name=${user.name || 'User'}&background=random`,
+          avatar: user.profilePic 
+            ? (user.profilePic.startsWith('http') || user.profilePic.startsWith('/api') || user.profilePic.startsWith('data:') 
+                ? user.profilePic 
+                : `${API_BASE}/api/image?file=${user.profilePic}`)
+            : `https://ui-avatars.com/api/?name=${user.name || 'User'}&background=random`,
           rank: user.rank
         }));
         setLeaderboard(formattedData);

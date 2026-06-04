@@ -4,6 +4,14 @@ import { io } from 'socket.io-client';
 import { API_BASE } from '../config';
 import PullToRefresh from './PullToRefresh';
 
+const getProfilePicUrl = (pic) => {
+  if (!pic) return '';
+  if (pic.startsWith('http') || pic.startsWith('/api') || pic.startsWith('data:')) {
+    return pic;
+  }
+  return `${API_BASE}/api/image?file=${pic}`;
+};
+
 const MessengerPage = ({ onBack, activeChatPartner, setActiveChatPartner }) => {
   const [currentUser, setCurrentUser] = useState(null);
   const [chatUsers, setChatUsers] = useState([]);
@@ -446,7 +454,7 @@ const MessengerPage = ({ onBack, activeChatPartner, setActiveChatPartner }) => {
                             <div className="relative flex-shrink-0">
                               {user.profilePic ? (
                                 <img
-                                  src={`${API_BASE}/api/image?file=${user.profilePic}`}
+                                  src={getProfilePicUrl(user.profilePic)}
                                   alt={user.name}
                                   className="w-12 h-12 rounded-full object-cover border border-slate-100 dark:border-slate-800"
                                 />
@@ -512,7 +520,7 @@ const MessengerPage = ({ onBack, activeChatPartner, setActiveChatPartner }) => {
                           <div className="relative">
                             {user.profilePic ? (
                               <img
-                                src={`${API_BASE}/api/image?file=${user.profilePic}`}
+                                src={getProfilePicUrl(user.profilePic)}
                                 alt={user.name}
                                 className="w-14 h-14 rounded-full object-cover border-2 border-white dark:border-slate-800 shadow-sm"
                               />
@@ -551,7 +559,7 @@ const MessengerPage = ({ onBack, activeChatPartner, setActiveChatPartner }) => {
                             <div className="relative">
                               {user.profilePic ? (
                                 <img
-                                  src={`${API_BASE}/api/image?file=${user.profilePic}`}
+                                  src={getProfilePicUrl(user.profilePic)}
                                   alt={user.name}
                                   className="w-11 h-11 rounded-full object-cover"
                                 />
@@ -614,7 +622,7 @@ const MessengerPage = ({ onBack, activeChatPartner, setActiveChatPartner }) => {
                           <div className="flex items-center gap-3">
                             {user.profilePic ? (
                               <img
-                                src={`${API_BASE}/api/image?file=${user.profilePic}`}
+                                src={getProfilePicUrl(user.profilePic)}
                                 alt={user.name}
                                 className="w-11 h-11 rounded-full object-cover"
                               />
@@ -707,7 +715,7 @@ const MessengerPage = ({ onBack, activeChatPartner, setActiveChatPartner }) => {
               <div className="relative">
                 {activePartner.profilePic ? (
                   <img
-                    src={`${API_BASE}/api/image?file=${activePartner.profilePic}`}
+                    src={getProfilePicUrl(activePartner.profilePic)}
                     alt={activePartner.name}
                     className="w-10 h-10 rounded-full object-cover border border-slate-100 dark:border-slate-850"
                   />
@@ -772,7 +780,7 @@ const MessengerPage = ({ onBack, activeChatPartner, setActiveChatPartner }) => {
                         <div className="relative flex-shrink-0">
                           {activePartner.profilePic ? (
                             <img
-                              src={`${API_BASE}/api/image?file=${activePartner.profilePic}`}
+                              src={getProfilePicUrl(activePartner.profilePic)}
                               alt="partner"
                               className="w-8 h-8 rounded-full object-cover shadow-xs border border-slate-100 dark:border-slate-800"
                             />
@@ -807,7 +815,7 @@ const MessengerPage = ({ onBack, activeChatPartner, setActiveChatPartner }) => {
                 <div className="flex gap-2 items-end">
                   {activePartner.profilePic ? (
                     <img
-                      src={`${API_BASE}/api/image?file=${activePartner.profilePic}`}
+                      src={getProfilePicUrl(activePartner.profilePic)}
                       alt="typing"
                       className="w-8 h-8 rounded-full object-cover border border-slate-100 dark:border-slate-800 shadow-xs"
                     />
@@ -898,7 +906,7 @@ const MessengerPage = ({ onBack, activeChatPartner, setActiveChatPartner }) => {
             <div className="w-32 h-32 rounded-full bg-gradient-to-tr from-[#7C3AED] to-[#5B21B6] flex items-center justify-center relative border-4 border-[#7C3AED]/50 shadow-2xl overflow-hidden">
               {activePartner?.profilePic ? (
                 <img
-                  src={`${API_BASE}/api/image?file=${activePartner.profilePic}`}
+                  src={getProfilePicUrl(activePartner.profilePic)}
                   alt="partner"
                   className="w-full h-full object-cover animate-pulse"
                 />

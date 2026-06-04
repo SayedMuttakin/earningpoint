@@ -92,7 +92,7 @@ const NewsSlider = ({ posts, onSeeAll, onCardClick }) => {
                 <div className="h-28 w-full rounded-xl overflow-hidden bg-slate-50 dark:bg-slate-950 border border-slate-100 dark:border-slate-850 flex-shrink-0">
                   {post.image ? (
                     <img 
-                      src={post.image.startsWith('http') || post.image.startsWith('/api') ? post.image : `${API_BASE}/api/image?file=${encodeURIComponent(post.image)}`} 
+                      src={post.image.startsWith('http') || post.image.startsWith('/api') || post.image.startsWith('data:') ? post.image : `${API_BASE}/api/image?file=${encodeURIComponent(post.image)}`} 
                       alt="News" 
                       className="w-full h-full object-cover"
                     />
@@ -199,7 +199,7 @@ const CommunityPostCard = ({ post, onFollowToggle }) => {
       {post.image && (
         <div className="rounded-2xl overflow-hidden border border-slate-100 dark:border-slate-850 bg-slate-50 dark:bg-slate-950">
           <img 
-            src={post.image.startsWith('http') || post.image.startsWith('/api') ? post.image : `${API_BASE}/api/image?file=${encodeURIComponent(post.image)}`} 
+            src={post.image.startsWith('http') || post.image.startsWith('/api') || post.image.startsWith('data:') ? post.image : `${API_BASE}/api/image?file=${encodeURIComponent(post.image)}`} 
             alt="Community Post"
             className="w-full h-auto max-h-[350px] object-cover"
             loading="lazy"
@@ -480,7 +480,7 @@ const HomePage = ({ setActiveTab, setSelectedNewsId, setActiveChatPartner }) => 
                         <div className="flex items-center gap-3 min-w-0">
                           {user.profilePic ? (
                             <img
-                              src={`${API_BASE}/api/image?file=${user.profilePic}`}
+                              src={user.profilePic.startsWith('http') || user.profilePic.startsWith('/api') || user.profilePic.startsWith('data:') ? user.profilePic : `${API_BASE}/api/image?file=${user.profilePic}`}
                               alt={user.name}
                               className="w-9 h-9 rounded-full object-cover border border-slate-100 dark:border-slate-800"
                             />

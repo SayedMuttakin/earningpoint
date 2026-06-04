@@ -4,6 +4,7 @@ import {
   Settings,
   History,
   Users,
+  User,
   ShieldCheck,
   Lock,
   Globe,
