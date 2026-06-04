@@ -4,7 +4,7 @@ import { API_BASE } from '../config';
 import VerifiedBadge from './VerifiedBadge';
 import PullToRefresh from './PullToRefresh';
 import BannerAd from './BannerAd';
-import NewsSlider from './NewsSlider';
+import NewsTicker from './NewsTicker';
 
 const UpdateCard = ({ post, onClick }) => {
   const [isExpanded, setIsExpanded] = useState(false);
@@ -214,19 +214,16 @@ const UpdatesPage = ({ onBack, selectedPostId, setSelectedPostId }) => {
             <BannerAd globalSettings={globalSettings} />
           </div>
 
+          {/* Scrolling News Ticker at the top */}
+          <NewsTicker 
+            posts={posts} 
+            onCardClick={(postId) => {
+              if (setSelectedPostId) setSelectedPostId(postId);
+              setDetailPost(posts.find(p => p._id === postId) || null);
+            }}
+          />
+
           <div className="max-w-xl mx-auto px-4 w-full pt-6 flex-1 flex flex-col">
-            {posts.length > 0 && (
-              <div className="mb-6 pb-6 border-b border-slate-150 dark:border-slate-800">
-                <NewsSlider 
-                  posts={posts} 
-                  onSeeAll={handleBackToFeed} 
-                  onCardClick={(postId) => {
-                    if (setSelectedPostId) setSelectedPostId(postId);
-                    setDetailPost(posts.find(p => p._id === postId) || null);
-                  }}
-                />
-              </div>
-            )}
             {/* Back to feed link */}
             <div className="flex items-center gap-3.5 mb-6">
               <button 
@@ -293,6 +290,15 @@ const UpdatesPage = ({ onBack, selectedPostId, setSelectedPostId }) => {
           <BannerAd globalSettings={globalSettings} />
         </div>
 
+        {/* Scrolling News Ticker at the top */}
+        <NewsTicker 
+          posts={posts} 
+          onCardClick={(postId) => {
+            if (setSelectedPostId) setSelectedPostId(postId);
+            setDetailPost(posts.find(p => p._id === postId) || null);
+          }}
+        />
+
         <div className="max-w-xl mx-auto px-4 w-full pt-6">
           {/* Header */}
           <div className="flex items-center justify-between pb-6 mb-6 border-b border-slate-150 dark:border-slate-800">
@@ -305,20 +311,6 @@ const UpdatesPage = ({ onBack, selectedPostId, setSelectedPostId }) => {
             <h1 className="text-xl font-black text-slate-850 dark:text-white">Official Updates</h1>
             <div className="w-10" /> {/* Spacer */}
           </div>
-
-          {/* News Slider at the top of updates list */}
-          {posts.length > 0 && (
-            <div className="mb-6 pb-6 border-b border-slate-150 dark:border-slate-800 animate-fade-in">
-              <NewsSlider 
-                posts={posts} 
-                onSeeAll={() => {}} 
-                onCardClick={(postId) => {
-                  if (setSelectedPostId) setSelectedPostId(postId);
-                  setDetailPost(posts.find(p => p._id === postId) || null);
-                }}
-              />
-            </div>
-          )}
 
           {/* Feed */}
           {loading ? (
