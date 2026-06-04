@@ -291,7 +291,7 @@ const ProfilePage = ({
         <div className="w-full bg-gradient-to-b from-indigo-50/30 via-slate-50 to-slate-50 dark:from-slate-950 dark:via-slate-950 dark:to-slate-950 min-h-screen pb-28 flex flex-col relative select-none">
           
           {/* Banner Ad */}
-          <div className="sticky top-[128px] md:top-16 z-30 w-full bg-slate-50 dark:bg-slate-950 pb-2 pt-2 border-b border-slate-200 dark:border-slate-800 shadow-sm px-4">
+          <div className="sticky top-16 z-30 w-full bg-slate-50 dark:bg-slate-950 pb-2 pt-2 border-b border-slate-200 dark:border-slate-800 shadow-sm px-4">
             <BannerAd globalSettings={globalSettings} />
           </div>
 

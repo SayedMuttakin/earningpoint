@@ -420,7 +420,7 @@ const HomePage = ({ setActiveTab, setSelectedNewsId, setActiveChatPartner }) => 
     <PullToRefresh onRefresh={handleRefresh} refreshing={refreshing}>
       <div className="min-h-screen bg-slate-50 dark:bg-slate-950 pb-24 flex flex-col relative">
         {/* News ticker & Ad Banner */}
-        <div className="sticky top-[128px] md:top-16 z-30 w-full bg-slate-50 dark:bg-slate-950 pb-2 pt-2 border-b border-slate-200 dark:border-slate-800 shadow-sm px-4">
+        <div className="sticky top-16 z-30 w-full bg-slate-50 dark:bg-slate-950 pb-2 pt-2 border-b border-slate-200 dark:border-slate-800 shadow-sm px-4">
           <BannerAd globalSettings={globalSettings} />
         </div>
 

@@ -149,33 +149,68 @@ const Navbar = ({ onLogout, activeTab, setActiveTab }) => {
         </div>
       </nav>
 
-      {/* Mobile Sticky Navigation Below Navbar */}
-      <div className="md:hidden bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-b border-brand-100 dark:border-slate-700 sticky top-16 z-40 w-full shadow-sm">
-        <div className="flex justify-evenly items-center px-2 py-2 w-full">
-          {mobileNavItems.map((item) => {
-            const isActive = activeTab === item.name;
-            const Icon = item.icon;
-            const isNotification = item.name === 'Notification';
+      {/* Mobile Sticky Floating Bottom Navigation (Matches mockup) */}
+      <div className="md:hidden fixed bottom-5 left-4 right-4 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border border-slate-150/40 dark:border-slate-800/80 rounded-[28px] z-45 shadow-[0_12px_40px_rgba(0,0,0,0.12)] h-[72px] flex items-center px-2">
+        <div className="flex justify-around items-center w-full relative h-full">
+          
+          {/* Home Tab */}
+          <button 
+            onClick={() => setActiveTab && setActiveTab('Home')}
+            className={`flex flex-col items-center justify-center w-12 transition-all duration-300 active:scale-90 ${activeTab === 'Home' ? 'text-brand-650 dark:text-brand-400' : 'text-slate-450 dark:text-slate-500'}`}
+          >
+            <Home className="w-5.5 h-5.5" strokeWidth={activeTab === 'Home' ? 2.5 : 2} />
+            <span className="text-[10px] font-black mt-1 tracking-wide">Home</span>
+          </button>
 
-            return (
-              <button 
-                key={item.name}
-                onClick={() => setActiveTab && setActiveTab(item.name)}
-                className="flex flex-col items-center justify-center p-2 group transition-all"
-              >
-                <div className={`p-2.5 sm:p-3 rounded-2xl transition-all duration-300 relative ${
-                  isActive 
-                    ? 'bg-brand-100 dark:bg-brand-900/40 text-brand-700 dark:text-brand-400 shadow-sm scale-110' 
-                    : 'text-slate-500 dark:text-slate-400 group-hover:bg-slate-50 dark:group-hover:bg-slate-800 group-hover:text-brand-600'
-                }`}>
-                  <Icon className="w-5 h-5 sm:w-6 sm:h-6" strokeWidth={isActive ? 2.5 : 2} />
-                  {isNotification && unreadCount > 0 && (
-                    <span className="absolute top-2 right-2 w-3 h-3 bg-rose-500 rounded-full border-2 border-white dark:border-slate-900 animate-pulse" />
-                  )}
-                </div>
-              </button>
-            )
-          })}
+          {/* Inbox/Notification Tab */}
+          <button 
+            onClick={() => setActiveTab && setActiveTab('Notification')}
+            className={`flex flex-col items-center justify-center w-12 transition-all duration-300 active:scale-90 relative ${activeTab === 'Notification' ? 'text-brand-650 dark:text-brand-400' : 'text-slate-450 dark:text-slate-500'}`}
+          >
+            <Bell className="w-5.5 h-5.5" strokeWidth={activeTab === 'Notification' ? 2.5 : 2} />
+            {unreadCount > 0 && (
+              <span className="absolute top-0 right-3 w-2.5 h-2.5 bg-rose-500 rounded-full border-2 border-white dark:border-slate-900 animate-pulse" />
+            )}
+            <span className="text-[10px] font-black mt-1 tracking-wide">Alerts</span>
+          </button>
+
+          {/* Central Earning [Z] Button */}
+          <div className="relative -top-5 flex flex-col items-center">
+            <button 
+              onClick={() => setActiveTab && setActiveTab('Earning')}
+              className={`w-15 h-15 rounded-full bg-gradient-to-tr from-[#6366f1] via-[#8b5cf6] to-[#ec4899] flex items-center justify-center shadow-lg transform active:scale-90 transition-all duration-300 border-4 border-slate-50 dark:border-slate-950 relative group ${
+                activeTab === 'Earning'
+                  ? 'ring-4 ring-indigo-400/40 shadow-indigo-500/30'
+                  : 'shadow-slate-500/20'
+              }`}
+            >
+              {/* White Z text logo resembling mockup */}
+              <span className="text-white font-black text-2xl font-sans tracking-tight leading-none">Z</span>
+              {/* Gold coin currency badge */}
+              <span className="absolute -top-1 -right-1 bg-amber-400 text-slate-900 text-[8px] font-black w-4.5 h-4.5 rounded-full border border-white dark:border-slate-950 shadow-xs flex items-center justify-center animate-pulse">
+                ৳
+              </span>
+            </button>
+          </div>
+
+          {/* Cart Tab */}
+          <button 
+            onClick={() => setActiveTab && setActiveTab('Cart')}
+            className={`flex flex-col items-center justify-center w-12 transition-all duration-300 active:scale-90 ${activeTab === 'Cart' ? 'text-brand-650 dark:text-brand-400' : 'text-slate-450 dark:text-slate-500'}`}
+          >
+            <ShoppingCart className="w-5.5 h-5.5" strokeWidth={activeTab === 'Cart' ? 2.5 : 2} />
+            <span className="text-[10px] font-black mt-1 tracking-wide">Cart</span>
+          </button>
+
+          {/* Profile Tab */}
+          <button 
+            onClick={() => setActiveTab && setActiveTab('Profile')}
+            className={`flex flex-col items-center justify-center w-12 transition-all duration-300 active:scale-90 ${activeTab === 'Profile' ? 'text-brand-650 dark:text-brand-400' : 'text-slate-450 dark:text-slate-500'}`}
+          >
+            <User className="w-5.5 h-5.5" strokeWidth={activeTab === 'Profile' ? 2.5 : 2} />
+            <span className="text-[10px] font-black mt-1 tracking-wide">Profile</span>
+          </button>
+          
         </div>
       </div>
     </>
