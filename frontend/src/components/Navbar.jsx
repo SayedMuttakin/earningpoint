@@ -81,8 +81,8 @@ const Navbar = ({ onLogout, activeTab, setActiveTab }) => {
 
             {/* Right Side: Desktop Navigation & Menu Toggle */}
             <div className="flex items-center gap-4">
-              {/* Desktop Navigation moved to right side */}
-              <div className="hidden md:flex items-center">
+              {/* Desktop Navigation hidden on all screen sizes to force mobile view */}
+              <div className="hidden">
                 <div className="relative flex space-x-1 p-1 bg-slate-100 dark:bg-slate-800 rounded-xl">
                   {navItems.map((item) => {
                     const Icon = item.icon;
@@ -115,12 +115,12 @@ const Navbar = ({ onLogout, activeTab, setActiveTab }) => {
                 </div>
               </div>
 
-              <button onClick={onLogout} className="hidden md:flex bg-brand-50 dark:bg-slate-800 hover:bg-brand-100 dark:hover:bg-slate-700 text-brand-700 dark:text-brand-400 h-10 w-10 rounded-full items-center justify-center transition-colors" title="Log out">
+              <button onClick={onLogout} className="hidden bg-brand-50 dark:bg-slate-800 hover:bg-brand-100 dark:hover:bg-slate-700 text-brand-700 dark:text-brand-400 h-10 w-10 rounded-full items-center justify-center transition-colors" title="Log out">
                 <LogOut className="w-5 h-5" />
               </button>
               
-              {/* Mobile Menu Button with Dropdown */}
-              <div className="md:hidden relative flex items-center">
+              {/* Mobile Menu Button with Dropdown (Visible on all sizes for mobile layout on desktop) */}
+              <div className="relative flex items-center">
                 <button 
                   onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
                   className="text-slate-500 dark:text-slate-400 hover:text-brand-600 p-2 transition-colors relative z-50"
@@ -149,8 +149,8 @@ const Navbar = ({ onLogout, activeTab, setActiveTab }) => {
         </div>
       </nav>
 
-      {/* Mobile Sticky Flat Bottom Navigation */}
-      <div className="md:hidden fixed bottom-0 left-0 right-0 bg-gradient-to-r from-indigo-50/95 via-purple-50/95 to-pink-50/95 dark:from-slate-900/95 dark:via-slate-950/50 dark:to-slate-900/95 backdrop-blur-md rounded-t-[24px] z-45 shadow-[0_-8px_30px_rgba(99,102,241,0.15)] h-[76px] pb-safe flex items-center px-2">
+      {/* Sticky Flat Bottom Navigation (Visible on all sizes) */}
+      <div className="fixed bottom-0 left-0 right-0 bg-gradient-to-r from-indigo-50/95 via-purple-50/95 to-pink-50/95 dark:from-slate-900/95 dark:via-slate-950/50 dark:to-slate-900/95 backdrop-blur-md rounded-t-[24px] z-45 shadow-[0_-8px_30px_rgba(99,102,241,0.15)] h-[76px] pb-safe flex items-center px-2">
         <div className="flex justify-around items-center w-full relative h-full">
           
           {/* Home Tab */}

@@ -13,6 +13,14 @@
   --color-brand-700: #6d28d9;
   --color-brand-800: #5b21b6;
   --color-brand-900: #4c1d95;
+
+  /* Redefine breakpoints to be extremely large. This prevents Tailwind's desktop-responsive
+     classes (sm:, md:, lg:, xl:, etc.) from triggering inside the centered mobile container. */
+  --breakpoint-sm: 99999px;
+  --breakpoint-md: 99999px;
+  --breakpoint-lg: 99999px;
+  --breakpoint-xl: 99999px;
+  --breakpoint-2xl: 99999px;
 }
 
 @layer base {
@@ -177,3 +185,45 @@
   60%  { transform: translateX(100%); }
   100% { transform: translateX(100%); }
 }
+
+/* ── Centered Mobile Viewport on Desktop ── */
+#root {
+  width: 100%;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+@media (min-width: 640px) {
+  #root {
+    max-width: 480px;
+    margin: 0 auto;
+    /* translate3d forces GPU hardware acceleration and acts as a containing block 
+       for position: fixed, keeping all modal screens and bottom navigation bounded inside #root */
+    transform: translate3d(0, 0, 0);
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25), 0 12px 24px -10px rgba(0, 0, 0, 0.15);
+    background-color: #ffffff;
+    position: relative;
+    border-left: 1px solid rgba(226, 232, 240, 0.8);
+    border-right: 1px solid rgba(226, 232, 240, 0.8);
+    overflow-x: hidden;
+  }
+  
+  .dark #root {
+    background-color: #0f172a;
+    border-left: 1px solid rgba(30, 41, 59, 0.8);
+    border-right: 1px solid rgba(30, 41, 59, 0.8);
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5), 0 12px 24px -10px rgba(0, 0, 0, 0.3);
+  }
+
+  body {
+    background-color: #f1f5f9 !important; /* Soft gray screen surroundings */
+    transition: background-color 0.3s ease;
+  }
+
+  .dark body {
+    background-color: #030712 !important; /* Slate black screen surroundings */
+    transition: background-color 0.3s ease;
+  }
+}
+
