@@ -150,28 +150,28 @@ const Navbar = ({ onLogout, activeTab, setActiveTab }) => {
       </nav>
 
       {/* Mobile Sticky Flat Bottom Navigation */}
-      <div className="md:hidden fixed bottom-0 left-0 right-0 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-t border-slate-150/40 dark:border-slate-800/80 rounded-t-[24px] z-45 shadow-[0_-8px_30px_rgba(0,0,0,0.08)] h-[76px] pb-safe flex items-center px-2">
+      <div className="md:hidden fixed bottom-0 left-0 right-0 bg-gradient-to-r from-indigo-50/95 via-purple-50/95 to-pink-50/95 dark:from-slate-900/95 dark:via-slate-950/50 dark:to-slate-900/95 backdrop-blur-md rounded-t-[24px] z-45 shadow-[0_-8px_30px_rgba(99,102,241,0.15)] h-[76px] pb-safe flex items-center px-2">
         <div className="flex justify-around items-center w-full relative h-full">
           
           {/* Home Tab */}
           <button 
             onClick={() => setActiveTab && setActiveTab('Home')}
-            className={`flex flex-col items-center justify-center w-12 transition-all duration-300 active:scale-90 ${activeTab === 'Home' ? 'text-brand-650 dark:text-brand-400' : 'text-slate-450 dark:text-slate-500'}`}
+            className={`flex flex-col items-center justify-center w-12 transition-all duration-300 active:scale-90 ${activeTab === 'Home' ? 'text-blue-500 dark:text-blue-400' : 'text-slate-450 dark:text-slate-500'}`}
           >
             <Home className="w-5.5 h-5.5" strokeWidth={activeTab === 'Home' ? 2.5 : 2} />
-            <span className="text-[10px] font-black mt-1 tracking-wide">Home</span>
+            <span className={`text-[10px] font-black mt-1 tracking-wide ${activeTab === 'Home' ? 'text-blue-600 dark:text-blue-400' : 'text-slate-450 dark:text-slate-500'}`}>Home</span>
           </button>
 
           {/* Inbox/Notification Tab */}
           <button 
             onClick={() => setActiveTab && setActiveTab('Notification')}
-            className={`flex flex-col items-center justify-center w-12 transition-all duration-300 active:scale-90 relative ${activeTab === 'Notification' ? 'text-brand-650 dark:text-brand-400' : 'text-slate-450 dark:text-slate-500'}`}
+            className={`flex flex-col items-center justify-center w-12 transition-all duration-300 active:scale-90 relative ${activeTab === 'Notification' ? 'text-amber-500 dark:text-amber-400' : 'text-slate-450 dark:text-slate-500'}`}
           >
             <Bell className="w-5.5 h-5.5" strokeWidth={activeTab === 'Notification' ? 2.5 : 2} />
             {unreadCount > 0 && (
               <span className="absolute top-0 right-3 w-2.5 h-2.5 bg-rose-500 rounded-full border-2 border-white dark:border-slate-900 animate-pulse" />
             )}
-            <span className="text-[10px] font-black mt-1 tracking-wide">Alerts</span>
+            <span className={`text-[10px] font-black mt-1 tracking-wide ${activeTab === 'Notification' ? 'text-amber-600 dark:text-amber-400' : 'text-slate-450 dark:text-slate-500'}`}>Alerts</span>
           </button>
 
           {/* Central Earning [Z] Button */}
@@ -196,19 +196,19 @@ const Navbar = ({ onLogout, activeTab, setActiveTab }) => {
           {/* Cart Tab */}
           <button 
             onClick={() => setActiveTab && setActiveTab('Cart')}
-            className={`flex flex-col items-center justify-center w-12 transition-all duration-300 active:scale-90 ${activeTab === 'Cart' ? 'text-brand-650 dark:text-brand-400' : 'text-slate-450 dark:text-slate-500'}`}
+            className={`flex flex-col items-center justify-center w-12 transition-all duration-300 active:scale-90 ${activeTab === 'Cart' ? 'text-emerald-500 dark:text-emerald-400' : 'text-slate-450 dark:text-slate-500'}`}
           >
             <ShoppingCart className="w-5.5 h-5.5" strokeWidth={activeTab === 'Cart' ? 2.5 : 2} />
-            <span className="text-[10px] font-black mt-1 tracking-wide">Cart</span>
+            <span className={`text-[10px] font-black mt-1 tracking-wide ${activeTab === 'Cart' ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-450 dark:text-slate-500'}`}>Cart</span>
           </button>
 
           {/* Profile Tab */}
           <button 
             onClick={() => setActiveTab && setActiveTab('Profile')}
-            className={`flex flex-col items-center justify-center w-12 transition-all duration-300 active:scale-90 ${activeTab === 'Profile' ? 'text-brand-650 dark:text-brand-400' : 'text-slate-450 dark:text-slate-500'}`}
+            className={`flex flex-col items-center justify-center w-12 transition-all duration-300 active:scale-90 ${activeTab === 'Profile' ? 'text-purple-500 dark:text-purple-400' : 'text-slate-450 dark:text-slate-500'}`}
           >
             <User className="w-5.5 h-5.5" strokeWidth={activeTab === 'Profile' ? 2.5 : 2} />
-            <span className="text-[10px] font-black mt-1 tracking-wide">Profile</span>
+            <span className={`text-[10px] font-black mt-1 tracking-wide ${activeTab === 'Profile' ? 'text-purple-600 dark:text-purple-400' : 'text-slate-450 dark:text-slate-500'}`}>Profile</span>
           </button>
           
         </div>
