@@ -149,8 +149,8 @@ const Navbar = ({ onLogout, activeTab, setActiveTab }) => {
         </div>
       </nav>
 
-      {/* Mobile Sticky Floating Bottom Navigation (Matches mockup) */}
-      <div className="md:hidden fixed bottom-5 left-4 right-4 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border border-slate-150/40 dark:border-slate-800/80 rounded-[28px] z-45 shadow-[0_12px_40px_rgba(0,0,0,0.12)] h-[72px] flex items-center px-2">
+      {/* Mobile Sticky Flat Bottom Navigation */}
+      <div className="md:hidden fixed bottom-0 left-0 right-0 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-t border-slate-150/40 dark:border-slate-800/80 rounded-t-[24px] z-45 shadow-[0_-8px_30px_rgba(0,0,0,0.08)] h-[76px] pb-safe flex items-center px-2">
         <div className="flex justify-around items-center w-full relative h-full">
           
           {/* Home Tab */}
