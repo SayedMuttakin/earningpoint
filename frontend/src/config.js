@@ -1,7 +1,3 @@
-// Set to true to use your local development server (http://localhost:5001)
-// Set to false to use the production server (https://zenivio.it.com)
-const USE_LOCAL = true; 
-
-export const API_BASE = USE_LOCAL 
+export const API_BASE = import.meta.env.DEV 
   ? "http://localhost:5001" 
   : "https://zenivio.it.com";
