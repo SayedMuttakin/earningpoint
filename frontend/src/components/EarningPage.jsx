@@ -128,11 +128,25 @@ const BigAdBanner = ({ globalSettings }) => {
     );
   }
 
-  // Web fallback — minimal placeholder
+  // Web fallback — premium realistic AdMob test 320x250 ad
   return (
     <div className="w-full mt-2">
-      <div className="w-full h-[250px] bg-slate-50/50 dark:bg-slate-800/30 border border-slate-200/50 dark:border-slate-700/30 rounded-2xl flex items-center justify-center">
-        <span className="text-xs text-slate-400">Ad Space (320×250)</span>
+      <div className="relative w-full h-[250px] border border-slate-200/80 dark:border-slate-700/80 rounded-2xl bg-white dark:bg-slate-900 flex flex-col items-center justify-center overflow-hidden shadow-sm">
+        {/* Test Ad Badge in the top-right corner */}
+        <div className="absolute top-0 right-0 bg-[#4A5568] dark:bg-slate-700 text-white text-[10px] px-3 py-1 rounded-bl-xl font-bold tracking-wide uppercase select-none">
+          Test Ad
+        </div>
+        
+        {/* Ad Content */}
+        <div className="flex flex-col items-center gap-3 select-none">
+          <span className="text-[#3182CE] dark:text-blue-400 font-black text-sm tracking-widest uppercase">
+            SPONSORED
+          </span>
+          <div className="w-20 h-px bg-slate-350 dark:bg-slate-700" />
+          <span className="text-[#718096] dark:text-slate-400 text-sm font-semibold tracking-tight">
+            320x250 Medium Rectangle
+          </span>
+        </div>
       </div>
     </div>
   );
@@ -2984,47 +2998,47 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
 
     <PullToRefresh onRefresh={handleRefresh} refreshing={refreshing}>
       <main className="min-h-screen bg-slate-50 dark:bg-slate-950 transition-colors duration-500 pb-24 md:pb-8">
-        
-        {/* Sticky Header for Ad */}
-        <div className="sticky top-[132px] sm:top-[140px] md:top-16 z-30 flex flex-col w-full bg-slate-50 pb-2 border-b border-slate-200 shadow-sm">
-          <div className="bg-slate-50 pt-2 px-2 sm:px-0">
-            <BannerAd globalSettings={globalSettings} />
-          </div>
-        </div>
 
       {/* Responsive Container */}
       <div className="w-full max-w-4xl mx-auto bg-white dark:bg-slate-900 md:rounded-3xl shadow-xl overflow-hidden border border-slate-200 dark:border-slate-800 mt-2">
 
-        {/* Top Header - more compact height */}
-        <div className="bg-[#f5f3ff] dark:bg-slate-900 text-slate-800 dark:text-white px-4 py-3 sm:px-6 sm:py-4 flex justify-center items-center gap-3 sm:gap-6 border-b border-purple-100 dark:border-slate-800">
-            {/* Premium IP Indicator - Compact and Larger */}
-            <button
-              onClick={() => {
-                if (isPremium && !vpnActivatedShown) {
-                  setShowVpnActivated(true);
-                } else {
-                  setShowPremiumIPView(true);
-                  setIpStep(1);
-                }
-              }}
-              className={`px-5 py-2 sm:px-6 sm:py-2.5 rounded-2xl flex items-center gap-2 border-2 shadow-sm transform-gpu ${
-                isPremium 
-                  ? "bg-amber-500 border-amber-600 text-white" 
-                  : "bg-white dark:bg-slate-800 border-purple-200 dark:border-slate-700 text-purple-700 dark:text-purple-300"
-              }`}
-            >
-              <Shield className={`w-4 h-4 sm:w-5 sm:h-5 ${isPremium ? "text-white" : "text-purple-500"}`} strokeWidth={3} />
-              <span className="text-sm sm:text-base font-black uppercase tracking-tight">
-                Get VPN
-              </span>
-            </button>
-            <button
-              onClick={() => setActiveEarningTab('wallet')}
-              className="flex items-center gap-2 bg-gradient-to-r from-purple-600 to-indigo-600 px-5 py-2 sm:px-6 sm:py-2.5 rounded-2xl border-2 border-purple-500/30 shadow-md shadow-purple-500/20 transform-gpu text-white transition-colors"
-            >
-               <Wallet className="w-4 h-4 sm:w-5 sm:h-5 text-yellow-400 fill-current" />
-               <span className="text-sm sm:text-base font-black uppercase tracking-tight">My Wallet</span>
-            </button>
+        {/* Top Header - styled AdMob banner on top of GET VPN & MY WALLET buttons */}
+        <div className="bg-[#f5f3ff] dark:bg-slate-900 text-slate-800 dark:text-white px-4 py-4 sm:px-6 flex flex-col items-center gap-4 border-b border-purple-100 dark:border-slate-800">
+            {/* Banner Ad directly above the buttons */}
+            <div className="w-full max-w-md">
+              <BannerAd globalSettings={globalSettings} />
+            </div>
+
+            {/* Buttons Row */}
+            <div className="flex justify-center items-center gap-4 w-full max-w-md">
+              <button
+                onClick={() => {
+                  if (isPremium && !vpnActivatedShown) {
+                    setShowVpnActivated(true);
+                  } else {
+                    setShowPremiumIPView(true);
+                    setIpStep(1);
+                  }
+                }}
+                className={`flex-1 py-3 px-4 rounded-2xl flex items-center justify-center gap-2 border-2 shadow-sm transform-gpu transition-all duration-300 ${
+                  isPremium 
+                    ? "bg-amber-500 border-amber-600 text-white" 
+                    : "bg-white dark:bg-slate-800 border-purple-200 dark:border-slate-700 text-purple-700 dark:text-purple-300 hover:bg-purple-50/50"
+                }`}
+              >
+                <Shield className={`w-4 h-4 sm:w-5 sm:h-5 ${isPremium ? "text-white" : "text-purple-500"}`} strokeWidth={3} />
+                <span className="text-sm sm:text-base font-black uppercase tracking-tight">
+                  Get VPN
+                </span>
+              </button>
+              <button
+                onClick={() => setActiveEarningTab('wallet')}
+                className="flex-1 flex items-center justify-center gap-2 bg-gradient-to-r from-purple-600 to-indigo-600 py-3 px-4 rounded-2xl border-2 border-purple-500/30 shadow-md shadow-purple-500/20 transform-gpu text-white hover:opacity-90 transition-all duration-300"
+              >
+                 <Wallet className="w-4 h-4 sm:w-5 sm:h-5 text-yellow-400 fill-current" />
+                 <span className="text-sm sm:text-base font-black uppercase tracking-tight">My Wallet</span>
+              </button>
+            </div>
         </div>
 
 
