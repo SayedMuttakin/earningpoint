@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Search, Send, ArrowLeft, Loader2, User as UserIcon, WifiOff, Phone, Video, PhoneOff, Image, Mic, Smile, ThumbsUp, ChevronRight, UserPlus, MoreVertical } from 'lucide-react';
+import { Search, Send, ArrowLeft, Loader2, User as UserIcon, WifiOff, Phone, Video, PhoneOff, Image, Mic, Smile, ThumbsUp, ChevronRight, UserPlus, MoreVertical, Star, X } from 'lucide-react';
 import { io } from 'socket.io-client';
 import { API_BASE } from '../config';
 import PullToRefresh from './PullToRefresh';
@@ -18,6 +18,49 @@ const MessengerPage = ({ onBack, activeChatPartner, setActiveChatPartner }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [activePartner, setActivePartner] = useState(null); // Selected user object
   const [activeTab, setActiveTab] = useState('recent'); // 'recent' | 'contacts' | 'favorites'
+  const [bottomNavTab, setBottomNavTab] = useState('call'); // 'message' | 'call' | 'video'
+  const [favorites, setFavorites] = useState(() => {
+    const saved = localStorage.getItem('messenger_favorites');
+    return saved ? JSON.parse(saved) : [];
+  });
+  const [showEditFavoritesModal, setShowEditFavoritesModal] = useState(false);
+  const [favoritesSearchQuery, setFavoritesSearchQuery] = useState('');
+
+  // Default favorites populator
+  useEffect(() => {
+    if (chatUsers.length > 0 && favorites.length === 0) {
+      const saved = localStorage.getItem('messenger_favorites');
+      if (!saved) {
+        const defaultIds = chatUsers.slice(0, 4).map(u => u._id);
+        setFavorites(defaultIds);
+        localStorage.setItem('messenger_favorites', JSON.stringify(defaultIds));
+      }
+    }
+  }, [chatUsers, favorites.length]);
+
+  const toggleFavorite = (userId) => {
+    setFavorites(prev => {
+      const isFav = prev.includes(userId);
+      let updated;
+      if (isFav) {
+        updated = prev.filter(id => id !== userId);
+      } else {
+        updated = [...prev, userId];
+      }
+      localStorage.setItem('messenger_favorites', JSON.stringify(updated));
+      return updated;
+    });
+  };
+
+  const handleUserRowClick = (user) => {
+    if (bottomNavTab === 'call') {
+      handleStartCall('audio', user);
+    } else if (bottomNavTab === 'video') {
+      handleStartCall('video', user);
+    } else {
+      handleOpenChat(user);
+    }
+  };
   
   // Chat States
   const [socket, setSocket] = useState(null);
@@ -366,8 +409,7 @@ const MessengerPage = ({ onBack, activeChatPartner, setActiveChatPartner }) => {
   return (
     <div className="fixed inset-0 z-[60] bg-slate-50 dark:bg-slate-950 flex flex-col overflow-hidden">
       <div className="flex-1 flex flex-col bg-gradient-to-tr from-slate-50 via-indigo-50/10 to-violet-50/20 dark:from-slate-950 dark:via-indigo-950/5 dark:to-violet-950/10 relative">
-      
-      {/* ────────────────── Inbox / Conversation List Screen ────────────────── */}
+          {/* ────────────────── Inbox / Conversation List Screen ────────────────── */}
       {!activePartner ? (
         <>
           {/* Header */}
@@ -375,7 +417,9 @@ const MessengerPage = ({ onBack, activeChatPartner, setActiveChatPartner }) => {
             <button onClick={onBack} className="p-2 rounded-full hover:bg-slate-200/50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 transition-colors">
               <ArrowLeft className="w-6 h-6" />
             </button>
-            <h1 className="text-2xl font-black text-slate-800 dark:text-white absolute left-1/2 -translate-x-1/2">Call</h1>
+            <h1 className="text-2xl font-black text-slate-800 dark:text-white absolute left-1/2 -translate-x-1/2">
+              {bottomNavTab === 'message' ? 'Chats' : bottomNavTab === 'video' ? 'Video Call' : 'Call'}
+            </h1>
             <button className="p-2 rounded-full hover:bg-slate-200/50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 transition-colors">
               <MoreVertical className="w-6 h-6" />
             </button>
@@ -447,7 +491,7 @@ const MessengerPage = ({ onBack, activeChatPartner, setActiveChatPartner }) => {
                         <div
                           key={user._id}
                           className="flex items-center justify-between p-3.5 hover:bg-slate-50 dark:hover:bg-slate-850/60 transition-all rounded-2xl cursor-pointer group active:scale-[0.98]"
-                          onClick={() => handleOpenChat(user)}
+                          onClick={() => handleUserRowClick(user)}
                         >
                           <div className="flex items-center gap-3.5 min-w-0">
                             {/* Avatar with Status badge */}
@@ -474,29 +518,26 @@ const MessengerPage = ({ onBack, activeChatPartner, setActiveChatPartner }) => {
 
                           {/* Quick call buttons inside the chat item row (matches call buttons in reference image) */}
                           <div className="flex items-center gap-1.5 flex-shrink-0">
-                            {idx % 2 === 0 ? (
-                              <button 
-                                onClick={(e) => {
-                                  e.stopPropagation(); // Avoid opening chat
-                                  handleStartCall('audio', user);
-                                }}
-                                className="w-10 h-10 bg-emerald-50 dark:bg-emerald-950/40 text-emerald-500 dark:text-emerald-400 hover:bg-emerald-100 dark:hover:bg-emerald-950/70 active:scale-90 rounded-full flex items-center justify-center transition-all border border-emerald-100/50 dark:border-emerald-900/30"
-                                title="Voice Call"
-                              >
-                                <Phone className="w-4.5 h-4.5 fill-emerald-500/10" strokeWidth={2.5} />
-                              </button>
-                            ) : (
-                              <button 
-                                onClick={(e) => {
-                                  e.stopPropagation(); // Avoid opening chat
-                                  handleStartCall('video', user);
-                                }}
-                                className="w-10 h-10 bg-blue-50 dark:bg-blue-950/40 text-blue-500 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-950/70 active:scale-90 rounded-full flex items-center justify-center transition-all border border-blue-100/50 dark:border-blue-900/30"
-                                title="Video Call"
-                              >
-                                <Video className="w-4.5 h-4.5" strokeWidth={2.5} />
-                              </button>
-                            )}
+                            <button 
+                              onClick={(e) => {
+                                e.stopPropagation(); // Avoid row click action
+                                handleStartCall('audio', user);
+                              }}
+                              className="w-10 h-10 bg-emerald-50 dark:bg-emerald-950/40 text-emerald-500 dark:text-emerald-400 hover:bg-emerald-100 dark:hover:bg-emerald-950/70 active:scale-90 rounded-full flex items-center justify-center transition-all border border-emerald-100/50 dark:border-emerald-900/30"
+                              title="Voice Call"
+                            >
+                              <Phone className="w-4.5 h-4.5 fill-emerald-500/10" strokeWidth={2.5} />
+                            </button>
+                            <button 
+                              onClick={(e) => {
+                                e.stopPropagation(); // Avoid row click action
+                                handleStartCall('video', user);
+                              }}
+                              className="w-10 h-10 bg-blue-50 dark:bg-blue-950/40 text-blue-500 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-950/70 active:scale-90 rounded-full flex items-center justify-center transition-all border border-blue-100/50 dark:border-blue-900/30"
+                              title="Video Call"
+                            >
+                              <Video className="w-4.5 h-4.5" strokeWidth={2.5} />
+                            </button>
                           </div>
                         </div>
                       ))}
@@ -507,36 +548,53 @@ const MessengerPage = ({ onBack, activeChatPartner, setActiveChatPartner }) => {
                   <div className="space-y-4 pt-2">
                     <div className="flex items-center justify-between">
                       <h2 className="text-lg font-black text-slate-800 dark:text-white">Favorites</h2>
-                      <button className="text-xs font-black text-[#7C3AED] hover:underline">Edit</button>
+                      <button 
+                        onClick={() => setShowEditFavoritesModal(true)}
+                        className="text-xs font-black text-[#7C3AED] hover:underline"
+                      >
+                        Edit
+                      </button>
                     </div>
 
-                    <div className="flex gap-4 overflow-x-auto pb-2 scrollbar-none snap-x">
-                      {filteredUsers.map((user) => (
-                        <button
-                          key={user._id}
-                          onClick={() => handleOpenChat(user)}
-                          className="flex flex-col items-center gap-2 shrink-0 snap-start active:scale-95 transition-transform"
+                    {filteredUsers.filter(u => favorites.includes(u._id)).length === 0 ? (
+                      <div className="py-4 text-center w-full bg-slate-50/50 dark:bg-slate-900/30 rounded-2xl border border-dashed border-slate-200 dark:border-slate-800">
+                        <p className="text-[11px] font-bold text-slate-400">No favorites added yet.</p>
+                        <button 
+                          onClick={() => setShowEditFavoritesModal(true)}
+                          className="text-[10px] font-black text-[#7C3AED] mt-1 hover:underline"
                         >
-                          <div className="relative">
-                            {user.profilePic ? (
-                              <img
-                                src={getProfilePicUrl(user.profilePic)}
-                                alt={user.name}
-                                className="w-14 h-14 rounded-full object-cover border-2 border-white dark:border-slate-800 shadow-sm"
-                              />
-                            ) : (
-                              <div className="w-14 h-14 rounded-full bg-gradient-to-tr from-indigo-500 to-brand-500 flex items-center justify-center text-white font-black text-lg border-2 border-white dark:border-slate-800 shadow-sm">
-                                {user.name.charAt(0).toUpperCase()}
-                              </div>
-                            )}
-                            <span className="absolute bottom-0 right-0 w-3.5 h-3.5 bg-emerald-500 border-2 border-white dark:border-slate-900 rounded-full" />
-                          </div>
-                          <span className="text-[11px] font-black text-slate-650 dark:text-slate-350 max-w-[60px] truncate">
-                            {user.name.split(' ')[0]}
-                          </span>
+                          + Add Favorites
                         </button>
-                      ))}
-                    </div>
+                      </div>
+                    ) : (
+                      <div className="flex gap-4 overflow-x-auto pb-2 scrollbar-none snap-x">
+                        {filteredUsers.filter(u => favorites.includes(u._id)).map((user) => (
+                          <button
+                            key={user._id}
+                            onClick={() => handleUserRowClick(user)}
+                            className="flex flex-col items-center gap-2 shrink-0 snap-start active:scale-95 transition-transform"
+                          >
+                            <div className="relative">
+                              {user.profilePic ? (
+                                <img
+                                  src={getProfilePicUrl(user.profilePic)}
+                                  alt={user.name}
+                                  className="w-14 h-14 rounded-full object-cover border-2 border-white dark:border-slate-800 shadow-sm"
+                                />
+                              ) : (
+                                <div className="w-14 h-14 rounded-full bg-gradient-to-tr from-indigo-500 to-brand-500 flex items-center justify-center text-white font-black text-lg border-2 border-white dark:border-slate-800 shadow-sm">
+                                  {user.name.charAt(0).toUpperCase()}
+                                </div>
+                              )}
+                              <span className="absolute bottom-0 right-0 w-3.5 h-3.5 bg-emerald-500 border-2 border-white dark:border-slate-900 rounded-full" />
+                            </div>
+                            <span className="text-[11px] font-black text-slate-650 dark:text-slate-350 max-w-[60px] truncate">
+                              {user.name.split(' ')[0]}
+                            </span>
+                          </button>
+                        ))}
+                      </div>
+                    )}
                   </div>
                 </div>
               )}
@@ -552,7 +610,7 @@ const MessengerPage = ({ onBack, activeChatPartner, setActiveChatPartner }) => {
                       filteredUsers.map((user) => (
                         <div
                           key={user._id}
-                          onClick={() => handleOpenChat(user)}
+                          onClick={() => handleUserRowClick(user)}
                           className="flex items-center justify-between p-3 hover:bg-slate-50 dark:hover:bg-slate-850/60 transition-all rounded-2xl cursor-pointer group active:scale-[0.98]"
                         >
                           <div className="flex items-center gap-3">
@@ -605,43 +663,77 @@ const MessengerPage = ({ onBack, activeChatPartner, setActiveChatPartner }) => {
                 </div>
               )}
 
-              {/* Favorites Tab: Premium / VIP Users */}
+              {/* Favorites Tab: User's Custom Favorites */}
               {activeTab === 'favorites' && (
                 <div className="mt-4 space-y-4 animate-fade-in">
-                  <h2 className="text-lg font-black text-slate-800 dark:text-white">VIP Favorites</h2>
+                  <div className="flex items-center justify-between">
+                    <h2 className="text-lg font-black text-slate-800 dark:text-white">My Favorites</h2>
+                    <button 
+                      onClick={() => setShowEditFavoritesModal(true)}
+                      className="text-xs font-black text-[#7C3AED] hover:underline"
+                    >
+                      Edit
+                    </button>
+                  </div>
+                  
                   <div className="bg-white dark:bg-slate-900 border border-slate-150/40 dark:border-slate-800/80 rounded-[2rem] p-2.5 space-y-1 shadow-xs">
-                    {filteredUsers.filter(u => u.isPremium).length === 0 ? (
-                      <p className="text-center py-8 text-slate-400 text-sm font-medium">No Premium contacts yet.</p>
+                    {filteredUsers.filter(u => favorites.includes(u._id)).length === 0 ? (
+                      <div className="py-8 text-center text-slate-450">
+                        <p className="font-bold text-sm">No favorites added yet</p>
+                        <button 
+                          onClick={() => setShowEditFavoritesModal(true)}
+                          className="text-xs font-black text-[#7C3AED] mt-2 hover:underline"
+                        >
+                          + Add Favorites
+                        </button>
+                      </div>
                     ) : (
-                      filteredUsers.filter(u => u.isPremium).map((user) => (
+                      filteredUsers.filter(u => favorites.includes(u._id)).map((user) => (
                         <div
                           key={user._id}
-                          onClick={() => handleOpenChat(user)}
-                          className="flex items-center justify-between p-3 hover:bg-slate-50 dark:hover:bg-slate-850/60 transition-all rounded-2xl cursor-pointer group active:scale-[0.98]"
+                          onClick={() => handleUserRowClick(user)}
+                          className="flex items-center justify-between p-3 hover:bg-slate-55/40 dark:hover:bg-slate-850/60 transition-all rounded-2xl cursor-pointer group active:scale-[0.98]"
                         >
                           <div className="flex items-center gap-3">
-                            {user.profilePic ? (
-                              <img
-                                src={getProfilePicUrl(user.profilePic)}
-                                alt={user.name}
-                                className="w-11 h-11 rounded-full object-cover"
-                              />
-                            ) : (
-                              <div className="w-11 h-11 rounded-full bg-gradient-to-tr from-yellow-500 to-amber-500 flex items-center justify-center text-white font-black text-sm">
-                                {user.name.charAt(0).toUpperCase()}
-                              </div>
-                            )}
+                            <div className="relative">
+                              {user.profilePic ? (
+                                <img
+                                  src={getProfilePicUrl(user.profilePic)}
+                                  alt={user.name}
+                                  className="w-11 h-11 rounded-full object-cover"
+                                />
+                              ) : (
+                                <div className="w-11 h-11 rounded-full bg-gradient-to-tr from-indigo-500 to-brand-500 flex items-center justify-center text-white font-black text-sm">
+                                  {user.name.charAt(0).toUpperCase()}
+                                </div>
+                              )}
+                              <span className="absolute bottom-0 right-0 w-3.5 h-3.5 bg-emerald-500 border-2 border-white dark:border-slate-900 rounded-full" />
+                            </div>
                             <div>
                               <h3 className="font-bold text-slate-850 dark:text-slate-200 text-sm flex items-center gap-1.5">
                                 {user.name}
-                                <span className="text-[9px] bg-amber-50 dark:bg-amber-900/20 text-amber-600 dark:text-amber-400 border border-amber-100/50 px-1 py-0.5 rounded-md">VIP</span>
+                                {user.isPremium && (
+                                  <span className="text-[9px] bg-amber-55 dark:bg-amber-900/20 text-amber-600 dark:text-amber-400 border border-amber-100/50 px-1 py-0.5 rounded-md">VIP</span>
+                                )}
                               </h3>
                             </div>
                           </div>
                           
-                          <button className="w-8 h-8 rounded-full bg-amber-50 dark:bg-amber-900/40 text-amber-500 hover:bg-amber-100 flex items-center justify-center transition-colors">
-                            <ChevronRight className="w-4 h-4" />
-                          </button>
+                          <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
+                            <button 
+                              onClick={() => handleStartCall('audio', user)}
+                              className="w-8 h-8 rounded-full bg-emerald-50 dark:bg-emerald-950/40 text-emerald-500 hover:bg-emerald-100 flex items-center justify-center transition-colors"
+                              title="Voice Call"
+                            >
+                              <Phone className="w-4 h-4" />
+                            </button>
+                            <button 
+                              onClick={() => handleOpenChat(user)}
+                              className="w-8 h-8 rounded-full bg-indigo-50 dark:bg-indigo-950/40 text-[#7C3AED] hover:bg-indigo-100 flex items-center justify-center transition-colors"
+                            >
+                              <ChevronRight className="w-4 h-4" />
+                            </button>
+                          </div>
                         </div>
                       ))
                     )}
@@ -652,41 +744,43 @@ const MessengerPage = ({ onBack, activeChatPartner, setActiveChatPartner }) => {
             </PullToRefresh>
           </div>
 
-          {/* Bottom Floating Navigation Bar (Matches visual layout of reference screenshot) */}
+          {/* Bottom Floating Navigation Bar */}
           <div className="absolute bottom-5 left-1/2 -translate-x-1/2 w-[90%] max-w-sm bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border border-slate-200/50 dark:border-slate-800/80 rounded-[2rem] px-6 py-2 flex items-center justify-between shadow-xl z-20">
-            <button className="flex flex-col items-center justify-center gap-1 text-[#7C3AED]">
-              <div className="w-11 h-11 bg-indigo-50 dark:bg-indigo-950/40 rounded-full flex items-center justify-center">
-                <Smile className="w-6 h-6 fill-indigo-100/20" />
+            <button 
+              onClick={() => setBottomNavTab('message')}
+              className={`flex flex-col items-center justify-center gap-1 transition-colors ${
+                bottomNavTab === 'message' ? 'text-[#7C3AED]' : 'text-slate-450 dark:text-slate-500 hover:text-slate-650'
+              }`}
+            >
+              <div className={`w-11 h-11 rounded-full flex items-center justify-center ${
+                bottomNavTab === 'message' ? 'bg-indigo-50 dark:bg-indigo-950/40' : 'hover:bg-slate-50 dark:hover:bg-slate-800'
+              }`}>
+                <Smile className={`w-6 h-6 ${bottomNavTab === 'message' ? 'fill-indigo-100/20' : ''}`} />
               </div>
               <span className="text-[10px] font-black">Message</span>
             </button>
 
             {/* Large Center Call Floating Action Button */}
             <button 
-              onClick={() => {
-                // Call first user in list as quick mock support call
-                if (chatUsers.length > 0) {
-                  handleStartCall('audio', chatUsers[0]);
-                } else {
-                  alert('No contacts available to call.');
-                }
-              }}
-              className="w-14 h-14 bg-gradient-to-tr from-[#7C3AED] to-[#5B21B6] hover:scale-105 active:scale-95 transition-all text-white rounded-full flex items-center justify-center shadow-lg shadow-indigo-500/30 -mt-6"
+              onClick={() => setBottomNavTab('call')}
+              className={`w-14 h-14 hover:scale-105 active:scale-95 transition-all rounded-full flex items-center justify-center shadow-lg -mt-6 ${
+                bottomNavTab === 'call'
+                  ? 'bg-gradient-to-tr from-[#7C3AED] to-[#5B21B6] text-white shadow-indigo-500/30'
+                  : 'bg-slate-200 dark:bg-slate-800 text-slate-500 dark:text-slate-400 shadow-slate-500/10'
+              }`}
             >
-              <Phone className="w-6 h-6 fill-white/10" strokeWidth={2.5} />
+              <Phone className="w-6 h-6 fill-current" strokeWidth={2.5} />
             </button>
 
             <button 
-              onClick={() => {
-                if (chatUsers.length > 0) {
-                  handleStartCall('video', chatUsers[0]);
-                } else {
-                  alert('No contacts available to video call.');
-                }
-              }}
-              className="flex flex-col items-center justify-center gap-1 text-slate-400 dark:text-slate-500 hover:text-slate-650"
+              onClick={() => setBottomNavTab('video')}
+              className={`flex flex-col items-center justify-center gap-1 transition-colors ${
+                bottomNavTab === 'video' ? 'text-[#7C3AED]' : 'text-slate-450 dark:text-slate-500 hover:text-slate-650'
+              }`}
             >
-              <div className="w-11 h-11 rounded-full flex items-center justify-center hover:bg-slate-50 dark:hover:bg-slate-800">
+              <div className={`w-11 h-11 rounded-full flex items-center justify-center ${
+                bottomNavTab === 'video' ? 'bg-indigo-50 dark:bg-indigo-950/40' : 'hover:bg-slate-50 dark:hover:bg-slate-800'
+              }`}>
                 <Video className="w-6 h-6" />
               </div>
               <span className="text-[10px] font-black">Video Call</span>
@@ -936,6 +1030,90 @@ const MessengerPage = ({ onBack, activeChatPartner, setActiveChatPartner }) => {
             >
               <PhoneOff className="w-7 h-7 text-white" />
             </button>
+          </div>
+        </div>
+      )}
+
+      {/* ══════ Edit Favorites Modal overlay ══════ */}
+      {showEditFavoritesModal && (
+        <div className="fixed inset-0 z-[100] bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 animate-fade-in text-slate-800 dark:text-white">
+          <div className="bg-white dark:bg-slate-900 w-full max-w-sm rounded-[2rem] border border-slate-200 dark:border-slate-800 shadow-2xl flex flex-col max-h-[70vh] overflow-hidden">
+            {/* Modal Header */}
+            <div className="px-6 pt-6 pb-4 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center shrink-0">
+              <h3 className="text-lg font-black text-slate-800 dark:text-white">Edit Favorites</h3>
+              <button 
+                onClick={() => {
+                  setShowEditFavoritesModal(false);
+                  setFavoritesSearchQuery('');
+                }}
+                className="p-1.5 rounded-full hover:bg-slate-100 dark:hover:bg-slate-850 text-slate-400 dark:text-slate-500 transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            
+            {/* Search contacts input */}
+            <div className="px-6 py-3 border-b border-slate-100 dark:border-slate-800 shrink-0">
+              <div className="flex items-center bg-slate-55/60 dark:bg-slate-800 rounded-xl px-3 py-1.5 border border-slate-200/50 dark:border-slate-700/60 shadow-inner">
+                <Search className="w-4 h-4 text-slate-400 mr-2 shrink-0" />
+                <input 
+                  type="text"
+                  placeholder="Search contacts..."
+                  value={favoritesSearchQuery}
+                  onChange={(e) => setFavoritesSearchQuery(e.target.value)}
+                  className="w-full bg-transparent border-none py-1 text-xs text-slate-705 dark:text-white outline-none focus:ring-0"
+                />
+              </div>
+            </div>
+            
+            {/* Contacts list with Star toggles */}
+            <div className="flex-1 overflow-y-auto p-4 space-y-1">
+              {chatUsers
+                .filter(u => u.name.toLowerCase().includes(favoritesSearchQuery.toLowerCase()))
+                .map(user => {
+                  const isFav = favorites.includes(user._id);
+                  return (
+                    <div key={user._id} className="flex items-center justify-between p-3 hover:bg-slate-50 dark:hover:bg-slate-850/60 rounded-2xl transition-all">
+                      <div className="flex items-center gap-3">
+                        {user.profilePic ? (
+                          <img src={getProfilePicUrl(user.profilePic)} alt={user.name} className="w-10 h-10 rounded-full object-cover" />
+                        ) : (
+                          <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-indigo-500 to-brand-500 flex items-center justify-center text-white font-black text-sm">
+                            {user.name.charAt(0).toUpperCase()}
+                          </div>
+                        )}
+                        <div>
+                          <p className="font-bold text-sm text-slate-800 dark:text-white leading-tight">{user.name}</p>
+                          <p className="text-[10px] text-slate-450 truncate max-w-[150px] mt-0.5">{user.phoneOrEmail}</p>
+                        </div>
+                      </div>
+                      
+                      <button 
+                        onClick={() => toggleFavorite(user._id)}
+                        className="p-2 rounded-full hover:bg-slate-105 dark:hover:bg-slate-800 transition-colors"
+                      >
+                        <Star className={`w-5 h-5 ${isFav ? 'fill-amber-400 text-amber-500' : 'text-slate-350 dark:text-slate-600'}`} />
+                      </button>
+                    </div>
+                  );
+                })}
+              {chatUsers.filter(u => u.name.toLowerCase().includes(favoritesSearchQuery.toLowerCase())).length === 0 && (
+                <p className="text-center py-6 text-slate-400 text-xs font-medium">No contacts found</p>
+              )}
+            </div>
+            
+            {/* Footer */}
+            <div className="p-4 border-t border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/50 flex justify-end shrink-0">
+              <button 
+                onClick={() => {
+                  setShowEditFavoritesModal(false);
+                  setFavoritesSearchQuery('');
+                }}
+                className="px-6 py-2 bg-[#7C3AED] hover:bg-[#6D28D9] text-white rounded-xl text-xs font-black shadow-md shadow-indigo-500/20 active:scale-95 transition-transform"
+              >
+                Done
+              </button>
+            </div>
           </div>
         </div>
       )}
