@@ -156,7 +156,7 @@ const MultiAdViewPage = ({ config, onClose, onCoinsEarned }) => {
           <p className="text-white font-bold text-lg">Playing Ad…</p>
           <p className="text-white/50 text-sm">Please wait for the ad to complete</p>
           <div className="absolute bottom-10 w-full flex justify-center">
-            <div className="text-white/30 text-xs">AdMob Test Ad</div>
+            <div className="text-white/30 text-xs">Loading Ad…</div>
           </div>
         </div>
       )}

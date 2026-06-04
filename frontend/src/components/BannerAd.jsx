@@ -1,28 +1,38 @@
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
+import { AdMobService } from '../utils/admob';
+import { Capacitor } from '@capacitor/core';
 
-const BannerAd = ({ globalSettings }) => {
-  const bannerId = globalSettings?.admobConfig?.bannerAdUnitId;
-  
-  if (bannerId && bannerId.trim()) {
-    // If there is a real ID, we show a professional placeholder for now 
-    // In a real mobile app, Capacitor AdMob plugin would handle this
+const BannerAd = ({ globalSettings, size = 'banner' }) => {
+  const bannerShown = useRef(false);
+
+  useEffect(() => {
+    // On native platform, show real AdMob banner
+    if (Capacitor.isNativePlatform() && !bannerShown.current) {
+      bannerShown.current = true;
+      AdMobService.showBanner();
+    }
+    return () => {
+      if (bannerShown.current) {
+        AdMobService.hideBanner();
+        bannerShown.current = false;
+      }
+    };
+  }, []);
+
+  // On native, the banner is rendered natively by AdMob plugin (overlaid on WebView)
+  // We just need a spacer div to make room for it
+  if (Capacitor.isNativePlatform()) {
     return (
-      <div className="w-full border border-slate-200 dark:border-slate-800 rounded-xl p-3 flex items-center justify-center bg-slate-50 dark:bg-slate-800/30 relative overflow-hidden">
-        <span className="absolute top-0 right-0 bg-indigo-600 text-white text-[8px] px-1.5 py-0.5 font-bold rounded-bl-lg">AdMob Active</span>
-        <span className="text-xs text-slate-500 font-medium">Real Ad ID Connected: {bannerId}</span>
+      <div className="w-full h-[60px] flex items-center justify-center">
+        {/* Native AdMob banner renders here as an overlay */}
       </div>
     );
   }
 
-  // Default Test Ad View
+  // Web fallback — minimal placeholder for development only
   return (
-    <div className="w-full border border-slate-200 dark:border-slate-800 rounded-xl p-3 flex items-center justify-center bg-slate-50 dark:bg-slate-800/30 relative overflow-hidden">
-      <span className="absolute top-0 right-0 bg-slate-600 text-white text-[8px] px-1.5 py-0.5 font-bold rounded-bl-lg">Test Ad</span>
-      <div className="flex items-center gap-4">
-        <span className="text-blue-500 font-bold text-sm">SPONSORED</span>
-        <div className="h-6 w-px bg-slate-200 dark:bg-slate-700"></div>
-        <span className="text-slate-500 dark:text-slate-400 text-xs font-medium">468x60 Banner Ad</span>
-      </div>
+    <div className="w-full border border-slate-200/50 dark:border-slate-800/50 rounded-xl p-2 flex items-center justify-center bg-slate-50/50 dark:bg-slate-800/20 relative overflow-hidden">
+      <span className="text-[10px] text-slate-400 font-medium">Ad Space</span>
     </div>
   );
 };

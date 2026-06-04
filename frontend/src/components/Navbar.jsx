@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Home, Bell, DollarSign, ShoppingCart, User, Settings, LogOut, Menu, X, HelpCircle } from 'lucide-react';
+import { Home, Bell, DollarSign, ShoppingCart, User, Settings, LogOut, Menu, X, HelpCircle, MessageCircle } from 'lucide-react';
 import { API_BASE } from '../config';
 
 const navItems = [
@@ -44,53 +44,77 @@ const Navbar = ({ onLogout, activeTab, setActiveTab }) => {
       {/* Desktop & Top Mobile Navbar */}
       <nav className="sticky top-0 z-50 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-700 shadow-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between h-16">
-            {/* Left Side: Logo & Brand */}
-            <div className="flex items-center gap-3 cursor-pointer" onClick={() => setActiveTab && setActiveTab('Home')}>
-              <div className="w-10 h-10 flex items-center justify-center">
+          <div className="flex justify-between h-16 relative">
+            {/* Left Side: Messenger Icon */}
+            <div className="flex items-center">
+              <button 
+                onClick={() => setActiveTab && setActiveTab('Messenger')}
+                className="relative p-2 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 hover:scale-105 active:scale-95 transition-all duration-300 flex items-center justify-center border border-transparent hover:border-slate-150/40 dark:hover:border-slate-750/30"
+                title="Messenger Chat"
+              >
+                <div className="relative">
+                  <svg viewBox="0 0 24 24" className="w-7 h-7 transform active:scale-90 transition-transform duration-300" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M12 2C6.48 2 2 6.14 2 11.25c0 2.9 1.44 5.49 3.7 7.14v3.86a.75.75 0 001.17.62l4.03-2.58c.36.07.73.11 1.1.11 5.52 0 10-4.14 10-9.25S17.52 2 12 2zm1.25 12.25l-2.5-2.68-4.88 2.68 5.38-5.71 2.5 2.68 4.88-2.68-5.38 5.71z" fill="url(#messenger-gradient)"/>
+                    <defs>
+                      <linearGradient id="messenger-gradient" x1="2" y1="2" x2="22" y2="22" gradientUnits="userSpaceOnUse">
+                        <stop offset="0%" stopColor="#09f" />
+                        <stop offset="30%" stopColor="#a0f" />
+                        <stop offset="70%" stopColor="#f35" />
+                        <stop offset="100%" stopColor="#f85" />
+                      </linearGradient>
+                    </defs>
+                  </svg>
+                  <span className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 bg-emerald-500 rounded-full border-2 border-white dark:border-slate-900 animate-pulse" />
+                </div>
+              </button>
+            </div>
+
+            {/* Center Side: Logo & Brand (Centered) */}
+            <div className="absolute left-1/2 -translate-x-1/2 flex items-center gap-2 sm:gap-3 cursor-pointer h-16" onClick={() => setActiveTab && setActiveTab('Home')}>
+              <div className="w-9 h-9 sm:w-10 sm:h-10 flex items-center justify-center transform hover:scale-110 transition-transform duration-300">
                  <img src="/zenivio-logo.png" alt="Zenivio Logo" className="w-full h-full object-contain" />
               </div>
-              <span className="text-2xl font-black bg-gradient-to-r from-brand-500 to-brand-700 bg-clip-text text-transparent transform hover:scale-105 transition-transform duration-300">
+              <span className="text-xl sm:text-2xl font-black bg-gradient-to-r from-brand-500 to-brand-700 bg-clip-text text-transparent transform hover:scale-105 transition-all duration-300">
                 Zenivio
               </span>
             </div>
 
-            {/* Center: Desktop Navigation */}
-            <div className="hidden md:flex items-center">
-              <div className="relative flex space-x-1 p-1 bg-slate-100 dark:bg-slate-800 rounded-xl">
-                {navItems.map((item) => {
-                  const Icon = item.icon;
-                  const isActive = activeTab === item.name;
-                  const isNotification = item.name === 'Notification';
-                  
-                  return (
-                    <button
-                      key={item.name}
-                      onClick={() => setActiveTab && setActiveTab(item.name)}
-                      className={`relative px-4 py-2 rounded-lg text-sm font-bold transition-colors ${isActive ? 'text-brand-700 dark:text-brand-400' : 'text-black dark:text-slate-300 hover:text-brand-600'}`}
-                    >
-                      {isActive && (
-                        <div
-                          className="absolute inset-0 bg-white dark:bg-slate-700 rounded-xl shadow-sm border border-brand-100/50 dark:border-slate-600 animate-fade-in"
-                        />
-                      )}
-                      <span className="relative z-10 flex items-center gap-2">
-                        <div className="relative">
-                          <Icon strokeWidth={2.5} className={`w-4 h-4 ${isActive ? 'text-brand-600 dark:text-brand-400' : ''}`} />
-                          {isNotification && unreadCount > 0 && (
-                            <span className="absolute -top-1 -right-0.5 w-2 h-2 bg-rose-500 rounded-full border-2 border-white dark:border-slate-800 animate-pulse" />
-                          )}
-                        </div>
-                        {item.name}
-                      </span>
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-
-            {/* Right Side: Quick Actions/Profile Mobile Menu Toggle */}
+            {/* Right Side: Desktop Navigation & Menu Toggle */}
             <div className="flex items-center gap-4">
+              {/* Desktop Navigation moved to right side */}
+              <div className="hidden md:flex items-center">
+                <div className="relative flex space-x-1 p-1 bg-slate-100 dark:bg-slate-800 rounded-xl">
+                  {navItems.map((item) => {
+                    const Icon = item.icon;
+                    const isActive = activeTab === item.name;
+                    const isNotification = item.name === 'Notification';
+                    
+                    return (
+                      <button
+                        key={item.name}
+                        onClick={() => setActiveTab && setActiveTab(item.name)}
+                        className={`relative px-4 py-2 rounded-lg text-sm font-bold transition-colors ${isActive ? 'text-brand-700 dark:text-brand-400' : 'text-black dark:text-slate-300 hover:text-brand-600'}`}
+                      >
+                        {isActive && (
+                          <div
+                            className="absolute inset-0 bg-white dark:bg-slate-700 rounded-xl shadow-sm border border-brand-100/50 dark:border-slate-600 animate-fade-in"
+                          />
+                        )}
+                        <span className="relative z-10 flex items-center gap-2">
+                          <div className="relative">
+                            <Icon strokeWidth={2.5} className={`w-4 h-4 ${isActive ? 'text-brand-600 dark:text-brand-400' : ''}`} />
+                            {isNotification && unreadCount > 0 && (
+                              <span className="absolute -top-1 -right-0.5 w-2 h-2 bg-rose-500 rounded-full border-2 border-white dark:border-slate-800 animate-pulse" />
+                            )}
+                          </div>
+                          {item.name}
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
               <button onClick={onLogout} className="hidden md:flex bg-brand-50 dark:bg-slate-800 hover:bg-brand-100 dark:hover:bg-slate-700 text-brand-700 dark:text-brand-400 h-10 w-10 rounded-full items-center justify-center transition-colors" title="Log out">
                 <LogOut className="w-5 h-5" />
               </button>
@@ -105,19 +129,19 @@ const Navbar = ({ onLogout, activeTab, setActiveTab }) => {
                 </button>
                 
                 {/* Dropdown Menu for Setting and Log out */}
-                  {isMobileMenuOpen && (
-                    <div 
-                      className="absolute top-14 right-0 mt-2 w-48 bg-white dark:bg-slate-800 rounded-2xl shadow-xl border border-slate-100 dark:border-slate-700 py-2.5 z-50 overflow-hidden animate-fade-in-up"
-                    >
-                      <button onClick={() => { setIsMobileMenuOpen(false); setActiveTab && setActiveTab('Setting'); }} className="w-full text-left px-5 py-3 text-sm font-medium text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 hover:text-brand-600 flex items-center gap-3 transition-colors">
-                        <Settings className="w-4.5 h-4.5" /> Setting
-                      </button>
-                      <div className="h-px bg-slate-100 dark:bg-slate-700 my-1 mx-3" />
-                      <button onClick={() => { setIsMobileMenuOpen(false); onLogout(); }} className="w-full text-left px-5 py-3 text-sm font-medium text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-900/20 flex items-center gap-3 transition-colors">
-                        <LogOut className="w-4.5 h-4.5" /> Log out
-                      </button>
-                    </div>
-                  )}
+                {isMobileMenuOpen && (
+                  <div 
+                    className="absolute top-14 right-0 mt-2 w-48 bg-white dark:bg-slate-800 rounded-2xl shadow-xl border border-slate-100 dark:border-slate-700 py-2.5 z-50 overflow-hidden animate-fade-in-up"
+                  >
+                    <button onClick={() => { setIsMobileMenuOpen(false); setActiveTab && setActiveTab('Setting'); }} className="w-full text-left px-5 py-3 text-sm font-medium text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 hover:text-brand-600 flex items-center gap-3 transition-colors">
+                      <Settings className="w-4.5 h-4.5" /> Setting
+                    </button>
+                    <div className="h-px bg-slate-100 dark:bg-slate-700 my-1 mx-3" />
+                    <button onClick={() => { setIsMobileMenuOpen(false); onLogout(); }} className="w-full text-left px-5 py-3 text-sm font-medium text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-900/20 flex items-center gap-3 transition-colors">
+                      <LogOut className="w-4.5 h-4.5" /> Log out
+                    </button>
+                  </div>
+                )}
               </div>
             </div>
             

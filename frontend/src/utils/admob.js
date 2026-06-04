@@ -26,7 +26,7 @@ const REAL_ADMOB_IDS = {
 };
 
 // Toggle for Test Mode (Set to false for production)
-const USE_TEST_ADS = true;
+const USE_TEST_ADS = false;
 
 const getAdId = (type) => {
   if (USE_TEST_ADS) {

@@ -86,6 +86,9 @@ const startServer = async () => {
     const emailVerifyRoutes = require('./routes/emailVerifyRoutes');
     app.use('/api/email-verify', emailVerifyRoutes);
 
+    const messageRoutes = require('./routes/messageRoutes');
+    app.use('/api/messages', messageRoutes);
+
     // Basic Route
     app.get('/', (req, res) => {
       res.send('Zenivio API is running...');

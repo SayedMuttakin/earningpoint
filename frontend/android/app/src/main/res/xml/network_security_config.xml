@@ -1,8 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <network-security-config>
+    <!-- Production: Block cleartext by default for security -->
+    <base-config cleartextTrafficAllowed="false">
+        <trust-anchors>
+            <certificates src="system" />
+        </trust-anchors>
+    </base-config>
+    <!-- Allow specific domains that may need cleartext -->
     <domain-config cleartextTrafficAllowed="true">
-        <domain includeSubdomains="true">192.168.31.163</domain>
-        <domain includeSubdomains="true">localhost</domain>
-        <domain includeSubdomains="true">satrong-sajghor.top</domain>
+        <domain includeSubdomains="true">zenivio.it.com</domain>
     </domain-config>
 </network-security-config>

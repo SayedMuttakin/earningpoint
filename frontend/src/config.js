@@ -1,6 +1,6 @@
 // Set to true to use your local development server (http://localhost:5001)
 // Set to false to use the production server (https://zenivio.it.com)
-const USE_LOCAL = false; 
+const USE_LOCAL = true; 
 
 export const API_BASE = USE_LOCAL 
   ? "http://localhost:5001" 

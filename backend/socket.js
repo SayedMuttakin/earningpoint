@@ -1,5 +1,6 @@
 const { Server } = require('socket.io');
 const ChatSession = require('./models/ChatSession');
+const Message = require('./models/Message');
 
 let io;
 
@@ -63,6 +64,57 @@ module.exports = {
           console.error('Socket error rejoin_session:', err);
         }
       });
+
+      // Get or create session for logged-in user
+      socket.on('get_or_create_session', async (data) => {
+        try {
+          const { userId, name, email } = data;
+          if (!userId) {
+            socket.emit('session_error', { message: 'Authentication required' });
+            return;
+          }
+
+          // Check if there is an active session for this user
+          let session = await ChatSession.findOne({ userId, status: 'active' });
+          if (!session) {
+            session = await ChatSession.create({
+              userId,
+              name: name || 'User',
+              email: email || 'user@zenivio.com',
+              status: 'active',
+              adminJoined: false
+            });
+            // Broadcast to admin room
+            io.to('admin_room').emit('new_support_request', session);
+          }
+
+          socket.join(session._id.toString());
+          socket.emit('session_created', { sessionId: session._id });
+
+          // Send existing messages if any
+          if (session.messages && session.messages.length > 0) {
+            socket.emit('previous_messages', session.messages);
+          } else {
+            // Add a bot welcome message
+            const welcomeMsg = {
+              sender: 'admin',
+              content: `Hello ${name || 'User'}! Welcome to Zenivio Support. How can we help you today?`,
+              timestamp: new Date()
+            };
+            session.messages.push(welcomeMsg);
+            await session.save();
+            socket.emit('previous_messages', session.messages);
+          }
+
+          // If admin already joined, notify frontend
+          if (session.adminJoined) {
+            socket.emit('admin_joined', { message: 'Admin has joined the chat' });
+          }
+        } catch (err) {
+          console.error('Socket error get_or_create_session:', err);
+        }
+      });
+
 
       // Admin joins the session
       socket.on('admin_join', async (data) => {
@@ -128,6 +180,48 @@ module.exports = {
       // Admin logic
       socket.on('join_admin_room', () => {
         socket.join('admin_room');
+      });
+
+      // Direct messaging room join
+      socket.on('join_user_room', (data) => {
+        try {
+          const { userId } = data;
+          if (userId) {
+            socket.join(userId.toString());
+            console.log(`Socket ${socket.id} joined private room ${userId}`);
+          }
+        } catch (err) {
+          console.error('Socket join_user_room error:', err);
+        }
+      });
+
+      // Send direct message
+      socket.on('send_direct_message', async (data) => {
+        try {
+          const { senderId, receiverId, content } = data;
+          if (!senderId || !receiverId || !content) return;
+
+          const savedMessage = await Message.create({
+            sender: senderId,
+            receiver: receiverId,
+            content: content
+          });
+
+          // Broadcast to receiver
+          io.to(receiverId.toString()).emit('receive_direct_message', savedMessage);
+          // Emit back to sender
+          socket.emit('receive_direct_message', savedMessage);
+        } catch (err) {
+          console.error('Socket send_direct_message error:', err);
+        }
+      });
+
+      // Direct messaging typing indicator
+      socket.on('direct_typing', (data) => {
+        const { senderId, receiverId, isTyping } = data;
+        if (receiverId) {
+          socket.to(receiverId.toString()).emit('direct_typing', { senderId, isTyping });
+        }
       });
 
       socket.on('disconnect', () => {

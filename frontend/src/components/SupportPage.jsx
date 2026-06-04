@@ -1,28 +1,32 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Send, UserCircle, ArrowLeft, Loader2, Bot, User as UserIcon, WifiOff } from 'lucide-react';
+import { Send, ArrowLeft, Loader2, User as UserIcon, WifiOff, Phone, Video, PhoneOff, Image, Mic, Smile, ThumbsUp } from 'lucide-react';
 import VerifiedBadge from './VerifiedBadge';
 import { io } from 'socket.io-client';
 import { API_BASE } from '../config';
 import PullToRefresh from './PullToRefresh';
 
 const SupportPage = ({ onBack }) => {
-  const [step, setStep] = useState(1); // 1: Form, 2: Wait, 3: Chat
-  const [name, setName] = useState('');
-  
+  const [userName, setUserName] = useState('');
+  const [userEmail, setUserEmail] = useState('');
+  const [userId, setUserId] = useState(null);
+
   const [socket, setSocket] = useState(null);
   const [sessionId, setSessionId] = useState(null);
   const [messages, setMessages] = useState([]);
   const [messageInput, setMessageInput] = useState('');
   const [isAdminJoined, setIsAdminJoined] = useState(false);
   const [isAdminTyping, setIsAdminTyping] = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const [socketConnected, setSocketConnected] = useState(false);
   const [connectionError, setConnectionError] = useState(false);
-  const submitTimeoutRef = useRef(null);
+  
+  // Call States
+  const [activeCall, setActiveCall] = useState(null); // 'audio' | 'video' | null
   
   const messagesEndRef = useRef(null);
   const typingTimeoutRef = useRef(null);
+  const audioContextRef = useRef(null);
+  const ringIntervalRef = useRef(null);
 
   // Auto-scroll to bottom of chat
   const scrollToBottom = () => {
@@ -32,6 +36,28 @@ const SupportPage = ({ onBack }) => {
   useEffect(() => {
     scrollToBottom();
   }, [messages, isAdminTyping, isAdminJoined]);
+
+  // Fetch user profile on mount
+  useEffect(() => {
+    const fetchUserProfile = async () => {
+      try {
+        const token = localStorage.getItem('token');
+        if (!token) return;
+        const res = await fetch(`${API_BASE}/api/profile`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        if (res.ok) {
+          const data = await res.json();
+          setUserName(data.name || data.phoneOrEmail || 'User');
+          setUserEmail(data.phoneOrEmail || 'user@zenivio.com');
+          setUserId(data._id || null);
+        }
+      } catch (err) {
+        console.error('Failed to fetch user profile in SupportPage:', err);
+      }
+    };
+    fetchUserProfile();
+  }, []);
 
   // Connect socket
   useEffect(() => {
@@ -45,29 +71,11 @@ const SupportPage = ({ onBack }) => {
     newSocket.on('connect', () => {
       setSocketConnected(true);
       setConnectionError(false);
-      
-      // Check for existing session
-      const savedSession = localStorage.getItem('zenivio_support_session');
-      if (savedSession) {
-        try {
-          const parsed = JSON.parse(savedSession);
-          // 10 minutes expiry
-          if (Date.now() - parsed.timestamp < 10 * 60 * 1000) {
-            setSessionId(parsed.sessionId);
-            setStep(2);
-            newSocket.emit('rejoin_session', { sessionId: parsed.sessionId });
-          } else {
-            localStorage.removeItem('zenivio_support_session');
-          }
-        } catch (e) {}
-      }
     });
 
     newSocket.on('connect_error', () => {
       setSocketConnected(false);
       setConnectionError(true);
-      setIsSubmitting(false);
-      if (submitTimeoutRef.current) clearTimeout(submitTimeoutRef.current);
     });
 
     newSocket.on('disconnect', () => {
@@ -76,10 +84,11 @@ const SupportPage = ({ onBack }) => {
 
     return () => {
       newSocket.disconnect();
-      if (submitTimeoutRef.current) clearTimeout(submitTimeoutRef.current);
+      stopRingtone();
     };
   }, []);
 
+  // Listen to socket events
   useEffect(() => {
     if (!socket) return;
 
@@ -89,14 +98,11 @@ const SupportPage = ({ onBack }) => {
         sessionId: data.sessionId, 
         timestamp: Date.now() 
       }));
-      setStep(2); // Move to waiting screen
-      setIsSubmitting(false);
-      if (submitTimeoutRef.current) clearTimeout(submitTimeoutRef.current);
+      setConnectionError(false);
     });
 
     socket.on('admin_joined', (data) => {
       setIsAdminJoined(true);
-      setStep(3); // Move to chat screen
     });
     
     socket.on('previous_messages', (msgs) => {
@@ -105,7 +111,6 @@ const SupportPage = ({ onBack }) => {
     
     socket.on('session_expired', () => {
       localStorage.removeItem('zenivio_support_session');
-      setStep(1);
       setSessionId(null);
     });
 
@@ -128,34 +133,135 @@ const SupportPage = ({ onBack }) => {
       socket.off('admin_joined');
       socket.off('receive_message');
       socket.off('typing');
+      socket.off('previous_messages');
+      socket.off('session_expired');
     };
   }, [socket]);
 
-  const handleSubmitForm = (e) => {
-    e.preventDefault();
-    if (!name || !socket) return;
-
-    if (!socketConnected) {
-      setConnectionError(true);
-      return;
+  // Request or rejoin session once profile and socket are ready
+  useEffect(() => {
+    if (socketConnected && socket && userId) {
+      socket.emit('get_or_create_session', {
+        userId,
+        name: userName,
+        email: userEmail
+      });
     }
-    
-    setIsSubmitting(true);
-    setConnectionError(false);
-    socket.emit('request_support', { name, email: 'user@zenivio.com', userId: null });
+  }, [socketConnected, socket, userId, userName, userEmail]);
 
-    // Timeout: if no response in 10s, show error
-    submitTimeoutRef.current = setTimeout(() => {
-      setIsSubmitting(false);
-      setConnectionError(true);
-    }, 10000);
+  // Call Simulators
+  const startRingtone = () => {
+    try {
+      const AudioContext = window.AudioContext || window.webkitAudioContext;
+      if (!AudioContext) return;
+      const ctx = new AudioContext();
+      audioContextRef.current = ctx;
+
+      const playRing = () => {
+        const osc1 = ctx.createOscillator();
+        const osc2 = ctx.createOscillator();
+        const gainNode = ctx.createGain();
+
+        osc1.frequency.value = 440;
+        osc2.frequency.value = 480;
+
+        osc1.connect(gainNode);
+        osc2.connect(gainNode);
+        gainNode.connect(ctx.destination);
+
+        gainNode.gain.setValueAtTime(0, ctx.currentTime);
+        gainNode.gain.linearRampToValueAtTime(0.15, ctx.currentTime + 0.1);
+        gainNode.gain.setValueAtTime(0.15, ctx.currentTime + 1.8);
+        gainNode.gain.linearRampToValueAtTime(0, ctx.currentTime + 2.0);
+
+        osc1.start();
+        osc2.start();
+
+        setTimeout(() => {
+          try {
+            osc1.stop();
+            osc2.stop();
+          } catch (e) {}
+        }, 2200);
+      };
+
+      playRing();
+      ringIntervalRef.current = setInterval(playRing, 3000);
+    } catch (e) {
+      console.error('Failed to play synthetic ringtone:', e);
+    }
+  };
+
+  const stopRingtone = () => {
+    if (ringIntervalRef.current) {
+      clearInterval(ringIntervalRef.current);
+      ringIntervalRef.current = null;
+    }
+    if (audioContextRef.current) {
+      try {
+        audioContextRef.current.close();
+      } catch (e) {}
+      audioContextRef.current = null;
+    }
+  };
+
+  const playBusyTone = () => {
+    try {
+      const AudioContext = window.AudioContext || window.webkitAudioContext;
+      if (!AudioContext) return;
+      const ctx = new AudioContext();
+      
+      const playBeep = (delay) => {
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.frequency.value = 480;
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        gain.gain.setValueAtTime(0, ctx.currentTime + delay);
+        gain.gain.linearRampToValueAtTime(0.12, ctx.currentTime + delay + 0.05);
+        gain.gain.setValueAtTime(0.12, ctx.currentTime + delay + 0.35);
+        gain.gain.linearRampToValueAtTime(0, ctx.currentTime + delay + 0.4);
+        osc.start();
+        setTimeout(() => {
+          try { osc.stop(); } catch(e) {}
+        }, (delay + 0.5) * 1000);
+      };
+
+      playBeep(0);
+      playBeep(0.5);
+      playBeep(1.0);
+      
+      setTimeout(() => {
+        try { ctx.close(); } catch(e) {}
+      }, 2000);
+    } catch (e) {
+      console.error('Failed to play busy tone:', e);
+    }
+  };
+
+  const handleStartCall = (type) => {
+    setActiveCall(type);
+    startRingtone();
+    
+    // Auto-timeout call after 8 seconds of ringing
+    setTimeout(() => {
+      setActiveCall((currentCall) => {
+        if (currentCall) {
+          stopRingtone();
+          playBusyTone();
+          alert('Support Agent is currently busy. Please leave a text message.');
+          return null;
+        }
+        return null;
+      });
+    }, 8000);
   };
 
   const handleSendMessage = (e) => {
     e.preventDefault();
     if (!messageInput.trim() || !sessionId) return;
     
-    socket.emit('send_message', { sessionId, sender: 'user', content: messageInput });
+    socket.emit('send_message', { sessionId, sender: 'user', content: messageInput.trim() });
     setMessageInput('');
   };
 
@@ -167,188 +273,252 @@ const SupportPage = ({ onBack }) => {
 
   const handleRefresh = async () => {
     setRefreshing(true);
-    setStep(1);
-    setName('');
     setMessages([]);
-    setSessionId(null);
-    setIsAdminJoined(false);
-    setIsSubmitting(false);
-    setConnectionError(false);
     localStorage.removeItem('zenivio_support_session');
-    if (submitTimeoutRef.current) clearTimeout(submitTimeoutRef.current);
+    
+    if (socket && userId) {
+      socket.emit('get_or_create_session', {
+        userId,
+        name: userName,
+        email: userEmail
+      });
+    }
+    
     await new Promise(resolve => setTimeout(resolve, 800));
     setRefreshing(false);
   };
 
+  // Wait/Connect screen
+  if (!userId || !socketConnected) {
+    return (
+      <div className="absolute inset-0 z-50 bg-slate-50 dark:bg-slate-950 flex flex-col items-center justify-center p-6">
+        <Loader2 className="w-10 h-10 text-indigo-600 dark:text-indigo-400 animate-spin mb-4" />
+        <p className="text-slate-500 dark:text-slate-400 font-bold text-sm animate-pulse">Connecting to Zenivio Messenger...</p>
+      </div>
+    );
+  }
+
   return (
     <div className="absolute inset-0 z-50 bg-slate-50 dark:bg-slate-950 flex flex-col overflow-hidden">
       {/* Header */}
-      <div className="bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 px-4 py-4 flex items-center gap-3 shrink-0">
-        <button onClick={onBack} className="p-2 -ml-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
-          <ArrowLeft className="w-6 h-6 text-slate-700 dark:text-slate-300" />
-        </button>
-        <div>
-          <h1 className="text-xl font-black text-slate-800 dark:text-white flex items-center gap-2">
-            <div className="flex items-center gap-1">
-              Zenivio Team Support
-              <VerifiedBadge iconClassName="w-[18px] h-[18px] fill-blue-500 text-white flex-shrink-0 mt-0.5" />
+      <div className="bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800/80 px-4 py-3 flex items-center justify-between shrink-0 shadow-sm z-10 relative">
+        <div className="flex items-center gap-2 sm:gap-3">
+          <button onClick={onBack} className="p-2 -ml-1 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 transition-colors">
+            <ArrowLeft className="w-6 h-6" />
+          </button>
+          
+          {/* Avatar with Status Badge */}
+          <div className="relative">
+            <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-indigo-500 to-brand-500 flex items-center justify-center text-white border border-indigo-100 dark:border-slate-800 shadow-sm flex-shrink-0 font-black">
+              Z
             </div>
-          </h1>
-          {step === 3 && isAdminJoined && (
-            <p className="text-xs font-bold text-emerald-500 flex items-center gap-1.5 mt-0.5">
-              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-              Admin Online
+            <span className="absolute bottom-0 right-0 w-3 h-3 bg-emerald-500 border-2 border-white dark:border-slate-900 rounded-full" />
+          </div>
+
+          <div>
+            <h1 className="text-base sm:text-lg font-black text-slate-800 dark:text-white flex items-center gap-1.5 leading-tight">
+              Zenivio Support
+              <VerifiedBadge iconClassName="w-[17px] h-[17px] fill-blue-500 text-white flex-shrink-0" />
+            </h1>
+            <p className="text-[11px] font-bold text-emerald-500 flex items-center gap-1 mt-0.5">
+              Active Now
             </p>
-          )}
+          </div>
+        </div>
+
+        {/* Calling action buttons */}
+        <div className="flex items-center gap-1">
+          <button 
+            onClick={() => handleStartCall('audio')}
+            className="p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 text-indigo-600 dark:text-indigo-400 active:scale-95 transition-all"
+            title="Start Audio Call"
+          >
+            <Phone className="w-5 h-5" strokeWidth={2.2} />
+          </button>
+          <button 
+            onClick={() => handleStartCall('video')}
+            className="p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 text-indigo-600 dark:text-indigo-400 active:scale-95 transition-all"
+            title="Start Video Call"
+          >
+            <Video className="w-5.5 h-5.5" strokeWidth={2.2} />
+          </button>
         </div>
       </div>
 
+      {/* Main Chat Content */}
       <div className="flex-1 overflow-y-auto w-full max-w-4xl mx-auto h-full relative">
         <PullToRefresh onRefresh={handleRefresh} refreshing={refreshing}>
-          <div className="min-h-full flex flex-col">
-            {/* STEP 1: Form */}
-            {step === 1 && (
-              <div 
-                className="p-6 flex-1 flex flex-col justify-center max-w-md mx-auto animate-fade-in-up"
-              >
-                <div className="text-center mb-8">
-                  <div className="w-16 h-16 bg-indigo-100 dark:bg-indigo-900/40 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <Bot className="w-8 h-8 text-indigo-600 dark:text-indigo-400" />
+          <div className="min-h-full flex flex-col bg-white dark:bg-slate-950/20">
+            
+            {/* Messages Screen */}
+            <div className="flex-1 flex flex-col bg-slate-50 dark:bg-slate-900/40 relative">
+              <div className="flex-1 overflow-y-auto p-4 space-y-4 pb-32">
+                
+                {/* Chat Session Info */}
+                <div className="flex flex-col items-center justify-center text-center py-6 mb-4">
+                  <div className="w-16 h-16 rounded-full bg-gradient-to-tr from-indigo-500 to-brand-500 flex items-center justify-center text-white text-xl font-black shadow-md mb-2">
+                    Z
                   </div>
-                  <h2 className="text-2xl font-black text-slate-800 dark:text-white mb-2">How can we help?</h2>
-                  <p className="text-slate-500 dark:text-slate-400 text-sm">Please provide your details so our admin can reach out to you.</p>
+                  <h3 className="font-black text-slate-800 dark:text-white flex items-center gap-1">
+                    Zenivio Support Team
+                    <VerifiedBadge iconClassName="w-[16px] h-[16px] fill-blue-500 text-white" />
+                  </h3>
+                  <p className="text-xs text-slate-400 mt-1">You are connected to our support desk. How can we help?</p>
                 </div>
 
-                <form onSubmit={handleSubmitForm} className="space-y-5">
-                  <div>
-                    <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-1">Your Name</label>
-                    <div className="relative">
-                      <UserCircle className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
-                      <input 
-                        type="text" 
-                        required
-                        value={name}
-                        onChange={(e) => setName(e.target.value)}
-                        placeholder="e.g. John Doe"
-                        className="w-full pl-10 pr-4 py-3 bg-white dark:bg-slate-800 border-2 border-slate-200 dark:border-slate-700 rounded-xl focus:border-indigo-500 outline-none text-slate-800 dark:text-white transition-colors"
-                      />
-                    </div>
-                  </div>
-
-                  {connectionError && (
-                    <div className="flex items-center gap-2 text-red-500 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl px-4 py-3 text-sm font-semibold">
-                      <WifiOff className="w-4 h-4 flex-shrink-0" />
-                      <span>Unable to connect to the server. Please try again later.</span>
-                    </div>
-                  )}
-
-                  <button 
-                    type="submit" 
-                    disabled={isSubmitting || !name}
-                    className="w-full py-3.5 bg-indigo-600 hover:bg-indigo-700 text-white font-black rounded-xl shadow-lg shadow-indigo-600/30 transition-all disabled:opacity-70 flex items-center justify-center gap-2"
-                  >
-                    {isSubmitting ? (
-                      <><Loader2 className="w-5 h-5 animate-spin" /> Connecting...</>
-                    ) : (
-                      'Start Live Chat'
-                    )}
-                  </button>
-                </form>
-              </div>
-            )}
-
-            {/* STEP 2: Waiting Screen */}
-            {step === 2 && (
-              <div 
-                className="p-6 flex-1 flex flex-col items-center justify-center text-center max-w-sm mx-auto animate-fade-in"
-              >
-                <div className="relative mb-6">
-                  <div className="w-20 h-20 bg-indigo-100 dark:bg-indigo-900/40 rounded-full flex items-center justify-center">
-                    <Bot className="w-10 h-10 text-indigo-600 dark:text-indigo-400" />
-                  </div>
-                  <div className="absolute -top-1 -right-1 w-6 h-6 bg-amber-400 rounded-full flex items-center justify-center border-2 border-white dark:border-slate-950">
-                    <Loader2 className="w-3 h-3 text-white animate-spin" />
-                  </div>
-                </div>
-                <h2 className="text-xl font-black text-slate-800 dark:text-white mb-3">Please Wait</h2>
-                <p className="text-slate-600 dark:text-slate-400 font-medium">
-                  One of our admins is contacting you shortly, please wait a moment.
-                </p>
-              </div>
-            )}
-
-            {/* STEP 3: Chat Screen */}
-            {step === 3 && (
-              <div 
-                className="flex-1 flex flex-col bg-slate-50 dark:bg-slate-900 relative animate-fade-in"
-              >
-                <div className="flex-1 overflow-y-auto p-4 space-y-4 pb-32">
-                  <div className="flex justify-center mb-6">
-                    <span className="bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 text-xs font-bold px-3 py-1.5 rounded-full">
-                      Admin Joined the Chat
-                    </span>
-                  </div>
-
-                  {messages.map((msg, i) => {
-                    const isUser = msg.sender === 'user';
-                    return (
-                      <div key={i} className={`flex ${isUser ? 'justify-end' : 'justify-start'} max-w-full`}>
-                        <div className={`flex gap-2 max-w-[85%] ${isUser ? 'flex-row-reverse' : 'flex-row'}`}>
-                          <div className={`w-8 h-8 rounded-full flex-shrink-0 flex items-center justify-center ${isUser ? 'bg-indigo-100 dark:bg-indigo-900/50' : 'bg-slate-200 dark:bg-slate-800'}`}>
-                            {isUser ? <UserIcon className="w-4 h-4 text-indigo-600" /> : <Bot className="w-4 h-4 text-slate-600 dark:text-slate-400" />}
+                {/* Message List */}
+                {messages.map((msg, i) => {
+                  const isUser = msg.sender === 'user';
+                  return (
+                    <div key={i} className={`flex ${isUser ? 'justify-end' : 'justify-start'} w-full`}>
+                      <div className={`flex gap-2 max-w-[80%] items-end ${isUser ? 'flex-row-reverse' : 'flex-row'}`}>
+                        {!isUser && (
+                          <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-indigo-500 to-brand-500 flex-shrink-0 flex items-center justify-center text-white text-[11px] font-black shadow-xs">
+                            Z
                           </div>
-                          <div className={`p-3 rounded-2xl ${isUser ? 'bg-indigo-600 text-white rounded-tr-sm' : 'bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200 border border-slate-200 dark:border-slate-700 rounded-tl-sm shadow-sm'}`}>
-                            <p className="text-[15px] leading-relaxed break-words">{msg.content}</p>
-                            <span className={`text-[10px] block mt-1 ${isUser ? 'text-indigo-200 text-right' : 'text-slate-400'}`}>
-                              {new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                            </span>
-                          </div>
-                        </div>
-                      </div>
-                    );
-                  })}
-
-                  {isAdminTyping && (
-                    <div className="flex justify-start">
-                      <div className="flex gap-2 items-end">
-                        <div className="w-8 h-8 bg-slate-200 dark:bg-slate-800 rounded-full flex-shrink-0 flex items-center justify-center">
-                          <Bot className="w-4 h-4 text-slate-600 dark:text-slate-400" />
-                        </div>
-                        <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 p-3 rounded-2xl rounded-tl-sm flex items-center gap-1">
-                          <span className="w-1.5 h-1.5 bg-slate-400 rounded-full animate-bounce [animation-delay:-0.3s]"></span>
-                          <span className="w-1.5 h-1.5 bg-slate-400 rounded-full animate-bounce [animation-delay:-0.15s]"></span>
-                          <span className="w-1.5 h-1.5 bg-slate-400 rounded-full animate-bounce"></span>
+                        )}
+                        <div className={`p-3 px-4 rounded-2xl relative shadow-xs ${
+                          isUser 
+                            ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-br-sm' 
+                            : 'bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200 rounded-bl-sm border border-slate-200/40 dark:border-slate-700/40 shadow-xs'
+                        }`}>
+                          <p className="text-[14px] leading-relaxed break-words font-medium">{msg.content}</p>
+                          <span className={`text-[9px] block mt-1.5 font-bold ${isUser ? 'text-blue-200/90 text-right' : 'text-slate-400'}`}>
+                            {new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                          </span>
                         </div>
                       </div>
                     </div>
-                  )}
-                  <div ref={messagesEndRef} className="h-4" />
-                </div>
+                  );
+                })}
 
-                <div className="absolute bottom-0 left-0 right-0 bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 p-4 shrink-0 pb-safe pb-4">
-                  <form onSubmit={handleSendMessage} className="flex items-center gap-2 max-w-4xl mx-auto pb-4 md:pb-0">
+                {/* Admin Typing Indicator */}
+                {isAdminTyping && (
+                  <div className="flex justify-start">
+                    <div className="flex gap-2 items-end">
+                      <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-indigo-500 to-brand-500 flex-shrink-0 flex items-center justify-center text-white text-[11px] font-black shadow-xs">
+                        Z
+                      </div>
+                      <div className="bg-white dark:bg-slate-800 border border-slate-200/40 dark:border-slate-700/40 p-3.5 px-4 rounded-2xl rounded-bl-sm flex items-center gap-1 shadow-xs">
+                        <span className="w-1.5 h-1.5 bg-slate-400 rounded-full animate-bounce [animation-delay:-0.3s]"></span>
+                        <span className="w-1.5 h-1.5 bg-slate-400 rounded-full animate-bounce [animation-delay:-0.15s]"></span>
+                        <span className="w-1.5 h-1.5 bg-slate-400 rounded-full animate-bounce"></span>
+                      </div>
+                    </div>
+                  </div>
+                )}
+                
+                {/* Connection Error Message */}
+                {connectionError && (
+                  <div className="flex items-center gap-2 text-red-500 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl px-4 py-3 text-sm font-semibold">
+                    <WifiOff className="w-4 h-4 flex-shrink-0" />
+                    <span>Disconnected from Server. Retrying...</span>
+                  </div>
+                )}
+
+                <div ref={messagesEndRef} className="h-4" />
+              </div>
+
+              {/* Chat Input Area */}
+              <div className="absolute bottom-0 left-0 right-0 bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 p-3 shrink-0 pb-safe pb-4">
+                <form onSubmit={handleSendMessage} className="flex items-center gap-2 max-w-4xl mx-auto">
+                  {/* Decorative Icons */}
+                  <div className="flex items-center gap-1 text-slate-400 dark:text-slate-500">
+                    <button type="button" className="p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-indigo-600 active:scale-95 transition-all" title="Share Photo">
+                      <Image className="w-5 h-5" />
+                    </button>
+                    <button type="button" className="p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-indigo-600 active:scale-95 transition-all" title="Record Voice">
+                      <Mic className="w-5 h-5" />
+                    </button>
+                  </div>
+
+                  {/* Pill Input */}
+                  <div className="flex-1 flex items-center bg-slate-100 dark:bg-slate-800 rounded-full px-4 py-0.5 border border-transparent focus-within:bg-white dark:focus-within:bg-slate-850 focus-within:border-slate-200 dark:focus-within:border-slate-700 transition-all duration-200 shadow-inner">
                     <input
                       type="text"
                       value={messageInput}
                       onChange={(e) => setMessageInput(e.target.value)}
                       onKeyPress={handleKeyPress}
-                      placeholder="Type your message..."
-                      className="flex-1 bg-slate-100 dark:bg-slate-800 border-none rounded-full px-5 py-3.5 text-slate-800 dark:text-white focus:ring-2 focus:ring-indigo-500 outline-none"
+                      placeholder="Type a message..."
+                      className="flex-1 bg-transparent border-none py-2.5 text-slate-800 dark:text-white placeholder-slate-450 focus:ring-0 outline-none text-[15px] font-medium"
                     />
+                    <button type="button" className="p-1.5 text-slate-400 dark:text-slate-500 hover:text-indigo-600 transition-colors" title="Emojis">
+                      <Smile className="w-5.5 h-5.5" />
+                    </button>
+                  </div>
+
+                  {/* Conditional Send / ThumbsUp Button */}
+                  {messageInput.trim() ? (
                     <button
                       type="submit"
-                      disabled={!messageInput.trim()}
-                      className="w-12 h-12 bg-indigo-600 hover:bg-indigo-700 disabled:bg-slate-200 dark:disabled:bg-slate-700 rounded-full flex items-center justify-center shrink-0 transition-colors"
+                      className="w-10 h-10 bg-indigo-600 hover:bg-indigo-700 active:scale-95 text-white rounded-full flex items-center justify-center shrink-0 transition-all shadow-sm"
                     >
-                      <Send className={`w-5 h-5 ${messageInput.trim() ? 'text-white' : 'text-slate-400'}`} />
+                      <Send className="w-4.5 h-4.5" />
                     </button>
-                  </form>
-                </div>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        socket.emit('send_message', { sessionId, sender: 'user', content: '👍' });
+                      }}
+                      className="w-10 h-10 hover:bg-slate-100 dark:hover:bg-slate-850 text-indigo-600 active:scale-90 rounded-full flex items-center justify-center shrink-0 transition-all"
+                      title="Send Like"
+                    >
+                      <ThumbsUp className="w-5 h-5 fill-indigo-600" />
+                    </button>
+                  )}
+                </form>
               </div>
-            )}
+
+            </div>
           </div>
         </PullToRefresh>
       </div>
+
+      {/* Calling Screen Overlay */}
+      {activeCall && (
+        <div className="fixed inset-0 z-[100] bg-slate-950/95 backdrop-blur-lg flex flex-col items-center justify-between py-20 px-6 text-white animate-fade-in">
+          <div className="flex flex-col items-center gap-2 mt-12">
+            <span className="text-emerald-500 font-black tracking-widest text-xs uppercase animate-pulse">
+              Zenivio Secure Call
+            </span>
+            <h2 className="text-3xl font-black mt-4">Zenivio Support</h2>
+            <p className="text-slate-400 text-sm font-medium animate-pulse mt-1">
+              Ringing...
+            </p>
+          </div>
+
+          <div className="relative">
+            <div className="absolute inset-0 bg-indigo-500/20 rounded-full scale-125 animate-ping" style={{ animationDuration: '2s' }} />
+            <div className="absolute inset-0 bg-indigo-500/30 rounded-full scale-150 animate-pulse" />
+            <div className="w-32 h-32 rounded-full bg-gradient-to-tr from-indigo-600 to-brand-600 flex items-center justify-center relative border-4 border-indigo-500/50 shadow-2xl">
+              {activeCall === 'video' ? (
+                <Video className="w-14 h-14 text-white animate-pulse" strokeWidth={1.5} />
+              ) : (
+                <Phone className="w-14 h-14 text-white" strokeWidth={1.5} />
+              )}
+            </div>
+          </div>
+
+          <div className="flex flex-col items-center gap-6 mb-8 w-full max-w-xs">
+            {activeCall === 'video' && (
+              <div className="w-full bg-slate-900/60 border border-slate-800 rounded-2xl p-3 flex items-center justify-center gap-3">
+                <span className="w-2.5 h-2.5 rounded-full bg-red-500 animate-pulse" />
+                <span className="text-xs font-bold text-slate-300">Front Camera Activated</span>
+              </div>
+            )}
+            <button 
+              onClick={() => {
+                stopRingtone();
+                setActiveCall(null);
+              }}
+              className="w-16 h-16 bg-rose-500 hover:bg-rose-600 active:scale-95 transition-all rounded-full flex items-center justify-center shadow-lg shadow-rose-500/40"
+            >
+              <PhoneOff className="w-7 h-7 text-white" />
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

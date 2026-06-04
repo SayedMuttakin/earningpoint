@@ -26,6 +26,10 @@ const UserSchema = new mongoose.Schema({
     type: String,
     default: '',
   },
+  bio: {
+    type: String,
+    default: 'Dream Big. Stay Positive. ✨',
+  },
   country: {
     type: String,
     default: '',
@@ -165,6 +169,16 @@ const UserSchema = new mongoose.Schema({
     type: Date,
     default: null,
   },
+  following: [{
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+    default: []
+  }],
+  followers: [{
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+    default: []
+  }],
 }, { timestamps: true });
 
 // Auto-generate referral code before saving if not set

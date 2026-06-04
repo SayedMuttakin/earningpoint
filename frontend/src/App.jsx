@@ -19,6 +19,8 @@ import NotificationPage from './components/NotificationPage';
 import PaymentSuccess from './components/PaymentSuccess';
 import SettingsPage from './components/SettingsPage';
 import SupportPage from './components/SupportPage';
+import MessengerPage from './components/MessengerPage';
+import UpdatesPage from './components/UpdatesPage';
 import SplashScreen from './components/SplashScreen';
 import OnboardingScreen from './components/OnboardingScreen';
 import TransactionHistoryPage from './components/TransactionHistoryPage';
@@ -45,6 +47,8 @@ function App() {
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState('');
   const [darkMode, setDarkMode] = useState(() => localStorage.getItem('darkMode') === 'true');
+  const [selectedNewsId, setSelectedNewsId] = useState(null);
+  const [activeChatPartner, setActiveChatPartner] = useState(null);
 
   // Initialize AdMob
   useEffect(() => {
@@ -142,7 +146,14 @@ function App() {
     return (
       <div className="min-h-screen bg-slate-100/50 dark:bg-slate-950 transition-colors duration-300">
         <Navbar onLogout={handleLogout} activeTab={activeTab} setActiveTab={setActiveTab} />
-        {activeTab === 'Home' && <HomePage onBuyNow={handleBuyNow} />}
+        {activeTab === 'Home' && (
+          <HomePage 
+            onBuyNow={handleBuyNow} 
+            setActiveTab={setActiveTab} 
+            setSelectedNewsId={setSelectedNewsId}
+            setActiveChatPartner={setActiveChatPartner}
+          />
+        )}
         {activeTab === 'Cart' && <CartPage onBuyNow={handleBuyNow} />}
         {activeTab === 'Checkout' && <CheckoutPage product={selectedProduct} onBack={() => setActiveTab('Cart')} onSuccess={(method) => { setSelectedPaymentMethod(method); setActiveTab('PaymentSuccess'); }} />}
         {activeTab === 'Notification' && <NotificationPage onBack={() => setActiveTab('Home')} />}
@@ -158,6 +169,8 @@ function App() {
           onSupportClick={() => setActiveTab('Support')}
           onTermsClick={() => setActiveTab('TermsPrivacy')}
           onDeleteClick={() => setActiveTab('DeleteAccount')}
+          onNotificationClick={() => setActiveTab('Notification')}
+          onSettingsClick={() => setActiveTab('Setting')}
           darkMode={darkMode}
           onToggleDarkMode={handleToggleDarkMode}
         />}
@@ -187,6 +200,26 @@ function App() {
         )}
         
         {activeTab === 'Support' && <SupportPage onBack={() => setActiveTab('Home')} />}
+        {activeTab === 'Messenger' && (
+          <MessengerPage 
+            onBack={() => {
+              setActiveChatPartner(null);
+              setActiveTab('Home');
+            }} 
+            activeChatPartner={activeChatPartner}
+            setActiveChatPartner={setActiveChatPartner}
+          />
+        )}
+        {activeTab === 'Updates' && (
+          <UpdatesPage 
+            onBack={() => {
+              setSelectedNewsId(null);
+              setActiveTab('Home');
+            }} 
+            selectedPostId={selectedNewsId}
+            setSelectedPostId={setSelectedNewsId}
+          />
+        )}
       </div>
     );
   }

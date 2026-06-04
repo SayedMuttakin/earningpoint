@@ -8,7 +8,20 @@ exports.getProfile = async (req, res) => {
     if (!user) {
       return res.status(404).json({ message: 'User not found' });
     }
-    res.json(user);
+
+    // Count posts by this user
+    const Post = require('../models/Post');
+    const postsCount = await Post.countDocuments({ authorId: req.user._id });
+
+    // Send profile data along with stats
+    const profileData = {
+      ...user.toObject(),
+      postsCount,
+      followersCount: user.followers ? user.followers.length : 0,
+      followingCount: user.following ? user.following.length : 0
+    };
+
+    res.json(profileData);
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: error.message || 'Server Error' });
@@ -18,7 +31,7 @@ exports.getProfile = async (req, res) => {
 // PUT /api/profile — Update profile info (name, location, profilePic)
 exports.updateProfile = async (req, res) => {
   try {
-    const { name, location, profilePic } = req.body;
+    const { name, location, bio, profilePic } = req.body;
     const user = await User.findById(req.user._id);
 
     if (!user) {
@@ -27,6 +40,7 @@ exports.updateProfile = async (req, res) => {
 
     if (name !== undefined) user.name = name;
     if (location !== undefined) user.location = location;
+    if (bio !== undefined) user.bio = bio;
     if (profilePic !== undefined) user.profilePic = profilePic;
 
     await user.save();
@@ -125,3 +139,88 @@ exports.toggleDarkMode = async (req, res) => {
     res.status(500).json({ message: error.message || 'Server Error' });
   }
 };
+
+// POST /api/profile/follow/:userId — Follow or Unfollow a user
+exports.followUser = async (req, res) => {
+  try {
+    const currentUserId = req.user._id;
+    const targetUserId = req.params.userId;
+
+    if (currentUserId.toString() === targetUserId.toString()) {
+      return res.status(400).json({ message: 'You cannot follow yourself' });
+    }
+
+    const currentUser = await User.findById(currentUserId);
+    const targetUser = await User.findById(targetUserId);
+
+    if (!targetUser) {
+      return res.status(404).json({ message: 'User to follow not found' });
+    }
+
+    // Initialize arrays if they don't exist
+    if (!currentUser.following) currentUser.following = [];
+    if (!targetUser.followers) targetUser.followers = [];
+
+    const isFollowing = currentUser.following.includes(targetUserId);
+
+    if (isFollowing) {
+      // Unfollow
+      currentUser.following = currentUser.following.filter(id => id.toString() !== targetUserId.toString());
+      targetUser.followers = targetUser.followers.filter(id => id.toString() !== currentUserId.toString());
+      await currentUser.save();
+      await targetUser.save();
+      return res.json({ isFollowing: false, message: 'Unfollowed user successfully' });
+    } else {
+      // Follow
+      currentUser.following.push(targetUserId);
+      targetUser.followers.push(currentUserId);
+      await currentUser.save();
+      await targetUser.save();
+      return res.json({ isFollowing: true, message: 'Followed user successfully' });
+    }
+  } catch (error) {
+    console.error('Error following user:', error);
+    res.status(500).json({ message: 'Server Error' });
+  }
+};
+
+// GET /api/profile/search — Search users by name or phone/email
+exports.searchUsers = async (req, res) => {
+  try {
+    const { q } = req.query;
+    if (!q || q.trim() === '') {
+      return res.json([]);
+    }
+
+    const currentUserId = req.user._id;
+    const followingIds = req.user.following || [];
+
+    const users = await User.find({
+      _id: { $ne: currentUserId },
+      $or: [
+        { name: { $regex: q, $options: 'i' } },
+        { phoneOrEmail: { $regex: q, $options: 'i' } }
+      ]
+    })
+    .select('name phoneOrEmail profilePic isPremium')
+    .limit(20);
+
+    const mappedUsers = users.map(u => {
+      const isFollowing = followingIds.includes(u._id.toString());
+      return {
+        _id: u._id,
+        name: u.name || u.phoneOrEmail || 'User',
+        phoneOrEmail: u.phoneOrEmail || '',
+        profilePic: u.profilePic || '',
+        isPremium: u.isPremium || false,
+        isFollowing
+      };
+    });
+
+    res.json(mappedUsers);
+  } catch (error) {
+    console.error('Error searching users:', error);
+    res.status(500).json({ message: 'Server Error' });
+  }
+};
+

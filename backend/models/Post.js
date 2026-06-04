@@ -13,6 +13,11 @@ const PostSchema = new mongoose.Schema({
     type: String,
     default: null,
   },
+  authorId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+    default: null,
+  },
   authorName: {
     type: String,
     default: 'Zenivio',
