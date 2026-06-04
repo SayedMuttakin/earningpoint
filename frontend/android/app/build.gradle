@@ -1,10 +1,10 @@
 apply plugin: 'com.android.application'
 
 android {
-    namespace = "app.zenivio"
+    namespace = "app.earningpoint"
     compileSdk = rootProject.ext.compileSdkVersion
     defaultConfig {
-        applicationId "app.zenivio"
+        applicationId "app.earningpoint"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode 1
