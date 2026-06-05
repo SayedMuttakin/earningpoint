@@ -31,6 +31,7 @@ import { API_BASE } from './config';
 import { AdMob } from '@capacitor-community/admob';
 import { App as CapacitorApp } from '@capacitor/app';
 import { AdMobService } from './utils/admob';
+import MultiAdViewPage from './components/MultiAdViewPage';
 
 function App() {
   // Check if URL has a password reset token (from email link)
@@ -163,6 +164,20 @@ function App() {
             setActiveTab={setActiveTab} 
             setSelectedNewsId={setSelectedNewsId}
             setActiveChatPartner={setActiveChatPartner}
+          />
+        )}
+        {activeTab === 'Video' && (
+          <MultiAdViewPage 
+            config={{
+              key: 'videos',
+              name: 'Videos',
+              adType: 'rewarded',
+              coins: 25,
+              logo: 'https://img.icons8.com/color/96/youtube-play.png',
+              color: 'from-purple-400 to-pink-500'
+            }}
+            onClose={() => setActiveTab('Home')}
+            onCoinsEarned={() => {}}
           />
         )}
         {activeTab === 'Cart' && <CartPage onBuyNow={handleBuyNow} />}
