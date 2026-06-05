@@ -122,14 +122,15 @@ const CommunityPostCard = ({ post, onFollowToggle }) => {
         {post.content}
       </div>
 
-      {/* Image Attachment */}
+      {/* Image Attachment (Instagram-style balanced aspect ratio constraints) */}
       {post.image && (
-        <div className="rounded-2xl overflow-hidden border border-slate-100 dark:border-slate-850 bg-slate-50 dark:bg-slate-950">
+        <div className="rounded-2xl overflow-hidden border border-slate-100 dark:border-slate-850 bg-slate-100/40 dark:bg-slate-900/40 mt-3 flex items-center justify-center w-full max-h-[500px]">
           <img 
             src={post.image.startsWith('http') || post.image.startsWith('/api') || post.image.startsWith('data:') ? post.image : `${API_BASE}/api/image?file=${encodeURIComponent(post.image)}`} 
             alt="Community Post"
-            className="w-full h-auto max-h-[350px] object-cover"
+            className="w-full h-auto object-contain max-h-[500px]"
             loading="lazy"
+            decoding="async"
           />
         </div>
       )}
@@ -138,12 +139,45 @@ const CommunityPostCard = ({ post, onFollowToggle }) => {
 };
 
 const HomePage = ({ setActiveTab, setSelectedNewsId, setActiveChatPartner }) => {
-  const [newsPosts, setNewsPosts] = useState([]);
-  const [feedPosts, setFeedPosts] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [newsPosts, setNewsPosts] = useState(() => {
+    try {
+      const cached = localStorage.getItem('cached_news_posts');
+      return cached ? JSON.parse(cached) : [];
+    } catch (e) {
+      return [];
+    }
+  });
+  const [feedPosts, setFeedPosts] = useState(() => {
+    try {
+      const cached = localStorage.getItem('cached_feed_posts');
+      return cached ? JSON.parse(cached) : [];
+    } catch (e) {
+      return [];
+    }
+  });
+  const [loading, setLoading] = useState(() => {
+    // Stale-While-Revalidate: skip initial spinner if we have cached feed content
+    const cachedNews = localStorage.getItem('cached_news_posts');
+    const cachedFeed = localStorage.getItem('cached_feed_posts');
+    return !(cachedNews || cachedFeed);
+  });
   const [refreshing, setRefreshing] = useState(false);
-  const [globalSettings, setGlobalSettings] = useState(null);
-  const [currentUser, setCurrentUser] = useState(null);
+  const [globalSettings, setGlobalSettings] = useState(() => {
+    try {
+      const cached = localStorage.getItem('cached_global_settings');
+      return cached ? JSON.parse(cached) : null;
+    } catch (e) {
+      return null;
+    }
+  });
+  const [currentUser, setCurrentUser] = useState(() => {
+    try {
+      const cached = localStorage.getItem('cached_current_user');
+      return cached ? JSON.parse(cached) : null;
+    } catch (e) {
+      return null;
+    }
+  });
   
   // Post Creation States
   const [showCreateModal, setShowCreateModal] = useState(false);
@@ -233,6 +267,7 @@ const HomePage = ({ setActiveTab, setSelectedNewsId, setActiveChatPartner }) => 
         if (userRes.ok) {
           const userData = await userRes.json();
           setCurrentUser(userData);
+          localStorage.setItem('cached_current_user', JSON.stringify(userData));
         }
       } catch (err) {
         console.error('Failed to fetch user profile in Home:', err);
@@ -245,6 +280,7 @@ const HomePage = ({ setActiveTab, setSelectedNewsId, setActiveChatPartner }) => 
         // updates (where authorId is null)
         const updates = data.filter(p => !p.authorId);
         setNewsPosts(updates);
+        localStorage.setItem('cached_news_posts', JSON.stringify(updates));
       }
 
       // 2. Fetch custom feed posts (Community posts)
@@ -254,6 +290,7 @@ const HomePage = ({ setActiveTab, setSelectedNewsId, setActiveChatPartner }) => 
       if (feedResponse.ok) {
         const feedData = await feedResponse.json();
         setFeedPosts(feedData);
+        localStorage.setItem('cached_feed_posts', JSON.stringify(feedData));
       }
     } catch (err) {
       console.error('Failed to fetch home page feed:', err);
@@ -269,6 +306,7 @@ const HomePage = ({ setActiveTab, setSelectedNewsId, setActiveChatPartner }) => 
       if (response.ok) {
         const data = await response.json();
         setGlobalSettings(data);
+        localStorage.setItem('cached_global_settings', JSON.stringify(data));
       }
     } catch (err) {
       console.error('Failed to fetch settings:', err);

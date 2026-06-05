@@ -37,6 +37,8 @@ app.get('/api/image', (req, res) => {
   const safeName = path.basename(filename);
   const filePath = path.join(__dirname, 'uploads', safeName);
   if (fs.existsSync(filePath)) {
+    // Cache statically uploaded media (images and videos) permanently on user devices to make load speeds instant
+    res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
     return res.sendFile(filePath);
   }
   res.status(404).json({ message: 'Image not found', requested: safeName });
