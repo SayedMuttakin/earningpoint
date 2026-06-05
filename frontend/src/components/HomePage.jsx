@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Loader2, Plus, Image as ImageIcon, X, Globe, MoreVertical, Search, MessageCircle } from 'lucide-react';
+import { Loader2, Plus, Image as ImageIcon, X, Globe, MoreVertical, Search, MessageCircle, Users, Smile } from 'lucide-react';
 import { API_BASE } from '../config';
 import VerifiedBadge from './VerifiedBadge';
 import PullToRefresh from './PullToRefresh';
@@ -143,6 +143,7 @@ const HomePage = ({ setActiveTab, setSelectedNewsId, setActiveChatPartner }) => 
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [globalSettings, setGlobalSettings] = useState(null);
+  const [currentUser, setCurrentUser] = useState(null);
   
   // Post Creation States
   const [showCreateModal, setShowCreateModal] = useState(false);
@@ -223,6 +224,19 @@ const HomePage = ({ setActiveTab, setSelectedNewsId, setActiveChatPartner }) => 
     try {
       const token = localStorage.getItem('token');
       if (!token) return;
+
+      // Fetch current user details
+      try {
+        const userRes = await fetch(`${API_BASE}/api/profile`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        if (userRes.ok) {
+          const userData = await userRes.json();
+          setCurrentUser(userData);
+        }
+      } catch (err) {
+        console.error('Failed to fetch user profile in Home:', err);
+      }
 
       // 1. Fetch updates (news)
       const newsResponse = await fetch(`${API_BASE}/api/posts`);
@@ -498,7 +512,7 @@ const HomePage = ({ setActiveTab, setSelectedNewsId, setActiveChatPartner }) => 
         {showCreateModal && (
           <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4">
             <div className="absolute inset-0 bg-slate-950/80 backdrop-blur-xs" onClick={() => setShowCreateModal(false)} />
-            <div className="relative z-10 bg-white dark:bg-slate-900 rounded-t-3xl sm:rounded-3xl w-full sm:max-w-lg max-h-[85vh] flex flex-col shadow-2xl overflow-hidden animate-fade-in-up border border-transparent dark:border-slate-800">
+            <div className="relative z-10 bg-white dark:bg-slate-900 rounded-t-3xl sm:rounded-3xl w-full sm:max-w-lg max-h-[calc(100vh-90px)] sm:max-h-[85vh] flex flex-col shadow-2xl overflow-hidden animate-fade-in-up border border-transparent dark:border-slate-800 mb-[76px] sm:mb-0">
               
               {/* Header */}
               <div className="flex items-center justify-between px-5 py-4 border-b border-slate-100 dark:border-slate-800 flex-shrink-0">
@@ -513,41 +527,45 @@ const HomePage = ({ setActiveTab, setSelectedNewsId, setActiveChatPartner }) => 
 
               {/* Form */}
               <form onSubmit={handleCreatePostSubmit} className="flex-1 flex flex-col overflow-y-auto p-5 space-y-4">
+                
+                {/* User Header Profile (Facebook Style) */}
+                <div className="flex items-center gap-3 flex-shrink-0">
+                  <div className="w-11 h-11 rounded-full bg-gradient-to-tr from-indigo-500 to-brand-500 flex items-center justify-center text-white font-black shadow-xs">
+                    {currentUser?.profilePic ? (
+                      <img 
+                        src={currentUser.profilePic.startsWith('http') || currentUser.profilePic.startsWith('/api') || currentUser.profilePic.startsWith('data:') ? currentUser.profilePic : `${API_BASE}/api/image?file=${currentUser.profilePic}`} 
+                        alt="Current User avatar" 
+                        className="w-full h-full rounded-full object-cover"
+                      />
+                    ) : (
+                      <span>{currentUser?.name ? currentUser.name.charAt(0).toUpperCase() : 'U'}</span>
+                    )}
+                  </div>
+                  <div>
+                    <h4 className="font-bold text-slate-800 dark:text-slate-200 text-sm">{currentUser?.name || 'User'}</h4>
+                    <div className="flex items-center gap-1 text-[9.5px] text-slate-500 bg-slate-100 dark:bg-slate-800 dark:text-slate-400 px-2 py-0.5 rounded-md w-fit font-bold mt-0.5">
+                      <Globe className="w-3 h-3" />
+                      <span>Public</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Facebook-style Textarea */}
                 <textarea
                   value={newPostContent}
                   onChange={(e) => setNewPostContent(e.target.value)}
-                  placeholder="What's on your mind? Share updates, tips, or ask questions with the community..."
-                  rows={5}
-                  required
-                  className="w-full bg-slate-55/40 dark:bg-slate-850 rounded-2xl p-4 text-slate-800 dark:text-white placeholder-slate-450 border border-slate-150/40 dark:border-slate-750 outline-none focus:border-indigo-500/50 resize-none text-sm leading-relaxed"
+                  placeholder={`What's on your mind, ${currentUser?.name || 'User'}?`}
+                  rows={4}
+                  className="w-full bg-transparent text-slate-850 dark:text-white placeholder-slate-400 outline-none border-none resize-none text-[15px] leading-relaxed focus:ring-0 focus:border-transparent mt-2 p-0"
                 />
-
-                {/* File Upload Selector */}
-                <div className="flex items-center gap-3">
-                  <label className="flex items-center gap-2 px-4.5 py-2.5 bg-indigo-50 dark:bg-indigo-950/40 border border-indigo-100/50 dark:border-indigo-900/30 text-[#7C3AED] hover:bg-indigo-100 dark:hover:bg-indigo-950/70 transition-colors rounded-xl text-xs font-black cursor-pointer active:scale-95">
-                    <ImageIcon className="w-4 h-4" />
-                    Add Photo/Video
-                    <input 
-                      type="file" 
-                      accept="image/*,video/*" 
-                      onChange={handleImageChange} 
-                      className="hidden" 
-                    />
-                  </label>
-                  {selectedImage && (
-                    <span className="text-[10px] text-slate-450 font-bold max-w-[150px] truncate">
-                      {selectedImage.name}
-                    </span>
-                  )}
-                </div>
 
                 {/* Preview Image or Video */}
                 {imagePreview && (
-                  <div className="relative rounded-2xl overflow-hidden border border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 max-h-[200px] w-fit">
+                  <div className="relative rounded-2xl overflow-hidden border border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 max-h-[180px] w-full flex items-center justify-center flex-shrink-0">
                     {selectedFileType === 'video' ? (
-                      <video src={imagePreview} controls className="h-full object-contain max-h-[200px]" />
+                      <video src={imagePreview} controls className="w-full h-full max-h-[180px] object-cover" />
                     ) : (
-                      <img src={imagePreview} alt="Preview" className="h-full object-contain max-h-[200px]" />
+                      <img src={imagePreview} alt="Preview" className="w-full h-full max-h-[180px] object-cover" />
                     )}
                     <button 
                       type="button"
@@ -556,18 +574,61 @@ const HomePage = ({ setActiveTab, setSelectedNewsId, setActiveChatPartner }) => 
                         setImagePreview(null);
                         setSelectedFileType('image');
                       }}
-                      className="absolute top-2 right-2 p-1 bg-black/60 hover:bg-black/85 text-white rounded-full transition-colors"
+                      className="absolute top-2.5 right-2.5 p-1.5 bg-black/60 hover:bg-black/85 text-white rounded-full transition-colors shadow-md active:scale-90"
                     >
                       <X className="w-4 h-4" />
                     </button>
                   </div>
                 )}
 
+                <div className="flex-1" />
+
+                {/* Facebook-style Add to Post Toolbar */}
+                <div className="flex items-center justify-between p-3 bg-slate-50 dark:bg-slate-800/40 border border-slate-100 dark:border-slate-800 rounded-2xl flex-shrink-0">
+                  <span className="text-xs font-black text-slate-500 dark:text-slate-400">Add to your post</span>
+                  <div className="flex items-center gap-1">
+                    {/* Photo/Video trigger button */}
+                    <label className="p-2 hover:bg-slate-200 dark:hover:bg-slate-800 text-emerald-500 rounded-full transition-colors active:scale-90 cursor-pointer">
+                      <ImageIcon className="w-5.5 h-5.5" />
+                      <input 
+                        type="file" 
+                        accept="image/*,video/*" 
+                        onChange={handleImageChange} 
+                        className="hidden" 
+                      />
+                    </label>
+                    {/* Mock tag friends button */}
+                    <button 
+                      type="button" 
+                      onClick={() => alert('Tag friends coming soon!')}
+                      className="p-2 hover:bg-slate-200 dark:hover:bg-slate-800 text-blue-500 rounded-full transition-colors active:scale-90"
+                      title="Tag Friends"
+                    >
+                      <Users className="w-5.5 h-5.5" />
+                    </button>
+                    {/* Mock feeling emoji button */}
+                    <button 
+                      type="button"
+                      onClick={() => alert('Feelings/Activity coming soon!')}
+                      className="p-2 hover:bg-slate-200 dark:hover:bg-slate-800 text-amber-500 rounded-full transition-colors active:scale-90"
+                      title="Feeling/Activity"
+                    >
+                      <Smile className="w-5.5 h-5.5" />
+                    </button>
+                  </div>
+                </div>
+
+                {selectedImage && (
+                  <div className="flex items-center gap-1.5 bg-emerald-50 dark:bg-emerald-950/20 px-3.5 py-2 rounded-xl text-emerald-600 dark:text-emerald-450 border border-emerald-100 dark:border-emerald-900/30 text-xs font-black w-fit max-w-full flex-shrink-0">
+                    <span className="truncate">{selectedImage.name}</span>
+                  </div>
+                )}
+
                 {/* Submit button */}
                 <button
                   type="submit"
-                  disabled={!newPostContent.trim() || postingLoading}
-                  className="w-full py-3.5 bg-gradient-to-r from-[#7C3AED] to-[#5B21B6] text-white font-black rounded-2xl shadow-lg shadow-indigo-650/20 hover:shadow-xl transition-all disabled:opacity-50 disabled:shadow-none flex items-center justify-center gap-2 text-sm mt-auto"
+                  disabled={(!newPostContent.trim() && !selectedImage) || postingLoading}
+                  className="w-full py-3 bg-[#1877f2] hover:bg-[#166fe5] text-white font-black rounded-xl shadow-md active:scale-95 transition-all disabled:opacity-50 disabled:bg-slate-200 dark:disabled:bg-slate-800 disabled:text-slate-400 dark:disabled:text-slate-650 flex items-center justify-center gap-2 text-sm flex-shrink-0"
                 >
                   {postingLoading ? (
                     <><Loader2 className="w-4.5 h-4.5 animate-spin" /> Publishing...</>
