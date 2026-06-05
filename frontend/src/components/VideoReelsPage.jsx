@@ -184,9 +184,18 @@ const ReelCard = ({ video, isActive, isMuted, toggleMute, currentUserId, onLikeT
 
       {/* Right Side Overlay Actions (TikTok Style) */}
       <div className="absolute right-4 bottom-16 z-20 flex flex-col items-center gap-5.5">
-        {/* Creator Profile with Follow button */}
-        <div className="flex flex-col items-center relative pb-3">
-          <div className="w-12 h-12 rounded-full border-2 border-white bg-gradient-to-tr from-indigo-500 to-brand-500 flex items-center justify-center text-white font-bold text-lg shadow-md overflow-hidden">
+        {/* Creator Profile with Follow button (clicking the avatar immediately follows) */}
+        <div 
+          onClick={(e) => {
+            e.stopPropagation();
+            if (!isSelf) {
+              onFollowToggle(creatorId);
+            }
+          }}
+          className={`flex flex-col items-center relative pb-3 ${!isSelf ? 'cursor-pointer' : ''}`}
+          title={!isSelf ? (isCreatorFollowing ? 'Unfollow user' : 'Follow user') : ''}
+        >
+          <div className="w-12 h-12 rounded-full border-2 border-white bg-gradient-to-tr from-indigo-500 to-brand-500 flex items-center justify-center text-white font-bold text-lg shadow-md overflow-hidden transition-transform active:scale-95">
             {creatorAvatar && !avatarError ? (
               <img
                 src={creatorAvatar}
@@ -200,16 +209,11 @@ const ReelCard = ({ video, isActive, isMuted, toggleMute, currentUserId, onLikeT
           </div>
           {/* Red Follow (+) Button */}
           {!isCreatorFollowing && !isSelf && (
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                onFollowToggle(creatorId);
-              }}
-              className="absolute bottom-1.5 left-1/2 -translate-x-1/2 w-5 h-5 rounded-full bg-rose-500 border border-white flex items-center justify-center text-white shadow-sm hover:scale-110 active:scale-95 transition-transform cursor-pointer"
-              title="Follow user"
+            <div
+              className="absolute bottom-1.5 left-1/2 -translate-x-1/2 w-5 h-5 rounded-full bg-rose-500 border border-white flex items-center justify-center text-white shadow-sm pointer-events-none"
             >
               <Plus className="w-3.5 h-3.5 stroke-[3.5]" />
-            </button>
+            </div>
           )}
         </div>
 
@@ -263,24 +267,7 @@ const ReelCard = ({ video, isActive, isMuted, toggleMute, currentUserId, onLikeT
           <span className="text-[11.5px] font-black tracking-wide mt-0.5">{video.likes ? Math.round(video.likes.length * 1.5) : 173}</span>
         </button>
 
-        {/* Spinning Music Record disc at the bottom right */}
-        <div className="w-10 h-10 rounded-full border-4 border-slate-900/80 bg-black flex items-center justify-center animate-spin-slow mt-2 relative">
-          <div className="w-full h-full rounded-full bg-gradient-to-tr from-slate-950 via-slate-900 to-slate-850 p-1 flex items-center justify-center overflow-hidden">
-            {creatorAvatar && !recordAvatarError ? (
-              <img 
-                src={creatorAvatar} 
-                alt="music record" 
-                className="w-5.5 h-5.5 rounded-full object-cover"
-                onError={() => setRecordAvatarError(true)}
-              />
-            ) : (
-              <div className="w-5.5 h-5.5 rounded-full bg-indigo-500 flex items-center justify-center text-white text-[8px] font-bold">
-                {creatorName ? creatorName.charAt(0).toUpperCase() : 'U'}
-              </div>
-            )}
-          </div>
-        </div>
-
+        {/* Spinning Music Record disc removed per user request */}
       </div>
 
       {/* Bottom Overlay Info (Description/Creator) */}
