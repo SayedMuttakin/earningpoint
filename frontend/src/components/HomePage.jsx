@@ -88,7 +88,7 @@ const BannerSection = ({ onStartEarning }) => {
 };
 
 // Comments Drawer Slide-up Component
-const CommentsDrawer = ({ post, onClose, onCommentSubmit, currentUserId }) => {
+const CommentsDrawer = ({ post, onClose, onCommentSubmit, currentUserId, onUserClick }) => {
   const [commentText, setCommentText] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const listRef = React.useRef(null);
@@ -137,7 +137,10 @@ const CommentsDrawer = ({ post, onClose, onCommentSubmit, currentUserId }) => {
           {post.comments && post.comments.length > 0 ? (
             post.comments.map((comment, i) => (
               <div key={i} className="flex gap-3 items-start">
-                <div className="w-8 h-8 rounded-full bg-slate-200 dark:bg-slate-800 flex items-center justify-center font-bold text-xs shrink-0 overflow-hidden">
+                <button
+                  onClick={() => comment.user && onUserClick && onUserClick(comment.user)}
+                  className="w-8 h-8 rounded-full bg-slate-200 dark:bg-slate-800 flex items-center justify-center font-bold text-xs shrink-0 overflow-hidden active:scale-90 transition-transform"
+                >
                   {comment.userAvatar ? (
                     <img
                       src={comment.userAvatar.startsWith('http') || comment.userAvatar.startsWith('/api') || comment.userAvatar.startsWith('data:') 
@@ -152,11 +155,14 @@ const CommentsDrawer = ({ post, onClose, onCommentSubmit, currentUserId }) => {
                   ) : (
                     <span>{comment.userName ? comment.userName.charAt(0).toUpperCase() : 'U'}</span>
                   )}
-                </div>
+                </button>
                 <div className="flex-1 bg-slate-50 dark:bg-slate-850 rounded-2xl px-4 py-2.5">
-                  <span className="block font-black text-xs text-slate-750 dark:text-slate-350">
+                  <button
+                    onClick={() => comment.user && onUserClick && onUserClick(comment.user)}
+                    className="block font-black text-xs text-slate-750 dark:text-slate-350 hover:underline text-left"
+                  >
                     {comment.userName || 'User'}
-                  </span>
+                  </button>
                   <p className="text-xs text-slate-650 dark:text-slate-300 mt-1 leading-relaxed">
                     {comment.text}
                   </p>
@@ -193,7 +199,7 @@ const CommentsDrawer = ({ post, onClose, onCommentSubmit, currentUserId }) => {
   );
 };
 
-const CommunityPostCard = ({ post, onFollowToggle, onLikeToggle, onCommentClick, currentUserId, setSelectedReelId, setActiveTab }) => {
+const CommunityPostCard = ({ post, onFollowToggle, onLikeToggle, onCommentClick, currentUserId, setSelectedReelId, setActiveTab, onUserClick }) => {
   const [actionLoading, setActionLoading] = useState(false);
   const [isLiking, setIsLiking] = useState(false);
 
@@ -225,23 +231,28 @@ const CommunityPostCard = ({ post, onFollowToggle, onLikeToggle, onCommentClick,
         <div className="flex items-center gap-3">
           {/* Avatar with IG gradient border and follow plus button overlay */}
           <div className="relative select-none">
-            <div className="bg-gradient-to-tr from-yellow-500 via-red-500 to-purple-600 p-[1.8px] rounded-full">
-              <div className="bg-white dark:bg-slate-900 p-[1.5px] rounded-full">
-                {post.authorDetails?.profilePic ? (
-                  <img 
-                    src={post.authorDetails.profilePic.startsWith('http') || post.authorDetails.profilePic.startsWith('/api') || post.authorDetails.profilePic.startsWith('data:') 
-                      ? post.authorDetails.profilePic 
-                      : `${API_BASE}/api/image?file=${encodeURIComponent(post.authorDetails.profilePic)}`} 
-                    alt={post.authorDetails.name || post.authorName} 
-                    className="w-10 h-10 rounded-full object-cover"
-                  />
-                ) : (
-                  <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-indigo-500 to-brand-500 flex items-center justify-center text-white font-black text-sm">
-                    {post.authorDetails?.name ? post.authorDetails.name.charAt(0).toUpperCase() : (post.authorName ? post.authorName.charAt(0).toUpperCase() : 'U')}
-                  </div>
-                )}
+            <button
+              onClick={() => post.authorId && onUserClick && onUserClick(post.authorId)}
+              className="block active:scale-90 transition-transform"
+            >
+              <div className="bg-gradient-to-tr from-yellow-500 via-red-500 to-purple-600 p-[1.8px] rounded-full">
+                <div className="bg-white dark:bg-slate-900 p-[1.5px] rounded-full">
+                  {post.authorDetails?.profilePic ? (
+                    <img 
+                      src={post.authorDetails.profilePic.startsWith('http') || post.authorDetails.profilePic.startsWith('/api') || post.authorDetails.profilePic.startsWith('data:') 
+                        ? post.authorDetails.profilePic 
+                        : `${API_BASE}/api/image?file=${encodeURIComponent(post.authorDetails.profilePic)}`} 
+                      alt={post.authorDetails.name || post.authorName} 
+                      className="w-10 h-10 rounded-full object-cover"
+                    />
+                  ) : (
+                    <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-indigo-500 to-brand-500 flex items-center justify-center text-white font-black text-sm">
+                      {post.authorDetails?.name ? post.authorDetails.name.charAt(0).toUpperCase() : (post.authorName ? post.authorName.charAt(0).toUpperCase() : 'U')}
+                    </div>
+                  )}
+                </div>
               </div>
-            </div>
+            </button>
             
             {/* Follow overlay plus badge */}
             {!post.isOwnPost && post.authorId && !post.isFollowing && (
@@ -262,7 +273,12 @@ const CommunityPostCard = ({ post, onFollowToggle, onLikeToggle, onCommentClick,
 
           <div>
             <h3 className="font-extrabold text-slate-850 dark:text-slate-200 text-sm flex items-center gap-1.5">
-              <span>{post.authorDetails?.name || post.authorName || 'User'}</span>
+              <button
+                onClick={() => post.authorId && onUserClick && onUserClick(post.authorId)}
+                className="hover:underline font-extrabold text-left active:opacity-70 transition-opacity"
+              >
+                {post.authorDetails?.name || post.authorName || 'User'}
+              </button>
               {post.isVerified && (
                 <VerifiedBadge iconClassName="w-[14px] h-[14px] fill-blue-500 text-white" />
               )}
@@ -477,7 +493,7 @@ const CommunityPostCard = ({ post, onFollowToggle, onLikeToggle, onCommentClick,
   );
 };
 
-const HomePage = ({ setActiveTab, setSelectedNewsId, setActiveChatPartner, setSelectedReelId }) => {
+const HomePage = ({ setActiveTab, setSelectedNewsId, setActiveChatPartner, setSelectedReelId, highlightedPostId, setHighlightedPostId, onUserClick }) => {
   const [activeCommentPost, setActiveCommentPost] = useState(null);
   const [newsPosts, setNewsPosts] = useState(() => {
     try {
@@ -657,6 +673,27 @@ const HomePage = ({ setActiveTab, setSelectedNewsId, setActiveChatPartner, setSe
     fetchHomeData();
     fetchGlobalSettings();
   }, []);
+
+  useEffect(() => {
+    if (highlightedPostId) {
+      const fetchHighlightedPost = async () => {
+        try {
+          const token = localStorage.getItem('token');
+          const res = await fetch(`${API_BASE}/api/posts/${highlightedPostId}`, {
+            headers: { Authorization: `Bearer ${token}` }
+          });
+          if (res.ok) {
+            const postData = await res.json();
+            setActiveCommentPost(postData);
+            if (setHighlightedPostId) setHighlightedPostId(null);
+          }
+        } catch (err) {
+          console.error('Failed to fetch highlighted post:', err);
+        }
+      };
+      fetchHighlightedPost();
+    }
+  }, [highlightedPostId]);
 
   const handleRefresh = () => {
     setRefreshing(true);
@@ -876,15 +913,24 @@ const HomePage = ({ setActiveTab, setSelectedNewsId, setActiveChatPartner, setSe
                   ) : userSearchResults.length > 0 ? (
                     userSearchResults.map(user => (
                       <div key={user._id} className="flex items-center justify-between py-2.5 px-3 hover:bg-slate-50 dark:hover:bg-slate-850 rounded-xl transition-colors">
-                        <div className="flex items-center gap-3 min-w-0">
+                        <button
+                          onClick={() => {
+                            if (onUserClick) {
+                              onUserClick(user._id);
+                              setUserSearchQuery('');
+                              setUserSearchResults([]);
+                            }
+                          }}
+                          className="flex items-center gap-3 min-w-0 flex-1 text-left active:opacity-70 transition-opacity"
+                        >
                           {user.profilePic ? (
                             <img
                               src={user.profilePic.startsWith('http') || user.profilePic.startsWith('/api') || user.profilePic.startsWith('data:') ? user.profilePic : `${API_BASE}/api/image?file=${user.profilePic}`}
                               alt={user.name}
-                              className="w-9 h-9 rounded-full object-cover border border-slate-100 dark:border-slate-800"
+                              className="w-9 h-9 rounded-full object-cover border border-slate-100 dark:border-slate-800 flex-shrink-0"
                             />
                           ) : (
-                            <div className="w-9 h-9 rounded-full bg-gradient-to-tr from-indigo-500 to-brand-500 flex items-center justify-center text-white text-xs font-black">
+                            <div className="w-9 h-9 rounded-full bg-gradient-to-tr from-indigo-500 to-brand-500 flex items-center justify-center text-white text-xs font-black flex-shrink-0">
                               {user.name.charAt(0).toUpperCase()}
                             </div>
                           )}
@@ -892,12 +938,12 @@ const HomePage = ({ setActiveTab, setSelectedNewsId, setActiveChatPartner, setSe
                             <span className="text-xs font-black text-slate-850 dark:text-slate-200 block truncate leading-tight">{user.name}</span>
                             <span className="text-[10px] text-slate-400 font-bold block truncate">{user.phoneOrEmail}</span>
                           </div>
-                        </div>
+                        </button>
 
-                        <div className="flex items-center gap-2 flex-shrink-0">
+                        <div className="flex items-center gap-2 flex-shrink-0 ml-2">
                           {/* Follow Button */}
                           <button
-                            onClick={() => handleSearchUserFollowToggle(user._id)}
+                            onClick={(e) => { e.stopPropagation(); handleSearchUserFollowToggle(user._id); }}
                             className={`px-3 py-1.5 rounded-lg text-[10px] font-black transition-all active:scale-95 ${
                               user.isFollowing
                                 ? 'bg-slate-100 dark:bg-slate-850 text-slate-450 dark:text-slate-500'
@@ -909,7 +955,7 @@ const HomePage = ({ setActiveTab, setSelectedNewsId, setActiveChatPartner, setSe
 
                           {/* Message Button */}
                           <button
-                            onClick={() => handleSearchUserMessageClick(user)}
+                            onClick={(e) => { e.stopPropagation(); handleSearchUserMessageClick(user); }}
                             className="p-1.5 rounded-lg bg-indigo-50 dark:bg-[#7C3AED]/10 text-[#7C3AED] hover:bg-indigo-100/70 active:scale-95 transition-all"
                             title="Message User"
                           >
@@ -944,6 +990,7 @@ const HomePage = ({ setActiveTab, setSelectedNewsId, setActiveChatPartner, setSe
                     currentUserId={currentUser?._id}
                     setSelectedReelId={setSelectedReelId}
                     setActiveTab={setActiveTab}
+                    onUserClick={onUserClick}
                   />
                 ))}
               </div>
@@ -1107,6 +1154,7 @@ const HomePage = ({ setActiveTab, setSelectedNewsId, setActiveChatPartner, setSe
             onClose={() => setActiveCommentPost(null)}
             onCommentSubmit={handleCommentSubmit}
             currentUserId={currentUser?._id}
+            onUserClick={onUserClick}
           />
         )}
       </>

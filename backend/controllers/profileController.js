@@ -224,3 +224,73 @@ exports.searchUsers = async (req, res) => {
   }
 };
 
+// @desc    Get public profile of another user
+// @route   GET /api/profile/:userId
+// @access  Private
+exports.getPublicProfile = async (req, res) => {
+  try {
+    const targetUserId = req.params.userId;
+    const currentUserId = req.user._id;
+
+    const user = await User.findById(targetUserId).select('name email profilePic googleAvatar isEmailVerified followers following bio');
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    const Post = require('../models/Post');
+    
+    // Get all posts by this user
+    const posts = await Post.find({ authorId: targetUserId }).sort({ createdAt: -1 });
+
+    // Calculate total likes on their posts
+    const totalLikes = posts.reduce((sum, p) => sum + (p.likes?.length || 0), 0);
+
+    // Split into videos (reels) and text/image posts
+    const videos = posts.filter(p => p.video);
+    const communityPosts = posts.filter(p => !p.video);
+
+    // Is the current user following this target user?
+    const isFollowing = user.followers ? user.followers.includes(currentUserId) : false;
+
+    res.json({
+      user: {
+        _id: user._id,
+        name: user.name,
+        username: user.email ? user.email.split('@')[0] : 'user',
+        profilePic: user.profilePic,
+        googleAvatar: user.googleAvatar,
+        isEmailVerified: user.isEmailVerified,
+        followersCount: user.followers ? user.followers.length : 0,
+        followingCount: user.following ? user.following.length : 0,
+        totalLikes,
+        bio: user.bio || 'Follow and support me!',
+        isFollowing
+      },
+      videos: videos.map(v => ({
+        _id: v._id,
+        video: v.video,
+        image: v.image,
+        title: v.title,
+        content: v.content,
+        views: v.likes ? v.likes.length * 2 + 5 : 365,
+        likesCount: v.likes?.length || 0,
+        commentsCount: v.comments?.length || 0
+      })),
+      posts: communityPosts.map(p => ({
+        _id: p._id,
+        content: p.content,
+        image: p.image,
+        title: p.title,
+        createdAt: p.createdAt,
+        likesCount: p.likes?.length || 0,
+        commentsCount: p.comments?.length || 0,
+        likes: p.likes,
+        comments: p.comments
+      }))
+    });
+  } catch (error) {
+    console.error('Error fetching public profile:', error);
+    res.status(500).json({ message: error.message });
+  }
+};
+

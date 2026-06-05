@@ -34,6 +34,7 @@ const TransactionHistoryPage = lazy(() => import('./components/TransactionHistor
 const ForgotPasswordPage = lazy(() => import('./components/ForgotPasswordPage'));
 const ResetPasswordPage = lazy(() => import('./components/ResetPasswordPage'));
 const VideoReelsPage = lazy(() => import('./components/VideoReelsPage'));
+const PublicProfilePage = lazy(() => import('./components/PublicProfilePage'));
 
 // Loader fallback component for lazy-loaded pages
 const PageLoader = () => (
@@ -63,6 +64,8 @@ function App() {
   const [darkMode, setDarkMode] = useState(() => localStorage.getItem('darkMode') === 'true');
   const [selectedNewsId, setSelectedNewsId] = useState(null);
   const [activeChatPartner, setActiveChatPartner] = useState(null);
+  const [selectedNotificationPostId, setSelectedNotificationPostId] = useState(null);
+  const [activePublicProfileUserId, setActivePublicProfileUserId] = useState(null);
 
   // Initialize AdMob
   useEffect(() => {
@@ -179,6 +182,12 @@ function App() {
               setSelectedNewsId={setSelectedNewsId}
               setActiveChatPartner={setActiveChatPartner}
               setSelectedReelId={setSelectedReelId}
+              highlightedPostId={selectedNotificationPostId}
+              setHighlightedPostId={setSelectedNotificationPostId}
+              onUserClick={(uid) => {
+                setActivePublicProfileUserId(uid);
+                setActiveTab('PublicProfile');
+              }}
             />
           )}
           {activeTab === 'Video' && (
@@ -186,7 +195,22 @@ function App() {
           )}
           {activeTab === 'Cart' && <CartPage onBuyNow={handleBuyNow} />}
           {activeTab === 'Checkout' && <CheckoutPage product={selectedProduct} onBack={() => setActiveTab('Cart')} onSuccess={(method) => { setSelectedPaymentMethod(method); setActiveTab('PaymentSuccess'); }} />}
-          {activeTab === 'Notification' && <NotificationPage onBack={() => setActiveTab('Home')} />}
+          {activeTab === 'Notification' && (
+            <NotificationPage 
+              onBack={() => setActiveTab('Home')} 
+              setActiveTab={setActiveTab}
+              setSelectedNotificationPostId={setSelectedNotificationPostId}
+            />
+          )}
+          {activeTab === 'PublicProfile' && (
+            <PublicProfilePage 
+              userId={activePublicProfileUserId}
+              onBack={() => setActiveTab('Home')}
+              setActiveTab={setActiveTab}
+              setSelectedReelId={setSelectedReelId}
+              setActiveChatPartner={setActiveChatPartner}
+            />
+          )}
           {activeTab === 'PaymentSuccess' && <PaymentSuccess paymentMethod={selectedPaymentMethod} onBack={() => showBackAd(() => setActiveTab('Home'))} />}
           {activeTab === 'Profile' && <ProfilePage 
             onBack={() => setActiveTab('Home')}

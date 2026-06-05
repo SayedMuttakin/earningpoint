@@ -290,6 +290,20 @@ exports.toggleLikePost = async (req, res) => {
       post.likes = post.likes.filter(id => id.toString() !== userId.toString());
     } else {
       post.likes.push(userId);
+      // Trigger notification for post author (if not own post)
+      if (post.authorId && post.authorId.toString() !== userId.toString()) {
+        try {
+          await createNotification(
+            post.authorId,
+            'New Like! ❤️',
+            `${req.user.name || 'A user'} liked your post: "${post.content.substring(0, 30)}${post.content.length > 30 ? '...' : ''}"`,
+            'post',
+            post._id
+          );
+        } catch (err) {
+          console.error('Failed to create like notification:', err);
+        }
+      }
     }
 
     await post.save();
@@ -328,6 +342,21 @@ exports.commentPost = async (req, res) => {
 
     post.comments.push(newComment);
     await post.save();
+
+    // Trigger notification for post author (if not own post)
+    if (post.authorId && post.authorId.toString() !== req.user._id.toString()) {
+      try {
+        await createNotification(
+          post.authorId,
+          'New Comment! 💬',
+          `${req.user.name || 'A user'} commented: "${text.substring(0, 30)}${text.length > 30 ? '...' : ''}"`,
+          'post',
+          post._id
+        );
+      } catch (err) {
+        console.error('Failed to create comment notification:', err);
+      }
+    }
 
     res.status(201).json(newComment);
   } catch (error) {

@@ -9,6 +9,7 @@ const {
   toggleDarkMode,
   followUser,
   searchUsers,
+  getPublicProfile,
 } = require('../controllers/profileController');
 
 router.get('/', protect, getProfile);
@@ -18,5 +19,6 @@ router.put('/password', protect, changePassword);
 router.delete('/', protect, deleteAccount);
 router.put('/darkmode', protect, toggleDarkMode);
 router.post('/follow/:userId', protect, followUser);
+router.get('/:userId', protect, getPublicProfile);
 
 module.exports = router;

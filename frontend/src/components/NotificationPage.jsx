@@ -14,7 +14,7 @@ import {
 import { API_BASE } from '../config';
 import PullToRefresh from './PullToRefresh';
 
-const NotificationPage = ({ onBack }) => {
+const NotificationPage = ({ onBack, setActiveTab, setSelectedNotificationPostId }) => {
   const [notifications, setNotifications] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -212,7 +212,13 @@ const NotificationPage = ({ onBack }) => {
                     className="flex-1 min-w-0 py-0.5 sm:py-1 cursor-pointer" 
                     onClick={() => {
                       if (!n.isRead) markAsRead(n._id);
-                      setSelectedNotification(n);
+                      if (n.type === 'post' && n.postId && setSelectedNotificationPostId && setActiveTab) {
+                        setSelectedNotificationPostId(n.postId);
+                        setActiveTab('Home');
+                        onBack();
+                      } else {
+                        setSelectedNotification(n);
+                      }
                     }}
                   >
                     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1.5 sm:gap-2 mb-1 sm:mb-1.5">
