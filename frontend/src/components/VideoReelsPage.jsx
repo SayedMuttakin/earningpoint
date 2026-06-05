@@ -330,7 +330,7 @@ const CommentsDrawer = ({ video, onClose, onCommentSubmit, currentUserId }) => {
   };
 
   return (
-    <div className="absolute bottom-0 left-0 right-0 h-[60%] bg-white dark:bg-slate-900 rounded-t-3xl z-40 shadow-2xl flex flex-col animate-fade-in-up border-t border-slate-150 dark:border-slate-800">
+    <div className="absolute bottom-0 left-0 right-0 h-[42%] bg-white dark:bg-slate-900 rounded-t-3xl z-40 shadow-2xl flex flex-col animate-fade-in-up border-t border-slate-150 dark:border-slate-800">
       {/* Header */}
       <div className="flex items-center justify-between px-5 py-4 border-b border-slate-100 dark:border-slate-800">
         <h3 className="font-bold text-slate-850 dark:text-slate-200">

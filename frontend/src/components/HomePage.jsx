@@ -115,7 +115,7 @@ const CommentsDrawer = ({ post, onClose, onCommentSubmit, currentUserId }) => {
       <div className="absolute inset-0 bg-slate-950/60 backdrop-blur-xs" onClick={onClose} />
       
       {/* Drawer */}
-      <div className="relative z-10 w-full sm:max-w-md h-[48%] bg-white dark:bg-slate-900 rounded-t-[2rem] shadow-2xl flex flex-col animate-fade-in-up border-t border-slate-150 dark:border-slate-800 mb-[76px] sm:mb-0">
+      <div className="relative z-10 w-full sm:max-w-md h-[38%] bg-white dark:bg-slate-900 rounded-t-[2rem] shadow-2xl flex flex-col animate-fade-in-up border-t border-slate-150 dark:border-slate-800 mb-[76px] sm:mb-0">
         {/* Drag handle */}
         <div className="w-12 h-1 bg-slate-250 dark:bg-slate-750 rounded-full mx-auto my-3 flex-shrink-0" />
 
