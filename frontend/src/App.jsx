@@ -1,38 +1,48 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, lazy, Suspense } from 'react';
 import AuthLayout from './components/AuthLayout';
 import RegistrationForm from './components/RegistrationForm';
 import LoginForm from './components/LoginForm';
 import HomePage from './components/HomePage';
 import Navbar from './components/Navbar';
-import CartPage from './components/CartPage';
-import CheckoutPage from './components/CheckoutPage';
-import ProfilePage from './components/ProfilePage';
-import VerificationPage from './components/VerificationPage';
-import LanguagePage from './components/LanguagePage';
-import ChangePasswordPage from './components/ChangePasswordPage';
-import ReferralsPage from './components/ReferralsPage';
-import LeaderboardPage from './components/LeaderboardPage';
-import TermsPrivacyPage from './components/TermsPrivacyPage';
-import DeleteAccountPage from './components/DeleteAccountPage';
-import EarningPage from './components/EarningPage';
-import NotificationPage from './components/NotificationPage';
-import PaymentSuccess from './components/PaymentSuccess';
-import SettingsPage from './components/SettingsPage';
-import SupportPage from './components/SupportPage';
-import MessengerPage from './components/MessengerPage';
-import UpdatesPage from './components/UpdatesPage';
 import SplashScreen from './components/SplashScreen';
 import OnboardingScreen from './components/OnboardingScreen';
-import TransactionHistoryPage from './components/TransactionHistoryPage';
-import ForgotPasswordPage from './components/ForgotPasswordPage';
-import ResetPasswordPage from './components/ResetPasswordPage';
 import { API_BASE } from './config';
 
 import { AdMob } from '@capacitor-community/admob';
 import { App as CapacitorApp } from '@capacitor/app';
 import { AdMobService } from './utils/admob';
-import MultiAdViewPage from './components/MultiAdViewPage';
-import VideoReelsPage from './components/VideoReelsPage';
+
+// Lazy load other sub-pages/components to split bundle size and make initial load super fast
+const CartPage = lazy(() => import('./components/CartPage'));
+const CheckoutPage = lazy(() => import('./components/CheckoutPage'));
+const ProfilePage = lazy(() => import('./components/ProfilePage'));
+const VerificationPage = lazy(() => import('./components/VerificationPage'));
+const LanguagePage = lazy(() => import('./components/LanguagePage'));
+const ChangePasswordPage = lazy(() => import('./components/ChangePasswordPage'));
+const ReferralsPage = lazy(() => import('./components/ReferralsPage'));
+const LeaderboardPage = lazy(() => import('./components/LeaderboardPage'));
+const TermsPrivacyPage = lazy(() => import('./components/TermsPrivacyPage'));
+const DeleteAccountPage = lazy(() => import('./components/DeleteAccountPage'));
+const EarningPage = lazy(() => import('./components/EarningPage'));
+const NotificationPage = lazy(() => import('./components/NotificationPage'));
+const PaymentSuccess = lazy(() => import('./components/PaymentSuccess'));
+const SettingsPage = lazy(() => import('./components/SettingsPage'));
+const SupportPage = lazy(() => import('./components/SupportPage'));
+const MessengerPage = lazy(() => import('./components/MessengerPage'));
+const UpdatesPage = lazy(() => import('./components/UpdatesPage'));
+const TransactionHistoryPage = lazy(() => import('./components/TransactionHistoryPage'));
+const ForgotPasswordPage = lazy(() => import('./components/ForgotPasswordPage'));
+const ResetPasswordPage = lazy(() => import('./components/ResetPasswordPage'));
+const VideoReelsPage = lazy(() => import('./components/VideoReelsPage'));
+
+// Loader fallback component for lazy-loaded pages
+const PageLoader = () => (
+  <div className="flex flex-col items-center justify-center p-12 space-y-3 min-h-[60vh]">
+    <div className="w-8 h-8 border-4 border-brand-500 border-t-transparent rounded-full animate-spin"></div>
+    <span className="text-xs font-semibold text-slate-500 tracking-wide animate-pulse">Loading...</span>
+  </div>
+);
+
 
 function App() {
   // Check if URL has a password reset token (from email link) or reelId (from shared link)
@@ -161,104 +171,108 @@ function App() {
     return (
       <div className="min-h-screen bg-slate-100/50 dark:bg-slate-950 transition-colors duration-300">
         <Navbar onLogout={handleLogout} activeTab={activeTab} setActiveTab={setActiveTab} />
-        {activeTab === 'Home' && (
-          <HomePage 
-            onBuyNow={handleBuyNow} 
-            setActiveTab={setActiveTab} 
-            setSelectedNewsId={setSelectedNewsId}
-            setActiveChatPartner={setActiveChatPartner}
-          />
-        )}
-        {activeTab === 'Video' && (
-          <VideoReelsPage selectedReelId={selectedReelId} onBack={() => setActiveTab('Home')} />
-        )}
-        {activeTab === 'Cart' && <CartPage onBuyNow={handleBuyNow} />}
-        {activeTab === 'Checkout' && <CheckoutPage product={selectedProduct} onBack={() => setActiveTab('Cart')} onSuccess={(method) => { setSelectedPaymentMethod(method); setActiveTab('PaymentSuccess'); }} />}
-        {activeTab === 'Notification' && <NotificationPage onBack={() => setActiveTab('Home')} />}
-        {activeTab === 'PaymentSuccess' && <PaymentSuccess paymentMethod={selectedPaymentMethod} onBack={() => showBackAd(() => setActiveTab('Home'))} />}
-        {activeTab === 'Profile' && <ProfilePage 
-          onBack={() => setActiveTab('Home')}
-          onVerifyClick={() => setActiveTab('Verify')} 
-          onLanguageClick={() => setActiveTab('Language')} 
-          onPasswordClick={() => setActiveTab('ChangePassword')}
-          onReferralsClick={() => setActiveTab('Referrals')}
-          onLeaderboardClick={() => setActiveTab('Leaderboard')}
-          onTransactionsClick={() => setActiveTab('TransactionHistory')}
-          onSupportClick={() => setActiveTab('Support')}
-          onTermsClick={() => setActiveTab('TermsPrivacy')}
-          onDeleteClick={() => setActiveTab('DeleteAccount')}
-          onNotificationClick={() => setActiveTab('Notification')}
-          onSettingsClick={() => setActiveTab('Setting')}
-          darkMode={darkMode}
-          onToggleDarkMode={handleToggleDarkMode}
-        />}
-        {activeTab === 'Verify' && <VerificationPage onBack={() => showBackAd(() => setActiveTab('Profile'))} />}
-        {activeTab === 'Language' && <LanguagePage onBack={() => showBackAd(() => setActiveTab('Profile'))} />}
-        {activeTab === 'ChangePassword' && <ChangePasswordPage onBack={() => showBackAd(() => setActiveTab('Profile'))} />}
-        {activeTab === 'Referrals' && <ReferralsPage onBack={() => showBackAd(() => setActiveTab('Profile'))} />}
-        {activeTab === 'Leaderboard' && <LeaderboardPage onBack={() => showBackAd(() => setActiveTab('Profile'))} />}
-        {activeTab === 'TransactionHistory' && <TransactionHistoryPage onBack={() => showBackAd(() => setActiveTab('Profile'))} />}
-        {activeTab === 'TermsPrivacy' && <TermsPrivacyPage onBack={() => showBackAd(() => setActiveTab('Profile'))} />}
-        {activeTab === 'DeleteAccount' && <DeleteAccountPage onBack={() => showBackAd(() => setActiveTab('Profile'))} onLogout={handleLogout} />}
-        {activeTab === 'Earning' && <EarningPage onReferralsClick={() => setActiveTab('Referrals')} setActiveTab={setActiveTab} />}
-        
-        {activeTab === 'Setting' && (
-          <SettingsPage 
-            darkMode={darkMode} 
-            onToggleDarkMode={handleToggleDarkMode} 
-            onLogout={handleLogout}
+        <Suspense fallback={<PageLoader />}>
+          {activeTab === 'Home' && (
+            <HomePage 
+              onBuyNow={handleBuyNow} 
+              setActiveTab={setActiveTab} 
+              setSelectedNewsId={setSelectedNewsId}
+              setActiveChatPartner={setActiveChatPartner}
+            />
+          )}
+          {activeTab === 'Video' && (
+            <VideoReelsPage selectedReelId={selectedReelId} onBack={() => setActiveTab('Home')} />
+          )}
+          {activeTab === 'Cart' && <CartPage onBuyNow={handleBuyNow} />}
+          {activeTab === 'Checkout' && <CheckoutPage product={selectedProduct} onBack={() => setActiveTab('Cart')} onSuccess={(method) => { setSelectedPaymentMethod(method); setActiveTab('PaymentSuccess'); }} />}
+          {activeTab === 'Notification' && <NotificationPage onBack={() => setActiveTab('Home')} />}
+          {activeTab === 'PaymentSuccess' && <PaymentSuccess paymentMethod={selectedPaymentMethod} onBack={() => showBackAd(() => setActiveTab('Home'))} />}
+          {activeTab === 'Profile' && <ProfilePage 
             onBack={() => setActiveTab('Home')}
+            onVerifyClick={() => setActiveTab('Verify')} 
+            onLanguageClick={() => setActiveTab('Language')} 
             onPasswordClick={() => setActiveTab('ChangePassword')}
-            onLanguageClick={() => setActiveTab('Language')}
+            onReferralsClick={() => setActiveTab('Referrals')}
+            onLeaderboardClick={() => setActiveTab('Leaderboard')}
+            onTransactionsClick={() => setActiveTab('TransactionHistory')}
+            onSupportClick={() => setActiveTab('Support')}
             onTermsClick={() => setActiveTab('TermsPrivacy')}
             onDeleteClick={() => setActiveTab('DeleteAccount')}
             onNotificationClick={() => setActiveTab('Notification')}
-            onSupportClick={() => setActiveTab('Support')}
-          />
-        )}
-        
-        {activeTab === 'Support' && <SupportPage onBack={() => setActiveTab('Home')} />}
-        {activeTab === 'Messenger' && (
-          <MessengerPage 
-            onBack={() => {
-              setActiveChatPartner(null);
-              setActiveTab('Home');
-            }} 
-            activeChatPartner={activeChatPartner}
-            setActiveChatPartner={setActiveChatPartner}
-          />
-        )}
-        {activeTab === 'Updates' && (
-          <UpdatesPage 
-            onBack={() => {
-              setSelectedNewsId(null);
-              setActiveTab('Home');
-            }} 
-            selectedPostId={selectedNewsId}
-            setSelectedPostId={setSelectedNewsId}
-          />
-        )}
+            onSettingsClick={() => setActiveTab('Setting')}
+            darkMode={darkMode}
+            onToggleDarkMode={handleToggleDarkMode}
+          />}
+          {activeTab === 'Verify' && <VerificationPage onBack={() => showBackAd(() => setActiveTab('Profile'))} />}
+          {activeTab === 'Language' && <LanguagePage onBack={() => showBackAd(() => setActiveTab('Profile'))} />}
+          {activeTab === 'ChangePassword' && <ChangePasswordPage onBack={() => showBackAd(() => setActiveTab('Profile'))} />}
+          {activeTab === 'Referrals' && <ReferralsPage onBack={() => showBackAd(() => setActiveTab('Profile'))} />}
+          {activeTab === 'Leaderboard' && <LeaderboardPage onBack={() => showBackAd(() => setActiveTab('Profile'))} />}
+          {activeTab === 'TransactionHistory' && <TransactionHistoryPage onBack={() => showBackAd(() => setActiveTab('Profile'))} />}
+          {activeTab === 'TermsPrivacy' && <TermsPrivacyPage onBack={() => showBackAd(() => setActiveTab('Profile'))} />}
+          {activeTab === 'DeleteAccount' && <DeleteAccountPage onBack={() => showBackAd(() => setActiveTab('Profile'))} onLogout={handleLogout} />}
+          {activeTab === 'Earning' && <EarningPage onReferralsClick={() => setActiveTab('Referrals')} setActiveTab={setActiveTab} />}
+          
+          {activeTab === 'Setting' && (
+            <SettingsPage 
+              darkMode={darkMode} 
+              onToggleDarkMode={handleToggleDarkMode} 
+              onLogout={handleLogout}
+              onBack={() => setActiveTab('Home')}
+              onPasswordClick={() => setActiveTab('ChangePassword')}
+              onLanguageClick={() => setActiveTab('Language')}
+              onTermsClick={() => setActiveTab('TermsPrivacy')}
+              onDeleteClick={() => setActiveTab('DeleteAccount')}
+              onNotificationClick={() => setActiveTab('Notification')}
+              onSupportClick={() => setActiveTab('Support')}
+            />
+          )}
+          
+          {activeTab === 'Support' && <SupportPage onBack={() => setActiveTab('Home')} />}
+          {activeTab === 'Messenger' && (
+            <MessengerPage 
+              onBack={() => {
+                setActiveChatPartner(null);
+                setActiveTab('Home');
+              }} 
+              activeChatPartner={activeChatPartner}
+              setActiveChatPartner={setActiveChatPartner}
+            />
+          )}
+          {activeTab === 'Updates' && (
+            <UpdatesPage 
+              onBack={() => {
+                setSelectedNewsId(null);
+                setActiveTab('Home');
+              }} 
+              selectedPostId={selectedNewsId}
+              setSelectedPostId={setSelectedNewsId}
+            />
+          )}
+        </Suspense>
       </div>
     );
   }
 
   return (
-    <AuthLayout>
-      {showForgotPassword ? (
-        <ForgotPasswordPage onBack={() => setShowForgotPassword(false)} />
-      ) : isLogin ? (
-        <LoginForm
-          onToggleForm={() => setIsLogin(false)}
-          onLoginSuccess={() => setIsAuthenticated(true)}
-          onForgotPassword={() => setShowForgotPassword(true)}
-        />
-      ) : (
-        <RegistrationForm
-          onToggleForm={() => setIsLogin(true)}
-          onRegisterSuccess={() => setIsLogin(true)}
-        />
-      )}
-    </AuthLayout>
+    <Suspense fallback={<PageLoader />}>
+      <AuthLayout>
+        {showForgotPassword ? (
+          <ForgotPasswordPage onBack={() => setShowForgotPassword(false)} />
+        ) : isLogin ? (
+          <LoginForm
+            onToggleForm={() => setIsLogin(false)}
+            onLoginSuccess={() => setIsAuthenticated(true)}
+            onForgotPassword={() => setShowForgotPassword(true)}
+          />
+        ) : (
+          <RegistrationForm
+            onToggleForm={() => setIsLogin(true)}
+            onRegisterSuccess={() => setIsLogin(true)}
+          />
+        )}
+      </AuthLayout>
+    </Suspense>
   );
 }
 
