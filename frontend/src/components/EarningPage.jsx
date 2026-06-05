@@ -2974,13 +2974,8 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
       {/* Responsive Container */}
       <div className="w-full max-w-4xl mx-auto bg-white dark:bg-slate-900 md:rounded-3xl shadow-xl overflow-hidden border border-slate-200 dark:border-slate-800 mt-2">
 
-        {/* Top Header - styled AdMob banner on top of GET VPN & MY WALLET buttons */}
+        {/* Top Header - GET VPN & MY WALLET buttons */}
         <div className="bg-[#f5f3ff] dark:bg-slate-900 text-slate-800 dark:text-white px-4 py-4 sm:px-6 flex flex-col items-center gap-4 border-b border-purple-100 dark:border-slate-800">
-            {/* Banner Ad directly above the buttons */}
-            <div className="w-full max-w-md">
-              <BannerAd globalSettings={globalSettings} />
-            </div>
-
             {/* Buttons Row */}
             <div className="flex justify-center items-center gap-4 w-full max-w-md">
               <button

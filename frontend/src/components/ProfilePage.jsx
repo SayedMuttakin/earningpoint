@@ -259,11 +259,6 @@ const ProfilePage = ({
       <PullToRefresh onRefresh={handleRefresh} refreshing={refreshing}>
         <div className="w-full bg-slate-50 dark:bg-slate-950 min-h-screen pb-28 flex flex-col relative select-none">
           
-          {/* Banner Ad */}
-          <div className="sticky top-16 z-30 w-full bg-transparent pb-2 pt-2 border-b border-indigo-100/10 dark:border-slate-850/10 shadow-none px-4">
-            <BannerAd globalSettings={globalSettings} />
-          </div>
-
           {/* Top Transparent Header Section */}
           <div className="pt-6 px-4">
             <div className="max-w-md mx-auto w-full space-y-4">

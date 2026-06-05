@@ -57,13 +57,6 @@ const CartPage = ({ onBuyNow }) => {
   return (
     <PullToRefresh onRefresh={handleRefresh} refreshing={refreshing}>
       <div className="bg-[#F9FAFB] min-h-screen flex flex-col">
-        {/* Sticky Header for Ad */}
-        <div className="sticky top-[132px] sm:top-[140px] md:top-16 z-30 flex flex-col w-full bg-[#F9FAFB] pb-2 border-b border-slate-200 shadow-sm">
-          <div className="bg-[#F9FAFB] pt-2 px-2 sm:px-0">
-            <BannerAd globalSettings={globalSettings} />
-          </div>
-        </div>
-
         <div className="max-w-[1200px] mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 w-full">
           {/* Header */}
           <div className="text-center mb-8 relative">
