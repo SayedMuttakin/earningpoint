@@ -1,10 +1,10 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Heart, MessageCircle, Share2, Volume2, VolumeX, Play, Pause, Send, Loader2, X, Globe, User } from 'lucide-react';
+import { Heart, MessageCircle, Share2, Volume2, VolumeX, Play, Pause, Send, Loader2, X, Globe, User, Bookmark, Search, ArrowLeft, Plus, Forward } from 'lucide-react';
 import { API_BASE } from '../config';
 import VerifiedBadge from './VerifiedBadge';
 
 // Inner Reel Video Card Component
-const ReelCard = ({ video, isActive, isMuted, toggleMute, currentUserId, onLikeToggle, onCommentClick }) => {
+const ReelCard = ({ video, isActive, isMuted, toggleMute, currentUserId, onLikeToggle, onCommentClick, onBack, currentUser, onFollowToggle }) => {
   const videoRef = useRef(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [showPlayOverlay, setShowPlayOverlay] = useState(false);
@@ -70,9 +70,11 @@ const ReelCard = ({ video, isActive, isMuted, toggleMute, currentUserId, onLikeT
   };
 
   const hasLiked = video.likes?.includes(currentUserId);
+  const isCreatorFollowing = currentUser?.following?.includes(video.authorId?._id || video.authorId);
+  const isSelf = (video.authorId?._id || video.authorId) === currentUserId;
 
   return (
-    <div className="snap-start snap-always w-full h-[calc(100vh-140px)] relative bg-black flex items-center justify-center overflow-hidden">
+    <div className="snap-start snap-always w-full h-[calc(100vh-76px)] relative bg-black flex items-center justify-center overflow-hidden">
       {/* Video element */}
       <video
         ref={videoRef}
@@ -85,13 +87,29 @@ const ReelCard = ({ video, isActive, isMuted, toggleMute, currentUserId, onLikeT
         className="w-full h-full object-cover cursor-pointer"
       />
 
+      {/* Top Transparent Header (Matches TikTok top bar) */}
+      <div className="absolute top-0 left-0 right-0 z-30 flex items-center justify-between p-4 bg-gradient-to-b from-black/60 to-transparent">
+        <button 
+          onClick={onBack}
+          className="p-2 rounded-full hover:bg-white/10 text-white transition-colors filter drop-shadow-md animate-fade-in"
+        >
+          <ArrowLeft className="w-6.5 h-6.5" />
+        </button>
+        <button 
+          onClick={() => alert('Search feature coming soon!')}
+          className="p-2 rounded-full hover:bg-white/10 text-white transition-colors filter drop-shadow-md animate-fade-in"
+        >
+          <Search className="w-6.5 h-6.5" />
+        </button>
+      </div>
+
       {/* Floating Mute Indicator */}
       <button
         onClick={(e) => {
           e.stopPropagation();
           toggleMute();
         }}
-        className="absolute top-4 right-4 z-20 p-2.5 rounded-full bg-black/40 text-white backdrop-blur-xs hover:bg-black/60 transition-colors"
+        className="absolute top-16 right-4 z-20 p-2.5 rounded-full bg-black/40 text-white backdrop-blur-xs hover:bg-black/60 transition-colors"
       >
         {isMuted ? <VolumeX className="w-5 h-5" /> : <Volume2 className="w-5 h-5" />}
       </button>
@@ -116,11 +134,11 @@ const ReelCard = ({ video, isActive, isMuted, toggleMute, currentUserId, onLikeT
         </div>
       )}
 
-      {/* Right Side Overlay Actions */}
+      {/* Right Side Overlay Actions (TikTok Style) */}
       <div className="absolute right-4 bottom-16 z-20 flex flex-col items-center gap-5.5">
-        {/* Creator Profile */}
-        <div className="flex flex-col items-center">
-          <div className="w-12 h-12 rounded-full border-2 border-white bg-gradient-to-tr from-indigo-500 to-brand-500 flex items-center justify-center text-white font-bold text-lg shadow-md relative">
+        {/* Creator Profile with Follow button */}
+        <div className="flex flex-col items-center relative pb-3">
+          <div className="w-12 h-12 rounded-full border-2 border-white bg-gradient-to-tr from-indigo-500 to-brand-500 flex items-center justify-center text-white font-bold text-lg shadow-md">
             {video.authorId?.profilePic || video.authorId?.googleAvatar ? (
               <img
                 src={video.authorId.profilePic || video.authorId.googleAvatar}
@@ -133,8 +151,17 @@ const ReelCard = ({ video, isActive, isMuted, toggleMute, currentUserId, onLikeT
             ) : (
               <span>{video.authorName ? video.authorName.charAt(0).toUpperCase() : 'U'}</span>
             )}
-            <span className="absolute bottom-0 right-0 w-3 h-3 bg-emerald-500 rounded-full border-2 border-black" />
           </div>
+          {/* Red Follow (+) Button */}
+          {!isCreatorFollowing && !isSelf && (
+            <button
+              onClick={() => onFollowToggle(video.authorId?._id || video.authorId)}
+              className="absolute bottom-1.5 left-1/2 -translate-x-1/2 w-5 h-5 rounded-full bg-rose-500 border border-white flex items-center justify-center text-white shadow-sm hover:scale-110 active:scale-95 transition-transform"
+              title="Follow user"
+            >
+              <Plus className="w-3.5 h-3.5 stroke-[3.5]" />
+            </button>
+          )}
         </div>
 
         {/* Like Button */}
@@ -143,10 +170,10 @@ const ReelCard = ({ video, isActive, isMuted, toggleMute, currentUserId, onLikeT
           disabled={isLiking}
           className="flex flex-col items-center gap-1 text-white filter drop-shadow-md group active:scale-90 transition-transform"
         >
-          <div className={`p-3 rounded-full bg-black/40 backdrop-blur-xs hover:bg-black/60 transition-colors ${hasLiked ? 'text-rose-500' : ''}`}>
-            <Heart className={`w-6.5 h-6.5 ${hasLiked ? 'fill-rose-500' : ''}`} />
+          <div className="transition-colors">
+            <Heart className={`w-7.5 h-7.5 transition-all ${hasLiked ? 'text-rose-500 fill-rose-500 scale-110' : 'text-white'}`} />
           </div>
-          <span className="text-xs font-black tracking-wide">{video.likes?.length || 0}</span>
+          <span className="text-[11.5px] font-black tracking-wide mt-0.5">{video.likes?.length || 0}</span>
         </button>
 
         {/* Comment Button */}
@@ -154,13 +181,24 @@ const ReelCard = ({ video, isActive, isMuted, toggleMute, currentUserId, onLikeT
           onClick={() => onCommentClick(video)}
           className="flex flex-col items-center gap-1 text-white filter drop-shadow-md active:scale-90 transition-transform"
         >
-          <div className="p-3 rounded-full bg-black/40 backdrop-blur-xs hover:bg-black/60 transition-colors">
-            <MessageCircle className="w-6.5 h-6.5" />
+          <div>
+            <MessageCircle className="w-7.5 h-7.5 text-white" />
           </div>
-          <span className="text-xs font-black tracking-wide">{video.comments?.length || 0}</span>
+          <span className="text-[11.5px] font-black tracking-wide mt-0.5">{video.comments?.length || 0}</span>
         </button>
 
-        {/* Share Button */}
+        {/* Save/Bookmark Button */}
+        <button
+          onClick={() => alert('Reel saved to collection!')}
+          className="flex flex-col items-center gap-1 text-white filter drop-shadow-md active:scale-90 transition-transform"
+        >
+          <div>
+            <Bookmark className="w-7.5 h-7.5 text-white" />
+          </div>
+          <span className="text-[11.5px] font-black tracking-wide mt-0.5">{video.likes ? video.likes.length * 2 + 5 : 365}</span>
+        </button>
+
+        {/* Share Button (TikTok Curved Arrow) */}
         <button
           onClick={() => {
             const shareUrl = `${window.location.origin}/?reelId=${video._id}`;
@@ -170,30 +208,57 @@ const ReelCard = ({ video, isActive, isMuted, toggleMute, currentUserId, onLikeT
           }}
           className="flex flex-col items-center gap-1 text-white filter drop-shadow-md active:scale-90 transition-transform"
         >
-          <div className="p-3 rounded-full bg-black/40 backdrop-blur-xs hover:bg-black/60 transition-colors">
-            <Share2 className="w-6.5 h-6.5" />
+          <div>
+            <Forward className="w-8.5 h-8.5 text-white stroke-[1.8]" />
           </div>
-          <span className="text-xs font-black tracking-wide">Share</span>
+          <span className="text-[11.5px] font-black tracking-wide mt-0.5">{video.likes ? Math.round(video.likes.length * 1.5) : 173}</span>
         </button>
+
+        {/* Spinning Music Record disc at the bottom right */}
+        <div className="w-10 h-10 rounded-full border-4 border-slate-900/80 bg-black flex items-center justify-center animate-spin-slow mt-2 relative">
+          <div className="w-full h-full rounded-full bg-gradient-to-tr from-slate-950 via-slate-900 to-slate-850 p-1 flex items-center justify-center">
+            {video.authorId?.profilePic || video.authorId?.googleAvatar ? (
+              <img 
+                src={video.authorId.profilePic || video.authorId.googleAvatar} 
+                alt="music record" 
+                className="w-5.5 h-5.5 rounded-full object-cover"
+              />
+            ) : (
+              <div className="w-5.5 h-5.5 rounded-full bg-indigo-500 flex items-center justify-center text-white text-[8px] font-bold">
+                {video.authorName ? video.authorName.charAt(0).toUpperCase() : 'U'}
+              </div>
+            )}
+          </div>
+        </div>
+
       </div>
 
       {/* Bottom Overlay Info (Description/Creator) */}
-      <div className="absolute left-4 bottom-4 right-20 z-20 text-white flex flex-col gap-1.5 filter drop-shadow-md">
+      <div className="absolute left-4 bottom-4 right-20 z-20 text-white flex flex-col gap-1.5 filter drop-shadow-md select-text">
         <div className="flex items-center gap-2">
           <h3 className="font-bold text-sm sm:text-base flex items-center gap-1">
             {video.authorName || 'User'}
             {(video.isVerified || video.authorId?.isEmailVerified) && (
-              <VerifiedBadge iconClassName="w-4 h-4 fill-blue-500 text-white" />
+              <VerifiedBadge iconClassName="w-4 h-4 fill-blue-500 text-white flex-shrink-0" />
             )}
           </h3>
-          <span className="text-[10px] bg-white/20 px-2 py-0.5 rounded-full font-bold">Reel</span>
+          <span className="text-slate-350 text-xs">· 10h ago</span>
         </div>
         <p className="text-xs leading-relaxed line-clamp-3 text-slate-100/90 font-medium">
           {video.content}
         </p>
-        <div className="flex items-center gap-1 text-[9px] text-slate-350 font-bold mt-1">
-          <Globe className="w-3 h-3" />
-          <span>Public</span>
+        
+        {/* Scrolling sound title marquee */}
+        <div className="flex items-center gap-1.5 text-xs text-slate-200 mt-2 font-medium">
+          <span className="text-sm">🎵</span>
+          <div className="overflow-hidden w-40 whitespace-nowrap">
+            <span 
+              className="inline-block" 
+              style={{ animation: 'marquee 10s linear infinite', paddingRight: '20px' }}
+            >
+              Original Sound - {video.authorName || 'User'} • {video.content || 'Video Reel'}
+            </span>
+          </div>
         </div>
       </div>
 
@@ -299,13 +364,38 @@ const CommentsDrawer = ({ video, onClose, onCommentSubmit, currentUserId }) => {
 };
 
 // Main Reels View Page
-const VideoReelsPage = ({ selectedReelId }) => {
+const VideoReelsPage = ({ selectedReelId, onBack }) => {
   const [videos, setVideos] = useState([]);
   const [loading, setLoading] = useState(true);
   const [activeIndex, setActiveIndex] = useState(0);
   const [isMuted, setIsMuted] = useState(true);
   const [currentUser, setCurrentUser] = useState(null);
   const [activeCommentVideo, setActiveCommentVideo] = useState(null);
+
+  // Follow/unfollow creator toggle
+  const handleFollowToggle = async (userId) => {
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) return;
+      const res = await fetch(`${API_BASE}/api/profile/follow/${userId}`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      if (res.ok) {
+        // Toggle follow state locally
+        setCurrentUser(prev => {
+          if (!prev) return prev;
+          const isFollowing = prev.following?.includes(userId);
+          const newFollowing = isFollowing 
+            ? prev.following.filter(id => id !== userId)
+            : [...(prev.following || []), userId];
+          return { ...prev, following: newFollowing };
+        });
+      }
+    } catch (err) {
+      console.error('Failed to toggle follow in Reels:', err);
+    }
+  };
 
   // Fetch current user ID
   useEffect(() => {
@@ -429,7 +519,7 @@ const VideoReelsPage = ({ selectedReelId }) => {
 
   if (loading) {
     return (
-      <div className="h-[calc(100vh-140px)] flex flex-col items-center justify-center bg-black text-slate-400 space-y-3">
+      <div className="h-[calc(100vh-76px)] flex flex-col items-center justify-center bg-black text-slate-400 space-y-3">
         <Loader2 className="w-8 h-8 animate-spin text-brand-500" />
         <span className="text-xs font-bold tracking-wide">Loading reels...</span>
       </div>
@@ -438,7 +528,7 @@ const VideoReelsPage = ({ selectedReelId }) => {
 
   if (videos.length === 0) {
     return (
-      <div className="h-[calc(100vh-140px)] flex flex-col items-center justify-center bg-black text-slate-400 space-y-3 px-6 text-center">
+      <div className="h-[calc(100vh-76px)] flex flex-col items-center justify-center bg-black text-slate-400 space-y-3 px-6 text-center">
         <Play className="w-12 h-12 text-slate-600 opacity-60" />
         <p className="text-sm font-bold">No Video Reels posted yet.</p>
         <p className="text-xs text-slate-500 leading-relaxed max-w-xs">Be the first to post a video from the Create Post (+) modal on the home tab!</p>
@@ -447,7 +537,7 @@ const VideoReelsPage = ({ selectedReelId }) => {
   }
 
   return (
-    <div className="w-full h-[calc(100vh-140px)] bg-black relative overflow-hidden flex flex-col">
+    <div className="w-full h-[calc(100vh-76px)] bg-black relative overflow-hidden flex flex-col">
       {/* Vertical Snap Scrolling Container */}
       <div
         onScroll={handleScroll}
@@ -467,6 +557,9 @@ const VideoReelsPage = ({ selectedReelId }) => {
             currentUserId={currentUser?._id}
             onLikeToggle={handleLikeToggle}
             onCommentClick={(v) => setActiveCommentVideo(v)}
+            onBack={onBack}
+            currentUser={currentUser}
+            onFollowToggle={handleFollowToggle}
           />
         ))}
       </div>

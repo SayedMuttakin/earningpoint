@@ -235,55 +235,24 @@ const ProfilePage = ({
     return count;
   };
 
-  // Menu items grouped into clean mockup list items
-  const menuGroup1 = [
+  // Flat menu items listing exactly like mockup and keeping all original options
+  const allMenuItems = [
     { icon: FileText, label: 'My Posts', color: 'bg-purple-100 dark:bg-purple-950/40 text-[#7C3AED] dark:text-purple-400', action: () => alert('Your community posts are listed on the Home page feed!') },
     { icon: Heart, label: 'Liked Posts', color: 'bg-pink-100 dark:bg-pink-950/40 text-pink-500 dark:text-pink-400', action: () => alert('Coming soon!') },
     { icon: Bookmark, label: 'Saved Posts', color: 'bg-blue-100 dark:bg-blue-950/40 text-blue-500 dark:text-blue-400', action: () => alert('Coming soon!') },
-    { icon: Wallet, label: 'My Wallet', color: 'bg-emerald-100 dark:bg-emerald-950/40 text-emerald-500 dark:text-emerald-400', value: `৳ ${userBalance.toFixed(2)}`, action: onTransactionsClick },
-  ];
-
-  const menuGroup2 = [
-    { icon: Users, label: 'My Referrals', color: 'bg-indigo-105 dark:bg-indigo-950/40 text-indigo-500 dark:text-indigo-400', action: onReferralsClick },
+    { icon: Wallet, label: 'My Wallet', color: 'bg-emerald-100 dark:bg-emerald-950/40 text-emerald-500 dark:text-emerald-400', value: `৳ ${userBalance.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`, action: onTransactionsClick },
+    { icon: Users, label: 'My Referrals', color: 'bg-indigo-100 dark:bg-indigo-950/40 text-indigo-500 dark:text-indigo-400', action: onReferralsClick },
     { icon: Trophy, label: 'Leaderboard', color: 'bg-amber-100 dark:bg-amber-950/40 text-amber-500 dark:text-amber-400', action: onLeaderboardClick },
-    { icon: History, label: 'Transaction History', color: 'bg-slate-100 dark:bg-slate-800 text-slate-550 dark:text-slate-400', action: onTransactionsClick },
-  ];
-
-  const menuGroup3 = [
+    { icon: History, label: 'Transaction History', color: 'bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400', action: onTransactionsClick },
     { icon: ShieldCheck, label: 'Verify Account', color: 'bg-blue-100 dark:bg-blue-950/40 text-blue-500 dark:text-blue-400', action: () => setShowEmailVerifyModal(true) },
     { icon: Lock, label: 'Change Password', color: 'bg-rose-100 dark:bg-rose-950/40 text-rose-500 dark:text-rose-450', action: onPasswordClick },
     { icon: Globe, label: 'Language', color: 'bg-teal-100 dark:bg-teal-950/40 text-teal-500 dark:text-teal-400', action: onLanguageClick },
     { icon: Bell, label: 'Notifications', color: 'bg-orange-100 dark:bg-orange-950/40 text-orange-500 dark:text-orange-400', action: onNotificationClick },
-    { icon: Shield, label: 'Privacy & Security Settings', color: 'bg-indigo-100 dark:bg-indigo-950/40 text-indigo-500 dark:text-indigo-400', action: onSettingsClick }
+    { icon: Shield, label: 'Privacy & Security Settings', color: 'bg-indigo-100 dark:bg-indigo-950/40 text-indigo-500 dark:text-indigo-400', action: onSettingsClick },
+    { icon: HeadphonesIcon, label: 'Contact Support', color: 'bg-cyan-50 dark:bg-cyan-950/40 text-cyan-500 dark:text-cyan-400', action: onSupportClick },
+    { icon: Moon, label: 'Dark Mode', color: 'bg-indigo-50 dark:bg-indigo-950/40 text-indigo-650 dark:text-indigo-400', isToggle: true, action: onToggleDarkMode },
+    { icon: Trash2, label: 'Delete Account', color: 'bg-rose-50 dark:bg-rose-950/40 text-rose-500', isDelete: true, action: onDeleteClick }
   ];
-
-  const MenuSectionList = ({ items }) => (
-    <div className="space-y-2.5 w-full">
-      {items.map((item, idx) => (
-        <button 
-          key={idx}
-          onClick={item.action}
-          className="w-full flex items-center justify-between p-4 bg-white dark:bg-slate-900 border border-slate-150/30 dark:border-slate-800/80 rounded-2xl shadow-2xs hover:scale-[1.01] active:scale-[0.99] transition-all duration-200 text-left"
-        >
-          <div className="flex items-center gap-3.5 min-w-0">
-            <div className={`w-10 h-10 flex-shrink-0 rounded-full flex items-center justify-center ${item.color} shadow-3xs`}>
-              <item.icon className="w-5 h-5" strokeWidth={2.4} />
-            </div>
-            <span className="text-slate-850 dark:text-slate-200 font-black text-[15px] truncate">{item.label}</span>
-          </div>
-          
-          <div className="flex items-center gap-1.5 flex-shrink-0">
-            {item.value && (
-              <span className="text-xs sm:text-sm font-black text-[#7C3AED] dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-950/40 px-3 py-1 rounded-xl">
-                {item.value}
-              </span>
-            )}
-            <ChevronRight className="w-4.5 h-4.5 text-slate-400" />
-          </div>
-        </button>
-      ))}
-    </div>
-  );
 
   return (
     <>
@@ -291,13 +260,13 @@ const ProfilePage = ({
         <div className="w-full bg-slate-50 dark:bg-slate-950 min-h-screen pb-28 flex flex-col relative select-none">
           
           {/* Banner Ad */}
-          <div className="sticky top-16 z-30 w-full bg-slate-50 dark:bg-slate-950 pb-2 pt-2 border-b border-slate-200 dark:border-slate-800 shadow-sm px-4">
+          <div className="sticky top-16 z-30 w-full bg-transparent pb-2 pt-2 border-b border-indigo-100/10 dark:border-slate-850/10 shadow-none px-4">
             <BannerAd globalSettings={globalSettings} />
           </div>
 
-          {/* Top Gradient Header Section */}
-          <div className="bg-gradient-to-b from-blue-400 via-indigo-150 to-slate-50 dark:from-slate-900 dark:via-slate-900/60 dark:to-slate-950 pb-8 pt-6 rounded-b-[2.5rem] px-4 shadow-sm">
-            <div className="max-w-md mx-auto w-full space-y-6">
+          {/* Top Transparent Header Section */}
+          <div className="pt-6 px-4">
+            <div className="max-w-md mx-auto w-full space-y-4">
               
               {/* Header Toolbar (Matches mockup top bar) */}
               <div className="flex items-center justify-between relative shrink-0">
@@ -381,10 +350,10 @@ const ProfilePage = ({
             </div>
           </div>
 
-          <div className="max-w-md mx-auto px-4 mt-6 w-full space-y-6">
+          <div className="max-w-md mx-auto px-4 mt-4 w-full space-y-4">
             
             {/* Profile Statistics counts card */}
-            <div className="bg-white dark:bg-slate-900 border border-slate-150/30 dark:border-slate-800 rounded-3xl p-4 flex justify-around text-center shadow-xs w-full">
+            <div className="bg-white dark:bg-slate-900 rounded-3xl p-4 flex justify-around text-center shadow-xs w-full">
               <div className="flex-1">
                 <User strokeWidth={2.4} className="w-5.5 h-5.5 text-indigo-500 mx-auto" />
                 <span className="text-base font-black text-slate-850 dark:text-white block mt-1.5">{postsCount}</span>
@@ -428,57 +397,55 @@ const ProfilePage = ({
               </button>
             </div>
 
-            {/* Redesigned Menu sections */}
-            <div className="space-y-3.5 w-full">
-              <MenuSectionList items={menuGroup1} />
-              <MenuSectionList items={menuGroup2} />
-              <MenuSectionList items={menuGroup3} />
-              
-              {/* Contact Support Card */}
-              <button 
-                onClick={onSupportClick}
-                className="w-full flex items-center justify-between p-4 bg-white dark:bg-slate-900 border border-slate-150/30 dark:border-slate-800/80 rounded-2xl shadow-2xs hover:scale-[1.01] active:scale-[0.99] transition-all duration-200 text-left"
-              >
-                <div className="flex items-center gap-3.5 min-w-0">
-                  <div className="w-10 h-10 flex-shrink-0 rounded-full flex items-center justify-center bg-cyan-50 dark:bg-cyan-950/40 text-cyan-500 dark:text-cyan-400 shadow-2xs">
-                    <HeadphonesIcon className="w-5 h-5" strokeWidth={2.4} />
-                  </div>
-                  <span className="text-slate-850 dark:text-slate-200 font-bold text-sm sm:text-[15px] truncate">Contact Support</span>
-                </div>
-                <ChevronRight className="w-4.5 h-4.5 text-slate-400" />
-              </button>
+            {/* Redesigned Menu list */}
+            <div className="bg-white dark:bg-slate-900 rounded-3xl shadow-xs overflow-hidden flex flex-col w-full">
+              {allMenuItems.map((item, idx) => {
+                if (item.isToggle) {
+                  return (
+                    <div 
+                      key={idx} 
+                      className="w-full flex items-center justify-between p-4 border-b border-slate-100 dark:border-slate-800/60 last:border-b-0"
+                    >
+                      <div className="flex items-center gap-3.5 min-w-0">
+                        <div className={`w-10 h-10 flex-shrink-0 rounded-full flex items-center justify-center ${item.color} shadow-3xs`}>
+                          <item.icon className="w-5 h-5" strokeWidth={2.4} />
+                        </div>
+                        <span className="text-slate-850 dark:text-slate-200 font-black text-[15px] truncate">{item.label}</span>
+                      </div>
+                      <button 
+                        onClick={item.action}
+                        className={`relative inline-flex h-7 w-12 items-center rounded-full transition-colors duration-300 focus:outline-none ${darkMode ? 'bg-[#7C3AED]' : 'bg-slate-250 dark:bg-slate-800'}`}
+                      >
+                        <span className={`inline-block h-5 w-5 transform rounded-full bg-white shadow-md transition-transform duration-300 ${darkMode ? 'translate-x-6' : 'translate-x-1'}`} />
+                      </button>
+                    </div>
+                  );
+                }
 
-              {/* Dark Mode toggle card */}
-              <div className="w-full flex items-center justify-between p-4 bg-white dark:bg-slate-900 border border-slate-150/30 dark:border-slate-800/80 rounded-2xl shadow-2xs">
-                <div className="flex items-center gap-3.5 min-w-0">
-                  <div className="w-10 h-10 flex-shrink-0 rounded-full flex items-center justify-center bg-indigo-50 dark:bg-indigo-950/40 text-indigo-650 dark:text-indigo-400 shadow-2xs">
-                    <Moon className="w-5 h-5" strokeWidth={2.4} />
-                  </div>
-                  <span className="text-slate-850 dark:text-slate-200 font-bold text-sm sm:text-[15px] truncate">Dark Mode</span>
-                </div>
-                
-                {/* Slider Toggle */}
-                <button 
-                  onClick={onToggleDarkMode}
-                  className={`relative inline-flex h-7 w-12 items-center rounded-full transition-colors duration-300 focus:outline-none ${darkMode ? 'bg-[#7C3AED]' : 'bg-slate-250 dark:bg-slate-800'}`}
-                >
-                  <span className={`inline-block h-5 w-5 transform rounded-full bg-white shadow-md transition-transform duration-300 ${darkMode ? 'translate-x-6' : 'translate-x-1'}`} />
-                </button>
-              </div>
-
-              {/* Delete Account Card */}
-              <button 
-                onClick={onDeleteClick}
-                className="w-full flex items-center justify-between p-4 bg-white dark:bg-slate-900 border border-slate-150/30 dark:border-slate-800/80 rounded-2xl shadow-2xs hover:scale-[1.01] active:scale-[0.99] transition-all duration-200 text-left"
-              >
-                <div className="flex items-center gap-3.5 min-w-0">
-                  <div className="w-10 h-10 flex-shrink-0 rounded-full flex items-center justify-center bg-rose-50 dark:bg-rose-950/40 text-rose-500 shadow-2xs">
-                    <Trash2 className="w-5 h-5" strokeWidth={2.4} />
-                  </div>
-                  <span className="text-rose-600 dark:text-rose-450 font-bold text-sm sm:text-[15px] truncate">Delete Account</span>
-                </div>
-                <ChevronRight className="w-4.5 h-4.5 text-[#f43f5e]" />
-              </button>
+                return (
+                  <button 
+                    key={idx}
+                    onClick={item.action}
+                    className="w-full flex items-center justify-between p-4 hover:bg-slate-50/50 dark:hover:bg-slate-800/30 border-b border-slate-100 dark:border-slate-800/60 last:border-b-0 transition-colors text-left"
+                  >
+                    <div className="flex items-center gap-3.5 min-w-0">
+                      <div className={`w-10 h-10 flex-shrink-0 rounded-full flex items-center justify-center ${item.color} shadow-3xs`}>
+                        <item.icon className="w-5 h-5" strokeWidth={2.4} />
+                      </div>
+                      <span className={`font-black text-[15px] truncate ${item.isDelete ? 'text-rose-600 dark:text-rose-450' : 'text-slate-850 dark:text-slate-200'}`}>{item.label}</span>
+                    </div>
+                    
+                    <div className="flex items-center gap-1.5 flex-shrink-0">
+                      {item.value && (
+                        <span className="text-xs sm:text-sm font-black text-[#7C3AED] dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-950/40 px-3 py-1 rounded-xl">
+                          {item.value}
+                        </span>
+                      )}
+                      <ChevronRight className={`w-4.5 h-4.5 ${item.isDelete ? 'text-[#f43f5e]' : 'text-slate-400'}`} />
+                    </div>
+                  </button>
+                );
+              })}
             </div>
           </div>
         </div>

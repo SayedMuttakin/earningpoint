@@ -170,7 +170,7 @@ function App() {
           />
         )}
         {activeTab === 'Video' && (
-          <VideoReelsPage selectedReelId={selectedReelId} />
+          <VideoReelsPage selectedReelId={selectedReelId} onBack={() => setActiveTab('Home')} />
         )}
         {activeTab === 'Cart' && <CartPage onBuyNow={handleBuyNow} />}
         {activeTab === 'Checkout' && <CheckoutPage product={selectedProduct} onBack={() => setActiveTab('Cart')} onSuccess={(method) => { setSelectedPaymentMethod(method); setActiveTab('PaymentSuccess'); }} />}
