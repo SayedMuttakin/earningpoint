@@ -192,10 +192,10 @@ const ReelCard = ({ video, isActive, isMuted, toggleMute, currentUserId, onLikeT
               onFollowToggle(creatorId);
             }
           }}
-          className={`flex flex-col items-center relative pb-3 ${!isSelf ? 'cursor-pointer' : ''}`}
+          className={`flex flex-col items-center relative pb-3.5 ${!isSelf ? 'cursor-pointer' : ''}`}
           title={!isSelf ? (isCreatorFollowing ? 'Unfollow user' : 'Follow user') : ''}
         >
-          <div className="w-12 h-12 rounded-full border-2 border-white bg-gradient-to-tr from-indigo-500 to-brand-500 flex items-center justify-center text-white font-bold text-lg shadow-md overflow-hidden transition-transform active:scale-95">
+          <div className="w-13 h-13 rounded-full border-2 border-white bg-gradient-to-tr from-indigo-500 to-brand-500 flex items-center justify-center text-white font-bold text-lg shadow-md overflow-hidden transition-transform active:scale-95">
             {creatorAvatar && !avatarError ? (
               <img
                 src={creatorAvatar}
@@ -210,9 +210,9 @@ const ReelCard = ({ video, isActive, isMuted, toggleMute, currentUserId, onLikeT
           {/* Red Follow (+) Button */}
           {!isCreatorFollowing && !isSelf && (
             <div
-              className="absolute bottom-1.5 left-1/2 -translate-x-1/2 w-5 h-5 rounded-full bg-rose-500 border border-white flex items-center justify-center text-white shadow-sm pointer-events-none"
+              className="absolute -bottom-0.5 left-1/2 -translate-x-1/2 w-6 h-6 rounded-full bg-rose-500 border-2 border-white flex items-center justify-center text-white shadow-md pointer-events-none animate-pulse"
             >
-              <Plus className="w-3.5 h-3.5 stroke-[3.5]" />
+              <Plus className="w-4 h-4 stroke-[3.8]" />
             </div>
           )}
         </div>
@@ -221,34 +221,34 @@ const ReelCard = ({ video, isActive, isMuted, toggleMute, currentUserId, onLikeT
         <button
           onClick={triggerLike}
           disabled={isLiking}
-          className="flex flex-col items-center gap-1 text-white filter drop-shadow-md group active:scale-90 transition-transform"
+          className="flex flex-col items-center gap-0.5 text-white filter drop-shadow-md group active:scale-90 transition-transform"
         >
           <div className="transition-colors">
-            <Heart className={`w-7.5 h-7.5 transition-all ${hasLiked ? 'text-rose-500 fill-rose-500 scale-110' : 'text-white'}`} />
+            <Heart className={`w-9.5 h-9.5 transition-all ${hasLiked ? 'text-rose-500 fill-rose-500 scale-110' : 'text-white fill-white'}`} />
           </div>
-          <span className="text-[11.5px] font-black tracking-wide mt-0.5">{video.likes?.length || 0}</span>
+          <span className="text-xs font-bold mt-1 drop-shadow-md">{video.likes?.length || 0}</span>
         </button>
 
         {/* Comment Button */}
         <button
           onClick={() => onCommentClick(video)}
-          className="flex flex-col items-center gap-1 text-white filter drop-shadow-md active:scale-90 transition-transform"
+          className="flex flex-col items-center gap-0.5 text-white filter drop-shadow-md active:scale-90 transition-transform"
         >
           <div>
-            <MessageCircle className="w-7.5 h-7.5 text-white" />
+            <MessageCircle className="w-9.5 h-9.5 text-white fill-white" />
           </div>
-          <span className="text-[11.5px] font-black tracking-wide mt-0.5">{video.comments?.length || 0}</span>
+          <span className="text-xs font-bold mt-1 drop-shadow-md">{video.comments?.length || 0}</span>
         </button>
 
         {/* Save/Bookmark Button */}
         <button
           onClick={() => alert('Reel saved to collection!')}
-          className="flex flex-col items-center gap-1 text-white filter drop-shadow-md active:scale-90 transition-transform"
+          className="flex flex-col items-center gap-0.5 text-white filter drop-shadow-md active:scale-90 transition-transform"
         >
           <div>
-            <Bookmark className="w-7.5 h-7.5 text-white" />
+            <Bookmark className="w-9.5 h-9.5 text-white fill-white" />
           </div>
-          <span className="text-[11.5px] font-black tracking-wide mt-0.5">{video.likes ? video.likes.length * 2 + 5 : 365}</span>
+          <span className="text-xs font-bold mt-1 drop-shadow-md">{video.likes ? video.likes.length * 2 + 5 : 365}</span>
         </button>
 
         {/* Share Button (TikTok Curved Arrow) */}
@@ -259,12 +259,12 @@ const ReelCard = ({ video, isActive, isMuted, toggleMute, currentUserId, onLikeT
               alert('Reel link copied to clipboard!');
             });
           }}
-          className="flex flex-col items-center gap-1 text-white filter drop-shadow-md active:scale-90 transition-transform"
+          className="flex flex-col items-center gap-0.5 text-white filter drop-shadow-md active:scale-90 transition-transform"
         >
           <div>
-            <Forward className="w-8.5 h-8.5 text-white stroke-[1.8]" />
+            <Forward className="w-10.5 h-10.5 text-white fill-white" />
           </div>
-          <span className="text-[11.5px] font-black tracking-wide mt-0.5">{video.likes ? Math.round(video.likes.length * 1.5) : 173}</span>
+          <span className="text-xs font-bold mt-1 drop-shadow-md">{video.likes ? Math.round(video.likes.length * 1.5) : 173}</span>
         </button>
 
         {/* Spinning Music Record disc removed per user request */}
