@@ -178,6 +178,7 @@ function App() {
               setActiveTab={setActiveTab} 
               setSelectedNewsId={setSelectedNewsId}
               setActiveChatPartner={setActiveChatPartner}
+              setSelectedReelId={setSelectedReelId}
             />
           )}
           {activeTab === 'Video' && (
