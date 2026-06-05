@@ -25,17 +25,45 @@ const REAL_ADMOB_IDS = {
   appOpen: 'ca-app-pub-7161684117324999/6476945526'
 };
 
-// Toggle for Test Mode (Set to false for production)
-const USE_TEST_ADS = false;
+// Toggle for Test Mode (Set to false for production to default to REAL_ADMOB_IDS)
+const USE_TEST_ADS = true;
+
+let dynamicConfig = null;
 
 const getAdId = (type) => {
+  // Check if we have dynamic config from the database
+  if (dynamicConfig) {
+    const keyMap = {
+      banner: 'bannerAdUnitId',
+      interstitial: 'interstitialAdUnitId',
+      rewarded: 'rewardedAdUnitId',
+      rewarded_daily: 'rewardedAdUnitId',
+      rewarded_videos: 'rewardedAdUnitId',
+      rewarded_view_ads: 'rewardedAdUnitId',
+      appOpen: 'appOpenAdUnitId'
+    };
+    const configKey = keyMap[type];
+    const dynamicId = dynamicConfig[configKey];
+    if (dynamicId && dynamicId.trim() !== '') {
+      return dynamicId;
+    }
+  }
+
+  // Fall back to test ads if in test mode
   if (USE_TEST_ADS) {
     return TEST_ADMOB_IDS[type] || TEST_ADMOB_IDS.banner;
   }
-  return REAL_ADMOB_IDS[type] || REAL_ADMOB_IDS.interstitial;
+  
+  // Otherwise return hardcoded real ID or fall back to test ID if not declared
+  return REAL_ADMOB_IDS[type] || TEST_ADMOB_IDS[type] || TEST_ADMOB_IDS.banner;
 };
 
 export const AdMobService = {
+  setConfig(config) {
+    dynamicConfig = config;
+    console.log('[AdMob] Dynamic config loaded:', config);
+  },
+
   async showBanner() {
     if (!Capacitor.isNativePlatform()) return;
     try {

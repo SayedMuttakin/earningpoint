@@ -58,6 +58,17 @@ function App() {
           testingDevices: ['2077ef9a63d2b398840261c8221a0c9b'],
         });
         console.log('AdMob Initialized');
+        
+        // Fetch global settings dynamically to retrieve current AdMob configs
+        try {
+          const res = await fetch(`${API_BASE}/api/earning/settings`);
+          const settings = await res.json();
+          if (settings && settings.admobConfig) {
+            AdMobService.setConfig(settings.admobConfig);
+          }
+        } catch (settingsErr) {
+          console.error('Failed to load dynamic AdMob config:', settingsErr);
+        }
       } catch (err) {
         console.error('AdMob initialization failed:', err);
       }
