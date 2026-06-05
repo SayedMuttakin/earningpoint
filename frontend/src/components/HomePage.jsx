@@ -25,6 +25,22 @@ const formatRelativeTime = (dateStr) => {
   }
 };
 
+const safeLocalStorageSet = (key, value) => {
+  try {
+    localStorage.setItem(key, value);
+  } catch (e) {
+    console.warn(`[Local Storage] Failed to save key "${key}":`, e);
+    if (e.name === 'QuotaExceededError' || e.code === 22) {
+      try {
+        localStorage.removeItem('cached_feed_posts');
+        localStorage.removeItem('cached_news_posts');
+      } catch (innerErr) {
+        console.error('Failed to clear local storage items:', innerErr);
+      }
+    }
+  }
+};
+
 const BannerSection = ({ onStartEarning }) => {
   return (
     <div className="bg-gradient-to-r from-[#0d0728] via-[#120a3a] to-[#25106d] text-white rounded-3xl p-5 sm:p-6 shadow-md flex items-center justify-between relative overflow-hidden group select-none">
@@ -99,7 +115,7 @@ const CommentsDrawer = ({ post, onClose, onCommentSubmit, currentUserId }) => {
       <div className="absolute inset-0 bg-slate-950/60 backdrop-blur-xs" onClick={onClose} />
       
       {/* Drawer */}
-      <div className="relative z-10 w-full sm:max-w-md h-[65%] bg-white dark:bg-slate-900 rounded-t-[2rem] shadow-2xl flex flex-col animate-fade-in-up border-t border-slate-150 dark:border-slate-800 mb-[76px] sm:mb-0">
+      <div className="relative z-10 w-full sm:max-w-md h-[48%] bg-white dark:bg-slate-900 rounded-t-[2rem] shadow-2xl flex flex-col animate-fade-in-up border-t border-slate-150 dark:border-slate-800 mb-[76px] sm:mb-0">
         {/* Drag handle */}
         <div className="w-12 h-1 bg-slate-250 dark:bg-slate-750 rounded-full mx-auto my-3 flex-shrink-0" />
 
@@ -591,7 +607,7 @@ const HomePage = ({ setActiveTab, setSelectedNewsId, setActiveChatPartner, setSe
         if (userRes.ok) {
           const userData = await userRes.json();
           setCurrentUser(userData);
-          localStorage.setItem('cached_current_user', JSON.stringify(userData));
+          safeLocalStorageSet('cached_current_user', JSON.stringify(userData));
         }
       } catch (err) {
         console.error('Failed to fetch user profile in Home:', err);
@@ -604,7 +620,7 @@ const HomePage = ({ setActiveTab, setSelectedNewsId, setActiveChatPartner, setSe
         // updates (where authorId is null)
         const updates = data.filter(p => !p.authorId);
         setNewsPosts(updates);
-        localStorage.setItem('cached_news_posts', JSON.stringify(updates));
+        safeLocalStorageSet('cached_news_posts', JSON.stringify(updates));
       }
 
       // 2. Fetch custom feed posts (Community posts)
@@ -614,7 +630,7 @@ const HomePage = ({ setActiveTab, setSelectedNewsId, setActiveChatPartner, setSe
       if (feedResponse.ok) {
         const feedData = await feedResponse.json();
         setFeedPosts(feedData);
-        localStorage.setItem('cached_feed_posts', JSON.stringify(feedData));
+        safeLocalStorageSet('cached_feed_posts', JSON.stringify(feedData));
       }
     } catch (err) {
       console.error('Failed to fetch home page feed:', err);
@@ -630,7 +646,7 @@ const HomePage = ({ setActiveTab, setSelectedNewsId, setActiveChatPartner, setSe
       if (response.ok) {
         const data = await response.json();
         setGlobalSettings(data);
-        localStorage.setItem('cached_global_settings', JSON.stringify(data));
+        safeLocalStorageSet('cached_global_settings', JSON.stringify(data));
       }
     } catch (err) {
       console.error('Failed to fetch settings:', err);
@@ -666,7 +682,7 @@ const HomePage = ({ setActiveTab, setSelectedNewsId, setActiveChatPartner, setSe
             }
             return post;
           });
-          localStorage.setItem('cached_feed_posts', JSON.stringify(updated));
+          safeLocalStorageSet('cached_feed_posts', JSON.stringify(updated));
           return updated;
         });
       }
@@ -702,7 +718,7 @@ const HomePage = ({ setActiveTab, setSelectedNewsId, setActiveChatPartner, setSe
             }
             return p;
           });
-          localStorage.setItem('cached_feed_posts', JSON.stringify(updated));
+          safeLocalStorageSet('cached_feed_posts', JSON.stringify(updated));
           return updated;
         });
       }
@@ -739,7 +755,7 @@ const HomePage = ({ setActiveTab, setSelectedNewsId, setActiveChatPartner, setSe
             }
             return p;
           });
-          localStorage.setItem('cached_feed_posts', JSON.stringify(updated));
+          safeLocalStorageSet('cached_feed_posts', JSON.stringify(updated));
           return updated;
         });
       }
