@@ -32,18 +32,21 @@ import { AdMob } from '@capacitor-community/admob';
 import { App as CapacitorApp } from '@capacitor/app';
 import { AdMobService } from './utils/admob';
 import MultiAdViewPage from './components/MultiAdViewPage';
+import VideoReelsPage from './components/VideoReelsPage';
 
 function App() {
-  // Check if URL has a password reset token (from email link)
+  // Check if URL has a password reset token (from email link) or reelId (from shared link)
   const urlParams = new URLSearchParams(window.location.search);
   const resetToken = urlParams.get('token');
+  const reelIdFromUrl = urlParams.get('reelId');
   const [resetPasswordToken, setResetPasswordToken] = useState(resetToken || null);
 
   const [showSplash, setShowSplash] = useState(true);
   const [showOnboarding, setShowOnboarding] = useState(() => !localStorage.getItem('hasSeenOnboarding'));
   const [isLogin, setIsLogin] = useState(true);
   const [isAuthenticated, setIsAuthenticated] = useState(() => !!localStorage.getItem('token'));
-  const [activeTab, setActiveTab] = useState('Home');
+  const [activeTab, setActiveTab] = useState(reelIdFromUrl ? 'Video' : 'Home');
+  const [selectedReelId, setSelectedReelId] = useState(reelIdFromUrl || null);
   const [showForgotPassword, setShowForgotPassword] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState('');
@@ -167,18 +170,7 @@ function App() {
           />
         )}
         {activeTab === 'Video' && (
-          <MultiAdViewPage 
-            config={{
-              key: 'videos',
-              name: 'Videos',
-              adType: 'rewarded',
-              coins: 25,
-              logo: 'https://img.icons8.com/color/96/youtube-play.png',
-              color: 'from-purple-400 to-pink-500'
-            }}
-            onClose={() => setActiveTab('Home')}
-            onCoinsEarned={() => {}}
-          />
+          <VideoReelsPage selectedReelId={selectedReelId} />
         )}
         {activeTab === 'Cart' && <CartPage onBuyNow={handleBuyNow} />}
         {activeTab === 'Checkout' && <CheckoutPage product={selectedProduct} onBack={() => setActiveTab('Cart')} onSuccess={(method) => { setSelectedPaymentMethod(method); setActiveTab('PaymentSuccess'); }} />}

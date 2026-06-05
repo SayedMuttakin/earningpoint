@@ -149,6 +149,7 @@ const HomePage = ({ setActiveTab, setSelectedNewsId, setActiveChatPartner }) => 
   const [newPostContent, setNewPostContent] = useState('');
   const [selectedImage, setSelectedImage] = useState(null);
   const [imagePreview, setImagePreview] = useState(null);
+  const [selectedFileType, setSelectedFileType] = useState('image'); // 'image' or 'video'
   const [postingLoading, setPostingLoading] = useState(false);
 
   // User Search Discovery States
@@ -300,6 +301,11 @@ const HomePage = ({ setActiveTab, setSelectedNewsId, setActiveChatPartner }) => 
     if (file) {
       setSelectedImage(file);
       setImagePreview(URL.createObjectURL(file));
+      if (file.type.startsWith('video/')) {
+        setSelectedFileType('video');
+      } else {
+        setSelectedFileType('image');
+      }
     }
   };
 
@@ -334,6 +340,7 @@ const HomePage = ({ setActiveTab, setSelectedNewsId, setActiveChatPartner }) => 
         setNewPostContent('');
         setSelectedImage(null);
         setImagePreview(null);
+        setSelectedFileType('image');
         setShowCreateModal(false);
       }
     } catch (err) {
@@ -519,10 +526,10 @@ const HomePage = ({ setActiveTab, setSelectedNewsId, setActiveChatPartner }) => 
                 <div className="flex items-center gap-3">
                   <label className="flex items-center gap-2 px-4.5 py-2.5 bg-indigo-50 dark:bg-indigo-950/40 border border-indigo-100/50 dark:border-indigo-900/30 text-[#7C3AED] hover:bg-indigo-100 dark:hover:bg-indigo-950/70 transition-colors rounded-xl text-xs font-black cursor-pointer active:scale-95">
                     <ImageIcon className="w-4 h-4" />
-                    Add Photo
+                    Add Photo/Video
                     <input 
                       type="file" 
-                      accept="image/*" 
+                      accept="image/*,video/*" 
                       onChange={handleImageChange} 
                       className="hidden" 
                     />
@@ -534,15 +541,20 @@ const HomePage = ({ setActiveTab, setSelectedNewsId, setActiveChatPartner }) => 
                   )}
                 </div>
 
-                {/* Preview Image */}
+                {/* Preview Image or Video */}
                 {imagePreview && (
                   <div className="relative rounded-2xl overflow-hidden border border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 max-h-[200px] w-fit">
-                    <img src={imagePreview} alt="Preview" className="h-full object-contain max-h-[200px]" />
+                    {selectedFileType === 'video' ? (
+                      <video src={imagePreview} controls className="h-full object-contain max-h-[200px]" />
+                    ) : (
+                      <img src={imagePreview} alt="Preview" className="h-full object-contain max-h-[200px]" />
+                    )}
                     <button 
                       type="button"
                       onClick={() => {
                         setSelectedImage(null);
                         setImagePreview(null);
+                        setSelectedFileType('image');
                       }}
                       className="absolute top-2 right-2 p-1 bg-black/60 hover:bg-black/85 text-white rounded-full transition-colors"
                     >

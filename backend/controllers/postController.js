@@ -7,8 +7,22 @@ const { createNotification } = require('./notificationController');
 // @access  Public
 exports.getPosts = async (req, res) => {
   try {
-    const posts = await Post.find().sort({ createdAt: -1 });
-    res.json(posts);
+    const posts = await Post.find().populate('authorId', 'name profilePic googleAvatar isEmailVerified').sort({ createdAt: -1 });
+    const mapped = posts.map(post => {
+      const postObj = post.toObject();
+      const authorObj = postObj.authorId;
+      return {
+        ...postObj,
+        authorId: authorObj ? authorObj._id.toString() : null,
+        authorDetails: authorObj ? {
+          name: authorObj.name,
+          profilePic: authorObj.profilePic,
+          googleAvatar: authorObj.googleAvatar,
+          isEmailVerified: authorObj.isEmailVerified
+        } : null
+      };
+    });
+    res.json(mapped);
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
@@ -19,11 +33,22 @@ exports.getPosts = async (req, res) => {
 // @access  Public
 exports.getPostById = async (req, res) => {
   try {
-    const post = await Post.findById(req.params.id);
+    const post = await Post.findById(req.params.id).populate('authorId', 'name profilePic googleAvatar isEmailVerified');
     if (!post) {
       return res.status(404).json({ message: 'Post not found' });
     }
-    res.json(post);
+    const postObj = post.toObject();
+    const authorObj = postObj.authorId;
+    res.json({
+      ...postObj,
+      authorId: authorObj ? authorObj._id.toString() : null,
+      authorDetails: authorObj ? {
+        name: authorObj.name,
+        profilePic: authorObj.profilePic,
+        googleAvatar: authorObj.googleAvatar,
+        isEmailVerified: authorObj.isEmailVerified
+      } : null
+    });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
@@ -34,7 +59,7 @@ exports.getPostById = async (req, res) => {
 // @access  Private/Admin
 exports.createPost = async (req, res) => {
   try {
-    const { content, title, image, authorName, isVerified } = req.body;
+    const { content, title, image, video, authorName, isVerified } = req.body;
     
     if (!content) {
       return res.status(400).json({ message: 'Content is required' });
@@ -44,6 +69,7 @@ exports.createPost = async (req, res) => {
       content,
       title: title || null,
       image: image || null,
+      video: video || null,
       authorName: authorName || 'Zenivio',
       isVerified: isVerified !== undefined ? isVerified : true
     });
@@ -75,7 +101,7 @@ exports.createPost = async (req, res) => {
 // @access  Private/Admin
 exports.updatePost = async (req, res) => {
   try {
-    const { content, title, image, authorName, isVerified } = req.body;
+    const { content, title, image, video, authorName, isVerified } = req.body;
     const post = await Post.findById(req.params.id);
 
     if (!post) {
@@ -85,6 +111,7 @@ exports.updatePost = async (req, res) => {
     post.content = content || post.content;
     post.title = title !== undefined ? title : post.title;
     post.image = image !== undefined ? image : post.image;
+    post.video = video !== undefined ? video : post.video;
     post.authorName = authorName || post.authorName;
     post.isVerified = isVerified !== undefined ? isVerified : post.isVerified;
 
@@ -124,13 +151,13 @@ exports.getPostsFeed = async (req, res) => {
     // 1. Fetch posts from followed users and current user
     const followedPosts = await Post.find({
       authorId: { $in: [...followingIds, currentUserId] }
-    }).sort({ createdAt: -1 }).limit(30);
+    }).populate('authorId', 'name profilePic googleAvatar isEmailVerified').sort({ createdAt: -1 }).limit(30);
 
     // 2. Fetch some posts from non-followed users (recommended posts)
     // Exclude followed users, the current user, and admin posts
     const nonFollowedPosts = await Post.find({
       authorId: { $nin: [...followingIds, currentUserId, null] }
-    }).sort({ createdAt: -1 }).limit(15);
+    }).populate('authorId', 'name profilePic googleAvatar isEmailVerified').sort({ createdAt: -1 }).limit(15);
 
     // 3. Combine and sort by createdAt descending
     const feedPosts = [...followedPosts, ...nonFollowedPosts];
@@ -138,10 +165,21 @@ exports.getPostsFeed = async (req, res) => {
 
     // 4. Map with isFollowing and isOwnPost indicators
     const postsWithStatus = feedPosts.map(post => {
-      const isFollowing = post.authorId ? followingIds.includes(post.authorId.toString()) : false;
-      const isOwnPost = post.authorId ? post.authorId.toString() === currentUserId.toString() : false;
+      const isFollowing = post.authorId ? followingIds.includes(post.authorId._id.toString()) : false;
+      const isOwnPost = post.authorId ? post.authorId._id.toString() === currentUserId.toString() : false;
+      
+      const postObj = post.toObject();
+      const authorObj = postObj.authorId;
+      
       return {
-        ...post.toObject(),
+        ...postObj,
+        authorId: authorObj ? authorObj._id.toString() : null,
+        authorDetails: authorObj ? {
+          name: authorObj.name,
+          profilePic: authorObj.profilePic,
+          googleAvatar: authorObj.googleAvatar,
+          isEmailVerified: authorObj.isEmailVerified
+        } : null,
         isFollowing,
         isOwnPost
       };
@@ -161,9 +199,15 @@ exports.createUserPost = async (req, res) => {
   try {
     const { content, title } = req.body;
     let imageUrl = null;
+    let videoUrl = null;
 
     if (req.file) {
-      imageUrl = `/api/image?file=${req.file.filename}`;
+      const fileUrl = `/api/image?file=${req.file.filename}`;
+      if (req.file.mimetype.startsWith('video/')) {
+        videoUrl = fileUrl;
+      } else {
+        imageUrl = fileUrl;
+      }
     }
 
     if (!content) {
@@ -174,14 +218,119 @@ exports.createUserPost = async (req, res) => {
       content,
       title: title || null,
       image: imageUrl,
+      video: videoUrl,
       authorId: req.user._id,
       authorName: req.user.name || 'User',
       isVerified: req.user.isEmailVerified || false
     });
 
-    res.status(201).json(post);
+    const populatedPost = await Post.findById(post._id).populate('authorId', 'name profilePic googleAvatar isEmailVerified');
+    const postObj = populatedPost.toObject();
+    const authorObj = postObj.authorId;
+
+    res.status(201).json({
+      ...postObj,
+      authorId: authorObj ? authorObj._id.toString() : null,
+      authorDetails: authorObj ? {
+        name: authorObj.name,
+        profilePic: authorObj.profilePic,
+        googleAvatar: authorObj.googleAvatar,
+        isEmailVerified: authorObj.isEmailVerified
+      } : null
+    });
   } catch (error) {
     console.error('Error creating user post:', error);
+    res.status(500).json({ message: error.message });
+  }
+};
+
+// @desc    Get all video posts (reels)
+// @route   GET /api/posts/videos
+// @access  Public
+exports.getVideoPosts = async (req, res) => {
+  try {
+    const posts = await Post.find({ video: { $ne: null } })
+      .populate('authorId', 'name profilePic googleAvatar isEmailVerified')
+      .sort({ createdAt: -1 });
+    const mapped = posts.map(post => {
+      const postObj = post.toObject();
+      const authorObj = postObj.authorId;
+      return {
+        ...postObj,
+        authorId: authorObj ? authorObj._id.toString() : null,
+        authorDetails: authorObj ? {
+          _id: authorObj._id.toString(),
+          name: authorObj.name,
+          profilePic: authorObj.profilePic,
+          googleAvatar: authorObj.googleAvatar,
+          isEmailVerified: authorObj.isEmailVerified
+        } : null
+      };
+    });
+    res.json(mapped);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+// @desc    Toggle like on a post
+// @route   POST /api/posts/:id/like
+// @access  Private
+exports.toggleLikePost = async (req, res) => {
+  try {
+    const post = await Post.findById(req.params.id);
+    if (!post) {
+      return res.status(404).json({ message: 'Post not found' });
+    }
+
+    const userId = req.user._id;
+    const isLiked = post.likes.includes(userId);
+
+    if (isLiked) {
+      post.likes = post.likes.filter(id => id.toString() !== userId.toString());
+    } else {
+      post.likes.push(userId);
+    }
+
+    await post.save();
+    
+    res.json({ 
+      likesCount: post.likes.length, 
+      isLiked: !isLiked 
+    });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+// @desc    Comment on a post
+// @route   POST /api/posts/:id/comment
+// @access  Private
+exports.commentPost = async (req, res) => {
+  try {
+    const { text } = req.body;
+    if (!text) {
+      return res.status(400).json({ message: 'Comment text is required' });
+    }
+
+    const post = await Post.findById(req.params.id);
+    if (!post) {
+      return res.status(404).json({ message: 'Post not found' });
+    }
+
+    const newComment = {
+      user: req.user._id,
+      userName: req.user.name || 'User',
+      userAvatar: req.user.profilePic || req.user.googleAvatar || '',
+      text,
+      createdAt: new Date()
+    };
+
+    post.comments.push(newComment);
+    await post.save();
+
+    res.status(201).json(newComment);
+  } catch (error) {
     res.status(500).json({ message: error.message });
   }
 };
