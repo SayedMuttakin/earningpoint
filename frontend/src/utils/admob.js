@@ -65,26 +65,11 @@ export const AdMobService = {
   },
 
   async showBanner() {
-    if (!Capacitor.isNativePlatform()) return;
-    try {
-      await AdMob.showBanner({
-        adId: getAdId('banner'),
-        adSize: BannerAdSize.BANNER,
-        position: BannerAdPosition.BOTTOM_CENTER,
-        margin: 0,
-      });
-    } catch (err) {
-      console.error('Banner error:', err);
-    }
+    // Disabled native banner overlays to prevent covering bottom navigation bar
   },
 
   async hideBanner() {
-    if (!Capacitor.isNativePlatform()) return;
-    try {
-      await AdMob.hideBanner();
-    } catch (err) {
-      console.error('Hide banner error:', err);
-    }
+    // Disabled native banner overlays
   },
 
   async showInterstitial(onClose) {
@@ -230,27 +215,11 @@ export const AdMobService = {
   },
 
   async showNativeSimulatedAd() {
-    if (!Capacitor.isNativePlatform()) return;
-    try {
-      await AdMob.showBanner({
-        adId: getAdId('native'),
-        adSize: BannerAdSize.MEDIUM_RECTANGLE,
-        position: BannerAdPosition.CENTER,
-        margin: 0,
-      });
-    } catch (err) {
-      console.error('Simulated Native error:', err);
-    }
+    // Disabled simulated native overlays
   },
 
   async hideNativeSimulatedAd() {
-    if (!Capacitor.isNativePlatform()) return;
-    try {
-      await AdMob.hideBanner();
-      await AdMob.removeBanner();
-    } catch (err) {
-      console.error('Hide simulated Native error:', err);
-    }
+    // Disabled simulated native overlays
   },
 
   async showAppOpenAd(onClose) {

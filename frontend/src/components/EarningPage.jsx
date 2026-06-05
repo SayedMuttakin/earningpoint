@@ -101,32 +101,8 @@ const ipPackages = [
 
 
 const BigAdBanner = ({ globalSettings }) => {
-  const adRef = React.useRef(false);
-
-  React.useEffect(() => {
-    // Show native medium rectangle ad on native platform
-    if (Capacitor.isNativePlatform() && !adRef.current) {
-      adRef.current = true;
-      AdMobService.showNativeSimulatedAd();
-    }
-    return () => {
-      if (adRef.current) {
-        AdMobService.hideNativeSimulatedAd();
-        adRef.current = false;
-      }
-    };
-  }, []);
-
-  // On native, AdMob renders the ad natively as an overlay
-  if (Capacitor.isNativePlatform()) {
-    return (
-      <div className="w-full mt-2">
-        <div className="w-full h-[250px] flex items-center justify-center rounded-2xl">
-          {/* Native AdMob 320x250 Medium Rectangle renders here */}
-        </div>
-      </div>
-    );
-  }
+  // Render the styled HTML test banner inline on all platforms (Web and Native)
+  // to avoid native floating overlays that cover page scroll content.
 
   // Web fallback — premium realistic AdMob test 320x250 ad
   return (
@@ -739,10 +715,6 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
     fetchGlobalSettings();
     fetchWithdrawHistory();
     fetchGlobalWithdrawals();
-    AdMobService.showBanner();
-    return () => {
-      AdMobService.hideBanner();
-    };
   }, []);
 
   // Show VPN activated celebration when premium becomes active and user hasn't accepted yet

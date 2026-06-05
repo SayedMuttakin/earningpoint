@@ -3,31 +3,8 @@ import { AdMobService } from '../utils/admob';
 import { Capacitor } from '@capacitor/core';
 
 const BannerAd = ({ globalSettings, size = 'banner' }) => {
-  const bannerShown = useRef(false);
-
-  useEffect(() => {
-    // On native platform, show real AdMob banner
-    if (Capacitor.isNativePlatform() && !bannerShown.current) {
-      bannerShown.current = true;
-      AdMobService.showBanner();
-    }
-    return () => {
-      if (bannerShown.current) {
-        AdMobService.hideBanner();
-        bannerShown.current = false;
-      }
-    };
-  }, []);
-
-  // On native, the banner is rendered natively by AdMob plugin (overlaid on WebView)
-  // We just need a spacer div to make room for it
-  if (Capacitor.isNativePlatform()) {
-    return (
-      <div className="w-full h-[60px] flex items-center justify-center">
-        {/* Native AdMob banner renders here as an overlay */}
-      </div>
-    );
-  }
+  // Render the styled HTML test banner inline on all platforms (Web and Native)
+  // to prevent overlapping the bottom navigation bar and display the ad exactly where intended.
 
   // Web fallback — premium realistic AdMob test banner ad
   return (
