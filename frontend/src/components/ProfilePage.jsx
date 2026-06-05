@@ -254,31 +254,31 @@ const ProfilePage = ({
     { icon: Lock, label: 'Change Password', color: 'bg-rose-100 dark:bg-rose-950/40 text-rose-500 dark:text-rose-450', action: onPasswordClick },
     { icon: Globe, label: 'Language', color: 'bg-teal-100 dark:bg-teal-950/40 text-teal-500 dark:text-teal-400', action: onLanguageClick },
     { icon: Bell, label: 'Notifications', color: 'bg-orange-100 dark:bg-orange-950/40 text-orange-500 dark:text-orange-400', action: onNotificationClick },
-    { icon: Shield, label: 'Privacy & Security Settings', color: 'bg-indigo-100 dark:bg-indigo-950/40 text-indigo-500 dark:text-indigo-400', action: onSettingsClick },
+    { icon: Shield, label: 'Privacy & Security Settings', color: 'bg-indigo-100 dark:bg-indigo-950/40 text-indigo-500 dark:text-indigo-400', action: onSettingsClick }
   ];
 
   const MenuSectionList = ({ items }) => (
-    <div className="bg-white dark:bg-slate-900 border border-slate-150/40 dark:border-slate-800 rounded-[2.2rem] p-2 space-y-1 shadow-2xs">
+    <div className="space-y-2.5 w-full">
       {items.map((item, idx) => (
         <button 
           key={idx}
           onClick={item.action}
-          className="w-full flex items-center justify-between p-3 hover:bg-slate-55/65 dark:hover:bg-slate-850/60 transition-all rounded-2xl group active:scale-[0.99] text-left"
+          className="w-full flex items-center justify-between p-4 bg-white dark:bg-slate-900 border border-slate-150/30 dark:border-slate-800/80 rounded-2xl shadow-2xs hover:scale-[1.01] active:scale-[0.99] transition-all duration-200 text-left"
         >
           <div className="flex items-center gap-3.5 min-w-0">
-            <div className={`w-10 h-10 flex-shrink-0 rounded-full flex items-center justify-center ${item.color} shadow-2xs`}>
+            <div className={`w-10 h-10 flex-shrink-0 rounded-full flex items-center justify-center ${item.color} shadow-3xs`}>
               <item.icon className="w-5 h-5" strokeWidth={2.4} />
             </div>
-            <span className="text-slate-850 dark:text-slate-200 font-bold text-sm sm:text-[15px] truncate">{item.label}</span>
+            <span className="text-slate-850 dark:text-slate-200 font-black text-[15px] truncate">{item.label}</span>
           </div>
           
           <div className="flex items-center gap-1.5 flex-shrink-0">
             {item.value && (
-              <span className="text-xs sm:text-sm font-black text-slate-800 dark:text-slate-350 bg-slate-50 dark:bg-slate-800 px-3 py-1 rounded-xl">
+              <span className="text-xs sm:text-sm font-black text-[#7C3AED] dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-950/40 px-3 py-1 rounded-xl">
                 {item.value}
               </span>
             )}
-            <ChevronRight className="w-4.5 h-4.5 text-slate-400 group-hover:text-[#7C3AED] transition-colors" />
+            <ChevronRight className="w-4.5 h-4.5 text-slate-400" />
           </div>
         </button>
       ))}
@@ -288,115 +288,122 @@ const ProfilePage = ({
   return (
     <>
       <PullToRefresh onRefresh={handleRefresh} refreshing={refreshing}>
-        <div className="w-full bg-gradient-to-b from-indigo-50/30 via-slate-50 to-slate-50 dark:from-slate-950 dark:via-slate-950 dark:to-slate-950 min-h-screen pb-28 flex flex-col relative select-none">
+        <div className="w-full bg-slate-50 dark:bg-slate-950 min-h-screen pb-28 flex flex-col relative select-none">
           
           {/* Banner Ad */}
           <div className="sticky top-16 z-30 w-full bg-slate-50 dark:bg-slate-950 pb-2 pt-2 border-b border-slate-200 dark:border-slate-800 shadow-sm px-4">
             <BannerAd globalSettings={globalSettings} />
           </div>
 
-          <div className="max-w-md mx-auto px-4 pt-6 w-full space-y-6">
-            
-            {/* Header Toolbar (Matches mockup top bar) */}
-            <div className="flex items-center justify-between relative shrink-0">
-              <button 
-                onClick={onBack}
-                className="w-10 h-10 rounded-full bg-white dark:bg-slate-900 border border-slate-200/50 dark:border-slate-800 flex items-center justify-center hover:bg-slate-100 dark:hover:bg-slate-800 transition-all active:scale-95 shadow-xs"
-              >
-                <ArrowLeft className="w-5 h-5 text-slate-700 dark:text-slate-300" />
-              </button>
-              <h1 className="text-lg font-black text-slate-850 dark:text-white absolute left-1/2 -translate-x-1/2">Profile</h1>
-              <button 
-                onClick={openEditProfileModal}
-                className="w-10 h-10 rounded-full bg-white dark:bg-slate-900 border border-slate-200/50 dark:border-slate-800 flex items-center justify-center hover:bg-slate-100 dark:hover:bg-slate-800 transition-all active:scale-95 shadow-xs"
-                title="Edit Profile"
-              >
-                <Edit3 className="w-4.5 h-4.5 text-slate-750 dark:text-slate-350" />
-              </button>
-            </div>
+          {/* Top Gradient Header Section */}
+          <div className="bg-gradient-to-b from-blue-400 via-indigo-150 to-slate-50 dark:from-slate-900 dark:via-slate-900/60 dark:to-slate-950 pb-8 pt-6 rounded-b-[2.5rem] px-4 shadow-sm">
+            <div className="max-w-md mx-auto w-full space-y-6">
+              
+              {/* Header Toolbar (Matches mockup top bar) */}
+              <div className="flex items-center justify-between relative shrink-0">
+                <button 
+                  onClick={onBack}
+                  className="hover:scale-110 transition-transform active:scale-90"
+                >
+                  <ArrowLeft className="w-6.5 h-6.5 text-slate-800 dark:text-slate-200" />
+                </button>
+                <h1 className="text-lg font-black text-slate-850 dark:text-white absolute left-1/2 -translate-x-1/2">Profile</h1>
+                <button 
+                  onClick={openEditProfileModal}
+                  className="hover:scale-110 transition-transform active:scale-90"
+                  title="Edit Profile"
+                >
+                  <Edit3 className="w-6 h-6 text-slate-800 dark:text-slate-200" />
+                </button>
+              </div>
 
-            {/* Profile Info Section (Avatar glow ring and metadata) */}
-            <div className="flex flex-col items-center text-center space-y-4 pt-2">
-              <div className="relative">
-                {/* Glowing neon purple border wrapper */}
-                <div className="relative p-1 bg-gradient-to-tr from-[#38bdf8] via-[#818cf8] to-[#c084fc] rounded-full shadow-lg">
-                  <div 
-                    onClick={triggerFileInput}
-                    className="w-24 h-24 sm:w-28 sm:h-28 rounded-full overflow-hidden border-4 border-white dark:border-slate-900 shadow-sm bg-slate-100 flex items-center justify-center cursor-pointer relative group"
-                  >
-                    {profilePic ? (
-                      <img 
-                        src={profilePic.startsWith('http') || profilePic.startsWith('/api') || profilePic.startsWith('data:') ? profilePic : `${API_BASE}/api/image?file=${profilePic}`}
-                        alt="Avatar" 
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform"
-                      />
-                    ) : (
-                      <div className="w-full h-full bg-gradient-to-tr from-indigo-500 to-brand-500 flex items-center justify-center text-white text-3xl font-black">
-                        {userName.charAt(0).toUpperCase()}
+              {/* Profile Info Section (Avatar glow ring and metadata - HORIZONTAL) */}
+              <div className="flex items-center gap-5 px-1 mt-4">
+                <div className="relative shrink-0">
+                  {/* Glowing neon purple border wrapper */}
+                  <div className="relative p-1 bg-gradient-to-tr from-[#00ffff] via-[#818cf8] to-[#c084fc] rounded-full shadow-lg">
+                    <div 
+                      onClick={triggerFileInput}
+                      className="w-20 h-20 sm:w-24 sm:h-24 rounded-full overflow-hidden border-4 border-white dark:border-slate-900 shadow-sm bg-slate-100 flex items-center justify-center cursor-pointer relative group"
+                    >
+                      {profilePic ? (
+                        <img 
+                          src={profilePic.startsWith('http') || profilePic.startsWith('/api') || profilePic.startsWith('data:') ? profilePic : `${API_BASE}/api/image?file=${profilePic}`}
+                          alt="Avatar" 
+                          className="w-full h-full object-cover group-hover:scale-105 transition-transform"
+                        />
+                      ) : (
+                        <div className="w-full h-full bg-gradient-to-tr from-indigo-500 to-brand-500 flex items-center justify-center text-white text-3xl font-black">
+                          {userName.charAt(0).toUpperCase()}
+                        </div>
+                      )}
+                      
+                      {/* Hover camera edit overlay */}
+                      <div className="absolute inset-0 bg-black/45 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                        <Camera className="w-6 h-6 text-white" />
                       </div>
-                    )}
-                    
-                    {/* Hover camera edit overlay */}
-                    <div className="absolute inset-0 bg-black/45 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                      <Camera className="w-6 h-6 text-white" />
                     </div>
                   </div>
+
+                  <input 
+                    type="file" 
+                    ref={fileInputRef} 
+                    onChange={handleDirectImageUpload} 
+                    accept="image/*" 
+                    className="hidden" 
+                  />
+
+                  {/* Online status indicator dot (Mockup styling) */}
+                  <span className="absolute bottom-0.5 right-0.5 w-4.5 h-4.5 bg-emerald-500 rounded-full border-3 border-white dark:border-slate-900 shadow-xs animate-pulse" />
                 </div>
 
-                <input 
-                  type="file" 
-                  ref={fileInputRef} 
-                  onChange={handleDirectImageUpload} 
-                  accept="image/*" 
-                  className="hidden" 
-                />
+                {/* Text metadata - Left Aligned */}
+                <div className="flex-1 min-w-0">
+                  <h2 className="text-lg sm:text-xl font-black text-slate-850 dark:text-white flex items-center gap-1.5 truncate">
+                    {userName}
+                    {isEmailVerified && (
+                      <VerifiedBadge iconClassName="w-[18.5px] h-[18.5px] fill-blue-500 text-white flex-shrink-0" />
+                    )}
+                  </h2>
+                  
+                  {/* Auto-generated professional profile handle */}
+                  <p className="text-[11.5px] font-black text-slate-500 dark:text-slate-400 tracking-wide font-mono mt-0.5">
+                    @{userName.toLowerCase().replace(/\s+/g, '_')}
+                  </p>
 
-                {/* Online status indicator dot (Mockup styling) */}
-                <span className="absolute bottom-1 right-1 w-5 h-5 bg-emerald-500 rounded-full border-4 border-white dark:border-slate-900 shadow-sm" />
+                  {/* Editable Status biography */}
+                  <p className="text-[11.5px] font-semibold text-slate-600 dark:text-slate-350 leading-relaxed mt-1.5 select-text line-clamp-2">
+                    {userBio}
+                  </p>
+                </div>
               </div>
 
-              {/* Text metadata */}
-              <div className="space-y-1.5 w-full">
-                <h2 className="text-xl font-black text-slate-850 dark:text-white flex items-center justify-center gap-1.5">
-                  {userName}
-                  {isEmailVerified && (
-                    <VerifiedBadge iconClassName="w-[18.5px] h-[18.5px] fill-blue-500 text-white flex-shrink-0" />
-                  )}
-                </h2>
-                
-                {/* Auto-generated professional profile handle */}
-                <p className="text-[11px] font-black text-indigo-500 dark:text-indigo-400 tracking-wide font-mono uppercase bg-indigo-50 dark:bg-indigo-950/30 px-3 py-1 rounded-full w-fit mx-auto">
-                  @{userName.toLowerCase().replace(/\s+/g, '')}
-                </p>
-
-                {/* Editable Status biography */}
-                <p className="text-xs font-black text-slate-450 dark:text-slate-400 max-w-xs mx-auto leading-relaxed pt-1 select-text">
-                  {userBio}
-                </p>
-              </div>
             </div>
+          </div>
 
+          <div className="max-w-md mx-auto px-4 mt-6 w-full space-y-6">
+            
             {/* Profile Statistics counts card */}
-            <div className="bg-white dark:bg-slate-900 border border-slate-150/40 dark:border-slate-800 rounded-3xl p-5 flex justify-around text-center shadow-2xs w-full">
-              <div className="flex-1 border-r border-slate-100 dark:border-slate-850">
-                <User strokeWidth={2.4} className="w-5 h-5 text-indigo-500 mx-auto" />
-                <span className="text-base font-black text-slate-850 dark:text-white block mt-2.5">{postsCount}</span>
+            <div className="bg-white dark:bg-slate-900 border border-slate-150/30 dark:border-slate-800 rounded-3xl p-4 flex justify-around text-center shadow-xs w-full">
+              <div className="flex-1">
+                <User strokeWidth={2.4} className="w-5.5 h-5.5 text-indigo-500 mx-auto" />
+                <span className="text-base font-black text-slate-850 dark:text-white block mt-1.5">{postsCount}</span>
                 <span className="text-[10px] text-slate-400 font-bold block mt-0.5 uppercase tracking-wide">Posts</span>
               </div>
-              <div className="flex-1 border-r border-slate-100 dark:border-slate-850">
-                <Heart strokeWidth={2.4} className="w-5 h-5 text-pink-500 mx-auto fill-pink-500/10" />
-                <span className="text-base font-black text-slate-850 dark:text-white block mt-2.5">{formatCount(followersCount)}</span>
+              <div className="flex-1">
+                <Heart strokeWidth={2.4} className="w-5.5 h-5.5 text-pink-500 mx-auto fill-pink-500/10" />
+                <span className="text-base font-black text-slate-850 dark:text-white block mt-1.5">{formatCount(followersCount)}</span>
                 <span className="text-[10px] text-slate-400 font-bold block mt-0.5 uppercase tracking-wide">Followers</span>
               </div>
               <div className="flex-1">
-                <UserPlus strokeWidth={2.4} className="w-5 h-5 text-blue-500 mx-auto" />
-                <span className="text-base font-black text-slate-850 dark:text-white block mt-2.5">{formatCount(followingCount)}</span>
+                <UserPlus strokeWidth={2.4} className="w-5.5 h-5.5 text-blue-500 mx-auto" />
+                <span className="text-base font-black text-slate-850 dark:text-white block mt-1.5">{formatCount(followingCount)}</span>
                 <span className="text-[10px] text-slate-400 font-bold block mt-0.5 uppercase tracking-wide">Following</span>
               </div>
             </div>
 
             {/* Zenevio Premium Upgrade banner (Purple-blue gradient card) */}
-            <div className="bg-gradient-to-r from-[#6366f1] via-[#8b5cf6] to-[#ec4899] rounded-3xl p-4.5 text-white flex items-center justify-between shadow-lg relative overflow-hidden select-none w-full group">
+            <div className="bg-gradient-to-r from-violet-600 via-indigo-600 to-fuchsia-500 rounded-3xl p-4.5 text-white flex items-center justify-between shadow-md relative overflow-hidden select-none w-full group">
               <div className="absolute top-[-40px] right-[-40px] w-24 h-24 bg-white/10 rounded-full blur-xl group-hover:scale-125 transition-transform duration-700" />
               <div className="absolute bottom-[-30px] left-[-30px] w-20 h-20 bg-white/10 rounded-full blur-lg" />
               
@@ -406,79 +413,73 @@ const ProfilePage = ({
                 </div>
                 <div>
                   <h3 className="text-sm font-black tracking-wide flex items-center gap-1.5">
-                    Zenevio Premium {isVerified && '👑'}
+                    Zenevio Premium 👑
                   </h3>
-                  <p className="text-[10px] text-white/80 font-bold tracking-wide mt-0.5">Unlock exclusive rewards & features</p>
+                  <p className="text-[10px] text-white/85 font-semibold tracking-wide mt-0.5">Unlock exclusive features</p>
                 </div>
               </div>
 
               <button 
                 onClick={onVerifyClick}
-                className="z-10 px-4.5 py-2.5 bg-white text-[#7C3AED] hover:scale-105 active:scale-95 transition-all text-xs font-black rounded-2xl flex items-center gap-1 shadow-md shadow-indigo-900/10 cursor-pointer"
+                className="z-10 px-4.5 py-2.5 bg-white text-[#7C3AED] hover:scale-105 active:scale-95 transition-all text-xs font-black rounded-full flex items-center gap-0.5 shadow-md shadow-indigo-900/10 cursor-pointer"
               >
                 Upgrade
-                <ChevronRight className="w-4 h-4 text-[#7C3AED]" strokeWidth={2.8} />
+                <ChevronRight className="w-4 h-4 text-[#7C3AED]" strokeWidth={3} />
               </button>
             </div>
 
             {/* Redesigned Menu sections */}
-            <div className="space-y-4 w-full">
+            <div className="space-y-3.5 w-full">
               <MenuSectionList items={menuGroup1} />
               <MenuSectionList items={menuGroup2} />
               <MenuSectionList items={menuGroup3} />
               
-              {/* Settings & System block */}
-              <div className="bg-white dark:bg-slate-900 border border-slate-150/40 dark:border-slate-800 rounded-[2.2rem] p-2 space-y-1 shadow-2xs">
-                
-                {/* Contact Support */}
-                <button 
-                  onClick={onSupportClick}
-                  className="w-full flex items-center justify-between p-3 hover:bg-slate-55/65 dark:hover:bg-slate-850/60 transition-all rounded-2xl group active:scale-[0.99] text-left"
-                >
-                  <div className="flex items-center gap-3.5 min-w-0">
-                    <div className="w-10 h-10 flex-shrink-0 rounded-full flex items-center justify-center bg-cyan-50 dark:bg-cyan-950/40 text-cyan-500 dark:text-cyan-400 shadow-2xs">
-                      <HeadphonesIcon className="w-5 h-5" strokeWidth={2.4} />
-                    </div>
-                    <span className="text-slate-850 dark:text-slate-200 font-bold text-sm sm:text-[15px] truncate">Contact Support</span>
+              {/* Contact Support Card */}
+              <button 
+                onClick={onSupportClick}
+                className="w-full flex items-center justify-between p-4 bg-white dark:bg-slate-900 border border-slate-150/30 dark:border-slate-800/80 rounded-2xl shadow-2xs hover:scale-[1.01] active:scale-[0.99] transition-all duration-200 text-left"
+              >
+                <div className="flex items-center gap-3.5 min-w-0">
+                  <div className="w-10 h-10 flex-shrink-0 rounded-full flex items-center justify-center bg-cyan-50 dark:bg-cyan-950/40 text-cyan-500 dark:text-cyan-400 shadow-2xs">
+                    <HeadphonesIcon className="w-5 h-5" strokeWidth={2.4} />
                   </div>
-                  <ChevronRight className="w-4.5 h-4.5 text-slate-400 group-hover:text-[#7C3AED] transition-colors" />
-                </button>
-
-                {/* Dark Mode toggle switch */}
-                <div className="w-full flex items-center justify-between p-3 rounded-2xl">
-                  <div className="flex items-center gap-3.5 min-w-0">
-                    <div className="w-10 h-10 flex-shrink-0 rounded-full flex items-center justify-center bg-indigo-50 dark:bg-indigo-950/40 text-indigo-650 dark:text-indigo-400 shadow-2xs">
-                      <Moon className="w-5 h-5" strokeWidth={2.4} />
-                    </div>
-                    <span className="text-slate-850 dark:text-slate-200 font-bold text-sm sm:text-[15px] truncate">Dark Mode</span>
-                  </div>
-                  
-                  {/* Slider Toggle */}
-                  <button 
-                    onClick={onToggleDarkMode}
-                    className={`relative inline-flex h-7 w-12 items-center rounded-full transition-colors duration-300 focus:outline-none ${darkMode ? 'bg-[#7C3AED]' : 'bg-slate-250 dark:bg-slate-800'}`}
-                  >
-                    <span className={`inline-block h-5 w-5 transform rounded-full bg-white shadow-md transition-transform duration-300 ${darkMode ? 'translate-x-6' : 'translate-x-1'}`} />
-                  </button>
+                  <span className="text-slate-850 dark:text-slate-200 font-bold text-sm sm:text-[15px] truncate">Contact Support</span>
                 </div>
+                <ChevronRight className="w-4.5 h-4.5 text-slate-400" />
+              </button>
 
-                {/* Delete Account */}
-                <button 
-                  onClick={onDeleteClick}
-                  className="w-full flex items-center justify-between p-3 hover:bg-rose-50 dark:hover:bg-rose-950/20 transition-all rounded-2xl group active:scale-[0.99] text-left"
-                >
-                  <div className="flex items-center gap-3.5 min-w-0">
-                    <div className="w-10 h-10 flex-shrink-0 rounded-full flex items-center justify-center bg-rose-50 dark:bg-rose-950/40 text-rose-500 shadow-2xs">
-                      <Trash2 className="w-5 h-5" strokeWidth={2.4} />
-                    </div>
-                    <span className="text-rose-600 dark:text-rose-450 font-bold text-sm sm:text-[15px] truncate">Delete Account</span>
+              {/* Dark Mode toggle card */}
+              <div className="w-full flex items-center justify-between p-4 bg-white dark:bg-slate-900 border border-slate-150/30 dark:border-slate-800/80 rounded-2xl shadow-2xs">
+                <div className="flex items-center gap-3.5 min-w-0">
+                  <div className="w-10 h-10 flex-shrink-0 rounded-full flex items-center justify-center bg-indigo-50 dark:bg-indigo-950/40 text-indigo-650 dark:text-indigo-400 shadow-2xs">
+                    <Moon className="w-5 h-5" strokeWidth={2.4} />
                   </div>
-                  <ChevronRight className="w-4.5 h-4.5 text-rose-350 group-hover:text-rose-500 transition-colors" />
+                  <span className="text-slate-850 dark:text-slate-200 font-bold text-sm sm:text-[15px] truncate">Dark Mode</span>
+                </div>
+                
+                {/* Slider Toggle */}
+                <button 
+                  onClick={onToggleDarkMode}
+                  className={`relative inline-flex h-7 w-12 items-center rounded-full transition-colors duration-300 focus:outline-none ${darkMode ? 'bg-[#7C3AED]' : 'bg-slate-250 dark:bg-slate-800'}`}
+                >
+                  <span className={`inline-block h-5 w-5 transform rounded-full bg-white shadow-md transition-transform duration-300 ${darkMode ? 'translate-x-6' : 'translate-x-1'}`} />
                 </button>
-
               </div>
-            </div>
 
+              {/* Delete Account Card */}
+              <button 
+                onClick={onDeleteClick}
+                className="w-full flex items-center justify-between p-4 bg-white dark:bg-slate-900 border border-slate-150/30 dark:border-slate-800/80 rounded-2xl shadow-2xs hover:scale-[1.01] active:scale-[0.99] transition-all duration-200 text-left"
+              >
+                <div className="flex items-center gap-3.5 min-w-0">
+                  <div className="w-10 h-10 flex-shrink-0 rounded-full flex items-center justify-center bg-rose-50 dark:bg-rose-950/40 text-rose-500 shadow-2xs">
+                    <Trash2 className="w-5 h-5" strokeWidth={2.4} />
+                  </div>
+                  <span className="text-rose-600 dark:text-rose-450 font-bold text-sm sm:text-[15px] truncate">Delete Account</span>
+                </div>
+                <ChevronRight className="w-4.5 h-4.5 text-[#f43f5e]" />
+              </button>
+            </div>
           </div>
         </div>
       </PullToRefresh>
