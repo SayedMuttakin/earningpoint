@@ -820,8 +820,9 @@ const HomePage = ({ setActiveTab, setSelectedNewsId, setActiveChatPartner, setSe
   };
 
   return (
-    <PullToRefresh onRefresh={handleRefresh} refreshing={refreshing}>
-      <div className="min-h-screen bg-slate-50 dark:bg-slate-950 pb-24 flex flex-col relative">
+    <>
+      <PullToRefresh onRefresh={handleRefresh} refreshing={refreshing}>
+        <div className="min-h-screen bg-slate-50 dark:bg-slate-950 pb-24 flex flex-col relative">
         {/* Content Body */}
         <main className="max-w-md mx-auto px-4 pt-5 pb-8 w-full flex-1 space-y-6">
           {/* Banner */}
@@ -962,6 +963,8 @@ const HomePage = ({ setActiveTab, setSelectedNewsId, setActiveChatPartner, setSe
         >
           <Plus className="w-7 h-7" strokeWidth={2.8} />
         </button>
+      </div>
+    </PullToRefresh>
 
         {/* Create Post Modal Overlay */}
         {showCreateModal && (
@@ -1106,9 +1109,8 @@ const HomePage = ({ setActiveTab, setSelectedNewsId, setActiveChatPartner, setSe
             currentUserId={currentUser?._id}
           />
         )}
-      </div>
-    </PullToRefresh>
-  );
+      </>
+    );
 };
 
 export default HomePage;
