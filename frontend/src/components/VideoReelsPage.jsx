@@ -3,6 +3,49 @@ import { Heart, MessageCircle, Share2, Volume2, VolumeX, Play, Pause, Send, Load
 import { API_BASE } from '../config';
 import VerifiedBadge from './VerifiedBadge';
 
+// Helper to format relative time
+const formatRelativeTime = (dateString) => {
+  if (!dateString) return '';
+  try {
+    const date = new Date(dateString);
+    const now = new Date();
+    const diffMs = now - date;
+    const diffSecs = Math.floor(diffMs / 1000);
+    const diffMins = Math.floor(diffSecs / 60);
+    const diffHours = Math.floor(diffMins / 60);
+    const diffDays = Math.floor(diffHours / 24);
+
+    if (diffSecs < 60) {
+      return 'just now';
+    } else if (diffMins < 60) {
+      return `${diffMins}m ago`;
+    } else if (diffHours < 24) {
+      return `${diffHours}h ago`;
+    } else if (diffDays < 7) {
+      return `${diffDays}d ago`;
+    } else {
+      return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+    }
+  } catch (err) {
+    console.error('Error formatting date:', err);
+    return '';
+  }
+};
+
+// Helper to get creator avatar URL
+const getCreatorAvatar = (video) => {
+  const pic = video.authorDetails?.profilePic || (video.authorId && typeof video.authorId === 'object' ? video.authorId.profilePic : null);
+  const google = video.authorDetails?.googleAvatar || (video.authorId && typeof video.authorId === 'object' ? video.authorId.googleAvatar : null);
+  
+  if (pic) {
+    if (pic.startsWith('http') || pic.startsWith('/api') || pic.startsWith('data:')) {
+      return pic;
+    }
+    return `${API_BASE}/api/image?file=${pic}`;
+  }
+  return google || '';
+};
+
 // Inner Reel Video Card Component
 const ReelCard = ({ video, isActive, isMuted, toggleMute, currentUserId, onLikeToggle, onCommentClick, onBack, currentUser, onFollowToggle }) => {
   const videoRef = useRef(null);
@@ -11,6 +54,8 @@ const ReelCard = ({ video, isActive, isMuted, toggleMute, currentUserId, onLikeT
   const [playOverlayType, setPlayOverlayType] = useState('play'); // 'play' or 'pause'
   const [showHeartPop, setShowHeartPop] = useState(false);
   const [isLiking, setIsLiking] = useState(false);
+  const [avatarError, setAvatarError] = useState(false);
+  const [recordAvatarError, setRecordAvatarError] = useState(false);
 
   // Sync autoplay state with active visibility
   useEffect(() => {
@@ -70,8 +115,11 @@ const ReelCard = ({ video, isActive, isMuted, toggleMute, currentUserId, onLikeT
   };
 
   const hasLiked = video.likes?.includes(currentUserId);
-  const isCreatorFollowing = currentUser?.following?.includes(video.authorId?._id || video.authorId);
-  const isSelf = (video.authorId?._id || video.authorId) === currentUserId;
+  const creatorId = video.authorId?._id ? String(video.authorId._id) : String(video.authorId);
+  const isCreatorFollowing = currentUser?.following?.some(id => String(id) === creatorId);
+  const isSelf = creatorId === String(currentUserId);
+  const creatorName = video.authorDetails?.name || video.authorName || 'User';
+  const creatorAvatar = getCreatorAvatar(video);
 
   return (
     <div className="snap-start snap-always w-full h-[calc(100vh-76px)] relative bg-black flex items-center justify-center overflow-hidden">
@@ -138,25 +186,26 @@ const ReelCard = ({ video, isActive, isMuted, toggleMute, currentUserId, onLikeT
       <div className="absolute right-4 bottom-16 z-20 flex flex-col items-center gap-5.5">
         {/* Creator Profile with Follow button */}
         <div className="flex flex-col items-center relative pb-3">
-          <div className="w-12 h-12 rounded-full border-2 border-white bg-gradient-to-tr from-indigo-500 to-brand-500 flex items-center justify-center text-white font-bold text-lg shadow-md">
-            {video.authorId?.profilePic || video.authorId?.googleAvatar ? (
+          <div className="w-12 h-12 rounded-full border-2 border-white bg-gradient-to-tr from-indigo-500 to-brand-500 flex items-center justify-center text-white font-bold text-lg shadow-md overflow-hidden">
+            {creatorAvatar && !avatarError ? (
               <img
-                src={video.authorId.profilePic || video.authorId.googleAvatar}
-                alt={video.authorName}
+                src={creatorAvatar}
+                alt={creatorName}
                 className="w-full h-full rounded-full object-cover"
-                onError={(e) => {
-                  e.target.style.display = 'none';
-                }}
+                onError={() => setAvatarError(true)}
               />
             ) : (
-              <span>{video.authorName ? video.authorName.charAt(0).toUpperCase() : 'U'}</span>
+              <span>{creatorName ? creatorName.charAt(0).toUpperCase() : 'U'}</span>
             )}
           </div>
           {/* Red Follow (+) Button */}
           {!isCreatorFollowing && !isSelf && (
             <button
-              onClick={() => onFollowToggle(video.authorId?._id || video.authorId)}
-              className="absolute bottom-1.5 left-1/2 -translate-x-1/2 w-5 h-5 rounded-full bg-rose-500 border border-white flex items-center justify-center text-white shadow-sm hover:scale-110 active:scale-95 transition-transform"
+              onClick={(e) => {
+                e.stopPropagation();
+                onFollowToggle(creatorId);
+              }}
+              className="absolute bottom-1.5 left-1/2 -translate-x-1/2 w-5 h-5 rounded-full bg-rose-500 border border-white flex items-center justify-center text-white shadow-sm hover:scale-110 active:scale-95 transition-transform cursor-pointer"
               title="Follow user"
             >
               <Plus className="w-3.5 h-3.5 stroke-[3.5]" />
@@ -216,16 +265,17 @@ const ReelCard = ({ video, isActive, isMuted, toggleMute, currentUserId, onLikeT
 
         {/* Spinning Music Record disc at the bottom right */}
         <div className="w-10 h-10 rounded-full border-4 border-slate-900/80 bg-black flex items-center justify-center animate-spin-slow mt-2 relative">
-          <div className="w-full h-full rounded-full bg-gradient-to-tr from-slate-950 via-slate-900 to-slate-850 p-1 flex items-center justify-center">
-            {video.authorId?.profilePic || video.authorId?.googleAvatar ? (
+          <div className="w-full h-full rounded-full bg-gradient-to-tr from-slate-950 via-slate-900 to-slate-850 p-1 flex items-center justify-center overflow-hidden">
+            {creatorAvatar && !recordAvatarError ? (
               <img 
-                src={video.authorId.profilePic || video.authorId.googleAvatar} 
+                src={creatorAvatar} 
                 alt="music record" 
                 className="w-5.5 h-5.5 rounded-full object-cover"
+                onError={() => setRecordAvatarError(true)}
               />
             ) : (
               <div className="w-5.5 h-5.5 rounded-full bg-indigo-500 flex items-center justify-center text-white text-[8px] font-bold">
-                {video.authorName ? video.authorName.charAt(0).toUpperCase() : 'U'}
+                {creatorName ? creatorName.charAt(0).toUpperCase() : 'U'}
               </div>
             )}
           </div>
@@ -234,32 +284,33 @@ const ReelCard = ({ video, isActive, isMuted, toggleMute, currentUserId, onLikeT
       </div>
 
       {/* Bottom Overlay Info (Description/Creator) */}
-      <div className="absolute left-4 bottom-4 right-20 z-20 text-white flex flex-col gap-1.5 filter drop-shadow-md select-text">
-        <div className="flex items-center gap-2">
+      <div className="absolute left-4 bottom-4 right-20 z-20 text-white flex flex-col gap-1 filter drop-shadow-md select-text">
+        <div className="flex items-center gap-2 flex-wrap">
           <h3 className="font-bold text-sm sm:text-base flex items-center gap-1">
-            {video.authorName || 'User'}
-            {(video.isVerified || video.authorId?.isEmailVerified) && (
+            {creatorName}
+            {(video.isVerified || video.authorDetails?.isEmailVerified) && (
               <VerifiedBadge iconClassName="w-4 h-4 fill-blue-500 text-white flex-shrink-0" />
             )}
           </h3>
-          <span className="text-slate-350 text-xs">· 10h ago</span>
+          {!isSelf && !isCreatorFollowing && (
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                onFollowToggle(creatorId);
+              }}
+              className="px-2 py-0.5 rounded-full bg-rose-500 hover:bg-rose-600 text-white text-[10px] font-extrabold flex items-center justify-center shadow-md active:scale-90 transition-all cursor-pointer animate-pulse"
+            >
+              <Plus className="w-2.5 h-2.5 mr-0.5 stroke-[3.5]" />
+              Follow
+            </button>
+          )}
+          {video.createdAt && (
+            <span className="text-slate-300 text-xs font-semibold">· {formatRelativeTime(video.createdAt)}</span>
+          )}
         </div>
-        <p className="text-xs leading-relaxed line-clamp-3 text-slate-100/90 font-medium">
+        <p className="text-xs sm:text-sm leading-relaxed line-clamp-3 text-slate-100/95 font-medium mt-1">
           {video.content}
         </p>
-        
-        {/* Scrolling sound title marquee */}
-        <div className="flex items-center gap-1.5 text-xs text-slate-200 mt-2 font-medium">
-          <span className="text-sm">🎵</span>
-          <div className="overflow-hidden w-40 whitespace-nowrap">
-            <span 
-              className="inline-block" 
-              style={{ animation: 'marquee 10s linear infinite', paddingRight: '20px' }}
-            >
-              Original Sound - {video.authorName || 'User'} • {video.content || 'Video Reel'}
-            </span>
-          </div>
-        </div>
       </div>
 
       {/* Bottom Shading Gradient */}
@@ -267,6 +318,7 @@ const ReelCard = ({ video, isActive, isMuted, toggleMute, currentUserId, onLikeT
     </div>
   );
 };
+
 
 // Comments Drawer Component
 const CommentsDrawer = ({ video, onClose, onCommentSubmit, currentUserId }) => {
@@ -385,10 +437,11 @@ const VideoReelsPage = ({ selectedReelId, onBack }) => {
         // Toggle follow state locally
         setCurrentUser(prev => {
           if (!prev) return prev;
-          const isFollowing = prev.following?.includes(userId);
+          const targetId = String(userId);
+          const isFollowing = prev.following?.some(id => String(id) === targetId);
           const newFollowing = isFollowing 
-            ? prev.following.filter(id => id !== userId)
-            : [...(prev.following || []), userId];
+            ? prev.following.filter(id => String(id) !== targetId)
+            : [...(prev.following || []).map(id => String(id)), targetId];
           return { ...prev, following: newFollowing };
         });
       }
