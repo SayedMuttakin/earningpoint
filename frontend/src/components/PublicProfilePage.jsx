@@ -242,21 +242,12 @@ const PublicProfilePage = ({ userId, onBack, currentUser, isOwnProfile, setActiv
         {/* Action Buttons */}
         <div className="flex items-center gap-3 select-none justify-center px-4 w-full">
           {isOwn ? (
-            <>
               <button 
                 onClick={() => setActiveTab && setActiveTab('EditProfile')}
-                className="flex-1 py-2.5 rounded-full font-black text-sm bg-gradient-to-r from-[#7C3AED] to-brand-500 hover:from-indigo-650 hover:to-brand-600 text-white hover:opacity-95 shadow-md transition-all active:scale-95 text-center font-bold"
+                className="w-full py-2.5 rounded-full font-black text-sm bg-gradient-to-r from-[#7C3AED] to-brand-500 hover:from-indigo-650 hover:to-brand-600 text-white hover:opacity-95 shadow-md transition-all active:scale-95 text-center font-bold"
               >
                 Edit Profile
               </button>
-              
-              <button 
-                onClick={() => setActiveTab && setActiveTab('Setting')}
-                className="flex-1 py-2.5 rounded-full font-black text-sm bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-700 transition-all active:scale-95 shadow-xs text-center font-bold"
-              >
-                Settings
-              </button>
-            </>
           ) : (
             <>
               <button 
