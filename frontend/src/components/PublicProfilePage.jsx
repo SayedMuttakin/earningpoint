@@ -12,7 +12,10 @@ import {
   Grid,
   FileText,
   MessageCircle,
-  Globe
+  Globe,
+  User,
+  UserPlus,
+  Eye
 } from 'lucide-react';
 import { API_BASE } from '../config';
 import VerifiedBadge from './VerifiedBadge';
@@ -118,6 +121,9 @@ const PublicProfilePage = ({ userId, onBack, currentUser, setActiveTab, setSelec
     }
   };
 
+  const totalPosts = (videos ? videos.length : 0) + (posts ? posts.length : 0);
+  const totalViews = videos.reduce((sum, v) => sum + (v.views || 0), 0);
+
   if (loading) {
     return (
       <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex flex-col items-center justify-center gap-3">
@@ -164,47 +170,76 @@ const PublicProfilePage = ({ userId, onBack, currentUser, setActiveTab, setSelec
 
       {/* Main Profile Info Section */}
       <main className="max-w-md mx-auto w-full px-4 pt-4 space-y-5 flex-1">
-        {/* Avatar Area */}
-        <div className="flex flex-col items-center text-center">
-          <div className="bg-gradient-to-tr from-yellow-500 via-red-500 to-purple-600 p-[3px] rounded-full shadow-lg">
-            <div className="bg-white dark:bg-slate-900 p-[2px] rounded-full">
-              {profile.profilePic ? (
-                <img 
-                  src={profile.profilePic.startsWith('http') || profile.profilePic.startsWith('/api') || profile.profilePic.startsWith('data:') 
-                    ? profile.profilePic 
-                    : `${API_BASE}/api/image?file=${encodeURIComponent(profile.profilePic)}`} 
-                  alt={profile.name} 
-                  className="w-24 h-24 rounded-full object-cover"
-                />
-              ) : (
-                <div className="w-24 h-24 rounded-full bg-gradient-to-tr from-indigo-500 to-brand-500 flex items-center justify-center text-white font-black text-3xl shadow-inner">
-                  {profile.name.charAt(0).toUpperCase()}
-                </div>
-              )}
+        {/* Profile Info Section (Avatar glow ring and metadata - HORIZONTAL) */}
+        <div className="flex items-center gap-5 px-1 mt-4">
+          <div className="relative shrink-0">
+            {/* Glowing neon gradient border wrapper */}
+            <div className="relative p-1 bg-gradient-to-tr from-[#00ffff] via-[#818cf8] to-[#c084fc] rounded-full shadow-lg">
+              <div 
+                className="w-20 h-20 sm:w-24 sm:h-24 rounded-full overflow-hidden border-4 border-white dark:border-slate-900 shadow-sm bg-slate-100 flex items-center justify-center relative group"
+              >
+                {profile.profilePic ? (
+                  <img 
+                    src={profile.profilePic.startsWith('http') || profile.profilePic.startsWith('/api') || profile.profilePic.startsWith('data:') 
+                      ? profile.profilePic 
+                      : `${API_BASE}/api/image?file=${encodeURIComponent(profile.profilePic)}`} 
+                    alt={profile.name} 
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform"
+                  />
+                ) : (
+                  <div className="w-full h-full bg-gradient-to-tr from-indigo-500 to-brand-500 flex items-center justify-center text-white text-3xl font-black">
+                    {profile.name.charAt(0).toUpperCase()}
+                  </div>
+                )}
+              </div>
             </div>
+
+            {/* Online status indicator dot (Mockup styling) */}
+            <span className="absolute bottom-0.5 right-0.5 w-4.5 h-4.5 bg-emerald-500 rounded-full border-3 border-white dark:border-slate-900 shadow-xs animate-pulse" />
           </div>
-          <h1 className="text-xl font-black mt-3 flex items-center gap-1">
-            {profile.name}
-            {profile.isEmailVerified && (
-              <VerifiedBadge iconClassName="w-[18px] h-[18px] fill-blue-500 text-white" />
-            )}
-          </h1>
-          <p className="text-xs text-slate-400 font-bold mt-0.5">@{profile.username}</p>
+
+          {/* Text metadata - Left Aligned */}
+          <div className="flex-1 min-w-0 text-left">
+            <h2 className="text-lg sm:text-xl font-black text-slate-850 dark:text-white flex items-center gap-1.5 truncate">
+              {profile.name}
+              {profile.isEmailVerified && (
+                <VerifiedBadge iconClassName="w-[18.5px] h-[18.5px] fill-blue-500 text-white flex-shrink-0" />
+              )}
+            </h2>
+            
+            {/* Auto-generated professional profile handle */}
+            <p className="text-[11.5px] font-black text-slate-500 dark:text-slate-400 tracking-wide font-mono mt-0.5">
+              @{profile.username}
+            </p>
+
+            {/* Status biography */}
+            <p className="text-[11.5px] font-semibold text-slate-600 dark:text-slate-350 leading-relaxed mt-1.5 select-text line-clamp-2">
+              {profile.bio || 'Follow and support me!'}
+            </p>
+          </div>
         </div>
 
-        {/* Stats Row (Following, Followers, Likes) */}
-        <div className="grid grid-cols-3 divide-x divide-slate-200 dark:divide-slate-800 text-center select-none pt-1">
-          <div className="flex flex-col">
-            <span className="text-lg font-black">{formatCount(profile.followingCount)}</span>
-            <span className="text-[10px] text-slate-450 font-bold uppercase tracking-wider">Following</span>
+        {/* Profile Statistics counts card */}
+        <div className="bg-white dark:bg-slate-900 rounded-3xl p-4 flex justify-around text-center shadow-xs w-full">
+          <div className="flex-1">
+            <User strokeWidth={2.4} className="w-5.5 h-5.5 text-indigo-500 mx-auto" />
+            <span className="text-base font-black text-slate-850 dark:text-white block mt-1.5">{totalPosts}</span>
+            <span className="text-[10px] text-slate-400 font-bold block mt-0.5 uppercase tracking-wide">Posts</span>
           </div>
-          <div className="flex flex-col">
-            <span className="text-lg font-black">{formatCount(profile.followersCount)}</span>
-            <span className="text-[10px] text-slate-450 font-bold uppercase tracking-wider">Followers</span>
+          <div className="flex-1">
+            <Heart strokeWidth={2.4} className="w-5.5 h-5.5 text-pink-500 mx-auto fill-pink-500/10" />
+            <span className="text-base font-black text-slate-850 dark:text-white block mt-1.5">{formatCount(profile.followersCount)}</span>
+            <span className="text-[10px] text-slate-400 font-bold block mt-0.5 uppercase tracking-wide">Followers</span>
           </div>
-          <div className="flex flex-col">
-            <span className="text-lg font-black">{formatCount(profile.totalLikes)}</span>
-            <span className="text-[10px] text-slate-450 font-bold uppercase tracking-wider">Likes</span>
+          <div className="flex-1">
+            <UserPlus strokeWidth={2.4} className="w-5.5 h-5.5 text-blue-500 mx-auto" />
+            <span className="text-base font-black text-slate-850 dark:text-white block mt-1.5">{formatCount(profile.followingCount)}</span>
+            <span className="text-[10px] text-slate-400 font-bold block mt-0.5 uppercase tracking-wide">Following</span>
+          </div>
+          <div className="flex-1">
+            <Eye strokeWidth={2.4} className="w-5.5 h-5.5 text-emerald-500 mx-auto" />
+            <span className="text-base font-black text-slate-850 dark:text-white block mt-1.5">{formatCount(totalViews)}</span>
+            <span className="text-[10px] text-slate-400 font-bold block mt-0.5 uppercase tracking-wide">Views</span>
           </div>
         </div>
 
@@ -238,11 +273,6 @@ const PublicProfilePage = ({ userId, onBack, currentUser, setActiveTab, setSelec
           <button className="p-2.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-700 transition-all active:scale-95">
             <ChevronDown className="w-4 h-4" />
           </button>
-        </div>
-
-        {/* Biography */}
-        <div className="bg-white dark:bg-slate-900 border border-slate-150/40 dark:border-slate-800 rounded-3xl p-4.5 text-center text-xs text-slate-650 dark:text-slate-350 leading-relaxed font-bold">
-          {profile.bio}
         </div>
 
         {/* Sub-Tabs Selector */}
