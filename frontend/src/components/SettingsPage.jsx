@@ -106,89 +106,80 @@ const SettingsPage = ({
     { 
       id: 'account_settings', 
       icon: User, 
-      color: 'bg-violet-100/80 dark:bg-violet-950/45 text-violet-650 dark:text-violet-400', 
+      color: 'bg-violet-100 dark:bg-violet-950/40 text-violet-600 dark:text-violet-405', 
       label: '1. Account Settings', 
       sub: 'Manage your profile, security and account', 
-      action: () => setShowProfileModal(true),
-      isFilled: true
+      action: () => setShowProfileModal(true)
     },
     { 
       id: 'notifications', 
       icon: Bell, 
-      color: 'bg-amber-100/80 dark:bg-amber-950/45 text-amber-655 dark:text-amber-400', 
+      color: 'bg-amber-100 dark:bg-amber-950/40 text-amber-600 dark:text-amber-405', 
       label: '2. Notifications', 
       sub: 'Control alerts and notification preferences', 
-      action: () => onNotificationClick && onNotificationClick(),
-      isFilled: true
+      action: () => onNotificationClick && onNotificationClick()
     },
     { 
       id: 'privacy', 
       icon: Shield, 
-      color: 'bg-emerald-100/80 dark:bg-emerald-950/45 text-emerald-655 dark:text-emerald-400', 
+      color: 'bg-emerald-100 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-405', 
       label: '3. Privacy', 
       sub: 'Manage privacy and visibility settings', 
-      action: onTermsClick,
-      isFilled: true
+      action: onTermsClick
     },
     { 
       id: 'messenger', 
       icon: MessageCircle, 
-      color: 'bg-blue-100/80 dark:bg-blue-950/45 text-blue-650 dark:text-blue-400', 
+      color: 'bg-blue-100 dark:bg-blue-950/40 text-blue-600 dark:text-blue-405', 
       label: '4. Messenger', 
       sub: 'Chat and messaging preferences', 
-      action: () => alert('Messenger preferences are synced with your chat settings!'),
-      isFilled: true
+      action: () => alert('Messenger preferences are synced with your chat settings!')
     },
     { 
       id: 'performance', 
       icon: Rocket, 
-      color: 'bg-purple-100/80 dark:bg-purple-950/45 text-purple-650 dark:text-purple-450', 
+      color: 'bg-purple-100 dark:bg-purple-950/40 text-purple-650 dark:text-purple-405', 
       label: '5. App Performance', 
       sub: 'Data saver, optimization and app performance', 
-      action: () => alert('App performance is automatically optimized for your device!'),
-      isFilled: true
+      action: () => alert('App performance is automatically optimized for your device!')
     },
     { 
       id: 'storage', 
       icon: Database, 
-      color: 'bg-sky-100/80 dark:bg-sky-950/45 text-sky-655 dark:text-sky-400', 
+      color: 'bg-sky-100 dark:bg-sky-950/40 text-sky-600 dark:text-sky-405', 
       label: '6. Storage & Data', 
       sub: 'Manage storage, data usage and cache', 
-      action: () => alert('Storage and Cache management feature is coming soon!'),
-      isFilled: true
+      action: () => alert('Storage and Cache management feature is coming soon!')
     },
     { 
       id: 'appearance', 
       icon: Palette, 
-      color: 'bg-pink-100/80 dark:bg-pink-950/45 text-pink-655 dark:text-pink-400', 
+      color: 'bg-pink-100 dark:bg-pink-950/40 text-pink-600 dark:text-pink-405', 
       label: '7. Appearance', 
       sub: 'Theme, dark mode and language', 
-      action: () => setShowAppearanceModal(true),
-      isFilled: true
+      action: () => setShowAppearanceModal(true)
     },
     { 
       id: 'support', 
       icon: Headphones, 
-      color: 'bg-green-100/80 dark:bg-green-950/45 text-green-655 dark:text-green-400', 
+      color: 'bg-green-100 dark:bg-green-950/40 text-green-600 dark:text-green-405', 
       label: '8. Help & Support', 
       sub: 'Get help, report issues and more', 
-      action: onSupportClick,
-      isFilled: true
+      action: onSupportClick
     },
     { 
       id: 'actions', 
       icon: LogOut, 
-      color: 'bg-rose-100/80 dark:bg-rose-950/45 text-rose-650 dark:text-rose-455', 
+      color: 'bg-rose-100 dark:bg-rose-950/40 text-rose-600 dark:text-rose-455', 
       label: '9. Account Actions', 
       sub: 'Logout or delete your account', 
-      action: () => setShowActionsModal(true),
-      isFilled: false
+      action: () => setShowActionsModal(true)
     }
   ];
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-slate-55 dark:bg-slate-955">
+      <div className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-slate-950">
         <div className="w-12 h-12 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin"></div>
       </div>
     );
@@ -196,16 +187,16 @@ const SettingsPage = ({
 
   return (
     <PullToRefresh onRefresh={handleRefresh} refreshing={refreshing}>
-      <div className="min-h-screen bg-slate-55 dark:bg-slate-955 pb-32">
+      <div className="min-h-screen bg-slate-50 dark:bg-slate-950 pb-32">
         {/* Sticky Header Section */}
-        <div className="sticky top-0 z-30 bg-slate-55/90 dark:bg-slate-955/90 backdrop-blur-md px-4 py-3 flex items-center justify-between border-b border-slate-200/50 dark:border-slate-900">
+        <div className="sticky top-0 z-30 bg-slate-50/90 dark:bg-slate-950/90 backdrop-blur-md px-4 py-3 flex items-center justify-between border-b border-slate-200/50 dark:border-slate-900">
           <button 
             onClick={onBack}
-            className="p-2 hover:bg-slate-200/55 dark:hover:bg-slate-900 rounded-full text-slate-700 dark:text-slate-355 active:scale-90 transition-transform"
+            className="p-2 hover:bg-slate-200/50 dark:hover:bg-slate-900 rounded-full text-slate-700 dark:text-slate-350 active:scale-90 transition-transform"
           >
             <ArrowLeft className="w-6 h-6" />
           </button>
-          <h2 className="font-extrabold text-sm text-slate-855 dark:text-slate-100">Settings</h2>
+          <h2 className="font-extrabold text-sm text-slate-850 dark:text-slate-100">Settings</h2>
           <div className="w-10 h-10" />
         </div>
 
@@ -213,7 +204,7 @@ const SettingsPage = ({
           {/* Main Title Section with Search button */}
           <div className="flex items-start justify-between mb-6">
             <div>
-              <h1 className="text-3xl font-black text-slate-855 dark:text-white">Settings</h1>
+              <h1 className="text-3xl font-black text-slate-850 dark:text-white">Settings</h1>
               <p className="text-xs text-slate-400 dark:text-slate-500 font-bold mt-1">Manage your account and app preferences</p>
             </div>
             
@@ -226,7 +217,7 @@ const SettingsPage = ({
           </div>
 
           {/* Single Flat Cards List */}
-          <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-150/40 dark:border-slate-800/80 shadow-xs overflow-hidden flex flex-col w-full">
+          <div className="bg-white dark:bg-slate-900 rounded-3xl shadow-xs overflow-hidden flex flex-col w-full">
             {allItems.map((item, idx) => (
               <button 
                 key={item.id}
@@ -234,16 +225,12 @@ const SettingsPage = ({
                 className="w-full flex items-center justify-between p-4.5 hover:bg-slate-50/50 dark:hover:bg-slate-800/30 border-b border-slate-100 dark:border-slate-800/60 last:border-b-0 transition-colors text-left"
               >
                 <div className="flex items-center gap-3.5 min-w-0">
-                  <div className={`w-11 h-11 flex-shrink-0 rounded-full flex items-center justify-center ${item.color} shadow-3xs`}>
-                    <item.icon 
-                      className="w-5.5 h-5.5" 
-                      fill={item.isFilled ? 'currentColor' : 'none'} 
-                      strokeWidth={1.8}
-                    />
+                  <div className={`w-10 h-10 flex-shrink-0 rounded-full flex items-center justify-center ${item.color} shadow-3xs`}>
+                    <item.icon className="w-5 h-5" strokeWidth={2.4} />
                   </div>
                   <div className="min-w-0">
-                    <span className="font-black text-[15px] text-slate-855 dark:text-slate-200 block truncate">{item.label}</span>
-                    <span className="text-[10px] text-slate-405 dark:text-slate-550 font-bold block truncate mt-0.5">{item.sub}</span>
+                    <span className="font-black text-[15px] text-slate-850 dark:text-slate-200 block truncate">{item.label}</span>
+                    <span className="text-[10px] text-slate-400 dark:text-slate-500 font-bold block truncate mt-0.5">{item.sub}</span>
                   </div>
                 </div>
                 
@@ -253,7 +240,7 @@ const SettingsPage = ({
           </div>
 
           <div className="mt-12 text-center">
-            <p className="text-xs text-slate-400 dark:text-slate-505 font-bold tracking-wide">Zenivio v2.1.0 • Built with ❤️</p>
+            <p className="text-xs text-slate-400 dark:text-slate-500 font-bold tracking-wide">Zenivio v2.1.0 • Built with ❤️</p>
           </div>
         </div>
       </div>
@@ -269,7 +256,7 @@ const SettingsPage = ({
             className="relative w-full sm:max-w-md bg-white dark:bg-slate-900 rounded-t-3xl sm:rounded-3xl shadow-2xl border border-transparent dark:border-slate-800 overflow-hidden animate-fade-in-up"
           >
             <div className="px-5 py-4.5 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
-              <h3 className="text-base font-black text-slate-855 dark:text-white">Account Settings</h3>
+              <h3 className="text-base font-black text-slate-850 dark:text-white">Account Settings</h3>
               <button 
                 onClick={() => setShowProfileModal(false)}
                 className="p-1 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400"
@@ -297,7 +284,7 @@ const SettingsPage = ({
                   required
                   value={editEmail}
                   onChange={(e) => setEditEmail(e.target.value)}
-                  className="w-full bg-slate-55/40 dark:bg-slate-850 rounded-2xl px-4 py-3 text-sm font-semibold text-slate-800 dark:text-white placeholder-slate-450 border border-slate-150/40 dark:border-slate-750 outline-none focus:border-indigo-500/55"
+                  className="w-full bg-slate-55/40 dark:bg-slate-850 rounded-2xl px-4 py-3 text-sm font-semibold text-slate-800 dark:text-white placeholder-slate-450 border border-slate-150/40 dark:border-slate-750 outline-none focus:border-indigo-500/50"
                   placeholder="Enter email"
                 />
               </div>
@@ -318,7 +305,7 @@ const SettingsPage = ({
                     setShowProfileModal(false);
                     onPasswordClick();
                   }}
-                  className="w-full py-3 bg-slate-55 dark:bg-slate-955 dark:hover:bg-slate-900/60 text-slate-800 dark:text-white rounded-2xl font-black border border-slate-150/40 dark:border-slate-800 transition-colors flex items-center justify-center gap-2 text-xs cursor-pointer shadow-3xs"
+                  className="w-full py-3 bg-slate-50 hover:bg-slate-100 dark:bg-slate-950 dark:hover:bg-slate-900/60 text-slate-800 dark:text-white rounded-2xl font-black border border-slate-150/40 dark:border-slate-800 transition-colors flex items-center justify-center gap-2 text-xs cursor-pointer shadow-3xs"
                 >
                   <Lock className="w-4 h-4 text-[#7C3AED]" /> Change Password
                 </button>
@@ -333,13 +320,13 @@ const SettingsPage = ({
         <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center p-0 sm:p-4">
           <div 
             onClick={() => setShowAppearanceModal(false)}
-            className="absolute inset-0 bg-slate-955/70 backdrop-blur-xs animate-fade-in"
+            className="absolute inset-0 bg-slate-950/70 backdrop-blur-xs animate-fade-in"
           />
           <div 
             className="relative w-full sm:max-w-md bg-white dark:bg-slate-900 rounded-t-3xl sm:rounded-3xl shadow-2xl border border-transparent dark:border-slate-800 overflow-hidden animate-fade-in-up"
           >
             <div className="px-5 py-4.5 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
-              <h3 className="text-base font-black text-slate-855 dark:text-white">Appearance Settings</h3>
+              <h3 className="text-base font-black text-slate-850 dark:text-white">Appearance Settings</h3>
               <button 
                 onClick={() => setShowAppearanceModal(false)}
                 className="p-1 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400"
@@ -350,14 +337,14 @@ const SettingsPage = ({
 
             <div className="p-5 space-y-4">
               {/* Dark Mode Toggle */}
-              <div className="flex items-center justify-between bg-slate-50 dark:bg-slate-955 p-4 rounded-2xl border border-slate-150/40 dark:border-slate-800">
+              <div className="flex items-center justify-between bg-slate-50 dark:bg-slate-950 p-4 rounded-2xl border border-slate-150/40 dark:border-slate-800">
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 rounded-full flex items-center justify-center bg-indigo-50 dark:bg-indigo-950 text-[#7C3AED]">
                     {darkMode ? <Moon className="w-5 h-5" /> : <Sun className="w-5 h-5" />}
                   </div>
                   <div>
-                    <p className="font-bold text-sm text-slate-855 dark:text-white">Dark Mode</p>
-                    <p className="text-[10px] text-slate-450 dark:text-slate-500 font-bold">Adjust dark and light modes</p>
+                    <p className="font-bold text-sm text-slate-850 dark:text-white">Dark Mode</p>
+                    <p className="text-[10px] text-slate-400 dark:text-slate-500 font-bold">Adjust dark and light modes</p>
                   </div>
                 </div>
                 
@@ -372,12 +359,12 @@ const SettingsPage = ({
               {/* Language Selection */}
               <div className="flex items-center justify-between bg-slate-50 dark:bg-slate-955 p-4 rounded-2xl border border-slate-150/40 dark:border-slate-800">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full flex items-center justify-center bg-teal-50 dark:bg-teal-950 text-teal-500">
+                  <div className="w-10 h-10 rounded-full flex items-center justify-center bg-teal-50 dark:bg-teal-955 text-teal-555">
                     <Globe className="w-5 h-5" />
                   </div>
                   <div>
-                    <p className="font-bold text-sm text-slate-855 dark:text-white">Language</p>
-                    <p className="text-[10px] text-slate-455 dark:text-slate-500 font-bold">Select app language preferences</p>
+                    <p className="font-bold text-sm text-slate-850 dark:text-white">Language</p>
+                    <p className="text-[10px] text-slate-400 dark:text-slate-500 font-bold">Select app language preferences</p>
                   </div>
                 </div>
                 
@@ -401,16 +388,16 @@ const SettingsPage = ({
         <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center p-0 sm:p-4">
           <div 
             onClick={() => setShowActionsModal(false)}
-            className="absolute inset-0 bg-slate-955/70 backdrop-blur-xs animate-fade-in"
+            className="absolute inset-0 bg-slate-950/70 backdrop-blur-xs animate-fade-in"
           />
           <div 
             className="relative w-full sm:max-w-md bg-white dark:bg-slate-900 rounded-t-3xl sm:rounded-3xl shadow-2xl border border-transparent dark:border-slate-800 overflow-hidden animate-fade-in-up"
           >
             <div className="px-5 py-4.5 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
-              <h3 className="text-base font-black text-slate-855 dark:text-white">Account Actions</h3>
+              <h3 className="text-base font-black text-slate-850 dark:text-white">Account Actions</h3>
               <button 
                 onClick={() => setShowActionsModal(false)}
-                className="p-1 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-455"
+                className="p-1 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -424,7 +411,7 @@ const SettingsPage = ({
                 }}
                 className="w-full py-4 bg-slate-50 dark:bg-slate-950 hover:bg-slate-100 dark:hover:bg-slate-900/60 text-slate-800 dark:text-white font-black rounded-2xl flex items-center justify-center gap-2 border border-slate-150/40 dark:border-slate-800 transition-all active:scale-98 cursor-pointer shadow-3xs"
               >
-                <LogOut className="w-5 h-5 text-slate-500 dark:text-slate-450" />
+                <LogOut className="w-5 h-5 text-slate-500 dark:text-slate-400" />
                 Log Out of Account
               </button>
 
@@ -433,9 +420,9 @@ const SettingsPage = ({
                   setShowActionsModal(false);
                   onDeleteClick();
                 }}
-                className="w-full py-4 bg-rose-50 hover:bg-rose-100 dark:bg-rose-955/30 dark:hover:bg-rose-955/60 text-rose-600 font-black rounded-2xl flex items-center justify-center gap-2 border border-rose-100 dark:border-rose-900/35 transition-all active:scale-98 cursor-pointer"
+                className="w-full py-4 bg-rose-50 hover:bg-rose-100 dark:bg-rose-950/30 dark:hover:bg-rose-950/60 text-rose-600 font-black rounded-2xl flex items-center justify-center gap-2 border border-rose-100 dark:border-rose-900/35 transition-all active:scale-98 cursor-pointer"
               >
-                <Trash2 className="w-5 h-5 text-rose-655" />
+                <Trash2 className="w-5 h-5 text-rose-650" />
                 Permanently Delete Account
               </button>
             </div>
