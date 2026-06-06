@@ -5,17 +5,13 @@ import {
   Share2, 
   ChevronDown, 
   Play, 
-  MessageSquare, 
   Heart, 
-  Loader2, 
-  Users,
-  Grid,
+  Loader2,
   FileText,
   MessageCircle,
   Globe,
   User,
-  UserPlus,
-  Eye
+  UserPlus
 } from 'lucide-react';
 import { API_BASE } from '../config';
 import VerifiedBadge from './VerifiedBadge';
@@ -124,7 +120,6 @@ const PublicProfilePage = ({ userId, onBack, currentUser, isOwnProfile, setActiv
   };
 
   const totalPosts = (videos ? videos.length : 0) + (posts ? posts.length : 0);
-  const totalViews = videos.reduce((sum, v) => sum + (v.views || 0), 0);
 
   if (loading) {
     return (
@@ -241,11 +236,6 @@ const PublicProfilePage = ({ userId, onBack, currentUser, isOwnProfile, setActiv
             <UserPlus strokeWidth={2.4} className="w-5.5 h-5.5 text-blue-500 mx-auto" />
             <span className="text-base font-black text-slate-850 dark:text-white block mt-1.5">{formatCount(profile.followingCount)}</span>
             <span className="text-[10px] text-slate-400 font-bold block mt-0.5 uppercase tracking-wide">Following</span>
-          </div>
-          <div className="flex-1">
-            <Eye strokeWidth={2.4} className="w-5.5 h-5.5 text-emerald-500 mx-auto" />
-            <span className="text-base font-black text-slate-850 dark:text-white block mt-1.5">{formatCount(totalViews)}</span>
-            <span className="text-[10px] text-slate-400 font-bold block mt-0.5 uppercase tracking-wide">Views</span>
           </div>
         </div>
 

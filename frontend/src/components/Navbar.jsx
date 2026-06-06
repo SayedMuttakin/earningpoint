@@ -1,17 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { Home, Bell, DollarSign, ShoppingCart, User, Settings, LogOut, Menu, X, HelpCircle, MessageCircle, Video, Newspaper } from 'lucide-react';
+import { Home, Bell, ShoppingCart, User, Settings, LogOut, Menu, X, Video, Newspaper } from 'lucide-react';
 import { API_BASE } from '../config';
 
-const navItems = [
-  { name: 'Home', icon: Home },
-  { name: 'Notification', icon: Bell },
-  { name: 'Earning', icon: DollarSign },
-  { name: 'Cart', icon: ShoppingCart },
-  { name: 'Profile', icon: User },
-  { name: 'Setting', icon: Settings },
-];
-
-const mobileNavItems = navItems.filter(item => item.name !== 'Setting');
 
 const Navbar = ({ onLogout, activeTab, setActiveTab, currentUser, activePublicProfileUserId }) => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);

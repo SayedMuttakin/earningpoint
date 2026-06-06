@@ -23,7 +23,6 @@ import {
   Shield,
   Edit3,
   Bookmark,
-  Award,
   Loader2,
   X
 } from 'lucide-react';
