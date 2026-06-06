@@ -267,89 +267,91 @@ const SettingsPage = ({
   }
 
   return (
-    <PullToRefresh onRefresh={handleRefresh} refreshing={refreshing}>
-      <div className="min-h-screen bg-slate-50 dark:bg-slate-955 pb-32">
-        <style>{`
-          @keyframes scaleUp {
-            from {
-              opacity: 0;
-              transform: scale(0.92);
+    <>
+      <PullToRefresh onRefresh={handleRefresh} refreshing={refreshing}>
+        <div className="min-h-screen bg-slate-50 dark:bg-slate-955 pb-32">
+          <style>{`
+            @keyframes scaleUp {
+              from {
+                opacity: 0;
+                transform: scale(0.92);
+              }
+              to {
+                opacity: 1;
+                transform: scale(1);
+              }
             }
-            to {
-              opacity: 1;
-              transform: scale(1);
+            .animate-scale-up {
+              animation: scaleUp 0.25s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
             }
-          }
-          .animate-scale-up {
-            animation: scaleUp 0.25s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
-          }
-          @keyframes fadeIn {
-            from { opacity: 0; }
-            to { opacity: 1; }
-          }
-          .animate-fade-in {
-            animation: fadeIn 0.2s ease-out forwards;
-          }
-        `}</style>
+            @keyframes fadeIn {
+              from { opacity: 0; }
+              to { opacity: 1; }
+            }
+            .animate-fade-in {
+              animation: fadeIn 0.2s ease-out forwards;
+            }
+          `}</style>
 
-        {/* Sticky Header Section */}
-        <div className="sticky top-0 z-30 bg-slate-50/90 dark:bg-slate-955/90 backdrop-blur-md px-4 py-3 flex items-center justify-between border-b border-slate-200/50 dark:border-slate-900">
-          <button 
-            onClick={onBack}
-            className="p-2 hover:bg-slate-200/55 dark:hover:bg-slate-900 rounded-full text-slate-700 dark:text-slate-355 active:scale-90 transition-transform"
-          >
-            <ArrowLeft className="w-6 h-6" />
-          </button>
-          <h2 className="font-extrabold text-sm text-slate-850 dark:text-slate-100">Settings</h2>
-          <div className="w-10 h-10" />
-        </div>
-
-        <div className="max-w-md mx-auto px-4 pt-6">
-          {/* Main Title Section with Search button */}
-          <div className="flex items-start justify-between mb-6">
-            <div>
-              <h1 className="text-3xl font-black text-slate-850 dark:text-white">Settings</h1>
-              <p className="text-xs text-slate-400 dark:text-slate-500 font-bold mt-1">Manage your account and app preferences</p>
-            </div>
-            
+          {/* Sticky Header Section */}
+          <div className="sticky top-0 z-30 bg-slate-50/90 dark:bg-slate-955/90 backdrop-blur-md px-4 py-3 flex items-center justify-between border-b border-slate-200/50 dark:border-slate-900">
             <button 
-              onClick={() => alert('Search feature is coming soon!')}
-              className="w-12 h-12 rounded-full bg-white dark:bg-slate-900 shadow-sm border border-slate-150/40 dark:border-slate-800 flex items-center justify-center text-[#7C3AED] hover:scale-105 active:scale-95 transition-transform cursor-pointer"
+              onClick={onBack}
+              className="p-2 hover:bg-slate-200/55 dark:hover:bg-slate-900 rounded-full text-slate-700 dark:text-slate-355 active:scale-90 transition-transform"
             >
-              <Search className="w-5 h-5" strokeWidth={2.5} />
+              <ArrowLeft className="w-6 h-6" />
             </button>
+            <h2 className="font-extrabold text-sm text-slate-855 dark:text-slate-100">Settings</h2>
+            <div className="w-10 h-10" />
           </div>
 
-          {/* Single Flat Cards List */}
-          <div className="bg-white dark:bg-slate-900 rounded-3xl shadow-xs overflow-hidden flex flex-col w-full">
-            {allItems.map((item, idx) => (
+          <div className="max-w-md mx-auto px-4 pt-6">
+            {/* Main Title Section with Search button */}
+            <div className="flex items-start justify-between mb-6">
+              <div>
+                <h1 className="text-3xl font-black text-slate-855 dark:text-white">Settings</h1>
+                <p className="text-xs text-slate-400 dark:text-slate-500 font-bold mt-1">Manage your account and app preferences</p>
+              </div>
+              
               <button 
-                key={item.id}
-                onClick={item.action}
-                className="w-full flex items-center justify-between p-4.5 hover:bg-slate-50/50 dark:hover:bg-slate-800/30 border-b border-slate-100 dark:border-slate-800/60 last:border-b-0 transition-colors text-left"
+                onClick={() => alert('Search feature is coming soon!')}
+                className="w-12 h-12 rounded-full bg-white dark:bg-slate-900 shadow-sm border border-slate-150/40 dark:border-slate-800 flex items-center justify-center text-[#7C3AED] hover:scale-105 active:scale-95 transition-transform cursor-pointer"
               >
-                <div className="flex items-center gap-3.5 min-w-0">
-                  <div className={`w-10 h-10 flex-shrink-0 rounded-full flex items-center justify-center ${item.color} shadow-3xs`}>
-                    <item.icon className="w-5 h-5" strokeWidth={2.4} />
-                  </div>
-                  <div className="min-w-0">
-                    <span className="font-black text-[15px] text-slate-850 dark:text-slate-200 block truncate">{item.label}</span>
-                    <span className="text-[10px] text-slate-400 dark:text-slate-550 font-bold block truncate mt-0.5">{item.sub}</span>
-                  </div>
-                </div>
-                
-                <ChevronRight className="w-4.5 h-4.5 text-indigo-500 dark:text-indigo-400 flex-shrink-0" strokeWidth={3} />
+                <Search className="w-5 h-5" strokeWidth={2.5} />
               </button>
-            ))}
-          </div>
+            </div>
 
-          <div className="mt-12 text-center">
-            <p className="text-xs text-slate-400 dark:text-slate-500 font-bold tracking-wide">Zenivio v2.1.0 • Built with ❤️</p>
+            {/* Single Flat Cards List */}
+            <div className="bg-white dark:bg-slate-900 rounded-3xl shadow-xs overflow-hidden flex flex-col w-full">
+              {allItems.map((item, idx) => (
+                <button 
+                  key={item.id}
+                  onClick={item.action}
+                  className="w-full flex items-center justify-between p-4.5 hover:bg-slate-50/50 dark:hover:bg-slate-800/30 border-b border-slate-100 dark:border-slate-800/60 last:border-b-0 transition-colors text-left"
+                >
+                  <div className="flex items-center gap-3.5 min-w-0">
+                    <div className={`w-10 h-10 flex-shrink-0 rounded-full flex items-center justify-center ${item.color} shadow-3xs`}>
+                      <item.icon className="w-5 h-5" strokeWidth={2.4} />
+                    </div>
+                    <div className="min-w-0">
+                      <span className="font-black text-[15px] text-slate-855 dark:text-slate-200 block truncate">{item.label}</span>
+                      <span className="text-[10px] text-slate-400 dark:text-slate-550 font-bold block truncate mt-0.5">{item.sub}</span>
+                    </div>
+                  </div>
+                  
+                  <ChevronRight className="w-4.5 h-4.5 text-indigo-500 dark:text-indigo-400 flex-shrink-0" strokeWidth={3} />
+                </button>
+              ))}
+            </div>
+
+            <div className="mt-12 text-center">
+              <p className="text-xs text-slate-400 dark:text-slate-500 font-bold tracking-wide">Zenivio v2.1.0 • Built with ❤️</p>
+            </div>
           </div>
         </div>
-      </div>
+      </PullToRefresh>
 
-      {/* Account Settings / Personal Info Modal - Centered */}
+      {/* Account Settings / Personal Info Modal - Centered Viewport */}
       {showProfileModal && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
           <div 
@@ -419,7 +421,7 @@ const SettingsPage = ({
         </div>
       )}
 
-      {/* Sub-Settings Detail Modal - Centered Popup */}
+      {/* Sub-Settings Detail Modal - Centered Viewport */}
       {activeSubMenu && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
           <div 
@@ -450,7 +452,7 @@ const SettingsPage = ({
                   return (
                     <div
                       key={idx}
-                      className="w-full flex items-center justify-between p-4 bg-white dark:bg-slate-955 border border-slate-150/30 dark:border-slate-850 rounded-2xl text-left shadow-3xs animate-fade-in"
+                      className="w-full flex items-center justify-between p-4 bg-white dark:bg-slate-955 border border-slate-150/30 dark:border-slate-855 rounded-2xl text-left shadow-3xs animate-fade-in"
                     >
                       <div className="min-w-0 pr-3">
                         <span className="font-bold text-sm text-slate-855 dark:text-white block">{subItem.label}</span>
@@ -485,7 +487,7 @@ const SettingsPage = ({
           </div>
         </div>
       )}
-    </PullToRefresh>
+    </>
   );
 };
 
