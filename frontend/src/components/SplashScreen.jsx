@@ -5,9 +5,9 @@ const SplashScreen = ({ onFinish }) => {
   const [progress, setProgress] = useState(0);
 
   useEffect(() => {
-    // Simulate loading progress
-    const duration = 2500; // 2.5 seconds total loading time
-    const intervalTime = 50;
+    // Fast loading — don't keep users waiting on splash
+    const duration = 1200; // 1.2 seconds total
+    const intervalTime = 30;
     const steps = duration / intervalTime;
     let currentStep = 0;
 
@@ -20,7 +20,7 @@ const SplashScreen = ({ onFinish }) => {
         clearInterval(timer);
         setTimeout(() => {
           onFinish();
-        }, 300); // small delay after reaching 100%
+        }, 150); // tiny delay after reaching 100%
       }
     }, intervalTime);
 

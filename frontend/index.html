@@ -3,11 +3,28 @@
   <head>
     <meta charset="UTF-8" />
     <link rel="icon" type="image/jpeg" href="/applogo.jpeg" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+
+    <!-- DNS prefetch / preconnect for external origins -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
+    <!-- Preconnect to API origin (replace with real domain if different) -->
+    <link rel="dns-prefetch" href="https://accounts.google.com" />
+
+    <!-- Non-blocking font load -->
+    <link
+      href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800;900&display=swap"
+      rel="stylesheet"
+      media="print"
+      onload="this.media='all'"
+    />
+    <noscript>
+      <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800;900&display=swap" rel="stylesheet" />
+    </noscript>
+
     <title>Zenivio</title>
+
+    <!-- Critical inline styles to prevent FOUC before CSS loads -->
     <style>
       /* Hide standard Google Translate elements to keep UI clean and native */
       .goog-te-banner-frame.skiptranslate { display: none !important; }
@@ -16,20 +33,54 @@
       .goog-tooltip { display: none !important; }
       .goog-tooltip:hover { display: none !important; }
       .goog-text-highlight { background-color: transparent !important; border: none !important; box-shadow: none !important; }
+
+      /* Prevent layout shift on initial paint */
+      html, body { margin: 0; padding: 0; }
+      #root { min-height: 100vh; }
+
+      /* Apply saved dark mode synchronously before React hydrates */
+      html.dark { background-color: #0f172a; color: #f1f5f9; }
     </style>
+
+    <!-- Apply dark mode BEFORE render to avoid flash of wrong theme -->
+    <script>
+      try {
+        if (localStorage.getItem('darkMode') === 'true') {
+          document.documentElement.classList.add('dark');
+        }
+      } catch(e) {}
+    </script>
   </head>
   <body>
-    <!-- Google Translate Injection Target -->
+    <!-- Google Translate injection target -->
     <div id="google_translate_element" style="display:none;"></div>
-    <script type="text/javascript">
-      function googleTranslateElementInit() {
-        new google.translate.TranslateElement({pageLanguage: 'en', autoDisplay: false}, 'google_translate_element');
-      }
-    </script>
-    <script type="text/javascript" src="https://translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
-    <script src="https://accounts.google.com/gsi/client" async defer></script>
 
     <div id="root"></div>
+
+    <!-- Main app bundle -->
     <script type="module" src="/src/main.jsx"></script>
+
+    <!-- Deferred non-critical scripts (load after page is interactive) -->
+    <script>
+      // Load Google Translate lazily after page is interactive
+      window.googleTranslateElementInit = function() {
+        new google.translate.TranslateElement(
+          { pageLanguage: 'en', autoDisplay: false },
+          'google_translate_element'
+        );
+      };
+      // Defer Google Translate — does NOT block page render
+      var gtScript = document.createElement('script');
+      gtScript.src = 'https://translate.google.com/translate_a/element.js?cb=googleTranslateElementInit';
+      gtScript.defer = true;
+      document.body.appendChild(gtScript);
+
+      // Google Sign-In — async + defer so it never blocks
+      var gsiScript = document.createElement('script');
+      gsiScript.src = 'https://accounts.google.com/gsi/client';
+      gsiScript.async = true;
+      gsiScript.defer = true;
+      document.body.appendChild(gsiScript);
+    </script>
   </body>
 </html>

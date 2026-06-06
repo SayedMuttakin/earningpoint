@@ -36,11 +36,11 @@ const ResetPasswordPage = lazy(() => import('./components/ResetPasswordPage'));
 const VideoReelsPage = lazy(() => import('./components/VideoReelsPage'));
 const PublicProfilePage = lazy(() => import('./components/PublicProfilePage'));
 
-// Loader fallback component for lazy-loaded pages
+// Ultra-fast loader fallback — uses inline styles so it renders before CSS parses
 const PageLoader = () => (
-  <div className="flex flex-col items-center justify-center p-12 space-y-3 min-h-[60vh]">
-    <div className="w-8 h-8 border-4 border-brand-500 border-t-transparent rounded-full animate-spin"></div>
-    <span className="text-xs font-semibold text-slate-500 tracking-wide animate-pulse">Loading...</span>
+  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '50vh', gap: '12px' }}>
+    <div style={{ width: 32, height: 32, border: '3px solid #7C3AED', borderTopColor: 'transparent', borderRadius: '50%', animation: 'spin 0.7s linear infinite' }} />
+    <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
   </div>
 );
 

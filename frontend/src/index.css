@@ -1,4 +1,3 @@
-@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&display=swap');
 @import "tailwindcss";
 @custom-variant dark (&:where(.dark, .dark *));
 
@@ -27,7 +26,7 @@
   body {
     background-color: var(--color-white);
     color: var(--color-slate-900);
-    font-family: 'Outfit', system-ui, sans-serif;
+    font-family: 'Outfit', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     text-rendering: optimizeSpeed;
@@ -131,6 +130,23 @@
   .text-stable {
     -webkit-font-smoothing: antialiased;
     transform: translateZ(0);
+  }
+
+  /* Paint containment — browser won't repaint outside element boundary */
+  .contain-paint {
+    contain: paint;
+  }
+
+  /* Skip rendering off-screen content until needed (large lists, etc.) */
+  .content-auto {
+    content-visibility: auto;
+    contain-intrinsic-size: 0 300px; /* estimated size to prevent scroll jump */
+  }
+
+  /* Optimize images for faster decode */
+  .img-fast {
+    decoding: async;
+    loading: lazy;
   }
 }
 
