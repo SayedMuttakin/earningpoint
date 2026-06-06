@@ -16,11 +16,15 @@ import {
   ArrowLeft,
   Smartphone,
   CheckCircle2,
-  X
+  X,
+  Search,
+  Rocket,
+  Palette,
+  Headphones,
+  MessageCircle
 } from 'lucide-react';
 import { API_BASE } from '../config';
 import PullToRefresh from './PullToRefresh';
-
 
 const SettingsPage = ({ 
   darkMode, 
@@ -37,6 +41,8 @@ const SettingsPage = ({
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [showProfileModal, setShowProfileModal] = useState(false);
+  const [showAppearanceModal, setShowAppearanceModal] = useState(false);
+  const [showActionsModal, setShowActionsModal] = useState(false);
   const [editName, setEditName] = useState('');
   const [editEmail, setEditEmail] = useState('');
   const [updateLoading, setUpdateLoading] = useState(false);
@@ -45,7 +51,6 @@ const SettingsPage = ({
   useEffect(() => {
     fetchProfile();
   }, []);
-
 
   const fetchProfile = async () => {
     try {
@@ -99,44 +104,97 @@ const SettingsPage = ({
 
   const sections = [
     {
-      id: 'account',
-      title: 'Account Settings',
+      id: 'group1',
       items: [
-        { id: 'profile', icon: User, label: 'Personal Information', sub: 'Update your name and email', action: () => setShowProfileModal(true) },
-        { id: 'device', icon: Smartphone, label: 'Linked Devices', sub: 'Manage your active sessions', action: () => alert('Currently limited to this device.') },
+        { 
+          id: 'account_settings', 
+          icon: User, 
+          color: 'bg-violet-100 dark:bg-violet-950/45 text-violet-600 dark:text-violet-400', 
+          label: 'Account Settings', 
+          sub: 'Manage your profile, security and account', 
+          action: () => setShowProfileModal(true) 
+        },
+        { 
+          id: 'notifications', 
+          icon: Bell, 
+          color: 'bg-amber-100 dark:bg-amber-950/45 text-amber-600 dark:text-amber-400', 
+          label: 'Notifications', 
+          sub: 'Control alerts and notification preferences', 
+          action: () => onNotificationClick && onNotificationClick() 
+        },
+        { 
+          id: 'privacy', 
+          icon: Shield, 
+          color: 'bg-emerald-100 dark:bg-emerald-950/45 text-emerald-600 dark:text-emerald-400', 
+          label: 'Privacy', 
+          sub: 'Manage privacy and visibility settings', 
+          action: onTermsClick 
+        },
+        { 
+          id: 'messenger', 
+          icon: MessageCircle, 
+          color: 'bg-blue-100 dark:bg-blue-950/45 text-blue-600 dark:text-blue-400', 
+          label: 'Messenger', 
+          sub: 'Chat and messaging preferences', 
+          action: () => alert('Messenger preferences are synced with your chat settings!') 
+        },
       ]
     },
     {
-      id: 'security',
-      title: 'Security',
+      id: 'group2',
       items: [
-        { id: 'password', icon: Lock, label: 'Change Password', sub: 'Update your account password', action: onPasswordClick },
-        { id: '2fa', icon: Shield, label: 'Two-Factor Auth', sub: 'Enhanced security for your account', action: () => alert('2FA is being prepared for the next update!') },
+        { 
+          id: 'performance', 
+          icon: Rocket, 
+          color: 'bg-purple-100 dark:bg-purple-950/45 text-purple-600 dark:text-purple-400', 
+          label: 'App Performance', 
+          sub: 'Data saver, optimization and app performance', 
+          action: () => alert('App performance is automatically optimized for your device!') 
+        },
+        { 
+          id: 'storage', 
+          icon: Database, 
+          color: 'bg-sky-100 dark:bg-sky-950/45 text-sky-600 dark:text-sky-400', 
+          label: 'Storage & Data', 
+          sub: 'Manage storage, data usage and cache', 
+          action: () => alert('Storage and Cache management feature is coming soon!') 
+        },
+        { 
+          id: 'appearance', 
+          icon: Palette, 
+          color: 'bg-pink-100 dark:bg-pink-950/45 text-pink-600 dark:text-pink-400', 
+          label: 'Appearance', 
+          sub: 'Theme, dark mode and language', 
+          action: () => setShowAppearanceModal(true) 
+        },
       ]
     },
     {
-      id: 'preferences',
-      title: 'Preferences',
+      id: 'group3',
       items: [
-        { id: 'appearance', icon: darkMode ? Moon : Sun, label: 'Dark Mode', isToggle: true, value: darkMode, onToggle: onToggleDarkMode },
-        { id: 'language', icon: Globe, label: 'Language', sub: 'English (US)', action: onLanguageClick },
-        { id: 'notifications', icon: Bell, label: 'Notifications', sub: 'Manage your alerts', action: () => onNotificationClick && onNotificationClick() },
-      ]
-    },
-    {
-      id: 'others',
-      title: 'Others',
-      items: [
-        { id: 'terms', icon: FileText, label: 'Terms of Service', sub: 'Read our usage guidelines', action: onTermsClick },
-        { id: 'help', icon: HelpCircle, label: 'Help & Support', sub: 'Contact our support team', action: onSupportClick },
-        { id: 'data', icon: Database, label: 'Data Management', sub: 'Download or clear your data', action: () => alert('Data management feature is coming soon!') },
+        { 
+          id: 'support', 
+          icon: Headphones, 
+          color: 'bg-green-100 dark:bg-green-950/45 text-green-600 dark:text-green-400', 
+          label: 'Help & Support', 
+          sub: 'Get help, report issues and more', 
+          action: onSupportClick 
+        },
+        { 
+          id: 'actions', 
+          icon: LogOut, 
+          color: 'bg-rose-100 dark:bg-rose-950/45 text-rose-600 dark:text-rose-450', 
+          label: 'Account Actions', 
+          sub: 'Logout or delete your account', 
+          action: () => setShowActionsModal(true) 
+        },
       ]
     }
   ];
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-slate-900">
+      <div className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-slate-950">
         <div className="w-12 h-12 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin"></div>
       </div>
     );
@@ -144,153 +202,252 @@ const SettingsPage = ({
 
   return (
     <PullToRefresh onRefresh={handleRefresh} refreshing={refreshing}>
-      <div className="min-h-screen bg-slate-50 dark:bg-slate-900 pb-32">
-        <div className="sticky top-0 z-30 bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl border-b border-slate-200 dark:border-slate-800">
-          <div className="max-w-4xl mx-auto px-4 h-16 sm:h-20 flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <button
-                onClick={onBack}
-                className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full transition-colors text-slate-600 dark:text-slate-400"
-              >
-                <ArrowLeft className="w-5 h-5" />
-              </button>
-              <h1 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white">Settings</h1>
-            </div>
-            <button
-              onClick={onLogout}
-              className="flex items-center gap-2 px-4 py-2 bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 rounded-xl font-bold text-sm hover:bg-red-100 dark:hover:bg-red-900/30 transition-colors"
-            >
-              <LogOut className="w-4 h-4" />
-              <span>Logout</span>
-            </button>
-          </div>
+      <div className="min-h-screen bg-slate-50 dark:bg-slate-950 pb-32">
+        {/* Sticky Header Section */}
+        <div className="sticky top-0 z-30 bg-slate-50/90 dark:bg-slate-950/90 backdrop-blur-md px-4 py-3 flex items-center justify-between border-b border-slate-200/50 dark:border-slate-900">
+          <button 
+            onClick={onBack}
+            className="p-2 hover:bg-slate-200/50 dark:hover:bg-slate-900 rounded-full text-slate-700 dark:text-slate-350 active:scale-90 transition-transform"
+          >
+            <ArrowLeft className="w-6 h-6" />
+          </button>
+          <h2 className="font-extrabold text-sm text-slate-855 dark:text-slate-100">Settings</h2>
+          <div className="w-10 h-10" />
         </div>
 
-        <div className="max-w-4xl mx-auto px-4 pt-8">
+        <div className="max-w-md mx-auto px-4 pt-6">
+          {/* Main Title Section with Search button */}
+          <div className="flex items-start justify-between mb-6">
+            <div>
+              <h1 className="text-3xl font-black text-slate-855 dark:text-white">Settings</h1>
+              <p className="text-xs text-slate-400 dark:text-slate-500 font-bold mt-1">Manage your account and app preferences</p>
+            </div>
+            
+            <button 
+              onClick={() => alert('Search feature is coming soon!')}
+              className="w-12 h-12 rounded-full bg-white dark:bg-slate-900 shadow-sm border border-slate-150/40 dark:border-slate-800 flex items-center justify-center text-[#7C3AED] hover:scale-105 active:scale-95 transition-transform cursor-pointer"
+            >
+              <Search className="w-5 h-5" strokeWidth={2.5} />
+            </button>
+          </div>
 
-        <div className="space-y-8">
-          {sections.map((group) => (
-            <div key={group.id}>
-              <h3 className="text-xs font-black uppercase tracking-widest text-slate-400 dark:text-slate-500 mb-4 px-2">
-                {group.title}
-              </h3>
-              <div className="bg-white dark:bg-slate-800 rounded-3xl border border-slate-200 dark:border-slate-700 shadow-sm overflow-hidden">
-                {group.items.map((item, iIdx) => (
+          {/* Cards Groups */}
+          <div className="space-y-5">
+            {sections.map((group) => (
+              <div 
+                key={group.id}
+                className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-150/40 dark:border-slate-800/80 shadow-xs overflow-hidden flex flex-col w-full"
+              >
+                {group.items.map((item, idx) => (
                   <button 
                     key={item.id}
                     onClick={item.action}
-                    className={`w-full flex items-center justify-between p-4 sm:p-5 hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-all text-left ${
-                      iIdx !== group.items.length - 1 ? 'border-b border-slate-100 dark:border-slate-700' : ''
-                    }`}
+                    className="w-full flex items-center justify-between p-4.5 hover:bg-slate-50/50 dark:hover:bg-slate-800/30 border-b border-slate-100 dark:border-slate-800/60 last:border-b-0 transition-colors text-left"
                   >
-                    <div className="flex items-center gap-4">
-                      <div className={`w-10 h-10 sm:w-12 sm:h-12 rounded-2xl flex items-center justify-center bg-slate-50 dark:bg-slate-700 text-slate-600 dark:text-slate-300`}>
-                        <item.icon className="w-5 h-5 sm:w-6 sm:h-6" />
+                    <div className="flex items-center gap-3.5 min-w-0">
+                      <div className={`w-10 h-10 flex-shrink-0 rounded-full flex items-center justify-center ${item.color} shadow-3xs`}>
+                        <item.icon className="w-5 h-5" strokeWidth={2.4} />
                       </div>
-                      <div>
-                        <p className="font-bold text-slate-900 dark:text-white text-sm sm:text-base">{item.label}</p>
-                        {item.sub && <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">{item.sub}</p>}
+                      <div className="min-w-0">
+                        <span className="font-black text-[15px] text-slate-855 dark:text-slate-200 block truncate">{item.label}</span>
+                        <span className="text-[10px] text-slate-400 dark:text-slate-500 font-bold block truncate mt-0.5">{item.sub}</span>
                       </div>
                     </div>
-
-                    {item.isToggle ? (
-                      <div 
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          item.onToggle();
-                        }}
-                        className={`w-12 h-6 rounded-full relative transition-colors duration-300 cursor-pointer ${item.value ? 'bg-indigo-600' : 'bg-slate-200 dark:bg-slate-600'}`}
-                      >
-                        <div className={`absolute top-1 w-4 h-4 rounded-full bg-white transition-all duration-300 shadow-sm ${item.value ? 'left-7' : 'left-1'}`} />
-                      </div>
-                    ) : (
-                      <ChevronRight className="w-5 h-5 text-slate-300 dark:text-slate-600" />
-                    )}
+                    
+                    <ChevronRight className="w-4.5 h-4.5 text-indigo-500 dark:text-indigo-400 flex-shrink-0" strokeWidth={3} />
                   </button>
                 ))}
               </div>
-            </div>
-          ))}
-
-          <div>
-            <h3 className="text-xs font-black uppercase tracking-widest text-red-500/60 dark:text-red-400/60 mb-4 px-2">
-              Danger Zone
-            </h3>
-            <div className="bg-red-50/50 dark:bg-red-900/10 rounded-3xl border border-red-100 dark:border-red-900/30 overflow-hidden">
-              <button 
-                className="w-full flex items-center justify-between p-4 sm:p-5 hover:bg-red-100/50 dark:hover:bg-red-900/20 transition-all text-left"
-                onClick={onDeleteClick}
-              >
-                <div className="flex items-center gap-4">
-                  <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-2xl bg-red-100 dark:bg-red-900/40 flex items-center justify-center text-red-600 dark:text-red-400">
-                    <Trash2 className="w-5 h-5 sm:w-6 sm:h-6" />
-                  </div>
-                  <div>
-                    <p className="font-bold text-red-600 dark:text-red-400 text-sm sm:text-base">Delete Account</p>
-                    <p className="text-xs text-red-500/70 dark:text-red-400/70 mt-0.5">Permanently remove your data</p>
-                  </div>
-                </div>
-                <ChevronRight className="w-5 h-5 text-red-300 dark:text-red-900/40" />
-              </button>
-            </div>
+            ))}
           </div>
-        </div>
 
-        <div className="mt-12 text-center">
-          <p className="text-sm text-slate-400 dark:text-slate-500 font-medium">Zenivio v2.1.0 • Built with ❤️</p>
-        </div>
+          <div className="mt-12 text-center">
+            <p className="text-xs text-slate-400 dark:text-slate-500 font-bold tracking-wide">Zenivio v2.1.0 • Built with ❤️</p>
+          </div>
         </div>
       </div>
 
+      {/* Account Settings / Personal Info Modal */}
       {showProfileModal && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center p-0 sm:p-4">
           <div 
             onClick={() => setShowProfileModal(false)}
-            className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm animate-fade-in"
+            className="absolute inset-0 bg-slate-950/70 backdrop-blur-xs animate-fade-in"
           />
           <div 
-            className="relative w-full max-w-lg bg-white dark:bg-slate-800 rounded-3xl shadow-2xl border border-slate-200 dark:border-slate-700 overflow-hidden animate-fade-in-up"
+            className="relative w-full sm:max-w-md bg-white dark:bg-slate-900 rounded-t-3xl sm:rounded-3xl shadow-2xl border border-transparent dark:border-slate-800 overflow-hidden animate-fade-in-up"
           >
-            <div className="p-6 border-b border-slate-100 dark:border-slate-700 flex items-center justify-between">
-              <h3 className="text-xl font-black text-slate-900 dark:text-white">Personal Information</h3>
+            <div className="px-5 py-4.5 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
+              <h3 className="text-base font-black text-slate-855 dark:text-white">Account Settings</h3>
               <button 
                 onClick={() => setShowProfileModal(false)}
-                className="p-2 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-xl transition-colors"
+                className="p-1 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400"
               >
-                <X className="w-5 h-5 text-slate-400" />
+                <X className="w-5 h-5" />
               </button>
             </div>
-            <form onSubmit={handleUpdateProfile} className="p-6 space-y-4">
-              <div>
-                <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-1">Full Name</label>
+            
+            <form onSubmit={handleUpdateProfile} className="p-5 space-y-4">
+              <div className="space-y-1.5">
+                <label className="text-xs font-black text-slate-450 dark:text-slate-400 uppercase tracking-wide">Full Name</label>
                 <input 
                   type="text"
                   required
                   value={editName}
                   onChange={(e) => setEditName(e.target.value)}
-                  className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3 text-slate-900 dark:text-white focus:ring-2 focus:ring-indigo-500 outline-none transition-all"
-                  placeholder="Enter your name"
+                  className="w-full bg-slate-55/40 dark:bg-slate-850 rounded-2xl px-4 py-3 text-sm font-semibold text-slate-800 dark:text-white placeholder-slate-450 border border-slate-150/40 dark:border-slate-750 outline-none focus:border-indigo-500/50"
+                  placeholder="Enter name"
                 />
               </div>
-              <div>
-                <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-1">Email Address</label>
+              <div className="space-y-1.5">
+                <label className="text-xs font-black text-slate-450 dark:text-slate-400 uppercase tracking-wide">Email Address</label>
                 <input 
                   type="email"
                   required
                   value={editEmail}
                   onChange={(e) => setEditEmail(e.target.value)}
-                  className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3 text-slate-900 dark:text-white focus:ring-2 focus:ring-indigo-500 outline-none transition-all"
-                  placeholder="Enter your email"
+                  className="w-full bg-slate-55/40 dark:bg-slate-850 rounded-2xl px-4 py-3 text-sm font-semibold text-slate-800 dark:text-white placeholder-slate-450 border border-slate-150/40 dark:border-slate-750 outline-none focus:border-indigo-500/50"
+                  placeholder="Enter email"
                 />
               </div>
+              
               <button 
                 type="submit"
                 disabled={updateLoading}
-                className="w-full py-4 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-black shadow-lg shadow-indigo-500/20 transition-all flex items-center justify-center gap-2"
+                className="w-full py-3.5 bg-gradient-to-r from-[#7C3AED] to-[#5B21B6] text-white font-black rounded-2xl shadow-md shadow-indigo-650/20 hover:shadow-lg transition-all disabled:opacity-50 flex items-center justify-center gap-2 text-sm"
               >
-                {updateLoading ? 'Saving...' : 'Save Changes'}
+                {updateLoading ? 'Saving changes...' : 'Save Changes'}
               </button>
+
+              {/* Password Action */}
+              <div className="pt-4 border-t border-slate-100 dark:border-slate-800 mt-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowProfileModal(false);
+                    onPasswordClick();
+                  }}
+                  className="w-full py-3 bg-slate-55 dark:bg-slate-950 dark:hover:bg-slate-900/60 text-slate-800 dark:text-white rounded-2xl font-black border border-slate-150/40 dark:border-slate-800 transition-colors flex items-center justify-center gap-2 text-xs cursor-pointer shadow-3xs"
+                >
+                  <Lock className="w-4 h-4 text-[#7C3AED]" /> Change Password
+                </button>
+              </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Appearance Settings Modal */}
+      {showAppearanceModal && (
+        <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center p-0 sm:p-4">
+          <div 
+            onClick={() => setShowAppearanceModal(false)}
+            className="absolute inset-0 bg-slate-950/70 backdrop-blur-xs animate-fade-in"
+          />
+          <div 
+            className="relative w-full sm:max-w-md bg-white dark:bg-slate-900 rounded-t-3xl sm:rounded-3xl shadow-2xl border border-transparent dark:border-slate-800 overflow-hidden animate-fade-in-up"
+          >
+            <div className="px-5 py-4.5 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
+              <h3 className="text-base font-black text-slate-855 dark:text-white">Appearance Settings</h3>
+              <button 
+                onClick={() => setShowAppearanceModal(false)}
+                className="p-1 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="p-5 space-y-4">
+              {/* Dark Mode Toggle */}
+              <div className="flex items-center justify-between bg-slate-50 dark:bg-slate-955 p-4 rounded-2xl border border-slate-150/40 dark:border-slate-800">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-full flex items-center justify-center bg-indigo-50 dark:bg-indigo-950 text-[#7C3AED]">
+                    {darkMode ? <Moon className="w-5 h-5" /> : <Sun className="w-5 h-5" />}
+                  </div>
+                  <div>
+                    <p className="font-bold text-sm text-slate-855 dark:text-white">Dark Mode</p>
+                    <p className="text-[10px] text-slate-400 dark:text-slate-500 font-bold">Adjust dark and light modes</p>
+                  </div>
+                </div>
+                
+                <button 
+                  onClick={onToggleDarkMode}
+                  className={`relative inline-flex h-7 w-12 items-center rounded-full transition-colors duration-300 focus:outline-none ${darkMode ? 'bg-[#7C3AED]' : 'bg-slate-250 dark:bg-slate-800'}`}
+                >
+                  <span className={`inline-block h-5 w-5 transform rounded-full bg-white shadow-md transition-transform duration-300 ${darkMode ? 'translate-x-6' : 'translate-x-1'}`} />
+                </button>
+              </div>
+
+              {/* Language Selection */}
+              <div className="flex items-center justify-between bg-slate-50 dark:bg-slate-955 p-4 rounded-2xl border border-slate-150/40 dark:border-slate-800">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-full flex items-center justify-center bg-teal-50 dark:bg-teal-950 text-teal-500">
+                    <Globe className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <p className="font-bold text-sm text-slate-855 dark:text-white">Language</p>
+                    <p className="text-[10px] text-slate-400 dark:text-slate-500 font-bold">Select app language preferences</p>
+                  </div>
+                </div>
+                
+                <button 
+                  onClick={() => {
+                    setShowAppearanceModal(false);
+                    onLanguageClick();
+                  }}
+                  className="px-4.5 py-2 bg-white dark:bg-slate-900 border border-slate-150/40 dark:border-slate-800 rounded-xl text-xs font-black hover:scale-105 active:scale-95 transition-transform shadow-3xs cursor-pointer"
+                >
+                  Change
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Account Actions / Danger Zone Modal */}
+      {showActionsModal && (
+        <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center p-0 sm:p-4">
+          <div 
+            onClick={() => setShowActionsModal(false)}
+            className="absolute inset-0 bg-slate-950/70 backdrop-blur-xs animate-fade-in"
+          />
+          <div 
+            className="relative w-full sm:max-w-md bg-white dark:bg-slate-900 rounded-t-3xl sm:rounded-3xl shadow-2xl border border-transparent dark:border-slate-800 overflow-hidden animate-fade-in-up"
+          >
+            <div className="px-5 py-4.5 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
+              <h3 className="text-base font-black text-slate-855 dark:text-white">Account Actions</h3>
+              <button 
+                onClick={() => setShowActionsModal(false)}
+                className="p-1 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="p-5 space-y-4">
+              <button
+                onClick={() => {
+                  setShowActionsModal(false);
+                  onLogout();
+                }}
+                className="w-full py-4 bg-slate-50 dark:bg-slate-950 hover:bg-slate-100 dark:hover:bg-slate-900/60 text-slate-800 dark:text-white font-black rounded-2xl flex items-center justify-center gap-2 border border-slate-150/40 dark:border-slate-800 transition-all active:scale-98 cursor-pointer shadow-3xs"
+              >
+                <LogOut className="w-5 h-5 text-slate-500 dark:text-slate-400" />
+                Log Out of Account
+              </button>
+
+              <button
+                onClick={() => {
+                  setShowActionsModal(false);
+                  onDeleteClick();
+                }}
+                className="w-full py-4 bg-rose-50 hover:bg-rose-100 dark:bg-rose-950/30 dark:hover:bg-rose-950/60 text-rose-600 font-black rounded-2xl flex items-center justify-center gap-2 border border-rose-100 dark:border-rose-900/35 transition-all active:scale-98 cursor-pointer"
+              >
+                <Trash2 className="w-5 h-5 text-rose-650" />
+                Permanently Delete Account
+              </button>
+            </div>
           </div>
         </div>
       )}
