@@ -55,16 +55,12 @@ const Navbar = ({ onLogout, activeTab, setActiveTab }) => {
                   {isMobileMenuOpen ? <X className="h-7 w-7" /> : <Menu className="h-7 w-7" />}
                 </button>
                 
-                {/* Dropdown Menu for Profile, Setting and Log out */}
+                {/* Dropdown Menu for Setting and Log out */}
                 {isMobileMenuOpen && (
                   <div 
                     className="absolute top-14 left-0 mt-2 w-48 bg-white dark:bg-slate-800 rounded-2xl shadow-xl border border-slate-100 dark:border-slate-700 py-2.5 z-50 overflow-hidden animate-fade-in-up"
                   >
-                    <button onClick={() => { setIsMobileMenuOpen(false); setActiveTab && setActiveTab('Profile'); }} className="w-full text-left px-5 py-3 text-sm font-medium text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 hover:text-brand-600 flex items-center gap-3 transition-colors">
-                      <User className="w-4.5 h-4.5" /> Profile
-                    </button>
-                    <div className="h-px bg-slate-100 dark:bg-slate-700 my-1 mx-3" />
-                    <button onClick={() => { setIsMobileMenuOpen(false); setActiveTab && setActiveTab('Setting'); }} className="w-full text-left px-5 py-3 text-sm font-medium text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 hover:text-brand-600 flex items-center gap-3 transition-colors">
+                    <button onClick={() => { setIsMobileMenuOpen(false); setActiveTab && setActiveTab('Setting'); }} className="w-full text-left px-5 py-3 text-sm font-medium text-slate-700 dark:text-slate-350 hover:bg-slate-50 dark:hover:bg-slate-700 hover:text-brand-600 flex items-center gap-3 transition-colors">
                       <Settings className="w-4.5 h-4.5" /> Setting
                     </button>
                     <div className="h-px bg-slate-100 dark:bg-slate-700 my-1 mx-3" />
@@ -138,7 +134,7 @@ const Navbar = ({ onLogout, activeTab, setActiveTab }) => {
             onClick={() => setActiveTab && setActiveTab('Home')}
             className={`flex flex-col items-center justify-center w-12 transition-all duration-300 active:scale-90 ${activeTab === 'Home' ? 'text-blue-500 dark:text-blue-400' : 'text-slate-450 dark:text-slate-500'}`}
           >
-            <Home className="w-5.5 h-5.5" strokeWidth={activeTab === 'Home' ? 2.5 : 2} />
+            <Home className="w-5.5 h-5.5" strokeWidth={activeTab === 'Home' ? 2.5 : 2} fill={activeTab === 'Home' ? 'currentColor' : 'none'} />
             <span className={`text-[10px] font-black mt-1 tracking-wide ${activeTab === 'Home' ? 'text-blue-600 dark:text-blue-400' : 'text-slate-450 dark:text-slate-500'}`}>Home</span>
           </button>
 
@@ -147,35 +143,16 @@ const Navbar = ({ onLogout, activeTab, setActiveTab }) => {
             onClick={() => setActiveTab && setActiveTab('Video')}
             className={`flex flex-col items-center justify-center w-12 transition-all duration-300 active:scale-90 ${activeTab === 'Video' ? 'text-purple-500 dark:text-purple-400' : 'text-slate-450 dark:text-slate-500'}`}
           >
-            <Video className="w-5.5 h-5.5" strokeWidth={activeTab === 'Video' ? 2.5 : 2} />
+            <Video className="w-5.5 h-5.5" strokeWidth={activeTab === 'Video' ? 2.5 : 2} fill={activeTab === 'Video' ? 'currentColor' : 'none'} />
             <span className={`text-[10px] font-black mt-1 tracking-wide ${activeTab === 'Video' ? 'text-purple-600 dark:text-purple-400' : 'text-slate-450 dark:text-slate-500'}`}>Video</span>
           </button>
-
-          {/* Central Earning [Z] Button */}
-          <div className="relative -top-5 flex flex-col items-center">
-            <button 
-              onClick={() => setActiveTab && setActiveTab('Earning')}
-              className={`w-15 h-15 rounded-full bg-gradient-to-tr from-[#6366f1] via-[#8b5cf6] to-[#ec4899] flex items-center justify-center shadow-lg transform active:scale-90 transition-all duration-300 border-4 border-slate-50 dark:border-slate-950 relative group ${
-                activeTab === 'Earning'
-                  ? 'ring-4 ring-indigo-400/40 shadow-indigo-500/30'
-                  : 'shadow-slate-500/20'
-              }`}
-            >
-              {/* White Z text logo resembling mockup */}
-              <span className="text-white font-black text-2xl font-sans tracking-tight leading-none">Z</span>
-              {/* Gold coin currency badge */}
-              <span className="absolute -top-1 -right-1 bg-amber-400 text-slate-900 text-[8px] font-black w-4.5 h-4.5 rounded-full border border-white dark:border-slate-950 shadow-xs flex items-center justify-center animate-pulse">
-                ৳
-              </span>
-            </button>
-          </div>
 
           {/* News Tab */}
           <button 
             onClick={() => setActiveTab && setActiveTab('Updates')}
             className={`flex flex-col items-center justify-center w-12 transition-all duration-300 active:scale-90 ${activeTab === 'Updates' ? 'text-rose-500 dark:text-rose-400' : 'text-slate-450 dark:text-slate-500'}`}
           >
-            <Newspaper className="w-5.5 h-5.5" strokeWidth={activeTab === 'Updates' ? 2.5 : 2} />
+            <Newspaper className="w-5.5 h-5.5" strokeWidth={activeTab === 'Updates' ? 2.5 : 2} fill={activeTab === 'Updates' ? 'currentColor' : 'none'} />
             <span className={`text-[10px] font-black mt-1 tracking-wide ${activeTab === 'Updates' ? 'text-rose-600 dark:text-rose-400' : 'text-slate-450 dark:text-slate-500'}`}>News</span>
           </button>
 
@@ -184,8 +161,17 @@ const Navbar = ({ onLogout, activeTab, setActiveTab }) => {
             onClick={() => setActiveTab && setActiveTab('Cart')}
             className={`flex flex-col items-center justify-center w-12 transition-all duration-300 active:scale-90 ${activeTab === 'Cart' ? 'text-emerald-500 dark:text-emerald-400' : 'text-slate-450 dark:text-slate-500'}`}
           >
-            <ShoppingCart className="w-5.5 h-5.5" strokeWidth={activeTab === 'Cart' ? 2.5 : 2} />
+            <ShoppingCart className="w-5.5 h-5.5" strokeWidth={activeTab === 'Cart' ? 2.5 : 2} fill={activeTab === 'Cart' ? 'currentColor' : 'none'} />
             <span className={`text-[10px] font-black mt-1 tracking-wide ${activeTab === 'Cart' ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-450 dark:text-slate-500'}`}>Cart</span>
+          </button>
+
+          {/* Profile Tab */}
+          <button 
+            onClick={() => setActiveTab && setActiveTab('Profile')}
+            className={`flex flex-col items-center justify-center w-12 transition-all duration-300 active:scale-90 ${activeTab === 'Profile' ? 'text-indigo-500 dark:text-indigo-400' : 'text-slate-450 dark:text-slate-500'}`}
+          >
+            <User className="w-5.5 h-5.5" strokeWidth={activeTab === 'Profile' ? 2.5 : 2} fill={activeTab === 'Profile' ? 'currentColor' : 'none'} />
+            <span className={`text-[10px] font-black mt-1 tracking-wide ${activeTab === 'Profile' ? 'text-indigo-600 dark:text-indigo-400' : 'text-slate-450 dark:text-slate-500'}`}>Profile</span>
           </button>
           
         </div>
