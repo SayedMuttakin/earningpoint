@@ -40,8 +40,16 @@ const SettingsPage = ({
 }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
+  
+  // Toggles inside Notifications sub-menu
+  const [pushNotifications, setPushNotifications] = useState(true);
+  const [newsAlerts, setNewsAlerts] = useState(true);
+  const [messageAlerts, setMessageAlerts] = useState(true);
+
+  // Modals / Menu Active State
   const [showProfileModal, setShowProfileModal] = useState(false);
   const [activeSubMenu, setActiveSubMenu] = useState(null);
+  
   const [editName, setEditName] = useState('');
   const [editEmail, setEditEmail] = useState('');
   const [updateLoading, setUpdateLoading] = useState(false);
@@ -113,9 +121,9 @@ const SettingsPage = ({
     notifications: {
       title: 'Notifications',
       items: [
-        { label: 'View Alerts', sub: 'Open your notification history feed', action: () => { setActiveSubMenu(null); onNotificationClick(); } },
-        { label: 'Push Notifications', sub: 'Enable or disable push alerts on this device', isToggle: true, value: true, action: () => alert('Push notification preferences updated.') },
-        { label: 'Email Digests', sub: 'Receive weekly progress reports via email', isToggle: true, value: false, action: () => alert('Email digests preference updated.') },
+        { label: 'Push Notifications', sub: 'Enable or disable push alerts on this device', isToggle: true, value: pushNotifications, action: () => setPushNotifications(prev => !prev) },
+        { label: 'News Alerts', sub: 'Get notified about new posts and updates', isToggle: true, value: newsAlerts, action: () => setNewsAlerts(prev => !prev) },
+        { label: 'Message Alerts', sub: 'Receive sound and vibration alerts for chats', isToggle: true, value: messageAlerts, action: () => setMessageAlerts(prev => !prev) },
       ]
     },
     privacy: {
@@ -155,7 +163,7 @@ const SettingsPage = ({
       items: [
         { label: 'Language', sub: 'Select your preferred display language', action: () => { setActiveSubMenu(null); onLanguageClick(); } },
         { label: 'Dark Mode', sub: 'Toggle dark mode and system theme settings', isToggle: true, value: darkMode, action: onToggleDarkMode },
-        { label: 'Theme', sub: 'Select accents and background themes', action: () => alert('Accent themes will be available in the next update!') },
+        { label: 'Theme', sub: 'Select accents and background themes', action: () => alert('Theme settings are managed via Dark Mode.') },
       ]
     },
     support: {
@@ -179,7 +187,7 @@ const SettingsPage = ({
     { 
       id: 'account_settings', 
       icon: User, 
-      color: 'bg-violet-100 dark:bg-violet-950/40 text-violet-650 dark:text-violet-405', 
+      color: 'bg-violet-100 dark:bg-violet-950/40 text-violet-600 dark:text-violet-405', 
       label: '1. Account Settings', 
       sub: 'Manage your profile, security and account', 
       action: () => setActiveSubMenu(subMenuData.account_settings)
@@ -261,6 +269,29 @@ const SettingsPage = ({
   return (
     <PullToRefresh onRefresh={handleRefresh} refreshing={refreshing}>
       <div className="min-h-screen bg-slate-50 dark:bg-slate-955 pb-32">
+        <style>{`
+          @keyframes scaleUp {
+            from {
+              opacity: 0;
+              transform: scale(0.92);
+            }
+            to {
+              opacity: 1;
+              transform: scale(1);
+            }
+          }
+          .animate-scale-up {
+            animation: scaleUp 0.25s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+          }
+          @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+          }
+          .animate-fade-in {
+            animation: fadeIn 0.2s ease-out forwards;
+          }
+        `}</style>
+
         {/* Sticky Header Section */}
         <div className="sticky top-0 z-30 bg-slate-50/90 dark:bg-slate-955/90 backdrop-blur-md px-4 py-3 flex items-center justify-between border-b border-slate-200/50 dark:border-slate-900">
           <button 
@@ -269,7 +300,7 @@ const SettingsPage = ({
           >
             <ArrowLeft className="w-6 h-6" />
           </button>
-          <h2 className="font-extrabold text-sm text-slate-855 dark:text-slate-100">Settings</h2>
+          <h2 className="font-extrabold text-sm text-slate-850 dark:text-slate-100">Settings</h2>
           <div className="w-10 h-10" />
         </div>
 
@@ -277,7 +308,7 @@ const SettingsPage = ({
           {/* Main Title Section with Search button */}
           <div className="flex items-start justify-between mb-6">
             <div>
-              <h1 className="text-3xl font-black text-slate-855 dark:text-white">Settings</h1>
+              <h1 className="text-3xl font-black text-slate-850 dark:text-white">Settings</h1>
               <p className="text-xs text-slate-400 dark:text-slate-500 font-bold mt-1">Manage your account and app preferences</p>
             </div>
             
@@ -318,17 +349,17 @@ const SettingsPage = ({
         </div>
       </div>
 
-      {/* Account Settings / Personal Info Modal */}
+      {/* Account Settings / Personal Info Modal - Centered */}
       {showProfileModal && (
-        <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center p-0 sm:p-4">
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
           <div 
             onClick={() => setShowProfileModal(false)}
-            className="absolute inset-0 bg-slate-955/70 backdrop-blur-xs animate-fade-in"
+            className="absolute inset-0 bg-slate-955/70 backdrop-blur-sm animate-fade-in"
           />
           <div 
-            className="relative w-full sm:max-w-md bg-white dark:bg-slate-900 rounded-t-3xl sm:rounded-3xl shadow-2xl border border-transparent dark:border-slate-800 overflow-hidden animate-fade-in-up"
+            className="relative w-full max-w-md bg-white dark:bg-slate-900 rounded-[32px] shadow-2xl border border-transparent dark:border-slate-800 overflow-hidden animate-scale-up"
           >
-            <div className="px-5 py-4.5 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
+            <div className="px-6 py-5 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
               <h3 className="text-base font-black text-slate-855 dark:text-white">Account Settings</h3>
               <button 
                 onClick={() => setShowProfileModal(false)}
@@ -338,7 +369,7 @@ const SettingsPage = ({
               </button>
             </div>
             
-            <form onSubmit={handleUpdateProfile} className="p-5 space-y-4">
+            <form onSubmit={handleUpdateProfile} className="p-6 space-y-4">
               <div className="space-y-1.5">
                 <label className="text-xs font-black text-slate-450 dark:text-slate-400 uppercase tracking-wide">Full Name</label>
                 <input 
@@ -388,41 +419,41 @@ const SettingsPage = ({
         </div>
       )}
 
-      {/* Sub-Settings Detail Modal */}
+      {/* Sub-Settings Detail Modal - Centered Popup */}
       {activeSubMenu && (
-        <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center p-0 sm:p-4">
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
           <div 
             onClick={() => setActiveSubMenu(null)}
-            className="absolute inset-0 bg-slate-955/70 backdrop-blur-xs animate-fade-in"
+            className="absolute inset-0 bg-slate-955/70 backdrop-blur-sm animate-fade-in"
           />
           <div 
-            className="relative w-full sm:max-w-md bg-white dark:bg-slate-900 rounded-t-3xl sm:rounded-3xl shadow-2xl border border-transparent dark:border-slate-800 overflow-hidden animate-fade-in-up max-h-[85vh] flex flex-col"
+            className="relative z-10 w-full max-w-md bg-white dark:bg-slate-900 rounded-[32px] shadow-2xl border border-transparent dark:border-slate-800 overflow-hidden max-h-[80vh] flex flex-col animate-scale-up"
           >
             {/* Header */}
-            <div className="px-5 py-4.5 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between flex-shrink-0">
+            <div className="px-6 py-5 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between flex-shrink-0">
               <div>
                 <h3 className="text-base font-black text-slate-855 dark:text-white">{activeSubMenu.title}</h3>
                 <p className="text-[10px] text-slate-400 dark:text-slate-500 font-bold mt-0.5">Configure your preferences</p>
               </div>
               <button 
                 onClick={() => setActiveSubMenu(null)}
-                className="p-1 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400"
+                className="p-1.5 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400 transition-colors"
               >
                 <X className="w-5 h-5" />
               </button>
             </div>
 
             {/* Scrollable Items List */}
-            <div className="p-5 space-y-3.5 overflow-y-auto flex-1 bg-slate-50 dark:bg-slate-900">
+            <div className="p-6 space-y-4 overflow-y-auto flex-1 bg-slate-50/50 dark:bg-slate-900">
               {activeSubMenu.items.map((subItem, idx) => {
                 if (subItem.isToggle) {
                   return (
                     <div
                       key={idx}
-                      className="w-full flex items-center justify-between p-4 bg-white dark:bg-slate-950 border border-slate-150/40 dark:border-slate-850 rounded-2xl text-left shadow-3xs"
+                      className="w-full flex items-center justify-between p-4 bg-white dark:bg-slate-955 border border-slate-150/30 dark:border-slate-850 rounded-2xl text-left shadow-3xs animate-fade-in"
                     >
-                      <div className="min-w-0 pr-2">
-                        <span className="font-bold text-sm text-slate-850 dark:text-white block">{subItem.label}</span>
+                      <div className="min-w-0 pr-3">
+                        <span className="font-bold text-sm text-slate-855 dark:text-white block">{subItem.label}</span>
                         <span className="text-[10px] text-slate-405 dark:text-slate-500 font-bold block mt-0.5 leading-relaxed">{subItem.sub}</span>
                       </div>
                       
@@ -440,10 +471,10 @@ const SettingsPage = ({
                   <button
                     key={idx}
                     onClick={subItem.action}
-                    className="w-full flex items-center justify-between p-4 bg-white hover:bg-slate-50/50 dark:bg-slate-955 dark:hover:bg-slate-950 border border-slate-150/40 dark:border-slate-850 rounded-2xl transition-all active:scale-98 text-left shadow-3xs"
+                    className="w-full flex items-center justify-between p-4 bg-white hover:bg-slate-50/50 dark:bg-slate-955 dark:hover:bg-slate-905 border border-slate-150/30 dark:border-slate-855 rounded-2xl transition-all active:scale-98 text-left shadow-3xs animate-fade-in"
                   >
-                    <div className="min-w-0 pr-2">
-                      <span className="font-bold text-sm text-slate-850 dark:text-white block">{subItem.label}</span>
+                    <div className="min-w-0 pr-3">
+                      <span className="font-bold text-sm text-slate-855 dark:text-white block">{subItem.label}</span>
                       <span className="text-[10px] text-slate-405 dark:text-slate-500 font-bold block mt-0.5 leading-relaxed">{subItem.sub}</span>
                     </div>
                     <ChevronRight className="w-4 h-4 text-indigo-500 dark:text-indigo-400 flex-shrink-0" strokeWidth={2.5} />
