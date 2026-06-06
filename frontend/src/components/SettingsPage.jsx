@@ -102,108 +102,93 @@ const SettingsPage = ({
     }
   };
 
-  const sections = [
-    {
-      id: 'group1',
-      items: [
-        { 
-          id: 'account_settings', 
-          icon: User, 
-          color: 'bg-violet-100 dark:bg-violet-950/45 text-violet-650 dark:text-violet-400', 
-          label: '1. Account Settings', 
-          sub: 'Manage your profile, security and account', 
-          action: () => setShowProfileModal(true),
-          isFilled: true
-        },
-        { 
-          id: 'notifications', 
-          icon: Bell, 
-          color: 'bg-amber-100 dark:bg-amber-950/45 text-amber-650 dark:text-amber-400', 
-          label: '2. Notifications', 
-          sub: 'Control alerts and notification preferences', 
-          action: () => onNotificationClick && onNotificationClick(),
-          isFilled: true
-        },
-        { 
-          id: 'privacy', 
-          icon: Shield, 
-          color: 'bg-emerald-100 dark:bg-emerald-950/45 text-emerald-650 dark:text-emerald-400', 
-          label: '3. Privacy', 
-          sub: 'Manage privacy and visibility settings', 
-          action: onTermsClick,
-          isFilled: true
-        },
-        { 
-          id: 'messenger', 
-          icon: MessageCircle, 
-          color: 'bg-blue-100 dark:bg-blue-950/45 text-blue-650 dark:text-blue-400', 
-          label: '4. Messenger', 
-          sub: 'Chat and messaging preferences', 
-          action: () => alert('Messenger preferences are synced with your chat settings!'),
-          isFilled: true
-        },
-      ]
+  const allItems = [
+    { 
+      id: 'account_settings', 
+      icon: User, 
+      color: 'bg-violet-100/80 dark:bg-violet-950/45 text-violet-650 dark:text-violet-400', 
+      label: '1. Account Settings', 
+      sub: 'Manage your profile, security and account', 
+      action: () => setShowProfileModal(true),
+      isFilled: true
     },
-    {
-      id: 'group2',
-      items: [
-        { 
-          id: 'performance', 
-          icon: Rocket, 
-          color: 'bg-purple-100 dark:bg-purple-950/45 text-purple-650 dark:text-purple-450', 
-          label: '5. App Performance', 
-          sub: 'Data saver, optimization and app performance', 
-          action: () => alert('App performance is automatically optimized for your device!'),
-          isFilled: true
-        },
-        { 
-          id: 'storage', 
-          icon: Database, 
-          color: 'bg-sky-100 dark:bg-sky-950/45 text-sky-655 dark:text-sky-400', 
-          label: '6. Storage & Data', 
-          sub: 'Manage storage, data usage and cache', 
-          action: () => alert('Storage and Cache management feature is coming soon!'),
-          isFilled: true
-        },
-        { 
-          id: 'appearance', 
-          icon: Palette, 
-          color: 'bg-pink-100 dark:bg-pink-950/45 text-pink-650 dark:text-pink-400', 
-          label: '7. Appearance', 
-          sub: 'Theme, dark mode and language', 
-          action: () => setShowAppearanceModal(true),
-          isFilled: true
-        },
-      ]
+    { 
+      id: 'notifications', 
+      icon: Bell, 
+      color: 'bg-amber-100/80 dark:bg-amber-950/45 text-amber-655 dark:text-amber-400', 
+      label: '2. Notifications', 
+      sub: 'Control alerts and notification preferences', 
+      action: () => onNotificationClick && onNotificationClick(),
+      isFilled: true
     },
-    {
-      id: 'group3',
-      items: [
-        { 
-          id: 'support', 
-          icon: Headphones, 
-          color: 'bg-green-100 dark:bg-green-950/45 text-green-650 dark:text-green-400', 
-          label: '8. Help & Support', 
-          sub: 'Get help, report issues and more', 
-          action: onSupportClick,
-          isFilled: true
-        },
-        { 
-          id: 'actions', 
-          icon: LogOut, 
-          color: 'bg-rose-100 dark:bg-rose-950/45 text-rose-650 dark:text-rose-450', 
-          label: '9. Account Actions', 
-          sub: 'Logout or delete your account', 
-          action: () => setShowActionsModal(true),
-          isFilled: false
-        },
-      ]
+    { 
+      id: 'privacy', 
+      icon: Shield, 
+      color: 'bg-emerald-100/80 dark:bg-emerald-950/45 text-emerald-655 dark:text-emerald-400', 
+      label: '3. Privacy', 
+      sub: 'Manage privacy and visibility settings', 
+      action: onTermsClick,
+      isFilled: true
+    },
+    { 
+      id: 'messenger', 
+      icon: MessageCircle, 
+      color: 'bg-blue-100/80 dark:bg-blue-950/45 text-blue-650 dark:text-blue-400', 
+      label: '4. Messenger', 
+      sub: 'Chat and messaging preferences', 
+      action: () => alert('Messenger preferences are synced with your chat settings!'),
+      isFilled: true
+    },
+    { 
+      id: 'performance', 
+      icon: Rocket, 
+      color: 'bg-purple-100/80 dark:bg-purple-950/45 text-purple-650 dark:text-purple-450', 
+      label: '5. App Performance', 
+      sub: 'Data saver, optimization and app performance', 
+      action: () => alert('App performance is automatically optimized for your device!'),
+      isFilled: true
+    },
+    { 
+      id: 'storage', 
+      icon: Database, 
+      color: 'bg-sky-100/80 dark:bg-sky-950/45 text-sky-655 dark:text-sky-400', 
+      label: '6. Storage & Data', 
+      sub: 'Manage storage, data usage and cache', 
+      action: () => alert('Storage and Cache management feature is coming soon!'),
+      isFilled: true
+    },
+    { 
+      id: 'appearance', 
+      icon: Palette, 
+      color: 'bg-pink-100/80 dark:bg-pink-950/45 text-pink-655 dark:text-pink-400', 
+      label: '7. Appearance', 
+      sub: 'Theme, dark mode and language', 
+      action: () => setShowAppearanceModal(true),
+      isFilled: true
+    },
+    { 
+      id: 'support', 
+      icon: Headphones, 
+      color: 'bg-green-100/80 dark:bg-green-950/45 text-green-655 dark:text-green-400', 
+      label: '8. Help & Support', 
+      sub: 'Get help, report issues and more', 
+      action: onSupportClick,
+      isFilled: true
+    },
+    { 
+      id: 'actions', 
+      icon: LogOut, 
+      color: 'bg-rose-100/80 dark:bg-rose-950/45 text-rose-650 dark:text-rose-455', 
+      label: '9. Account Actions', 
+      sub: 'Logout or delete your account', 
+      action: () => setShowActionsModal(true),
+      isFilled: false
     }
   ];
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-slate-55 dark:bg-slate-950">
+      <div className="min-h-screen flex items-center justify-center bg-slate-55 dark:bg-slate-955">
         <div className="w-12 h-12 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin"></div>
       </div>
     );
@@ -211,9 +196,9 @@ const SettingsPage = ({
 
   return (
     <PullToRefresh onRefresh={handleRefresh} refreshing={refreshing}>
-      <div className="min-h-screen bg-slate-55 dark:bg-slate-950 pb-32">
+      <div className="min-h-screen bg-slate-55 dark:bg-slate-955 pb-32">
         {/* Sticky Header Section */}
-        <div className="sticky top-0 z-30 bg-slate-55/90 dark:bg-slate-950/90 backdrop-blur-md px-4 py-3 flex items-center justify-between border-b border-slate-200/50 dark:border-slate-900">
+        <div className="sticky top-0 z-30 bg-slate-55/90 dark:bg-slate-955/90 backdrop-blur-md px-4 py-3 flex items-center justify-between border-b border-slate-200/50 dark:border-slate-900">
           <button 
             onClick={onBack}
             className="p-2 hover:bg-slate-200/55 dark:hover:bg-slate-900 rounded-full text-slate-700 dark:text-slate-355 active:scale-90 transition-transform"
@@ -240,37 +225,30 @@ const SettingsPage = ({
             </button>
           </div>
 
-          {/* Cards Groups */}
-          <div className="space-y-5">
-            {sections.map((group) => (
-              <div 
-                key={group.id}
-                className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-150/40 dark:border-slate-800/80 shadow-xs overflow-hidden flex flex-col w-full"
+          {/* Single Flat Cards List */}
+          <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-150/40 dark:border-slate-800/80 shadow-xs overflow-hidden flex flex-col w-full">
+            {allItems.map((item, idx) => (
+              <button 
+                key={item.id}
+                onClick={item.action}
+                className="w-full flex items-center justify-between p-4.5 hover:bg-slate-50/50 dark:hover:bg-slate-800/30 border-b border-slate-100 dark:border-slate-800/60 last:border-b-0 transition-colors text-left"
               >
-                {group.items.map((item, idx) => (
-                  <button 
-                    key={item.id}
-                    onClick={item.action}
-                    className="w-full flex items-center justify-between p-4.5 hover:bg-slate-50/50 dark:hover:bg-slate-800/30 border-b border-slate-100 dark:border-slate-800/60 last:border-b-0 transition-colors text-left"
-                  >
-                    <div className="flex items-center gap-3.5 min-w-0">
-                      <div className={`w-10 h-10 flex-shrink-0 rounded-full flex items-center justify-center ${item.color} shadow-3xs`}>
-                        <item.icon 
-                          className="w-5.5 h-5.5" 
-                          fill={item.isFilled ? 'currentColor' : 'none'} 
-                          strokeWidth={item.isFilled ? 0 : 2.4}
-                        />
-                      </div>
-                      <div className="min-w-0">
-                        <span className="font-black text-[15px] text-slate-855 dark:text-slate-200 block truncate">{item.label}</span>
-                        <span className="text-[10px] text-slate-400 dark:text-slate-500 font-bold block truncate mt-0.5">{item.sub}</span>
-                      </div>
-                    </div>
-                    
-                    <ChevronRight className="w-4.5 h-4.5 text-indigo-500 dark:text-indigo-400 flex-shrink-0" strokeWidth={3} />
-                  </button>
-                ))}
-              </div>
+                <div className="flex items-center gap-3.5 min-w-0">
+                  <div className={`w-11 h-11 flex-shrink-0 rounded-full flex items-center justify-center ${item.color} shadow-3xs`}>
+                    <item.icon 
+                      className="w-5.5 h-5.5" 
+                      fill={item.isFilled ? 'currentColor' : 'none'} 
+                      strokeWidth={1.8}
+                    />
+                  </div>
+                  <div className="min-w-0">
+                    <span className="font-black text-[15px] text-slate-855 dark:text-slate-200 block truncate">{item.label}</span>
+                    <span className="text-[10px] text-slate-405 dark:text-slate-550 font-bold block truncate mt-0.5">{item.sub}</span>
+                  </div>
+                </div>
+                
+                <ChevronRight className="w-4.5 h-4.5 text-indigo-500 dark:text-indigo-400 flex-shrink-0" strokeWidth={3} />
+              </button>
             ))}
           </div>
 
@@ -340,7 +318,7 @@ const SettingsPage = ({
                     setShowProfileModal(false);
                     onPasswordClick();
                   }}
-                  className="w-full py-3 bg-slate-55 dark:bg-slate-950 dark:hover:bg-slate-900/60 text-slate-800 dark:text-white rounded-2xl font-black border border-slate-150/40 dark:border-slate-800 transition-colors flex items-center justify-center gap-2 text-xs cursor-pointer shadow-3xs"
+                  className="w-full py-3 bg-slate-55 dark:bg-slate-955 dark:hover:bg-slate-900/60 text-slate-800 dark:text-white rounded-2xl font-black border border-slate-150/40 dark:border-slate-800 transition-colors flex items-center justify-center gap-2 text-xs cursor-pointer shadow-3xs"
                 >
                   <Lock className="w-4 h-4 text-[#7C3AED]" /> Change Password
                 </button>
@@ -399,7 +377,7 @@ const SettingsPage = ({
                   </div>
                   <div>
                     <p className="font-bold text-sm text-slate-855 dark:text-white">Language</p>
-                    <p className="text-[10px] text-slate-450 dark:text-slate-500 font-bold">Select app language preferences</p>
+                    <p className="text-[10px] text-slate-455 dark:text-slate-500 font-bold">Select app language preferences</p>
                   </div>
                 </div>
                 
@@ -432,7 +410,7 @@ const SettingsPage = ({
               <h3 className="text-base font-black text-slate-855 dark:text-white">Account Actions</h3>
               <button 
                 onClick={() => setShowActionsModal(false)}
-                className="p-1 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-450"
+                className="p-1 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-455"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -446,7 +424,7 @@ const SettingsPage = ({
                 }}
                 className="w-full py-4 bg-slate-50 dark:bg-slate-950 hover:bg-slate-100 dark:hover:bg-slate-900/60 text-slate-800 dark:text-white font-black rounded-2xl flex items-center justify-center gap-2 border border-slate-150/40 dark:border-slate-800 transition-all active:scale-98 cursor-pointer shadow-3xs"
               >
-                <LogOut className="w-5 h-5 text-slate-500 dark:text-slate-400" />
+                <LogOut className="w-5 h-5 text-slate-500 dark:text-slate-450" />
                 Log Out of Account
               </button>
 
@@ -455,9 +433,9 @@ const SettingsPage = ({
                   setShowActionsModal(false);
                   onDeleteClick();
                 }}
-                className="w-full py-4 bg-rose-50 hover:bg-rose-100 dark:bg-rose-950/30 dark:hover:bg-rose-950/60 text-rose-600 font-black rounded-2xl flex items-center justify-center gap-2 border border-rose-100 dark:border-rose-900/35 transition-all active:scale-98 cursor-pointer"
+                className="w-full py-4 bg-rose-50 hover:bg-rose-100 dark:bg-rose-955/30 dark:hover:bg-rose-955/60 text-rose-600 font-black rounded-2xl flex items-center justify-center gap-2 border border-rose-100 dark:border-rose-900/35 transition-all active:scale-98 cursor-pointer"
               >
-                <Trash2 className="w-5 h-5 text-rose-650" />
+                <Trash2 className="w-5 h-5 text-rose-655" />
                 Permanently Delete Account
               </button>
             </div>
