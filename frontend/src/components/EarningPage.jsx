@@ -717,6 +717,101 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
     fetchGlobalWithdrawals();
   }, []);
 
+  React.useEffect(() => {
+    const handleHardwareBack = (e) => {
+      if (showArticleReader) {
+        e.preventDefault();
+        setShowArticleReader(false);
+        setIsReadingStarted(false);
+      } else if (showArticleListView) {
+        e.preventDefault();
+        setShowArticleListView(false);
+      } else if (showWheelView) {
+        e.preventDefault();
+        setShowWheelView(false);
+      } else if (showScratchView) {
+        e.preventDefault();
+        setShowScratchView(false);
+      } else if (showGamesView) {
+        e.preventDefault();
+        setShowGamesView(false);
+      } else if (showQuizView) {
+        e.preventDefault();
+        setShowQuizView(false);
+        setQuizTimerActive(false);
+      } else if (showQuizSelection) {
+        e.preventDefault();
+        setShowQuizSelection(false);
+      } else if (showCheckinView) {
+        e.preventDefault();
+        setShowCheckinView(false);
+      } else if (showMysteryBoxView) {
+        e.preventDefault();
+        setShowMysteryBoxView(false);
+      } else if (showWeeklyMissionsView) {
+        e.preventDefault();
+        setShowWeeklyMissionsView(false);
+      } else if (showLevelView) {
+        e.preventDefault();
+        setShowLevelView(false);
+      } else if (showCoinsDetails) {
+        e.preventDefault();
+        setShowCoinsDetails(false);
+      } else if (showPremiumIPView) {
+        e.preventDefault();
+        setShowPremiumIPView(false);
+      } else if (showGkQuizView) {
+        e.preventDefault();
+        setShowGkQuizView(false);
+      } else if (activeScratchCard) {
+        e.preventDefault();
+        setActiveScratchCard(null);
+      } else if (showStatusOverlay) {
+        e.preventDefault();
+        setShowStatusOverlay(false);
+      } else if (showVpnActivated) {
+        e.preventDefault();
+        setShowVpnActivated(false);
+      } else if (showNativeAd) {
+        e.preventDefault();
+        setShowNativeAd(false);
+      } else if (showOfferwallAd) {
+        e.preventDefault();
+        setShowOfferwallAd(false);
+      } else if (activeEarningTab !== 'rewards') {
+        e.preventDefault();
+        setActiveEarningTab('rewards');
+      }
+    };
+
+    document.addEventListener('appBackButton', handleHardwareBack);
+    return () => {
+      document.removeEventListener('appBackButton', handleHardwareBack);
+    };
+  }, [
+    showArticleReader,
+    showArticleListView,
+    showWheelView,
+    showScratchView,
+    showGamesView,
+    showQuizView,
+    showQuizSelection,
+    showCheckinView,
+    showMysteryBoxView,
+    showWeeklyMissionsView,
+    showLevelView,
+    showCoinsDetails,
+    showPremiumIPView,
+    showGkQuizView,
+    activeScratchCard,
+    showStatusOverlay,
+    showVpnActivated,
+    showNativeAd,
+    showOfferwallAd,
+    activeEarningTab
+  ]);
+
+
   // Show VPN activated celebration when premium becomes active and user hasn't accepted yet
   useEffect(() => {
     if (isPremium && !vpnActivatedShown) {

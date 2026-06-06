@@ -123,6 +123,19 @@ const UpdatesPage = ({ onBack, selectedPostId, setSelectedPostId }) => {
     fetchGlobalSettings();
   }, []);
 
+  useEffect(() => {
+    const handleHardwareBack = (e) => {
+      if (selectedPostId) {
+        e.preventDefault();
+        handleBackToFeed();
+      }
+    };
+    document.addEventListener('appBackButton', handleHardwareBack);
+    return () => {
+      document.removeEventListener('appBackButton', handleHardwareBack);
+    };
+  }, [selectedPostId]);
+
   // Fetch news details if selectedPostId changes
   useEffect(() => {
     const fetchDetailPost = async () => {

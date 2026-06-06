@@ -25,6 +25,19 @@ const CheckoutPage = ({ product, onBack, onSuccess }) => {
     fetchSettings();
   }, []);
 
+  useEffect(() => {
+    const handleHardwareBack = (e) => {
+      if (step === 2) {
+        e.preventDefault();
+        setStep(1);
+      }
+    };
+    document.addEventListener('appBackButton', handleHardwareBack);
+    return () => {
+      document.removeEventListener('appBackButton', handleHardwareBack);
+    };
+  }, [step]);
+
   const handleRefresh = async () => {
     setRefreshing(true);
     setTimeout(() => setRefreshing(false), 500);

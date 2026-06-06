@@ -695,6 +695,23 @@ const HomePage = ({ setActiveTab, setSelectedNewsId, setActiveChatPartner, setSe
     }
   }, [highlightedPostId]);
 
+  useEffect(() => {
+    const handleHardwareBack = (e) => {
+      if (showCreateModal) {
+        e.preventDefault();
+        setShowCreateModal(false);
+      } else if (activeCommentPost) {
+        e.preventDefault();
+        setActiveCommentPost(null);
+      }
+    };
+    document.addEventListener('appBackButton', handleHardwareBack);
+    return () => {
+      document.removeEventListener('appBackButton', handleHardwareBack);
+    };
+  }, [showCreateModal, activeCommentPost]);
+
+
   const handleRefresh = () => {
     setRefreshing(true);
     fetchHomeData();

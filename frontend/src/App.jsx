@@ -56,7 +56,74 @@ function App() {
   const [showOnboarding, setShowOnboarding] = useState(() => !localStorage.getItem('hasSeenOnboarding'));
   const [isLogin, setIsLogin] = useState(true);
   const [isAuthenticated, setIsAuthenticated] = useState(() => !!localStorage.getItem('token'));
-  const [activeTab, setActiveTab] = useState(reelIdFromUrl ? 'Video' : 'Home');
+  const [activeTab, _setActiveTab] = useState(reelIdFromUrl ? 'Video' : 'Home');
+  const [navigationHistory, setNavigationHistory] = useState([reelIdFromUrl ? 'Video' : 'Home']);
+
+  const setActiveTab = (tab) => {
+    setNavigationHistory(prev => {
+      if (tab === 'Home') {
+        return ['Home'];
+      }
+      if (prev[prev.length - 1] === tab) return prev;
+      return [...prev, tab];
+    });
+    _setActiveTab(tab);
+  };
+
+  const handleBackNavigation = () => {
+    setNavigationHistory(prev => {
+      if (prev.length <= 1) {
+        _setActiveTab('Home');
+        return ['Home'];
+      }
+      const newHistory = prev.slice(0, -1);
+      const targetTab = newHistory[newHistory.length - 1];
+      _setActiveTab(targetTab || 'Home');
+      return newHistory;
+    });
+  };
+
+  // Native back button listener
+  const navigationHistoryRef = React.useRef(navigationHistory);
+  useEffect(() => {
+    navigationHistoryRef.current = navigationHistory;
+  }, [navigationHistory]);
+
+  useEffect(() => {
+    let handler;
+    const registerListener = async () => {
+      try {
+        handler = await CapacitorApp.addListener('backButton', () => {
+          const customEvent = new CustomEvent('appBackButton', {
+            cancelable: true,
+            bubbles: true
+          });
+          document.dispatchEvent(customEvent);
+
+          if (customEvent.defaultPrevented) {
+            return;
+          }
+
+          if (navigationHistoryRef.current.length > 1) {
+            handleBackNavigation();
+          } else {
+            CapacitorApp.exitApp();
+          }
+        });
+      } catch (err) {
+        console.error('Capacitor backButton listener failed:', err);
+      }
+    };
+
+    registerListener();
+
+    return () => {
+      if (handler) {
+        handler.remove();
+      }
+    };
+  }, []);
+
   const [selectedReelId, setSelectedReelId] = useState(reelIdFromUrl || null);
   const [showForgotPassword, setShowForgotPassword] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState(null);
@@ -191,13 +258,13 @@ function App() {
             />
           )}
           {activeTab === 'Video' && (
-            <VideoReelsPage selectedReelId={selectedReelId} onBack={() => setActiveTab('Home')} />
+            <VideoReelsPage selectedReelId={selectedReelId} onBack={() => handleBackNavigation()} />
           )}
           {activeTab === 'Cart' && <CartPage onBuyNow={handleBuyNow} />}
-          {activeTab === 'Checkout' && <CheckoutPage product={selectedProduct} onBack={() => setActiveTab('Cart')} onSuccess={(method) => { setSelectedPaymentMethod(method); setActiveTab('PaymentSuccess'); }} />}
+          {activeTab === 'Checkout' && <CheckoutPage product={selectedProduct} onBack={() => handleBackNavigation()} onSuccess={(method) => { setSelectedPaymentMethod(method); setActiveTab('PaymentSuccess'); }} />}
           {activeTab === 'Notification' && (
             <NotificationPage 
-              onBack={() => setActiveTab('Home')} 
+              onBack={() => handleBackNavigation()} 
               setActiveTab={setActiveTab}
               setSelectedNotificationPostId={setSelectedNotificationPostId}
             />
@@ -205,15 +272,15 @@ function App() {
           {activeTab === 'PublicProfile' && (
             <PublicProfilePage 
               userId={activePublicProfileUserId}
-              onBack={() => setActiveTab('Home')}
+              onBack={() => handleBackNavigation()}
               setActiveTab={setActiveTab}
               setSelectedReelId={setSelectedReelId}
               setActiveChatPartner={setActiveChatPartner}
             />
           )}
-          {activeTab === 'PaymentSuccess' && <PaymentSuccess paymentMethod={selectedPaymentMethod} onBack={() => showBackAd(() => setActiveTab('Home'))} />}
+          {activeTab === 'PaymentSuccess' && <PaymentSuccess paymentMethod={selectedPaymentMethod} onBack={() => showBackAd(() => handleBackNavigation())} />}
           {activeTab === 'Profile' && <ProfilePage 
-            onBack={() => setActiveTab('Home')}
+            onBack={() => handleBackNavigation()}
             onVerifyClick={() => setActiveTab('Verify')} 
             onLanguageClick={() => setActiveTab('Language')} 
             onPasswordClick={() => setActiveTab('ChangePassword')}
@@ -228,14 +295,14 @@ function App() {
             darkMode={darkMode}
             onToggleDarkMode={handleToggleDarkMode}
           />}
-          {activeTab === 'Verify' && <VerificationPage onBack={() => showBackAd(() => setActiveTab('Profile'))} />}
-          {activeTab === 'Language' && <LanguagePage onBack={() => showBackAd(() => setActiveTab('Profile'))} />}
-          {activeTab === 'ChangePassword' && <ChangePasswordPage onBack={() => showBackAd(() => setActiveTab('Profile'))} />}
-          {activeTab === 'Referrals' && <ReferralsPage onBack={() => showBackAd(() => setActiveTab('Profile'))} />}
-          {activeTab === 'Leaderboard' && <LeaderboardPage onBack={() => showBackAd(() => setActiveTab('Profile'))} />}
-          {activeTab === 'TransactionHistory' && <TransactionHistoryPage onBack={() => showBackAd(() => setActiveTab('Profile'))} />}
-          {activeTab === 'TermsPrivacy' && <TermsPrivacyPage onBack={() => showBackAd(() => setActiveTab('Profile'))} />}
-          {activeTab === 'DeleteAccount' && <DeleteAccountPage onBack={() => showBackAd(() => setActiveTab('Profile'))} onLogout={handleLogout} />}
+          {activeTab === 'Verify' && <VerificationPage onBack={() => showBackAd(() => handleBackNavigation())} />}
+          {activeTab === 'Language' && <LanguagePage onBack={() => showBackAd(() => handleBackNavigation())} />}
+          {activeTab === 'ChangePassword' && <ChangePasswordPage onBack={() => showBackAd(() => handleBackNavigation())} />}
+          {activeTab === 'Referrals' && <ReferralsPage onBack={() => showBackAd(() => handleBackNavigation())} />}
+          {activeTab === 'Leaderboard' && <LeaderboardPage onBack={() => showBackAd(() => handleBackNavigation())} />}
+          {activeTab === 'TransactionHistory' && <TransactionHistoryPage onBack={() => showBackAd(() => handleBackNavigation())} />}
+          {activeTab === 'TermsPrivacy' && <TermsPrivacyPage onBack={() => showBackAd(() => handleBackNavigation())} />}
+          {activeTab === 'DeleteAccount' && <DeleteAccountPage onBack={() => showBackAd(() => handleBackNavigation())} onLogout={handleLogout} />}
           {activeTab === 'Earning' && <EarningPage onReferralsClick={() => setActiveTab('Referrals')} setActiveTab={setActiveTab} />}
           
           {activeTab === 'Setting' && (
@@ -243,22 +310,23 @@ function App() {
               darkMode={darkMode} 
               onToggleDarkMode={handleToggleDarkMode} 
               onLogout={handleLogout}
-              onBack={() => setActiveTab('Home')}
+              onBack={() => handleBackNavigation()}
               onPasswordClick={() => setActiveTab('ChangePassword')}
               onLanguageClick={() => setActiveTab('Language')}
               onTermsClick={() => setActiveTab('TermsPrivacy')}
               onDeleteClick={() => setActiveTab('DeleteAccount')}
               onNotificationClick={() => setActiveTab('Notification')}
               onSupportClick={() => setActiveTab('Support')}
+              onVerifyClick={() => setActiveTab('Verify')}
             />
           )}
           
-          {activeTab === 'Support' && <SupportPage onBack={() => setActiveTab('Home')} />}
+          {activeTab === 'Support' && <SupportPage onBack={() => handleBackNavigation()} />}
           {activeTab === 'Messenger' && (
             <MessengerPage 
               onBack={() => {
                 setActiveChatPartner(null);
-                setActiveTab('Home');
+                handleBackNavigation();
               }} 
               activeChatPartner={activeChatPartner}
               setActiveChatPartner={setActiveChatPartner}
@@ -268,7 +336,7 @@ function App() {
             <UpdatesPage 
               onBack={() => {
                 setSelectedNewsId(null);
-                setActiveTab('Home');
+                handleBackNavigation();
               }} 
               selectedPostId={selectedNewsId}
               setSelectedPostId={setSelectedNewsId}

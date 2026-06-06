@@ -5,6 +5,7 @@ import {
   Bell,
   Globe,
   Shield,
+  ShieldCheck,
   Trash2,
   ChevronRight,
   Moon,
@@ -36,7 +37,8 @@ const SettingsPage = ({
   onTermsClick, 
   onDeleteClick, 
   onNotificationClick,
-  onSupportClick
+  onSupportClick,
+  onVerifyClick
 }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -58,6 +60,23 @@ const SettingsPage = ({
   useEffect(() => {
     fetchProfile();
   }, []);
+
+  useEffect(() => {
+    const handleHardwareBack = (e) => {
+      if (showProfileModal) {
+        e.preventDefault();
+        setShowProfileModal(false);
+      } else if (activeSubMenu) {
+        e.preventDefault();
+        setActiveSubMenu(null);
+      }
+    };
+    document.addEventListener('appBackButton', handleHardwareBack);
+    return () => {
+      document.removeEventListener('appBackButton', handleHardwareBack);
+    };
+  }, [showProfileModal, activeSubMenu]);
+
 
   const fetchProfile = async () => {
     try {
@@ -188,7 +207,7 @@ const SettingsPage = ({
       id: 'account_settings', 
       icon: User, 
       color: 'bg-violet-100 dark:bg-violet-950/40 text-violet-600 dark:text-violet-405', 
-      label: '1. Account Settings', 
+      label: 'Account Settings', 
       sub: 'Manage your profile, security and account', 
       action: () => setActiveSubMenu(subMenuData.account_settings)
     },
@@ -196,7 +215,7 @@ const SettingsPage = ({
       id: 'notifications', 
       icon: Bell, 
       color: 'bg-amber-100 dark:bg-amber-950/40 text-amber-600 dark:text-amber-405', 
-      label: '2. Notifications', 
+      label: 'Notifications', 
       sub: 'Control alerts and notification preferences', 
       action: () => setActiveSubMenu(subMenuData.notifications)
     },
@@ -204,15 +223,23 @@ const SettingsPage = ({
       id: 'privacy', 
       icon: Shield, 
       color: 'bg-emerald-100 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-405', 
-      label: '3. Privacy', 
+      label: 'Privacy', 
       sub: 'Manage privacy and visibility settings', 
       action: () => setActiveSubMenu(subMenuData.privacy)
+    },
+    { 
+      id: 'verification', 
+      icon: ShieldCheck, 
+      color: 'bg-blue-100 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400', 
+      label: 'Verification', 
+      sub: 'Verify your identity and account status', 
+      action: () => { setActiveSubMenu(null); onVerifyClick(); }
     },
     { 
       id: 'messenger', 
       icon: MessageCircle, 
       color: 'bg-blue-100 dark:bg-blue-950/40 text-blue-600 dark:text-blue-405', 
-      label: '4. Messenger', 
+      label: 'Messenger', 
       sub: 'Chat and messaging preferences', 
       action: () => setActiveSubMenu(subMenuData.messenger)
     },
@@ -220,7 +247,7 @@ const SettingsPage = ({
       id: 'performance', 
       icon: Rocket, 
       color: 'bg-purple-100 dark:bg-purple-950/40 text-purple-650 dark:text-purple-405', 
-      label: '5. App Performance', 
+      label: 'App Performance', 
       sub: 'Data saver, optimization and app performance', 
       action: () => setActiveSubMenu(subMenuData.performance)
     },
@@ -228,7 +255,7 @@ const SettingsPage = ({
       id: 'storage', 
       icon: Database, 
       color: 'bg-sky-100 dark:bg-sky-950/40 text-sky-600 dark:text-sky-405', 
-      label: '6. Storage & Data', 
+      label: 'Storage & Data', 
       sub: 'Manage storage, data usage and cache', 
       action: () => setActiveSubMenu(subMenuData.storage)
     },
@@ -236,7 +263,7 @@ const SettingsPage = ({
       id: 'appearance', 
       icon: Palette, 
       color: 'bg-pink-100 dark:bg-pink-950/40 text-pink-600 dark:text-pink-405', 
-      label: '7. Language & Appearance', 
+      label: 'Language & Appearance', 
       sub: 'Theme, dark mode and language', 
       action: () => setActiveSubMenu(subMenuData.appearance)
     },
@@ -244,7 +271,7 @@ const SettingsPage = ({
       id: 'support', 
       icon: Headphones, 
       color: 'bg-green-100 dark:bg-green-950/40 text-green-600 dark:text-green-405', 
-      label: '8. Help & Support', 
+      label: 'Help & Support', 
       sub: 'Get help, report issues and more', 
       action: () => setActiveSubMenu(subMenuData.support)
     },
@@ -252,7 +279,7 @@ const SettingsPage = ({
       id: 'actions', 
       icon: LogOut, 
       color: 'bg-rose-100 dark:bg-rose-950/40 text-rose-600 dark:text-rose-455', 
-      label: '9. Account Actions', 
+      label: 'Account Actions', 
       sub: 'Logout or delete your account', 
       action: () => setActiveSubMenu(subMenuData.actions)
     }
@@ -296,7 +323,15 @@ const SettingsPage = ({
           {/* Sticky Header Section */}
           <div className="sticky top-0 z-30 bg-slate-50/90 dark:bg-slate-955/90 backdrop-blur-md px-4 py-3 flex items-center justify-between border-b border-slate-200/50 dark:border-slate-900">
             <button 
-              onClick={onBack}
+              onClick={() => {
+                if (showProfileModal) {
+                  setShowProfileModal(false);
+                } else if (activeSubMenu) {
+                  setActiveSubMenu(null);
+                } else {
+                  onBack();
+                }
+              }}
               className="p-2 hover:bg-slate-200/55 dark:hover:bg-slate-900 rounded-full text-slate-700 dark:text-slate-355 active:scale-90 transition-transform"
             >
               <ArrowLeft className="w-6 h-6" />

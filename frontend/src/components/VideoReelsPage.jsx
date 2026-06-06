@@ -443,6 +443,19 @@ const VideoReelsPage = ({ selectedReelId, onBack }) => {
     fetchVideos();
   }, []);
 
+  useEffect(() => {
+    const handleHardwareBack = (e) => {
+      if (activeCommentVideo) {
+        e.preventDefault();
+        setActiveCommentVideo(null);
+      }
+    };
+    document.addEventListener('appBackButton', handleHardwareBack);
+    return () => {
+      document.removeEventListener('appBackButton', handleHardwareBack);
+    };
+  }, [activeCommentVideo]);
+
   const fetchProfile = async () => {
     try {
       const token = localStorage.getItem('token');

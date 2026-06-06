@@ -70,6 +70,28 @@ const MessengerPage = ({ onBack, activeChatPartner, setActiveChatPartner }) => {
       handleOpenChat(activeChatPartner);
     }
   }, [activeChatPartner]);
+
+  useEffect(() => {
+    const handleHardwareBack = (e) => {
+      if (activeCall) {
+        e.preventDefault();
+        stopRingtone();
+        setActiveCall(null);
+      } else if (showEditFavoritesModal) {
+        e.preventDefault();
+        setShowEditFavoritesModal(false);
+      } else if (activePartner) {
+        e.preventDefault();
+        setActivePartner(null);
+        if (setActiveChatPartner) setActiveChatPartner(null);
+        fetchUsers();
+      }
+    };
+    document.addEventListener('appBackButton', handleHardwareBack);
+    return () => {
+      document.removeEventListener('appBackButton', handleHardwareBack);
+    };
+  }, [activeCall, showEditFavoritesModal, activePartner, setActiveChatPartner]);
   const [messages, setMessages] = useState([]);
   const [messageInput, setMessageInput] = useState('');
   const [isPartnerTyping, setIsPartnerTyping] = useState(false);
