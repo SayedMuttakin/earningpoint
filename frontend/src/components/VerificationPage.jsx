@@ -1,6 +1,37 @@
 import React, { useState, useRef, useEffect } from 'react';
 import PullToRefresh from './PullToRefresh';
-import { ChevronLeft, Camera, CheckCircle, Upload, ArrowRight, ShieldCheck, User, Search, ChevronDown } from 'lucide-react';
+import { 
+  ChevronLeft, 
+  Camera, 
+  CheckCircle, 
+  Upload, 
+  ArrowRight, 
+  ShieldCheck, 
+  User, 
+  Search, 
+  ChevronDown, 
+  HelpCircle, 
+  Crown 
+} from 'lucide-react';
+
+// Custom Gold and Blue Twitter-style Verified Badge SVG Components
+const GoldVerifiedBadge = ({ className = "w-12 h-12" }) => (
+  <svg viewBox="0 0 24 24" className={`${className} flex-shrink-0`} fill="currentColor">
+    <g>
+      <path d="M22.5 12.5c0-1.58-.875-2.95-2.148-3.6.154-.435.238-.905.238-1.4 0-2.21-1.71-3.998-3.918-3.998-.47 0-.92.084-1.336.25C14.818 2.415 13.51 1.5 12 1.5s-2.816.917-3.337 2.25c-.416-.165-.866-.25-1.336-.25-2.21 0-3.918 1.79-3.918 4 0 .495.084.965.238 1.4-1.273.65-2.148 2.02-2.148 3.6 0 1.46.827 2.766 2.057 3.435-.032.227-.057.452-.057.682 0 2.21 1.71 4 3.918 4 .47 0 .92-.086 1.336-.25.52 1.334 1.816 2.25 3.337 2.25s2.816-.916 3.337-2.25c.416.164.866.25 1.336.25 2.21 0 3.918-1.79 3.918-4 0-.23-.025-.455-.057-.682 1.23-.67 2.057-1.976 2.057-3.435z" fill="#EAB308"/>
+      <path d="M14.496 9.613l-3.393 3.393-1.614-1.615c-.293-.293-.768-.293-1.06 0-.294.293-.294.768 0 1.06l2.144 2.146c.146.146.338.22.53.22s.384-.073.53-.22l3.923-3.924c.294-.293.294-.768 0-1.06-.293-.293-.768-.293-1.06 0z" fill="#fff"/>
+    </g>
+  </svg>
+);
+
+const BlueVerifiedBadge = ({ className = "w-10 h-10" }) => (
+  <svg viewBox="0 0 24 24" className={`${className} flex-shrink-0`} fill="currentColor">
+    <g>
+      <path d="M22.5 12.5c0-1.58-.875-2.95-2.148-3.6.154-.435.238-.905.238-1.4 0-2.21-1.71-3.998-3.918-3.998-.47 0-.92.084-1.336.25C14.818 2.415 13.51 1.5 12 1.5s-2.816.917-3.337 2.25c-.416-.165-.866-.25-1.336-.25-2.21 0-3.918 1.79-3.918 4 0 .495.084.965.238 1.4-1.273.65-2.148 2.02-2.148 3.6 0 1.46.827 2.766 2.057 3.435-.032.227-.057.452-.057.682 0 2.21 1.71 4 3.918 4 .47 0 .92-.086 1.336-.25.52 1.334 1.816 2.25 3.337 2.25s2.816-.916 3.337-2.25c.416.164.866.25 1.336.25 2.21 0 3.918-1.79 3.918-4 0-.23-.025-.455-.057-.682 1.23-.67 2.057-1.976 2.057-3.435z" fill="#1d9bf0"/>
+      <path d="M14.496 9.613l-3.393 3.393-1.614-1.615c-.293-.293-.768-.293-1.06 0-.294.293-.294.768 0 1.06l2.144 2.146c.146.146.338.22.53.22s.384-.073.53-.22l3.923-3.924c.294-.293.294-.768 0-1.06-.293-.293-.768-.293-1.06 0z" fill="#fff"/>
+    </g>
+  </svg>
+);
 
 const VerificationPage = ({ onBack }) => {
   const [step, setStep] = useState(1);
@@ -10,6 +41,7 @@ const VerificationPage = ({ onBack }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [docType, setDocType] = useState(null);
   const [refreshing, setRefreshing] = useState(false);
+  const [showOfficialModal, setShowOfficialModal] = useState(false);
 
   const handleRefresh = async () => {
     setRefreshing(true);
@@ -36,6 +68,7 @@ const VerificationPage = ({ onBack }) => {
         ]);
       });
   }, []);
+
   const [images, setImages] = useState({
     front: null,
     back: null,
@@ -56,9 +89,83 @@ const VerificationPage = ({ onBack }) => {
     }
   };
 
+  // Intercept the native back button or custom back action to handle sub-navigation safely
+  useEffect(() => {
+    const handleHardwareBack = (e) => {
+      if (showOfficialModal) {
+        e.preventDefault();
+        setShowOfficialModal(false);
+      } else if (isCountryOpen) {
+        e.preventDefault();
+        setIsCountryOpen(false);
+      } else if (step > 1) {
+        e.preventDefault();
+        setStep(prev => prev - 1);
+      }
+    };
+    document.addEventListener('appBackButton', handleHardwareBack);
+    return () => {
+      document.removeEventListener('appBackButton', handleHardwareBack);
+    };
+  }, [showOfficialModal, isCountryOpen, step]);
+
   const renderStepContent = () => {
     switch(step) {
       case 1:
+        return (
+          <div className="flex flex-col h-full space-y-6 animate-fade-in-up">
+            {/* Promo Banner Card (Gold verified badge left, description right) */}
+            <div className="bg-[#FAF7F2] dark:bg-slate-900/50 rounded-3xl p-5 border border-[#F0EAE1] dark:border-slate-800/80 flex items-start gap-4 shadow-3xs">
+              <GoldVerifiedBadge className="w-14 h-14 flex-shrink-0" />
+              <div className="space-y-1">
+                <h2 className="text-[17px] font-black text-slate-900 dark:text-white leading-tight">Get Verified on Zenevio</h2>
+                <p className="text-[11px] text-slate-500 dark:text-slate-400 font-bold leading-relaxed">
+                  Verification helps people trust your profile. Choose a verification type that best represents you.
+                </p>
+              </div>
+            </div>
+            
+            {/* Verification Choices List */}
+            <div className="space-y-4">
+              {/* Card 1: Verified User */}
+              <div className="bg-slate-50/40 dark:bg-slate-900 border border-slate-200/50 dark:border-slate-800 rounded-3xl p-4.5 flex items-center justify-between shadow-3xs hover:border-slate-300 dark:hover:border-slate-700 transition-colors">
+                <div className="flex items-center gap-3.5 min-w-0">
+                  <BlueVerifiedBadge className="w-11 h-11 flex-shrink-0" />
+                  <div className="min-w-0">
+                    <span className="font-extrabold text-[15px] text-slate-855 dark:text-slate-200 block truncate">Verified User</span>
+                    <span className="text-[11px] text-slate-450 dark:text-slate-500 font-bold block truncate mt-0.5">Prove your identity and get verified.</span>
+                  </div>
+                </div>
+                <button 
+                  onClick={() => setStep(2)}
+                  className="px-6 py-2.5 bg-gradient-to-r from-[#7C3AED] to-[#5B21B6] text-white font-black rounded-xl text-xs hover:scale-105 active:scale-95 transition-transform cursor-pointer shadow-sm shadow-indigo-650/20"
+                >
+                  Apply
+                </button>
+              </div>
+
+              {/* Card 2: Official Account */}
+              <div className="bg-slate-50/40 dark:bg-slate-900 border border-slate-200/50 dark:border-slate-800 rounded-3xl p-4.5 flex items-center justify-between shadow-3xs hover:border-slate-300 dark:hover:border-slate-700 transition-colors">
+                <div className="flex items-center gap-3.5 min-w-0">
+                  <div className="w-11 h-11 rounded-full bg-amber-50 dark:bg-amber-950/40 flex items-center justify-center text-amber-500 dark:text-amber-400 flex-shrink-0 shadow-3xs">
+                    <Crown className="w-6 h-6" strokeWidth={2.4} />
+                  </div>
+                  <div className="min-w-0">
+                    <span className="font-extrabold text-[15px] text-slate-855 dark:text-slate-200 block truncate">Official Account</span>
+                    <span className="text-[11px] text-slate-450 dark:text-slate-500 font-bold block truncate mt-0.5">For brands, organizations & public figures.</span>
+                  </div>
+                </div>
+                <button 
+                  onClick={() => setShowOfficialModal(true)}
+                  className="px-6 py-2.5 bg-gradient-to-r from-[#7C3AED] to-[#5B21B6] text-white font-black rounded-xl text-xs hover:scale-105 active:scale-95 transition-transform cursor-pointer shadow-sm shadow-indigo-650/20"
+                >
+                  Apply
+                </button>
+              </div>
+            </div>
+          </div>
+        );
+      case 2:
         return (
           <div className="flex flex-col h-full space-y-6 animate-fade-in-up">
             <div className="text-center mb-4">
@@ -101,7 +208,7 @@ const VerificationPage = ({ onBack }) => {
                       <button
                         key={c.code}
                         onClick={() => { setCountry(c); setIsCountryOpen(false); setSearchQuery(''); }}
-                        className="w-full flex items-center gap-3 p-3 hover:bg-slate-50 transition-colors text-left border-b border-slate-50 last:border-0"
+                        className="w-full flex items-center gap-3 p-3 hover:bg-slate-55 transition-colors text-left border-b border-slate-50 last:border-0"
                       >
                         <img src={`https://flagcdn.com/w40/${c.code.toLowerCase()}.png`} width="24" className="rounded-sm shadow-sm" alt={c.name} />
                         <span className={`text-[15px] ${country.code === c.code ? 'font-bold text-brand-700' : 'font-medium text-slate-700'}`}>{c.name}</span>
@@ -119,14 +226,14 @@ const VerificationPage = ({ onBack }) => {
             <div className="mt-auto pt-8">
               <button 
                 onClick={handleNext} 
-                className="w-full bg-brand-600 hover:bg-brand-700 text-white font-bold py-3.5 rounded-xl transition-colors flex items-center justify-center gap-2 text-lg active:scale-95"
+                className="w-full bg-[#7C3AED] hover:bg-[#5B21B6] text-white font-bold py-3.5 rounded-xl transition-colors flex items-center justify-center gap-2 text-lg active:scale-95"
               >
                 Continue <ArrowRight className="w-5 h-5" />
               </button>
             </div>
           </div>
         );
-      case 2:
+      case 3:
         return (
           <div className="flex flex-col h-full space-y-6 animate-fade-in-up">
             <div className="text-center mb-4">
@@ -138,14 +245,14 @@ const VerificationPage = ({ onBack }) => {
             </div>
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <label className={`relative flex flex-col items-center p-6 border-2 rounded-2xl cursor-pointer transition-all ${docType === 'NID' ? 'border-brand-500 bg-brand-50' : 'border-slate-200 bg-white hover:border-brand-200'}`}>
+              <label className={`relative flex flex-col items-center p-6 border-2 rounded-2xl cursor-pointer transition-all ${docType === 'NID' ? 'border-[#7C3AED] bg-indigo-50/40' : 'border-slate-200 bg-white hover:border-brand-200'}`}>
                 <input type="radio" name="docType" value="NID" className="sr-only" onChange={(e) => setDocType(e.target.value)} />
-                <ShieldCheck className={`w-10 h-10 mb-3 ${docType === 'NID' ? 'text-brand-600' : 'text-slate-400'}`} />
+                <ShieldCheck className={`w-10 h-10 mb-3 ${docType === 'NID' ? 'text-[#7C3AED]' : 'text-slate-400'}`} />
                 <span className={`font-bold text-lg ${docType === 'NID' ? 'text-brand-700' : 'text-slate-700'}`}>National ID</span>
               </label>
-              <label className={`relative flex flex-col items-center p-6 border-2 rounded-2xl cursor-pointer transition-all ${docType === 'Passport' ? 'border-brand-500 bg-brand-50' : 'border-slate-200 bg-white hover:border-brand-200'}`}>
+              <label className={`relative flex flex-col items-center p-6 border-2 rounded-2xl cursor-pointer transition-all ${docType === 'Passport' ? 'border-[#7C3AED] bg-indigo-50/40' : 'border-slate-200 bg-white hover:border-brand-200'}`}>
                 <input type="radio" name="docType" value="Passport" className="sr-only" onChange={(e) => setDocType(e.target.value)} />
-                <GlobeIcon className={`w-10 h-10 mb-3 ${docType === 'Passport' ? 'text-brand-600' : 'text-slate-400'}`} />
+                <GlobeIcon className={`w-10 h-10 mb-3 ${docType === 'Passport' ? 'text-[#7C3AED]' : 'text-slate-400'}`} />
                 <span className={`font-bold text-lg ${docType === 'Passport' ? 'text-brand-700' : 'text-slate-700'}`}>Passport</span>
               </label>
             </div>
@@ -154,14 +261,14 @@ const VerificationPage = ({ onBack }) => {
               <button 
                 onClick={handleNext} 
                 disabled={!docType}
-                className={`w-full font-bold py-3.5 rounded-xl transition-all flex items-center justify-center gap-2 text-lg ${docType ? 'bg-brand-600 hover:bg-brand-700 text-white active:scale-95 shadow-md' : 'bg-slate-200 text-slate-400 cursor-not-allowed'}`}
+                className={`w-full font-bold py-3.5 rounded-xl transition-all flex items-center justify-center gap-2 text-lg ${docType ? 'bg-[#7C3AED] hover:bg-[#5B21B6] text-white active:scale-95 shadow-md shadow-indigo-650/20' : 'bg-slate-200 text-slate-400 cursor-not-allowed'}`}
               >
                 Continue <ArrowRight className="w-5 h-5" />
               </button>
             </div>
           </div>
         );
-      case 3:
+      case 4:
         return (
           <CaptureStep 
             title={`Front of ${docType}`}
@@ -173,7 +280,7 @@ const VerificationPage = ({ onBack }) => {
             captureMode="environment"
           />
         );
-      case 4:
+      case 5:
         return (
           <CaptureStep 
             title={`Back of ${docType}`}
@@ -185,7 +292,7 @@ const VerificationPage = ({ onBack }) => {
             captureMode="environment"
           />
         );
-      case 5:
+      case 6:
         return (
           <CaptureStep 
             title="Selfie Verification"
@@ -198,7 +305,7 @@ const VerificationPage = ({ onBack }) => {
             isSelfie={true}
           />
         );
-      case 6:
+      case 7:
         return (
           <div className="flex flex-col items-center justify-center h-full py-12 text-center space-y-6 animate-fade-in-up">
             <div className="w-24 h-24 bg-green-100 rounded-full flex items-center justify-center text-green-500 shadow-sm mb-4">
@@ -208,7 +315,7 @@ const VerificationPage = ({ onBack }) => {
             <p className="text-slate-500 text-base max-w-sm leading-relaxed">
               Your identity verification documents have been successfully uploaded securely. Our team will review them shortly.
             </p>
-            <button onClick={onBack} className="w-full max-w-sm mt-8 bg-brand-600 hover:bg-brand-700 text-white font-bold py-3.5 rounded-xl transition-colors shadow-md active:scale-95 text-lg">
+            <button onClick={onBack} className="w-full max-w-sm mt-8 bg-[#7C3AED] hover:bg-[#5B21B6] text-white font-bold py-3.5 rounded-xl transition-colors shadow-md active:scale-95 text-lg">
               Return to Profile
             </button>
           </div>
@@ -220,33 +327,94 @@ const VerificationPage = ({ onBack }) => {
 
   return (
     <PullToRefresh onRefresh={handleRefresh} refreshing={refreshing}>
-      <div className="w-full min-h-screen bg-slate-50 flex flex-col relative pb-24">
+      <div className="w-full min-h-screen bg-white dark:bg-slate-955 flex flex-col relative pb-24 select-none">
+        <style>{`
+          @keyframes scaleUp {
+            from {
+              opacity: 0;
+              transform: scale(0.92);
+            }
+            to {
+              opacity: 1;
+              transform: scale(1);
+            }
+          }
+          .animate-scale-up {
+            animation: scaleUp 0.25s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+          }
+          @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+          }
+          .animate-fade-in {
+            animation: fadeIn 0.2s ease-out forwards;
+          }
+        `}</style>
+
         {/* Header */}
-        <div className="sticky top-0 z-10 bg-white border-b border-slate-100 shadow-sm">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex items-center relative">
-            <button onClick={onBack} className="absolute left-4 sm:left-6 lg:left-8 w-10 h-10 rounded-full bg-slate-50 flex items-center justify-center hover:bg-slate-100 transition-colors">
-              <ChevronLeft className="w-6 h-6 text-slate-700" />
+        <div className="sticky top-0 z-10 bg-white dark:bg-slate-955 border-b border-slate-100 dark:border-slate-900 shadow-3xs">
+          <div className="max-w-md mx-auto px-4 py-4 flex items-center justify-between relative">
+            <button 
+              onClick={() => {
+                if (step === 1) {
+                  onBack();
+                } else {
+                  setStep(prev => prev - 1);
+                }
+              }} 
+              className="p-2 hover:bg-slate-100 dark:hover:bg-slate-900 rounded-full text-slate-700 dark:text-slate-300 active:scale-90 transition-transform cursor-pointer"
+            >
+              <ChevronLeft className="w-6 h-6" />
             </button>
-            <h1 className="text-xl font-bold text-slate-900 mx-auto">Verify Identity</h1>
+            <h1 className="text-base font-black text-slate-900 dark:text-white absolute left-1/2 -translate-x-1/2">Verification</h1>
+            <button 
+              onClick={() => alert('Verification Guide: Submit your government-issued ID (NID or Passport) to obtain the Verified User badge. Official Accounts are strictly for brands, public entities, or verified public figures.')}
+              className="p-2 hover:bg-slate-100 dark:hover:bg-slate-900 rounded-full text-slate-500 dark:text-slate-400 active:scale-90 transition-transform cursor-pointer"
+            >
+              <HelpCircle className="w-6 h-6" />
+            </button>
           </div>
         </div>
 
-        {/* Progress Bar */}
-        {step < 6 && (
-          <div className="w-full bg-slate-200 h-1.5">
+        {/* Progress Bar (Only visible when user enters the document verification stages) */}
+        {step > 1 && step < 7 && (
+          <div className="w-full bg-slate-100 dark:bg-slate-900 h-1.5 flex-shrink-0">
             <div 
-              className="h-full bg-brand-500 transition-all duration-300"
-              style={{ width: `${(step / 5) * 100}%` }}
+              className="h-full bg-[#7C3AED] transition-all duration-300"
+              style={{ width: `${((step - 1) / 5) * 100}%` }}
             />
           </div>
         )}
 
         {/* Main Content Area */}
-        <div className="max-w-7xl mx-auto w-full px-5 sm:px-8 py-8 sm:py-12 flex-1 flex justify-center">
-          <div className="w-full max-w-xl flex flex-col h-full">
-            {renderStepContent()}
-          </div>
+        <div className="max-w-md mx-auto w-full px-4 pt-6 flex-1 flex flex-col justify-start">
+          {renderStepContent()}
         </div>
+
+        {/* Official Account Support Overlay Dialog Modal */}
+        {showOfficialModal && (
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+            <div 
+              onClick={() => setShowOfficialModal(false)}
+              className="absolute inset-0 bg-slate-955/75 backdrop-blur-xs animate-fade-in"
+            />
+            <div className="relative z-10 w-full max-w-xs bg-white dark:bg-slate-900 rounded-[32px] p-6 shadow-2xl border border-transparent dark:border-slate-800 overflow-hidden animate-scale-up text-center space-y-4">
+              <div className="w-12 h-12 rounded-full bg-amber-100 dark:bg-amber-950/50 text-amber-600 dark:text-amber-400 flex items-center justify-center mx-auto shadow-3xs">
+                <Crown className="w-6 h-6" />
+              </div>
+              <h3 className="text-lg font-black text-slate-800 dark:text-white">Apply for Official Badge</h3>
+              <p className="text-xs text-slate-500 dark:text-slate-400 font-bold leading-relaxed">
+                To apply for an Official Account badge, please contact our support team or send your company registration documentation and brand details to <span className="text-indigo-600 font-extrabold select-text">support@zenevio.com</span>.
+              </p>
+              <button 
+                onClick={() => setShowOfficialModal(false)}
+                className="w-full py-3 bg-gradient-to-r from-[#7C3AED] to-[#5B21B6] text-white font-black rounded-2xl shadow-md shadow-indigo-650/20 active:scale-95 transition-transform"
+              >
+                Got it
+              </button>
+            </div>
+          </div>
+        )}
       </div>
     </PullToRefresh>
   );
@@ -260,7 +428,7 @@ const CaptureStep = ({ title, description, image, onCapture, onNext, inputRef, c
         {isSelfie ? <User className="w-8 h-8" /> : <Camera className="w-8 h-8" />}
       </div>
       <h2 className="text-2xl font-bold text-slate-900 mb-2">{title}</h2>
-      <p className="text-slate-500 text-sm max-w-sm mx-auto">{description}</p>
+      <p className="text-slate-500 text-sm max-w-xs mx-auto leading-relaxed">{description}</p>
     </div>
 
     {/* Camera / Preview Box */}
@@ -302,7 +470,7 @@ const CaptureStep = ({ title, description, image, onCapture, onNext, inputRef, c
       <button 
         onClick={onNext} 
         disabled={!image}
-        className={`w-full font-bold py-3.5 rounded-xl transition-all flex items-center justify-center gap-2 text-lg shadow-sm ${image ? 'bg-brand-600 hover:bg-brand-700 text-white active:scale-95 shadow-brand-500/20' : 'bg-slate-200 text-slate-400 cursor-not-allowed'}`}
+        className={`w-full font-bold py-3.5 rounded-xl transition-all flex items-center justify-center gap-2 text-lg shadow-sm ${image ? 'bg-[#7C3AED] hover:bg-[#5B21B6] text-white active:scale-95 shadow-indigo-650/20' : 'bg-slate-200 text-slate-400 cursor-not-allowed'}`}
       >
         Confirm & Continue <ArrowRight className="w-5 h-5" />
       </button>
