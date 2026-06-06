@@ -326,11 +326,11 @@ const CommunityPostCard = ({ post, onFollowToggle, onLikeToggle, onCommentClick,
 
       {/* Media Attachment (Image or Video) */}
       {post.image && (
-        <div className="rounded-2xl overflow-hidden border border-slate-100 dark:border-slate-850 bg-slate-100/40 dark:bg-slate-900/40 mt-1 flex items-center justify-center w-full max-h-[500px] select-none">
+        <div className="rounded-2xl overflow-hidden border border-slate-100 dark:border-slate-850 bg-slate-100/40 dark:bg-slate-900/40 mt-1 w-full max-h-[450px] select-none">
           <img 
             src={post.image.startsWith('http') || post.image.startsWith('/api') || post.image.startsWith('data:') ? post.image : `${API_BASE}/api/image?file=${encodeURIComponent(post.image)}`} 
             alt="Post Content"
-            className="w-full h-auto object-contain max-h-[500px]"
+            className="w-full h-auto object-cover max-h-[450px]"
             loading="lazy"
             decoding="async"
           />

@@ -229,8 +229,12 @@ exports.searchUsers = async (req, res) => {
 // @access  Private
 exports.getPublicProfile = async (req, res) => {
   try {
-    const targetUserId = req.params.userId;
+    let targetUserId = req.params.userId;
     const currentUserId = req.user._id;
+
+    if (targetUserId === 'me') {
+      targetUserId = currentUserId;
+    }
 
     const user = await User.findById(targetUserId).select('name email profilePic googleAvatar isEmailVerified followers following bio');
     if (!user) {

@@ -13,7 +13,7 @@ const navItems = [
 
 const mobileNavItems = navItems.filter(item => item.name !== 'Setting');
 
-const Navbar = ({ onLogout, activeTab, setActiveTab }) => {
+const Navbar = ({ onLogout, activeTab, setActiveTab, currentUser, activePublicProfileUserId }) => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
 
@@ -167,11 +167,23 @@ const Navbar = ({ onLogout, activeTab, setActiveTab }) => {
 
           {/* Profile Tab */}
           <button 
-            onClick={() => setActiveTab && setActiveTab('Profile')}
-            className={`flex flex-col items-center justify-center w-12 transition-all duration-300 active:scale-90 ${activeTab === 'Profile' ? 'text-indigo-500 dark:text-indigo-400' : 'text-slate-450 dark:text-slate-500'}`}
+            onClick={() => setActiveTab && setActiveTab('MyProfile')}
+            className={`flex flex-col items-center justify-center w-12 transition-all duration-300 active:scale-90 ${
+              (activeTab === 'MyProfile' || activeTab === 'EditProfile' || (activeTab === 'PublicProfile' && (activePublicProfileUserId === 'me' || (currentUser && (activePublicProfileUserId === currentUser._id || activePublicProfileUserId === currentUser.id)))))
+                ? 'text-indigo-500 dark:text-indigo-400' 
+                : 'text-slate-450 dark:text-slate-500'
+            }`}
           >
-            <User className="w-5.5 h-5.5" strokeWidth={activeTab === 'Profile' ? 2.5 : 2} fill={activeTab === 'Profile' ? 'currentColor' : 'none'} />
-            <span className={`text-[10px] font-black mt-1 tracking-wide ${activeTab === 'Profile' ? 'text-indigo-600 dark:text-indigo-400' : 'text-slate-450 dark:text-slate-500'}`}>Profile</span>
+            <User 
+              className="w-5.5 h-5.5" 
+              strokeWidth={(activeTab === 'MyProfile' || activeTab === 'EditProfile' || (activeTab === 'PublicProfile' && (activePublicProfileUserId === 'me' || (currentUser && (activePublicProfileUserId === currentUser._id || activePublicProfileUserId === currentUser.id))))) ? 2.5 : 2} 
+              fill={(activeTab === 'MyProfile' || activeTab === 'EditProfile' || (activeTab === 'PublicProfile' && (activePublicProfileUserId === 'me' || (currentUser && (activePublicProfileUserId === currentUser._id || activePublicProfileUserId === currentUser.id))))) ? 'currentColor' : 'none'} 
+            />
+            <span className={`text-[10px] font-black mt-1 tracking-wide ${
+              (activeTab === 'MyProfile' || activeTab === 'EditProfile' || (activeTab === 'PublicProfile' && (activePublicProfileUserId === 'me' || (currentUser && (activePublicProfileUserId === currentUser._id || activePublicProfileUserId === currentUser.id))))) 
+                ? 'text-indigo-600 dark:text-indigo-400' 
+                : 'text-slate-450 dark:text-slate-500'
+            }`}>Profile</span>
           </button>
           
         </div>

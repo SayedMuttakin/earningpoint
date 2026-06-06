@@ -133,6 +133,30 @@ function App() {
   const [activeChatPartner, setActiveChatPartner] = useState(null);
   const [selectedNotificationPostId, setSelectedNotificationPostId] = useState(null);
   const [activePublicProfileUserId, setActivePublicProfileUserId] = useState(null);
+  const [currentUser, setCurrentUser] = useState(null);
+
+  useEffect(() => {
+    const fetchUser = async () => {
+      const token = localStorage.getItem('token');
+      if (!token) return;
+      try {
+        const res = await fetch(`${API_BASE}/api/profile`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        if (res.ok) {
+          const data = await res.json();
+          setCurrentUser(data);
+        }
+      } catch (err) {
+        console.error('Failed to fetch profile in App:', err);
+      }
+    };
+    if (isAuthenticated) {
+      fetchUser();
+    } else {
+      setCurrentUser(null);
+    }
+  }, [isAuthenticated]);
 
   // Initialize AdMob
   useEffect(() => {
@@ -240,7 +264,7 @@ function App() {
   if (isAuthenticated) {
     return (
       <div className="min-h-screen bg-slate-100/50 dark:bg-slate-950 transition-colors duration-300">
-        <Navbar onLogout={handleLogout} activeTab={activeTab} setActiveTab={setActiveTab} />
+        <Navbar onLogout={handleLogout} activeTab={activeTab} setActiveTab={setActiveTab} currentUser={currentUser} activePublicProfileUserId={activePublicProfileUserId} />
         <Suspense fallback={<PageLoader />}>
           {activeTab === 'Home' && (
             <HomePage 
@@ -272,6 +296,18 @@ function App() {
           {activeTab === 'PublicProfile' && (
             <PublicProfilePage 
               userId={activePublicProfileUserId}
+              currentUser={currentUser}
+              onBack={() => handleBackNavigation()}
+              setActiveTab={setActiveTab}
+              setSelectedReelId={setSelectedReelId}
+              setActiveChatPartner={setActiveChatPartner}
+            />
+          )}
+          {activeTab === 'MyProfile' && (
+            <PublicProfilePage 
+              userId="me"
+              currentUser={currentUser}
+              isOwnProfile={true}
               onBack={() => handleBackNavigation()}
               setActiveTab={setActiveTab}
               setSelectedReelId={setSelectedReelId}
@@ -279,7 +315,7 @@ function App() {
             />
           )}
           {activeTab === 'PaymentSuccess' && <PaymentSuccess paymentMethod={selectedPaymentMethod} onBack={() => showBackAd(() => handleBackNavigation())} />}
-          {activeTab === 'Profile' && <ProfilePage 
+          {activeTab === 'EditProfile' && <ProfilePage 
             onBack={() => handleBackNavigation()}
             onVerifyClick={() => setActiveTab('Verify')} 
             onLanguageClick={() => setActiveTab('Language')} 

@@ -50,13 +50,15 @@ const formatRelativeTime = (dateStr) => {
   }
 };
 
-const PublicProfilePage = ({ userId, onBack, currentUser, setActiveTab, setSelectedReelId, setActiveChatPartner }) => {
+const PublicProfilePage = ({ userId, onBack, currentUser, isOwnProfile, setActiveTab, setSelectedReelId, setActiveChatPartner }) => {
   const [profile, setProfile] = useState(null);
   const [videos, setVideos] = useState([]);
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState(false);
   const [activeSubTab, setActiveSubTab] = useState('reels'); // 'reels' or 'posts'
+
+  const isOwn = isOwnProfile || userId === 'me' || (profile && currentUser && (profile._id === currentUser._id || profile._id === currentUser.id));
 
   const fetchPublicProfile = async () => {
     try {
@@ -151,12 +153,16 @@ const PublicProfilePage = ({ userId, onBack, currentUser, setActiveTab, setSelec
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 pb-24 text-slate-850 dark:text-slate-100 flex flex-col">
       {/* Top Navigation Bar */}
       <header className="sticky top-0 z-50 bg-slate-50/90 dark:bg-slate-950/90 backdrop-blur-md px-4 py-3 flex items-center justify-between border-b border-slate-200/50 dark:border-slate-900">
-        <button 
-          onClick={onBack}
-          className="p-2 hover:bg-slate-200/50 dark:hover:bg-slate-900 rounded-full text-slate-700 dark:text-slate-350 active:scale-90 transition-transform"
-        >
-          <ArrowLeft className="w-6 h-6" />
-        </button>
+        {isOwn ? (
+          <div className="w-10" />
+        ) : (
+          <button 
+            onClick={onBack}
+            className="p-2 hover:bg-slate-200/50 dark:hover:bg-slate-900 rounded-full text-slate-700 dark:text-slate-350 active:scale-90 transition-transform"
+          >
+            <ArrowLeft className="w-6 h-6" />
+          </button>
+        )}
         <h2 className="font-extrabold text-sm truncate max-w-[50%]">{profile.username}</h2>
         <div className="flex items-center gap-2">
           <button className="p-2 hover:bg-slate-200/50 dark:hover:bg-slate-900 rounded-full text-slate-700 dark:text-slate-350">
@@ -244,35 +250,55 @@ const PublicProfilePage = ({ userId, onBack, currentUser, setActiveTab, setSelec
         </div>
 
         {/* Action Buttons */}
-        <div className="flex items-center gap-3 select-none justify-center px-4">
-          <button 
-            disabled={actionLoading}
-            onClick={handleFollowToggle}
-            className={`flex-1 py-2.5 rounded-full font-black text-sm transition-all active:scale-95 shadow-md ${
-              profile.isFollowing 
-                ? 'bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:bg-slate-250 dark:hover:bg-slate-750' 
-                : 'bg-gradient-to-r from-pink-500 to-rose-500 hover:from-pink-600 hover:to-rose-600 text-white shadow-rose-500/25'
-            }`}
-          >
-            {actionLoading ? (
-              <Loader2 className="w-4 h-4 animate-spin mx-auto" />
-            ) : profile.isFollowing ? (
-              'Following'
-            ) : (
-              'Follow'
-            )}
-          </button>
-          
-          <button 
-            onClick={handleMessageClick}
-            className="flex-1 py-2.5 rounded-full font-black text-sm bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-700 transition-all active:scale-95 shadow-xs"
-          >
-            Message
-          </button>
+        <div className="flex items-center gap-3 select-none justify-center px-4 w-full">
+          {isOwn ? (
+            <>
+              <button 
+                onClick={() => setActiveTab && setActiveTab('EditProfile')}
+                className="flex-1 py-2.5 rounded-full font-black text-sm bg-gradient-to-r from-[#7C3AED] to-brand-500 hover:from-indigo-650 hover:to-brand-600 text-white hover:opacity-95 shadow-md transition-all active:scale-95 text-center font-bold"
+              >
+                Edit Profile
+              </button>
+              
+              <button 
+                onClick={() => setActiveTab && setActiveTab('Setting')}
+                className="flex-1 py-2.5 rounded-full font-black text-sm bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-700 transition-all active:scale-95 shadow-xs text-center font-bold"
+              >
+                Settings
+              </button>
+            </>
+          ) : (
+            <>
+              <button 
+                disabled={actionLoading}
+                onClick={handleFollowToggle}
+                className={`flex-1 py-2.5 rounded-full font-black text-sm transition-all active:scale-95 shadow-md ${
+                  profile.isFollowing 
+                    ? 'bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:bg-slate-250 dark:hover:bg-slate-750' 
+                    : 'bg-gradient-to-r from-pink-500 to-rose-500 hover:from-pink-600 hover:to-rose-600 text-white shadow-rose-500/25'
+                }`}
+              >
+                {actionLoading ? (
+                  <Loader2 className="w-4 h-4 animate-spin mx-auto" />
+                ) : profile.isFollowing ? (
+                  'Following'
+                ) : (
+                  'Follow'
+                )}
+              </button>
+              
+              <button 
+                onClick={handleMessageClick}
+                className="flex-1 py-2.5 rounded-full font-black text-sm bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-700 transition-all active:scale-95 shadow-xs"
+              >
+                Message
+              </button>
 
-          <button className="p-2.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-700 transition-all active:scale-95">
-            <ChevronDown className="w-4 h-4" />
-          </button>
+              <button className="p-2.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-700 transition-all active:scale-95">
+                <ChevronDown className="w-4 h-4" />
+              </button>
+            </>
+          )}
         </div>
 
         {/* Sub-Tabs Selector */}
@@ -404,11 +430,11 @@ const PublicProfilePage = ({ userId, onBack, currentUser, setActiveTab, setSelec
 
                     {/* Image Attachment if exists */}
                     {post.image && (
-                      <div className="rounded-2xl overflow-hidden border border-slate-100 dark:border-slate-850 bg-slate-50 dark:bg-slate-950/40 flex items-center justify-center w-full max-h-[300px] select-none">
+                      <div className="rounded-2xl overflow-hidden border border-slate-100 dark:border-slate-850 bg-slate-50 dark:bg-slate-950/40 w-full max-h-[450px] select-none">
                         <img 
                           src={post.image.startsWith('http') || post.image.startsWith('/api') || post.image.startsWith('data:') ? post.image : `${API_BASE}/api/image?file=${encodeURIComponent(post.image)}`} 
                           alt="Post attachment"
-                          className="w-full h-auto object-contain max-h-[300px]"
+                          className="w-full h-auto object-cover max-h-[450px]"
                           loading="lazy"
                         />
                       </div>
