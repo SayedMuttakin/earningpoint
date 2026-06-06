@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Home, Bell, ShoppingCart, User, Settings, LogOut, Menu, X, Video, Newspaper } from 'lucide-react';
+import { Home, Bell, ShoppingCart, User, Settings, Menu, X, Video, Newspaper } from 'lucide-react';
 import { API_BASE } from '../config';
 
 
@@ -45,17 +45,13 @@ const Navbar = ({ onLogout, activeTab, setActiveTab, currentUser, activePublicPr
                   {isMobileMenuOpen ? <X className="h-7 w-7" /> : <Menu className="h-7 w-7" />}
                 </button>
                 
-                {/* Dropdown Menu for Setting and Log out */}
+                {/* Dropdown Menu for Setting */}
                 {isMobileMenuOpen && (
                   <div 
                     className="absolute top-14 left-0 mt-2 w-48 bg-white dark:bg-slate-800 rounded-2xl shadow-xl border border-slate-100 dark:border-slate-700 py-2.5 z-50 overflow-hidden animate-fade-in-up"
                   >
                     <button onClick={() => { setIsMobileMenuOpen(false); setActiveTab && setActiveTab('Setting'); }} className="w-full text-left px-5 py-3 text-sm font-medium text-slate-700 dark:text-slate-350 hover:bg-slate-50 dark:hover:bg-slate-700 hover:text-brand-600 flex items-center gap-3 transition-colors">
                       <Settings className="w-4.5 h-4.5" /> Setting
-                    </button>
-                    <div className="h-px bg-slate-100 dark:bg-slate-700 my-1 mx-3" />
-                    <button onClick={() => { setIsMobileMenuOpen(false); onLogout(); }} className="w-full text-left px-5 py-3 text-sm font-medium text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-900/20 flex items-center gap-3 transition-colors">
-                      <LogOut className="w-4.5 h-4.5" /> Log out
                     </button>
                   </div>
                 )}

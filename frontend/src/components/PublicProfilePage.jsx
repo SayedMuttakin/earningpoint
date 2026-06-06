@@ -240,47 +240,38 @@ const PublicProfilePage = ({ userId, onBack, currentUser, isOwnProfile, setActiv
         </div>
 
         {/* Action Buttons */}
-        <div className="flex items-center gap-3 select-none justify-center px-4 w-full">
-          {isOwn ? (
-              <button 
-                onClick={() => setActiveTab && setActiveTab('EditProfile')}
-                className="w-full py-2.5 rounded-full font-black text-sm bg-gradient-to-r from-[#7C3AED] to-brand-500 hover:from-indigo-650 hover:to-brand-600 text-white hover:opacity-95 shadow-md transition-all active:scale-95 text-center font-bold"
-              >
-                Edit Profile
-              </button>
-          ) : (
-            <>
-              <button 
-                disabled={actionLoading}
-                onClick={handleFollowToggle}
-                className={`flex-1 py-2.5 rounded-full font-black text-sm transition-all active:scale-95 shadow-md ${
-                  profile.isFollowing 
-                    ? 'bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:bg-slate-250 dark:hover:bg-slate-750' 
-                    : 'bg-gradient-to-r from-pink-500 to-rose-500 hover:from-pink-600 hover:to-rose-600 text-white shadow-rose-500/25'
-                }`}
-              >
-                {actionLoading ? (
-                  <Loader2 className="w-4 h-4 animate-spin mx-auto" />
-                ) : profile.isFollowing ? (
-                  'Following'
-                ) : (
-                  'Follow'
-                )}
-              </button>
-              
-              <button 
-                onClick={handleMessageClick}
-                className="flex-1 py-2.5 rounded-full font-black text-sm bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-700 transition-all active:scale-95 shadow-xs"
-              >
-                Message
-              </button>
+        {!isOwn && (
+          <div className="flex items-center gap-3 select-none justify-center px-4 w-full">
+            <button 
+              disabled={actionLoading}
+              onClick={handleFollowToggle}
+              className={`flex-1 py-2.5 rounded-full font-black text-sm transition-all active:scale-95 shadow-md ${
+                profile.isFollowing 
+                  ? 'bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:bg-slate-250 dark:hover:bg-slate-750' 
+                  : 'bg-gradient-to-r from-pink-500 to-rose-500 hover:from-pink-600 hover:to-rose-600 text-white shadow-rose-500/25'
+              }`}
+            >
+              {actionLoading ? (
+                <Loader2 className="w-4 h-4 animate-spin mx-auto" />
+              ) : profile.isFollowing ? (
+                'Following'
+              ) : (
+                'Follow'
+              )}
+            </button>
+            
+            <button 
+              onClick={handleMessageClick}
+              className="flex-1 py-2.5 rounded-full font-black text-sm bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-700 transition-all active:scale-95 shadow-xs"
+            >
+              Message
+            </button>
 
-              <button className="p-2.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-700 transition-all active:scale-95">
-                <ChevronDown className="w-4 h-4" />
-              </button>
-            </>
-          )}
-        </div>
+            <button className="p-2.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-700 transition-all active:scale-95">
+              <ChevronDown className="w-4 h-4" />
+            </button>
+          </div>
+        )}
 
         {/* Sub-Tabs Selector */}
         <div className="border-t border-b border-slate-200/60 dark:border-slate-800/80 flex items-center justify-around py-2 select-none">
