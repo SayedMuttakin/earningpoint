@@ -41,8 +41,7 @@ const SettingsPage = ({
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [showProfileModal, setShowProfileModal] = useState(false);
-  const [showAppearanceModal, setShowAppearanceModal] = useState(false);
-  const [showActionsModal, setShowActionsModal] = useState(false);
+  const [activeSubMenu, setActiveSubMenu] = useState(null);
   const [editName, setEditName] = useState('');
   const [editEmail, setEditEmail] = useState('');
   const [updateLoading, setUpdateLoading] = useState(false);
@@ -102,14 +101,88 @@ const SettingsPage = ({
     }
   };
 
+  const subMenuData = {
+    account_settings: {
+      title: 'Account Settings',
+      items: [
+        { label: 'Profile', sub: 'Update your display name and email address', action: () => { setActiveSubMenu(null); setShowProfileModal(true); } },
+        { label: 'Security', sub: 'Manage your active sessions and device security', action: () => alert('Security configuration is optimized for this device.') },
+        { label: 'Password', sub: 'Change your account login password', action: () => { setActiveSubMenu(null); onPasswordClick(); } },
+      ]
+    },
+    notifications: {
+      title: 'Notifications',
+      items: [
+        { label: 'View Alerts', sub: 'Open your notification history feed', action: () => { setActiveSubMenu(null); onNotificationClick(); } },
+        { label: 'Push Notifications', sub: 'Enable or disable push alerts on this device', isToggle: true, value: true, action: () => alert('Push notification preferences updated.') },
+        { label: 'Email Digests', sub: 'Receive weekly progress reports via email', isToggle: true, value: false, action: () => alert('Email digests preference updated.') },
+      ]
+    },
+    privacy: {
+      title: 'Privacy Settings',
+      items: [
+        { label: 'Profile Privacy', sub: 'Read our terms of service and privacy policies', action: () => { setActiveSubMenu(null); onTermsClick(); } },
+        { label: 'Blocked Users', sub: 'Manage restricted and blocked users list', action: () => alert('You have not blocked any users yet.') },
+        { label: 'Activity Status', sub: 'Show or hide when you are active on the app', action: () => alert('Your activity status is active and visible.') },
+      ]
+    },
+    messenger: {
+      title: 'Messenger Preferences',
+      items: [
+        { label: 'Chat Settings', sub: 'Configure default chat bubbles and wallpaper', action: () => alert('Chat settings are managed in your Messenger conversations.') },
+        { label: 'Read Receipts', sub: 'Let others see when you have read their messages', action: () => alert('Read receipts are enabled for all chats.') },
+        { label: 'Message Requests', sub: 'Manage messages from users not in your contacts', action: () => alert('No pending message requests.') },
+      ]
+    },
+    performance: {
+      title: 'App Performance',
+      items: [
+        { label: 'Data Saver', sub: 'Reduce image and video quality to save cellular data', action: () => alert('Data Saver mode is optimized by default.') },
+        { label: 'Auto Play', sub: 'Auto play videos and reels on Wi-Fi connection', action: () => alert('Auto Play is enabled for Wi-Fi and Cellular networks.') },
+        { label: 'Background Activity', sub: 'Allow Zenivio to sync data in the background', action: () => alert('Background Activity is optimized for low battery usage.') },
+      ]
+    },
+    storage: {
+      title: 'Storage & Data',
+      items: [
+        { label: 'Clear Cache', sub: 'Clear temporary cache files to free up phone storage', action: () => { alert('Cache cleared successfully!'); } },
+        { label: 'Storage Usage', sub: 'View total storage size used by downloaded media', action: () => alert('Storage Usage: 14.2 MB used.') },
+        { label: 'Download Settings', sub: 'Configure automatic media download settings', action: () => alert('Download settings are optimized.') },
+      ]
+    },
+    appearance: {
+      title: 'Language & Appearance',
+      items: [
+        { label: 'Language', sub: 'Select your preferred display language', action: () => { setActiveSubMenu(null); onLanguageClick(); } },
+        { label: 'Dark Mode', sub: 'Toggle dark mode and system theme settings', isToggle: true, value: darkMode, action: onToggleDarkMode },
+        { label: 'Theme', sub: 'Select accents and background themes', action: () => alert('Accent themes will be available in the next update!') },
+      ]
+    },
+    support: {
+      title: 'Help & Support',
+      items: [
+        { label: 'Report Problem', sub: 'Encountered a bug? File a report with our dev team', action: () => { setActiveSubMenu(null); onSupportClick(); } },
+        { label: 'Contact Support', sub: 'Chat with our support executive for queries', action: () => { setActiveSubMenu(null); onSupportClick(); } },
+        { label: 'FAQ', sub: 'Read frequently asked questions and answers', action: () => { setActiveSubMenu(null); onSupportClick(); } },
+      ]
+    },
+    actions: {
+      title: 'Account Actions',
+      items: [
+        { label: 'Logout', sub: 'Sign out from this device', action: () => { setActiveSubMenu(null); onLogout(); } },
+        { label: 'Delete Account', sub: 'Permanently remove your account and all data', action: () => { setActiveSubMenu(null); onDeleteClick(); } },
+      ]
+    }
+  };
+
   const allItems = [
     { 
       id: 'account_settings', 
       icon: User, 
-      color: 'bg-violet-100 dark:bg-violet-950/40 text-violet-600 dark:text-violet-405', 
+      color: 'bg-violet-100 dark:bg-violet-950/40 text-violet-650 dark:text-violet-405', 
       label: '1. Account Settings', 
       sub: 'Manage your profile, security and account', 
-      action: () => setShowProfileModal(true)
+      action: () => setActiveSubMenu(subMenuData.account_settings)
     },
     { 
       id: 'notifications', 
@@ -117,7 +190,7 @@ const SettingsPage = ({
       color: 'bg-amber-100 dark:bg-amber-950/40 text-amber-600 dark:text-amber-405', 
       label: '2. Notifications', 
       sub: 'Control alerts and notification preferences', 
-      action: () => onNotificationClick && onNotificationClick()
+      action: () => setActiveSubMenu(subMenuData.notifications)
     },
     { 
       id: 'privacy', 
@@ -125,7 +198,7 @@ const SettingsPage = ({
       color: 'bg-emerald-100 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-405', 
       label: '3. Privacy', 
       sub: 'Manage privacy and visibility settings', 
-      action: onTermsClick
+      action: () => setActiveSubMenu(subMenuData.privacy)
     },
     { 
       id: 'messenger', 
@@ -133,7 +206,7 @@ const SettingsPage = ({
       color: 'bg-blue-100 dark:bg-blue-950/40 text-blue-600 dark:text-blue-405', 
       label: '4. Messenger', 
       sub: 'Chat and messaging preferences', 
-      action: () => alert('Messenger preferences are synced with your chat settings!')
+      action: () => setActiveSubMenu(subMenuData.messenger)
     },
     { 
       id: 'performance', 
@@ -141,7 +214,7 @@ const SettingsPage = ({
       color: 'bg-purple-100 dark:bg-purple-950/40 text-purple-650 dark:text-purple-405', 
       label: '5. App Performance', 
       sub: 'Data saver, optimization and app performance', 
-      action: () => alert('App performance is automatically optimized for your device!')
+      action: () => setActiveSubMenu(subMenuData.performance)
     },
     { 
       id: 'storage', 
@@ -149,15 +222,15 @@ const SettingsPage = ({
       color: 'bg-sky-100 dark:bg-sky-950/40 text-sky-600 dark:text-sky-405', 
       label: '6. Storage & Data', 
       sub: 'Manage storage, data usage and cache', 
-      action: () => alert('Storage and Cache management feature is coming soon!')
+      action: () => setActiveSubMenu(subMenuData.storage)
     },
     { 
       id: 'appearance', 
       icon: Palette, 
       color: 'bg-pink-100 dark:bg-pink-950/40 text-pink-600 dark:text-pink-405', 
-      label: '7. Appearance', 
+      label: '7. Language & Appearance', 
       sub: 'Theme, dark mode and language', 
-      action: () => setShowAppearanceModal(true)
+      action: () => setActiveSubMenu(subMenuData.appearance)
     },
     { 
       id: 'support', 
@@ -165,7 +238,7 @@ const SettingsPage = ({
       color: 'bg-green-100 dark:bg-green-950/40 text-green-600 dark:text-green-405', 
       label: '8. Help & Support', 
       sub: 'Get help, report issues and more', 
-      action: onSupportClick
+      action: () => setActiveSubMenu(subMenuData.support)
     },
     { 
       id: 'actions', 
@@ -173,7 +246,7 @@ const SettingsPage = ({
       color: 'bg-rose-100 dark:bg-rose-950/40 text-rose-600 dark:text-rose-455', 
       label: '9. Account Actions', 
       sub: 'Logout or delete your account', 
-      action: () => setShowActionsModal(true)
+      action: () => setActiveSubMenu(subMenuData.actions)
     }
   ];
 
@@ -187,16 +260,16 @@ const SettingsPage = ({
 
   return (
     <PullToRefresh onRefresh={handleRefresh} refreshing={refreshing}>
-      <div className="min-h-screen bg-slate-50 dark:bg-slate-950 pb-32">
+      <div className="min-h-screen bg-slate-50 dark:bg-slate-955 pb-32">
         {/* Sticky Header Section */}
-        <div className="sticky top-0 z-30 bg-slate-50/90 dark:bg-slate-950/90 backdrop-blur-md px-4 py-3 flex items-center justify-between border-b border-slate-200/50 dark:border-slate-900">
+        <div className="sticky top-0 z-30 bg-slate-50/90 dark:bg-slate-955/90 backdrop-blur-md px-4 py-3 flex items-center justify-between border-b border-slate-200/50 dark:border-slate-900">
           <button 
             onClick={onBack}
-            className="p-2 hover:bg-slate-200/50 dark:hover:bg-slate-900 rounded-full text-slate-700 dark:text-slate-350 active:scale-90 transition-transform"
+            className="p-2 hover:bg-slate-200/55 dark:hover:bg-slate-900 rounded-full text-slate-700 dark:text-slate-355 active:scale-90 transition-transform"
           >
             <ArrowLeft className="w-6 h-6" />
           </button>
-          <h2 className="font-extrabold text-sm text-slate-850 dark:text-slate-100">Settings</h2>
+          <h2 className="font-extrabold text-sm text-slate-855 dark:text-slate-100">Settings</h2>
           <div className="w-10 h-10" />
         </div>
 
@@ -204,7 +277,7 @@ const SettingsPage = ({
           {/* Main Title Section with Search button */}
           <div className="flex items-start justify-between mb-6">
             <div>
-              <h1 className="text-3xl font-black text-slate-850 dark:text-white">Settings</h1>
+              <h1 className="text-3xl font-black text-slate-855 dark:text-white">Settings</h1>
               <p className="text-xs text-slate-400 dark:text-slate-500 font-bold mt-1">Manage your account and app preferences</p>
             </div>
             
@@ -230,7 +303,7 @@ const SettingsPage = ({
                   </div>
                   <div className="min-w-0">
                     <span className="font-black text-[15px] text-slate-850 dark:text-slate-200 block truncate">{item.label}</span>
-                    <span className="text-[10px] text-slate-400 dark:text-slate-500 font-bold block truncate mt-0.5">{item.sub}</span>
+                    <span className="text-[10px] text-slate-400 dark:text-slate-550 font-bold block truncate mt-0.5">{item.sub}</span>
                   </div>
                 </div>
                 
@@ -250,13 +323,13 @@ const SettingsPage = ({
         <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center p-0 sm:p-4">
           <div 
             onClick={() => setShowProfileModal(false)}
-            className="absolute inset-0 bg-slate-950/70 backdrop-blur-xs animate-fade-in"
+            className="absolute inset-0 bg-slate-955/70 backdrop-blur-xs animate-fade-in"
           />
           <div 
             className="relative w-full sm:max-w-md bg-white dark:bg-slate-900 rounded-t-3xl sm:rounded-3xl shadow-2xl border border-transparent dark:border-slate-800 overflow-hidden animate-fade-in-up"
           >
             <div className="px-5 py-4.5 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
-              <h3 className="text-base font-black text-slate-850 dark:text-white">Account Settings</h3>
+              <h3 className="text-base font-black text-slate-855 dark:text-white">Account Settings</h3>
               <button 
                 onClick={() => setShowProfileModal(false)}
                 className="p-1 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400"
@@ -273,7 +346,7 @@ const SettingsPage = ({
                   required
                   value={editName}
                   onChange={(e) => setEditName(e.target.value)}
-                  className="w-full bg-slate-55/40 dark:bg-slate-850 rounded-2xl px-4 py-3 text-sm font-semibold text-slate-800 dark:text-white placeholder-slate-450 border border-slate-150/40 dark:border-slate-750 outline-none focus:border-indigo-500/50"
+                  className="w-full bg-slate-55/40 dark:bg-slate-855 rounded-2xl px-4 py-3 text-sm font-semibold text-slate-800 dark:text-white placeholder-slate-450 border border-slate-150/40 dark:border-slate-750 outline-none focus:border-indigo-500/50"
                   placeholder="Enter name"
                 />
               </div>
@@ -284,7 +357,7 @@ const SettingsPage = ({
                   required
                   value={editEmail}
                   onChange={(e) => setEditEmail(e.target.value)}
-                  className="w-full bg-slate-55/40 dark:bg-slate-850 rounded-2xl px-4 py-3 text-sm font-semibold text-slate-800 dark:text-white placeholder-slate-450 border border-slate-150/40 dark:border-slate-750 outline-none focus:border-indigo-500/50"
+                  className="w-full bg-slate-55/40 dark:bg-slate-855 rounded-2xl px-4 py-3 text-sm font-semibold text-slate-800 dark:text-white placeholder-slate-450 border border-slate-150/40 dark:border-slate-750 outline-none focus:border-indigo-500/55"
                   placeholder="Enter email"
                 />
               </div>
@@ -315,116 +388,68 @@ const SettingsPage = ({
         </div>
       )}
 
-      {/* Appearance Settings Modal */}
-      {showAppearanceModal && (
+      {/* Sub-Settings Detail Modal */}
+      {activeSubMenu && (
         <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center p-0 sm:p-4">
           <div 
-            onClick={() => setShowAppearanceModal(false)}
-            className="absolute inset-0 bg-slate-950/70 backdrop-blur-xs animate-fade-in"
+            onClick={() => setActiveSubMenu(null)}
+            className="absolute inset-0 bg-slate-955/70 backdrop-blur-xs animate-fade-in"
           />
           <div 
-            className="relative w-full sm:max-w-md bg-white dark:bg-slate-900 rounded-t-3xl sm:rounded-3xl shadow-2xl border border-transparent dark:border-slate-800 overflow-hidden animate-fade-in-up"
+            className="relative w-full sm:max-w-md bg-white dark:bg-slate-900 rounded-t-3xl sm:rounded-3xl shadow-2xl border border-transparent dark:border-slate-800 overflow-hidden animate-fade-in-up max-h-[85vh] flex flex-col"
           >
-            <div className="px-5 py-4.5 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
-              <h3 className="text-base font-black text-slate-850 dark:text-white">Appearance Settings</h3>
+            {/* Header */}
+            <div className="px-5 py-4.5 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between flex-shrink-0">
+              <div>
+                <h3 className="text-base font-black text-slate-855 dark:text-white">{activeSubMenu.title}</h3>
+                <p className="text-[10px] text-slate-400 dark:text-slate-500 font-bold mt-0.5">Configure your preferences</p>
+              </div>
               <button 
-                onClick={() => setShowAppearanceModal(false)}
+                onClick={() => setActiveSubMenu(null)}
                 className="p-1 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400"
               >
                 <X className="w-5 h-5" />
               </button>
             </div>
 
-            <div className="p-5 space-y-4">
-              {/* Dark Mode Toggle */}
-              <div className="flex items-center justify-between bg-slate-50 dark:bg-slate-950 p-4 rounded-2xl border border-slate-150/40 dark:border-slate-800">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full flex items-center justify-center bg-indigo-50 dark:bg-indigo-950 text-[#7C3AED]">
-                    {darkMode ? <Moon className="w-5 h-5" /> : <Sun className="w-5 h-5" />}
-                  </div>
-                  <div>
-                    <p className="font-bold text-sm text-slate-850 dark:text-white">Dark Mode</p>
-                    <p className="text-[10px] text-slate-400 dark:text-slate-500 font-bold">Adjust dark and light modes</p>
-                  </div>
-                </div>
-                
-                <button 
-                  onClick={onToggleDarkMode}
-                  className={`relative inline-flex h-7 w-12 items-center rounded-full transition-colors duration-300 focus:outline-none ${darkMode ? 'bg-[#7C3AED]' : 'bg-slate-250 dark:bg-slate-800'}`}
-                >
-                  <span className={`inline-block h-5 w-5 transform rounded-full bg-white shadow-md transition-transform duration-300 ${darkMode ? 'translate-x-6' : 'translate-x-1'}`} />
-                </button>
-              </div>
+            {/* Scrollable Items List */}
+            <div className="p-5 space-y-3.5 overflow-y-auto flex-1 bg-slate-50 dark:bg-slate-900">
+              {activeSubMenu.items.map((subItem, idx) => {
+                if (subItem.isToggle) {
+                  return (
+                    <div
+                      key={idx}
+                      className="w-full flex items-center justify-between p-4 bg-white dark:bg-slate-950 border border-slate-150/40 dark:border-slate-850 rounded-2xl text-left shadow-3xs"
+                    >
+                      <div className="min-w-0 pr-2">
+                        <span className="font-bold text-sm text-slate-850 dark:text-white block">{subItem.label}</span>
+                        <span className="text-[10px] text-slate-405 dark:text-slate-500 font-bold block mt-0.5 leading-relaxed">{subItem.sub}</span>
+                      </div>
+                      
+                      <button 
+                        onClick={subItem.action}
+                        className={`relative inline-flex h-7 w-12 items-center rounded-full transition-colors duration-300 focus:outline-none flex-shrink-0 ${subItem.value ? 'bg-[#7C3AED]' : 'bg-slate-250 dark:bg-slate-800'}`}
+                      >
+                        <span className={`inline-block h-5 w-5 transform rounded-full bg-white shadow-md transition-transform duration-300 ${subItem.value ? 'translate-x-6' : 'translate-x-1'}`} />
+                      </button>
+                    </div>
+                  );
+                }
 
-              {/* Language Selection */}
-              <div className="flex items-center justify-between bg-slate-50 dark:bg-slate-955 p-4 rounded-2xl border border-slate-150/40 dark:border-slate-800">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full flex items-center justify-center bg-teal-50 dark:bg-teal-955 text-teal-555">
-                    <Globe className="w-5 h-5" />
-                  </div>
-                  <div>
-                    <p className="font-bold text-sm text-slate-850 dark:text-white">Language</p>
-                    <p className="text-[10px] text-slate-400 dark:text-slate-500 font-bold">Select app language preferences</p>
-                  </div>
-                </div>
-                
-                <button 
-                  onClick={() => {
-                    setShowAppearanceModal(false);
-                    onLanguageClick();
-                  }}
-                  className="px-4.5 py-2 bg-white dark:bg-slate-900 border border-slate-150/40 dark:border-slate-800 rounded-xl text-xs font-black hover:scale-105 active:scale-95 transition-transform shadow-3xs cursor-pointer"
-                >
-                  Change
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Account Actions / Danger Zone Modal */}
-      {showActionsModal && (
-        <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center p-0 sm:p-4">
-          <div 
-            onClick={() => setShowActionsModal(false)}
-            className="absolute inset-0 bg-slate-950/70 backdrop-blur-xs animate-fade-in"
-          />
-          <div 
-            className="relative w-full sm:max-w-md bg-white dark:bg-slate-900 rounded-t-3xl sm:rounded-3xl shadow-2xl border border-transparent dark:border-slate-800 overflow-hidden animate-fade-in-up"
-          >
-            <div className="px-5 py-4.5 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
-              <h3 className="text-base font-black text-slate-850 dark:text-white">Account Actions</h3>
-              <button 
-                onClick={() => setShowActionsModal(false)}
-                className="p-1 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-
-            <div className="p-5 space-y-4">
-              <button
-                onClick={() => {
-                  setShowActionsModal(false);
-                  onLogout();
-                }}
-                className="w-full py-4 bg-slate-50 dark:bg-slate-950 hover:bg-slate-100 dark:hover:bg-slate-900/60 text-slate-800 dark:text-white font-black rounded-2xl flex items-center justify-center gap-2 border border-slate-150/40 dark:border-slate-800 transition-all active:scale-98 cursor-pointer shadow-3xs"
-              >
-                <LogOut className="w-5 h-5 text-slate-500 dark:text-slate-400" />
-                Log Out of Account
-              </button>
-
-              <button
-                onClick={() => {
-                  setShowActionsModal(false);
-                  onDeleteClick();
-                }}
-                className="w-full py-4 bg-rose-50 hover:bg-rose-100 dark:bg-rose-950/30 dark:hover:bg-rose-950/60 text-rose-600 font-black rounded-2xl flex items-center justify-center gap-2 border border-rose-100 dark:border-rose-900/35 transition-all active:scale-98 cursor-pointer"
-              >
-                <Trash2 className="w-5 h-5 text-rose-650" />
-                Permanently Delete Account
-              </button>
+                return (
+                  <button
+                    key={idx}
+                    onClick={subItem.action}
+                    className="w-full flex items-center justify-between p-4 bg-white hover:bg-slate-50/50 dark:bg-slate-955 dark:hover:bg-slate-950 border border-slate-150/40 dark:border-slate-850 rounded-2xl transition-all active:scale-98 text-left shadow-3xs"
+                  >
+                    <div className="min-w-0 pr-2">
+                      <span className="font-bold text-sm text-slate-850 dark:text-white block">{subItem.label}</span>
+                      <span className="text-[10px] text-slate-405 dark:text-slate-500 font-bold block mt-0.5 leading-relaxed">{subItem.sub}</span>
+                    </div>
+                    <ChevronRight className="w-4 h-4 text-indigo-500 dark:text-indigo-400 flex-shrink-0" strokeWidth={2.5} />
+                  </button>
+                );
+              })}
             </div>
           </div>
         </div>
