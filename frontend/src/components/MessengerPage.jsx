@@ -50,9 +50,30 @@ const MessengerPage = ({ onBack, activeChatPartner, setActiveChatPartner, socket
   const [refreshing, setRefreshing] = useState(false);
   const [activeCall, setActiveCall] = useState(null); // 'audio' | 'video' | null
   const [expandedMessageId, setExpandedMessageId] = useState(null);
+  const [callDuration, setCallDuration] = useState(0);
 
   const socketConnected = !!socket;
   const connectionError = !socket;
+
+  // Manage Call Duration Timer
+  useEffect(() => {
+    let interval;
+    if (activeCall === 'ongoing') {
+      setCallDuration(0);
+      interval = setInterval(() => {
+        setCallDuration(prev => prev + 1);
+      }, 1000);
+    } else {
+      setCallDuration(0);
+    }
+    return () => clearInterval(interval);
+  }, [activeCall]);
+
+  const formatDuration = (sec) => {
+    const mins = Math.floor(sec / 60);
+    const secs = sec % 60;
+    return `${mins}:${secs.toString().padStart(2, '0')}`;
+  };
 
   // Manage Ringtone when incomingCallData changes
   useEffect(() => {
@@ -79,6 +100,21 @@ const MessengerPage = ({ onBack, activeChatPartner, setActiveChatPartner, socket
   const typingTimeoutRef = useRef(null);
   const audioContextRef = useRef(null);
   const ringIntervalRef = useRef(null);
+
+  // WebRTC Call Refs & State trackers
+  const peerConnectionRef = useRef(null);
+  const localStreamRef = useRef(null);
+  const remoteStreamRef = useRef(null);
+  const callTypeRef = useRef('audio');
+
+  const activeCallRef = useRef(activeCall);
+  useEffect(() => { activeCallRef.current = activeCall; }, [activeCall]);
+
+  const activePartnerRef = useRef(activePartner);
+  useEffect(() => { activePartnerRef.current = activePartner; }, [activePartner]);
+
+  const incomingCallDataRef = useRef(incomingCallData);
+  useEffect(() => { incomingCallDataRef.current = incomingCallData; }, [incomingCallData]);
 
   // Auto-scroll to bottom
   const scrollToBottom = () => {
@@ -268,10 +304,67 @@ const MessengerPage = ({ onBack, activeChatPartner, setActiveChatPartner, socket
     });
 
     socket.on('call_declined', () => {
-      stopRingtone();
-      setActiveCall(null);
-      setIncomingCallData(null);
+      cleanUpCall();
       alert('Call declined.');
+    });
+
+    socket.on('call_accepted', async (data) => {
+      stopRingtone();
+      setActiveCall('ongoing');
+      
+      const callType = callTypeRef.current;
+      const partner = activePartnerRef.current;
+      if (!partner) return;
+
+      try {
+        const stream = await startLocalStream(callType);
+        const pc = createPeerConnection(partner._id, stream);
+        const offer = await pc.createOffer();
+        await pc.setLocalDescription(offer);
+        socket.emit('webrtc_signal', {
+          targetId: partner._id,
+          signal: { type: 'offer', sdp: offer.sdp }
+        });
+      } catch (err) {
+        console.error('Error starting WebRTC call:', err);
+        cleanUpCall();
+      }
+    });
+
+    socket.on('call_ended', () => {
+      cleanUpCall();
+      alert('Call ended.');
+    });
+
+    socket.on('webrtc_signal', async (data) => {
+      const { senderId, signal } = data;
+      let pc = peerConnectionRef.current;
+      
+      try {
+        if (signal.type === 'offer') {
+          const callType = incomingCallDataRef.current?.type || 'audio';
+          callTypeRef.current = callType;
+          const stream = await startLocalStream(callType);
+          pc = createPeerConnection(senderId, stream);
+          await pc.setRemoteDescription(new RTCSessionDescription(signal));
+          const answer = await pc.createAnswer();
+          await pc.setLocalDescription(answer);
+          socket.emit('webrtc_signal', {
+            targetId: senderId,
+            signal: { type: 'answer', sdp: answer.sdp }
+          });
+        } else if (signal.type === 'answer') {
+          if (pc) {
+            await pc.setRemoteDescription(new RTCSessionDescription(signal));
+          }
+        } else if (signal.type === 'candidate') {
+          if (pc && signal.candidate) {
+            await pc.addIceCandidate(new RTCIceCandidate(signal.candidate));
+          }
+        }
+      } catch (err) {
+        console.error('Error handling WebRTC signal:', err);
+      }
     });
 
     socket.on('online_users', (usersList) => {
@@ -287,6 +380,9 @@ const MessengerPage = ({ onBack, activeChatPartner, setActiveChatPartner, socket
       socket.off('incoming_call');
       socket.off('incoming_group_call');
       socket.off('call_declined');
+      socket.off('call_accepted');
+      socket.off('call_ended');
+      socket.off('webrtc_signal');
       socket.off('online_users');
     };
   }, [socket, activePartner, currentUser]);
@@ -593,9 +689,98 @@ const MessengerPage = ({ onBack, activeChatPartner, setActiveChatPartner, socket
     }
   };
 
+  const startLocalStream = async (type) => {
+    try {
+      const constraints = {
+        audio: true,
+        video: type === 'video' ? { facingMode: 'user' } : false
+      };
+      const stream = await navigator.mediaDevices.getUserMedia(constraints);
+      localStreamRef.current = stream;
+      
+      // If we have a local video element, set its srcObject
+      setTimeout(() => {
+        const localVideo = document.getElementById('localVideo');
+        if (localVideo) {
+          localVideo.srcObject = stream;
+        }
+      }, 500);
+      
+      return stream;
+    } catch (err) {
+      console.error('Failed to get local stream:', err);
+      alert('Could not access microphone/camera. Please check permissions.');
+      throw err;
+    }
+  };
+
+  const createPeerConnection = (targetId, stream) => {
+    const pc = new RTCPeerConnection({
+      iceServers: [
+        { urls: 'stun:stun.l.google.com:19302' },
+        { urls: 'stun:stun1.l.google.com:19302' }
+      ]
+    });
+    
+    peerConnectionRef.current = pc;
+    
+    // Add local tracks
+    stream.getTracks().forEach(track => {
+      pc.addTrack(track, stream);
+    });
+    
+    // Handle ICE candidates
+    pc.onicecandidate = (event) => {
+      if (event.candidate && socket) {
+        socket.emit('webrtc_signal', {
+          targetId,
+          signal: { type: 'candidate', candidate: event.candidate }
+        });
+      }
+    };
+    
+    // Handle remote stream
+    pc.ontrack = (event) => {
+      const remoteStream = event.streams[0];
+      remoteStreamRef.current = remoteStream;
+      
+      setTimeout(() => {
+        const remoteVideo = document.getElementById('remoteVideo');
+        const remoteAudio = document.getElementById('remoteAudio');
+        if (remoteVideo) {
+          remoteVideo.srcObject = remoteStream;
+        } else if (remoteAudio) {
+          remoteAudio.srcObject = remoteStream;
+        }
+      }, 500);
+    };
+    
+    return pc;
+  };
+
+  const cleanUpCall = () => {
+    stopRingtone();
+    if (localStreamRef.current) {
+      try {
+        localStreamRef.current.getTracks().forEach(track => track.stop());
+      } catch (e) {}
+      localStreamRef.current = null;
+    }
+    if (peerConnectionRef.current) {
+      try {
+        peerConnectionRef.current.close();
+      } catch (e) {}
+      peerConnectionRef.current = null;
+    }
+    remoteStreamRef.current = null;
+    setActiveCall(null);
+    setIncomingCallData(null);
+  };
+
   const handleStartCall = (type) => {
     if (!activePartner) return;
     setActiveCall(type);
+    callTypeRef.current = type;
     startRingtone();
     
     // Relay call request through socket
@@ -617,28 +802,31 @@ const MessengerPage = ({ onBack, activeChatPartner, setActiveChatPartner, socket
       }
     }
 
-    // Auto-timeout if call not answered
+    // Auto-timeout if call not answered (ring for 30 seconds)
     setTimeout(() => {
       setActiveCall((currentCall) => {
-        if (currentCall) {
-          stopRingtone();
+        if (currentCall && currentCall !== 'ongoing') {
+          cleanUpCall();
           playBusyTone();
-          alert(`${activePartner.name} is currently busy.`);
-          return null;
+          alert(`${activePartner.name} did not answer.`);
         }
-        return null;
+        return currentCall;
       });
-    }, 10000);
+    }, 30000);
   };
 
   const handleAnswerCall = () => {
     stopRingtone();
+    const callerId = incomingCallDataRef.current?.callerId;
+    const callType = incomingCallDataRef.current?.type || 'audio';
+    callTypeRef.current = callType;
+    
+    if (socket && callerId) {
+      socket.emit('accept_call', { callerId, receiverId: currentUser?._id });
+    }
+    
     setIncomingCallData(null);
     setActiveCall('ongoing');
-    setTimeout(() => {
-      setActiveCall(null);
-      alert('Call finished.');
-    }, 5000);
   };
 
   const handleDeclineCall = () => {
@@ -647,6 +835,14 @@ const MessengerPage = ({ onBack, activeChatPartner, setActiveChatPartner, socket
       socket.emit('decline_call', { callerId: incomingCallData.callerId });
     }
     setIncomingCallData(null);
+  };
+
+  const handleEndCall = () => {
+    const partnerId = activePartnerRef.current?._id || incomingCallDataRef.current?.callerId;
+    if (socket && partnerId) {
+      socket.emit('end_call', { targetId: partnerId });
+    }
+    cleanUpCall();
   };
 
   // ────────────────── SEARCH FILTERING ──────────────────
@@ -1191,10 +1387,7 @@ const MessengerPage = ({ onBack, activeChatPartner, setActiveChatPartner, socket
                 </div>
               )}
               <button 
-                onClick={() => {
-                  stopRingtone();
-                  setActiveCall(null);
-                }}
+                onClick={handleEndCall}
                 className="w-16 h-16 bg-rose-500 hover:bg-rose-600 active:scale-95 transition-all rounded-full flex items-center justify-center shadow-lg shadow-rose-500/40"
               >
                 <PhoneOff className="w-7 h-7 text-white" />
@@ -1255,24 +1448,44 @@ const MessengerPage = ({ onBack, activeChatPartner, setActiveChatPartner, socket
                 Zenivio Call Connected
               </span>
               <h2 className="text-3xl font-black mt-4">{activePartner?.name}</h2>
-              <p className="text-emerald-400 text-xs font-bold mt-1">Ongoing call: 0:08</p>
+              <p className="text-emerald-400 text-xs font-bold mt-1">Ongoing call: {formatDuration(callDuration)}</p>
             </div>
 
             <div className="w-44 h-44 rounded-3xl bg-slate-900 border border-slate-800 shadow-2xl overflow-hidden relative">
-              {activePartner?.profilePic ? (
-                <img
-                  src={getProfilePicUrl(activePartner.profilePic)}
-                  alt="ongoing"
+              {callTypeRef.current === 'video' ? (
+                <video 
+                  id="remoteVideo" 
+                  autoPlay 
+                  playsInline 
                   className="w-full h-full object-cover"
                 />
               ) : (
-                <div className="w-full h-full flex items-center justify-center bg-indigo-950/40 text-indigo-400">
-                  <UserIcon className="w-16 h-16" />
-                </div>
+                <>
+                  <audio id="remoteAudio" autoPlay />
+                  {activePartner?.profilePic ? (
+                    <img
+                      src={getProfilePicUrl(activePartner.profilePic)}
+                      alt="ongoing"
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center bg-indigo-950/40 text-indigo-400">
+                      <UserIcon className="w-16 h-16" />
+                    </div>
+                  )}
+                </>
               )}
               {/* Self view preview inset (matches professional videocall mock) */}
               <div className="absolute bottom-2 right-2 w-14 h-20 bg-slate-800 border border-slate-700 rounded-lg overflow-hidden shadow-md">
-                {currentUser?.profilePic ? (
+                {callTypeRef.current === 'video' ? (
+                  <video 
+                    id="localVideo" 
+                    autoPlay 
+                    playsInline 
+                    muted 
+                    className="w-full h-full object-cover"
+                  />
+                ) : currentUser?.profilePic ? (
                   <img src={getProfilePicUrl(currentUser.profilePic)} alt="self" className="w-full h-full object-cover" />
                 ) : (
                   <div className="w-full h-full bg-slate-700 flex items-center justify-center"><UserIcon className="w-4 h-4 text-slate-400" /></div>
@@ -1281,10 +1494,7 @@ const MessengerPage = ({ onBack, activeChatPartner, setActiveChatPartner, socket
             </div>
 
             <button 
-              onClick={() => {
-                setActiveCall(null);
-                alert('Call ended.');
-              }}
+              onClick={handleEndCall}
               className="w-16 h-16 bg-rose-500 hover:bg-rose-600 active:scale-95 transition-all rounded-full flex items-center justify-center shadow-lg shadow-rose-500/45"
             >
               <PhoneOff className="w-7 h-7 text-white" />

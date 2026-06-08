@@ -304,6 +304,27 @@ module.exports = {
         }
       });
 
+      socket.on('accept_call', (data) => {
+        const { callerId, receiverId } = data;
+        if (callerId) {
+          io.to(callerId.toString()).emit('call_accepted', { receiverId });
+        }
+      });
+
+      socket.on('end_call', (data) => {
+        const { targetId } = data;
+        if (targetId) {
+          io.to(targetId.toString()).emit('call_ended');
+        }
+      });
+
+      socket.on('webrtc_signal', (data) => {
+        const { targetId, signal } = data;
+        if (targetId) {
+          io.to(targetId.toString()).emit('webrtc_signal', { senderId: socket.userId, signal });
+        }
+      });
+
       socket.on('group_call', (data) => {
         const { callerId, callerName, groupId, type } = data;
         if (groupId) {
