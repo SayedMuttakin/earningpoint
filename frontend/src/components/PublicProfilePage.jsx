@@ -56,12 +56,50 @@ const formatRelativeTime = (dateStr) => {
   }
 };
 
+// Client-side image compression helper
+const compressImage = (base64Str, maxWidth = 1024, maxHeight = 1024, quality = 0.7) => {
+  return new Promise((resolve) => {
+    const img = new Image();
+    img.src = base64Str;
+    img.onload = () => {
+      const canvas = document.createElement('canvas');
+      let width = img.width;
+      let height = img.height;
+
+      if (width > height) {
+        if (width > maxWidth) {
+          height = Math.round((height * maxWidth) / width);
+          width = maxWidth;
+        }
+      } else {
+        if (height > maxHeight) {
+          width = Math.round((width * maxHeight) / height);
+          height = maxHeight;
+        }
+      }
+
+      canvas.width = width;
+      canvas.height = height;
+
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(img, 0, 0, width, height);
+
+      const compressedBase64 = canvas.toDataURL('image/jpeg', quality);
+      resolve(compressedBase64);
+    };
+    img.onerror = () => {
+      resolve(base64Str); // Fallback to original
+    };
+  });
+};
+
 const PublicProfilePage = ({ userId, onBack, currentUser, isOwnProfile, setActiveTab, setSelectedReelId, setActiveChatPartner }) => {
   const [profile, setProfile] = useState(null);
   const [videos, setVideos] = useState([]);
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState(false);
+  const [imageCompressing, setImageCompressing] = useState(false);
   
   // 4-icon tabs navigation: 'grid', 'reels', 'shop', 'saved'
   const [activeSubTab, setActiveSubTab] = useState('grid');
@@ -165,16 +203,18 @@ const PublicProfilePage = ({ userId, onBack, currentUser, isOwnProfile, setActiv
     setStoryProgress(0);
   };
 
-  // Upload/Change Cover photo
+  // Upload/Change Cover photo with compression
   const handleCoverUpload = (e) => {
     const file = e.target.files[0];
     if (file) {
+      setImageCompressing(true);
       const reader = new FileReader();
       reader.onloadend = async () => {
-        const base64 = reader.result;
-        setProfile(prev => ({ ...prev, coverPic: base64 }));
-        
         try {
+          const originalBase64 = reader.result;
+          const base64 = await compressImage(originalBase64, 1200, 600, 0.7);
+          setProfile(prev => ({ ...prev, coverPic: base64 }));
+          
           const token = localStorage.getItem('token');
           const res = await fetch(`${API_BASE}/api/profile/update`, {
             method: 'PUT',
@@ -189,22 +229,26 @@ const PublicProfilePage = ({ userId, onBack, currentUser, isOwnProfile, setActiv
           }
         } catch (err) {
           console.error('Failed to save cover photo:', err);
+        } finally {
+          setImageCompressing(false);
         }
       };
       reader.readAsDataURL(file);
     }
   };
 
-  // Upload/Change Profile photo
+  // Upload/Change Profile photo with compression
   const handleAvatarUpload = (e) => {
     const file = e.target.files[0];
     if (file) {
+      setImageCompressing(true);
       const reader = new FileReader();
       reader.onloadend = async () => {
-        const base64 = reader.result;
-        setProfile(prev => ({ ...prev, profilePic: base64 }));
-        
         try {
+          const originalBase64 = reader.result;
+          const base64 = await compressImage(originalBase64, 500, 500, 0.75);
+          setProfile(prev => ({ ...prev, profilePic: base64 }));
+          
           const token = localStorage.getItem('token');
           const res = await fetch(`${API_BASE}/api/profile/update`, {
             method: 'PUT',
@@ -219,19 +263,27 @@ const PublicProfilePage = ({ userId, onBack, currentUser, isOwnProfile, setActiv
           }
         } catch (err) {
           console.error('Failed to save profile picture:', err);
+        } finally {
+          setImageCompressing(false);
         }
       };
       reader.readAsDataURL(file);
     }
   };
 
-  // Upload highlight cover photo
+  // Upload highlight cover photo with compression
   const handleHighlightCoverChange = (e) => {
     const file = e.target.files[0];
     if (file) {
       const reader = new FileReader();
-      reader.onloadend = () => {
-        setHlCover(reader.result);
+      reader.onloadend = async () => {
+        try {
+          const originalBase64 = reader.result;
+          const base64 = await compressImage(originalBase64, 400, 400, 0.75);
+          setHlCover(base64);
+        } catch (err) {
+          console.error('Failed to compress highlight cover:', err);
+        }
       };
       reader.readAsDataURL(file);
     }
@@ -256,13 +308,23 @@ const PublicProfilePage = ({ userId, onBack, currentUser, isOwnProfile, setActiv
     setHlSelectedPosts([]);
   };
 
-  // Create Highlight Submission
+  // Create Highlight Submission with fallback cover
   const handleCreateHighlightSubmit = async () => {
     if (!hlTitle.trim() || hlSelectedPosts.length === 0) return;
 
+    let coverToSave = hlCover;
+    if (!coverToSave) {
+      // Find the first selected post inside selectable list
+      const firstPost = allSelectablePosts.find(p => p._id === hlSelectedPosts[0]);
+      if (firstPost) {
+        // Retrieve either image (community post attachment / reel cover) or video
+        coverToSave = firstPost.image || firstPost.video || '';
+      }
+    }
+
     const newHighlight = {
       title: hlTitle.trim(),
-      cover: hlCover,
+      cover: coverToSave,
       posts: hlSelectedPosts
     };
 
@@ -347,10 +409,10 @@ const PublicProfilePage = ({ userId, onBack, currentUser, isOwnProfile, setActiv
     }
   };
 
-  // Combined posts and reels list for Selection in Highlight modal
+  // Combined posts and reels list for Selection in Highlight modal (Preserve image field)
   const allSelectablePosts = [
-    ...posts.map(p => ({ ...p, video: null })),
-    ...videos.map(v => ({ ...v, content: v.title || 'Video Reel', image: null }))
+    ...posts,
+    ...videos.map(v => ({ ...v, content: v.title || 'Video Reel' }))
   ];
 
   const totalPosts = (videos ? videos.length : 0) + (posts ? posts.length : 0);
@@ -414,7 +476,7 @@ const PublicProfilePage = ({ userId, onBack, currentUser, isOwnProfile, setActiv
             className="w-full h-full object-cover"
           />
         ) : (
-          <div className="w-full h-full bg-gradient-to-r from-violet-650 via-indigo-600 to-purple-700 flex items-center justify-center opacity-90">
+          <div className="w-full h-full bg-gradient-to-r from-violet-600 via-indigo-600 to-purple-700 flex items-center justify-center opacity-90">
             <span className="text-white/20 font-black tracking-widest text-lg select-none">ZENIVIO</span>
           </div>
         )}
@@ -422,10 +484,11 @@ const PublicProfilePage = ({ userId, onBack, currentUser, isOwnProfile, setActiv
         {isOwn && (
           <>
             <button
+              disabled={imageCompressing}
               onClick={() => coverInputRef.current?.click()}
-              className="absolute bottom-3 right-3 p-2 bg-black/60 hover:bg-black/80 backdrop-blur-md text-white rounded-full transition-all active:scale-90 shadow-md border border-white/20"
+              className="absolute bottom-3 right-3 p-2 bg-black/60 hover:bg-black/80 backdrop-blur-md text-white rounded-full transition-all active:scale-90 shadow-md border border-white/20 flex items-center justify-center disabled:opacity-50"
             >
-              <Camera className="w-4 h-4" />
+              {imageCompressing ? <Loader2 className="w-4 h-4 animate-spin" /> : <Camera className="w-4 h-4" />}
             </button>
             <input
               type="file"
@@ -463,10 +526,11 @@ const PublicProfilePage = ({ userId, onBack, currentUser, isOwnProfile, setActiv
           {isOwn && (
             <>
               <button
+                disabled={imageCompressing}
                 onClick={() => fileInputRef.current?.click()}
-                className="absolute bottom-1 right-1 p-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-full transition-all active:scale-90 shadow-lg border-2 border-white dark:border-slate-950"
+                className="absolute bottom-1 right-1 p-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-full transition-all active:scale-90 shadow-lg border-2 border-white dark:border-slate-950 flex items-center justify-center disabled:opacity-50"
               >
-                <Camera className="w-4 h-4" />
+                {imageCompressing ? <Loader2 className="w-4 h-4 animate-spin" /> : <Camera className="w-4 h-4" />}
               </button>
               <input
                 type="file"
@@ -479,7 +543,7 @@ const PublicProfilePage = ({ userId, onBack, currentUser, isOwnProfile, setActiv
           )}
           
           {!isOwn && (
-            <span className="absolute bottom-1 right-1 w-5 h-5 bg-emerald-550 rounded-full border-4 border-white dark:border-slate-950 shadow-md animate-pulse" />
+            <span className="absolute bottom-1 right-1 w-5 h-5 bg-emerald-500 rounded-full border-4 border-white dark:border-slate-950 shadow-md animate-pulse" />
           )}
         </div>
 
@@ -497,7 +561,7 @@ const PublicProfilePage = ({ userId, onBack, currentUser, isOwnProfile, setActiv
           </p>
 
           {profile.bio && (
-            <p className="text-xs font-semibold text-slate-650 dark:text-slate-350 leading-relaxed px-4 pt-1 max-w-sm mx-auto whitespace-pre-wrap select-text">
+            <p className="text-xs font-semibold text-slate-655 dark:text-slate-350 leading-relaxed px-4 pt-1 max-w-sm mx-auto whitespace-pre-wrap select-text">
               {profile.bio}
             </p>
           )}
@@ -551,7 +615,7 @@ const PublicProfilePage = ({ userId, onBack, currentUser, isOwnProfile, setActiv
           <div className="flex items-center gap-3 select-none justify-center px-4 mt-4 w-full">
             <button 
               onClick={() => setActiveTab('EditProfile')}
-              className="flex-1 py-2.5 rounded-full font-black text-sm bg-indigo-650 hover:bg-indigo-750 text-white transition-all active:scale-95 shadow-md shadow-indigo-650/15"
+              className="flex-1 py-2.5 rounded-full font-black text-sm bg-indigo-600 hover:bg-indigo-700 text-white transition-all active:scale-95 shadow-md shadow-indigo-600/15"
             >
               Edit Profile
             </button>
@@ -581,7 +645,7 @@ const PublicProfilePage = ({ userId, onBack, currentUser, isOwnProfile, setActiv
               className={`flex-1 py-2.5 rounded-full font-black text-sm transition-all active:scale-95 shadow-md ${
                 profile.isFollowing 
                   ? 'bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:bg-slate-250 dark:hover:bg-slate-750' 
-                  : 'bg-gradient-to-r from-pink-500 to-rose-500 hover:from-pink-650 hover:to-rose-655 text-white shadow-rose-500/25'
+                  : 'bg-gradient-to-r from-pink-500 to-rose-500 hover:from-pink-600 hover:to-rose-600 text-white shadow-rose-500/25'
               }`}
             >
               {actionLoading ? (
@@ -657,7 +721,7 @@ const PublicProfilePage = ({ userId, onBack, currentUser, isOwnProfile, setActiv
                       e.stopPropagation();
                       handleDeleteHighlight(index);
                     }}
-                    className="absolute -top-1 -right-1 p-1 bg-red-500 text-white rounded-full hover:bg-red-650 opacity-0 group-hover:opacity-100 transition-opacity shadow-xs z-10"
+                    className="absolute -top-1 -right-1 p-1 bg-red-500 text-white rounded-full hover:bg-red-600 opacity-0 group-hover:opacity-100 transition-opacity shadow-xs z-10 animate-fade-in"
                   >
                     <X className="w-2.5 h-2.5" />
                   </button>
@@ -740,7 +804,7 @@ const PublicProfilePage = ({ userId, onBack, currentUser, isOwnProfile, setActiv
                         className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                       />
                     ) : (
-                      <div className="w-full h-full p-2 bg-gradient-to-tr from-slate-100 to-slate-200 dark:from-slate-900 dark:to-slate-950 flex flex-col justify-between text-left">
+                      <div className="w-full h-full p-2 bg-gradient-to-tr from-slate-100 to-slate-200 dark:from-slate-900 dark:to-slate-955 flex flex-col justify-between text-left">
                         <p className="text-[10px] sm:text-[11px] font-semibold text-slate-800 dark:text-slate-200 line-clamp-4 leading-normal select-none">
                           {post.content}
                         </p>
@@ -809,7 +873,7 @@ const PublicProfilePage = ({ userId, onBack, currentUser, isOwnProfile, setActiv
               </div>
             )
           ) : activeSubTab === 'shop' ? (
-            <div className="text-center py-16 px-4 bg-white dark:bg-slate-900/40 border border-slate-100 dark:border-slate-800 rounded-3xl select-none flex flex-col items-center gap-3">
+            <div className="text-center py-16 px-4 bg-white dark:bg-slate-900/40 border border-slate-150 dark:border-slate-800 rounded-3xl select-none flex flex-col items-center gap-3">
               <div className="p-4 bg-indigo-50 dark:bg-indigo-950/30 rounded-full text-indigo-500">
                 <ShoppingBag className="w-8 h-8" />
               </div>
@@ -819,7 +883,7 @@ const PublicProfilePage = ({ userId, onBack, currentUser, isOwnProfile, setActiv
               </p>
             </div>
           ) : (
-            <div className="text-center py-16 px-4 bg-white dark:bg-slate-900/40 border border-slate-100 dark:border-slate-800 rounded-3xl select-none flex flex-col items-center gap-3">
+            <div className="text-center py-16 px-4 bg-white dark:bg-slate-900/40 border border-slate-150 dark:border-slate-800 rounded-3xl select-none flex flex-col items-center gap-3">
               <div className="p-4 bg-pink-50 dark:bg-pink-950/30 rounded-full text-pink-500">
                 <Bookmark className="w-8 h-8" />
               </div>
@@ -848,21 +912,21 @@ const PublicProfilePage = ({ userId, onBack, currentUser, isOwnProfile, setActiv
             </div>
 
             {/* Scrollable Content */}
-            <div className="flex-1 overflow-y-auto py-4 space-y-4 no-scrollbar">
+            <div className="flex-1 overflow-y-auto py-4 space-y-4 no-scrollbar text-left">
               {/* Title Input */}
-              <div className="space-y-1.5 text-left">
+              <div className="space-y-1.5">
                 <label className="text-[11px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Highlight Title</label>
                 <input
                   type="text"
-                  placeholder="e.g. Summer Vibes ☀️"
+                  placeholder="e.g. Travel Vibes ✈️"
                   value={hlTitle}
                   onChange={(e) => setHlTitle(e.target.value)}
-                  className="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-850 rounded-2xl text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all dark:text-white"
+                  className="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-2xl text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all dark:text-white"
                 />
               </div>
 
               {/* Cover Image */}
-              <div className="space-y-2 text-left">
+              <div className="space-y-2">
                 <label className="text-[11px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider block">Cover Photo</label>
                 <div className="flex items-center gap-4">
                   <div className="relative w-16 h-16 rounded-full overflow-hidden border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 flex items-center justify-center shrink-0">
@@ -890,7 +954,7 @@ const PublicProfilePage = ({ userId, onBack, currentUser, isOwnProfile, setActiv
               </div>
 
               {/* Post List */}
-              <div className="space-y-2 text-left">
+              <div className="space-y-2">
                 <label className="text-[11px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider block">Select Posts to Include</label>
                 {allSelectablePosts.length > 0 ? (
                   <div className="space-y-2.5 max-h-[35vh] overflow-y-auto pr-1">
@@ -909,7 +973,7 @@ const PublicProfilePage = ({ userId, onBack, currentUser, isOwnProfile, setActiv
                           <div className={`w-5 h-5 rounded-md border flex items-center justify-center transition-all shrink-0 ${
                             isSelected 
                               ? 'bg-indigo-500 border-indigo-500 text-white' 
-                              : 'border-slate-350 dark:border-slate-755'
+                              : 'border-slate-300 dark:border-slate-700'
                           }`}>
                             {isSelected && <span className="text-[10px] font-black">✓</span>}
                           </div>
@@ -963,7 +1027,7 @@ const PublicProfilePage = ({ userId, onBack, currentUser, isOwnProfile, setActiv
               <button
                 onClick={handleCreateHighlightSubmit}
                 disabled={!hlTitle.trim() || hlSelectedPosts.length === 0}
-                className="flex-1 py-2.5 rounded-xl text-xs font-black bg-indigo-650 hover:bg-indigo-700 text-white transition-all active:scale-95 disabled:opacity-50 disabled:active:scale-100"
+                className="flex-1 py-2.5 rounded-xl text-xs font-black bg-indigo-600 hover:bg-indigo-700 text-white transition-all active:scale-95 disabled:opacity-50 disabled:active:scale-100"
               >
                 Save Highlight
               </button>
@@ -1072,7 +1136,7 @@ const PublicProfilePage = ({ userId, onBack, currentUser, isOwnProfile, setActiv
                 className="w-full h-full object-contain"
               />
             ) : (
-              <div className="w-full h-full flex flex-col items-center justify-center px-8 bg-gradient-to-br from-indigo-900 via-purple-900 to-indigo-950 text-center select-text">
+              <div className="w-full h-full flex flex-col items-center justify-center px-8 bg-gradient-to-br from-indigo-900 via-purple-900 to-indigo-955 text-center select-text">
                 <p className="text-lg sm:text-xl font-bold text-white leading-relaxed max-w-sm whitespace-pre-wrap">
                   {activeHighlight.posts[hlActiveIndex]?.content || 'Story Details'}
                 </p>
