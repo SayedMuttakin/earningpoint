@@ -27,14 +27,20 @@ import {
 import { API_BASE } from '../config';
 import PullToRefresh from './PullToRefresh';
 
-const VerifiedBadgeIcon = () => (
-  <svg viewBox="0 0 24 24" className="w-5 h-5 flex-shrink-0" fill="currentColor">
-    <g>
-      <path d="M22.5 12.5c0-1.58-.875-2.95-2.148-3.6.154-.435.238-.905.238-1.4 0-2.21-1.71-3.998-3.918-3.998-.47 0-.92.084-1.336.25C14.818 2.415 13.51 1.5 12 1.5s-2.816.917-3.337 2.25c-.416-.165-.866-.25-1.336-.25-2.21 0-3.918 1.79-3.918 4 0 .495.084.965.238 1.4-1.273.65-2.148 2.02-2.148 3.6 0 1.46.827 2.766 2.057 3.435-.032.227-.057.452-.057.682 0 2.21 1.71 4 3.918 4 .47 0 .92-.086 1.336-.25.52 1.334 1.816 2.25 3.337 2.25s2.816-.916 3.337-2.25c.416.164.866.25 1.336.25 2.21 0 3.918-1.79 3.918-4 0-.23-.025-.455-.057-.682 1.23-.67 2.057-1.976 2.057-3.435z" fill="#1d9bf0"/>
-      <path d="M14.496 9.613l-3.393 3.393-1.614-1.615c-.293-.293-.768-.293-1.06 0-.294.293-.294.768 0 1.06l2.144 2.146c.146.146.338.22.53.22s.384-.073.53-.22l3.923-3.924c.294-.293.294-.768 0-1.06-.293-.293-.768-.293-1.06 0z" fill="#fff"/>
-    </g>
-  </svg>
-);
+const getSubItemIcon = (label) => {
+  const l = label.toLowerCase();
+  if (l.includes('profile')) return User;
+  if (l.includes('password') || l.includes('security')) return Lock;
+  if (l.includes('notification') || l.includes('alerts')) return Bell;
+  if (l.includes('privacy') || l.includes('blocked') || l.includes('activity')) return Shield;
+  if (l.includes('chat') || l.includes('read receipt') || l.includes('message')) return MessageCircle;
+  if (l.includes('saver') || l.includes('play') || l.includes('background')) return Rocket;
+  if (l.includes('clear cache') || l.includes('storage') || l.includes('download')) return Database;
+  if (l.includes('language') || l.includes('dark mode') || l.includes('theme')) return Palette;
+  if (l.includes('report') || l.includes('contact') || l.includes('faq')) return Headphones;
+  if (l.includes('logout') || l.includes('delete')) return LogOut;
+  return ShieldCheck; // default fallback
+};
 
 const SettingsPage = ({ 
   darkMode, 
@@ -220,7 +226,7 @@ const SettingsPage = ({
 
   useEffect(() => {
     if (initialSubMenuKey && subMenuData[initialSubMenuKey]) {
-      setActiveSubMenu(subMenuData[initialSubMenuKey]);
+      setActiveSubMenu({ ...subMenuData[initialSubMenuKey], id: initialSubMenuKey });
     } else {
       setActiveSubMenu(null);
     }
@@ -233,7 +239,7 @@ const SettingsPage = ({
       color: 'bg-violet-100 dark:bg-violet-950/40 text-violet-600 dark:text-violet-405', 
       label: 'Account Settings', 
       sub: 'Manage your profile, security and account', 
-      action: () => setActiveSubMenu(subMenuData.account_settings)
+      action: () => setActiveSubMenu({ ...subMenuData.account_settings, id: 'account_settings' })
     },
     { 
       id: 'notifications', 
@@ -241,7 +247,7 @@ const SettingsPage = ({
       color: 'bg-amber-100 dark:bg-amber-950/40 text-amber-600 dark:text-amber-405', 
       label: 'Notifications', 
       sub: 'Control alerts and notification preferences', 
-      action: () => setActiveSubMenu(subMenuData.notifications)
+      action: () => setActiveSubMenu({ ...subMenuData.notifications, id: 'notifications' })
     },
     { 
       id: 'privacy', 
@@ -249,12 +255,12 @@ const SettingsPage = ({
       color: 'bg-emerald-100 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-405', 
       label: 'Privacy', 
       sub: 'Manage privacy and visibility settings', 
-      action: () => setActiveSubMenu(subMenuData.privacy)
+      action: () => setActiveSubMenu({ ...subMenuData.privacy, id: 'privacy' })
     },
     { 
       id: 'verification', 
-      icon: VerifiedBadgeIcon, 
-      color: 'bg-blue-50/75 dark:bg-blue-950/20', 
+      icon: ShieldCheck, 
+      color: 'bg-blue-100 dark:bg-blue-950/40 text-blue-600 dark:text-blue-405', 
       label: 'Verification', 
       sub: 'Verify your identity and account status', 
       action: () => { closeSubMenu(); onVerifyClick(); }
@@ -265,7 +271,7 @@ const SettingsPage = ({
       color: 'bg-blue-100 dark:bg-blue-950/40 text-blue-600 dark:text-blue-405', 
       label: 'Messenger', 
       sub: 'Chat and messaging preferences', 
-      action: () => setActiveSubMenu(subMenuData.messenger)
+      action: () => setActiveSubMenu({ ...subMenuData.messenger, id: 'messenger' })
     },
     { 
       id: 'performance', 
@@ -273,7 +279,7 @@ const SettingsPage = ({
       color: 'bg-purple-100 dark:bg-purple-950/40 text-purple-650 dark:text-purple-405', 
       label: 'App Performance', 
       sub: 'Data saver, optimization and app performance', 
-      action: () => setActiveSubMenu(subMenuData.performance)
+      action: () => setActiveSubMenu({ ...subMenuData.performance, id: 'performance' })
     },
     { 
       id: 'storage', 
@@ -281,7 +287,7 @@ const SettingsPage = ({
       color: 'bg-sky-100 dark:bg-sky-950/40 text-sky-600 dark:text-sky-405', 
       label: 'Storage & Data', 
       sub: 'Manage storage, data usage and cache', 
-      action: () => setActiveSubMenu(subMenuData.storage)
+      action: () => setActiveSubMenu({ ...subMenuData.storage, id: 'storage' })
     },
     { 
       id: 'appearance', 
@@ -289,7 +295,7 @@ const SettingsPage = ({
       color: 'bg-pink-100 dark:bg-pink-950/40 text-pink-600 dark:text-pink-405', 
       label: 'Language & Appearance', 
       sub: 'Theme, dark mode and language', 
-      action: () => setActiveSubMenu(subMenuData.appearance)
+      action: () => setActiveSubMenu({ ...subMenuData.appearance, id: 'appearance' })
     },
     { 
       id: 'support', 
@@ -297,7 +303,7 @@ const SettingsPage = ({
       color: 'bg-green-100 dark:bg-green-950/40 text-green-600 dark:text-green-405', 
       label: 'Help & Support', 
       sub: 'Get help, report issues and more', 
-      action: () => setActiveSubMenu(subMenuData.support)
+      action: () => setActiveSubMenu({ ...subMenuData.support, id: 'support' })
     },
     { 
       id: 'actions', 
@@ -305,9 +311,13 @@ const SettingsPage = ({
       color: 'bg-rose-100 dark:bg-rose-950/40 text-rose-600 dark:text-rose-455', 
       label: 'Account Actions', 
       sub: 'Logout or delete your account', 
-      action: () => setActiveSubMenu(subMenuData.actions)
+      action: () => setActiveSubMenu({ ...subMenuData.actions, id: 'actions' })
     }
   ];
+
+  const parentItem = activeSubMenu ? allItems.find(item => item.id === activeSubMenu.id) : null;
+  const ParentIcon = parentItem ? parentItem.icon : User;
+  const parentColor = parentItem ? parentItem.color : 'bg-indigo-100 dark:bg-indigo-950/40 text-indigo-650 dark:text-indigo-400';
 
   if (loading) {
     return (
@@ -485,44 +495,55 @@ const SettingsPage = ({
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
           <div 
             onClick={closeSubMenu}
-            className="absolute inset-0 bg-slate-955/70 backdrop-blur-sm animate-fade-in"
+            className="absolute inset-0 bg-slate-955/65 backdrop-blur-md animate-fade-in"
           />
           <div 
-            className="relative z-10 w-full max-w-md bg-white dark:bg-slate-900 rounded-[32px] shadow-2xl border border-transparent dark:border-slate-800 overflow-hidden max-h-[80vh] flex flex-col animate-scale-up"
+            className="relative z-10 w-full max-w-md bg-white/95 dark:bg-slate-900/95 backdrop-blur-lg rounded-[28px] shadow-2xl border border-slate-150/40 dark:border-slate-800/80 overflow-hidden max-h-[80vh] flex flex-col animate-scale-up"
           >
             {/* Header */}
-            <div className="px-6 py-5 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between flex-shrink-0">
-              <div>
-                <h3 className="text-base font-black text-slate-855 dark:text-white">{activeSubMenu.title}</h3>
-                <p className="text-[10px] text-slate-405 dark:text-slate-500 font-bold mt-0.5">Configure your preferences</p>
+            <div className="px-5 py-4 border-b border-slate-100 dark:border-slate-800/80 bg-slate-50/50 dark:bg-slate-900/30 flex items-center justify-between flex-shrink-0">
+              <div className="flex items-center gap-3.5 min-w-0">
+                <div className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 ${parentColor} shadow-3xs`}>
+                  <ParentIcon className="w-5.5 h-5.5" strokeWidth={2.4} />
+                </div>
+                <div className="min-w-0">
+                  <h3 className="text-[16px] font-black text-slate-855 dark:text-white leading-tight">{activeSubMenu.title}</h3>
+                  <p className="text-[9.5px] text-slate-400 dark:text-slate-500 font-bold mt-0.5 uppercase tracking-wider">Configure your preferences</p>
+                </div>
               </div>
               <button 
                 onClick={closeSubMenu}
-                className="p-1.5 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400 transition-colors"
+                className="w-7 h-7 rounded-full bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-450 dark:text-slate-400 flex items-center justify-center transition-all hover:scale-105 active:scale-95 border border-slate-150/10 dark:border-slate-750/30 flex-shrink-0"
               >
-                <X className="w-5 h-5" />
+                <X className="w-3.5 h-3.5" />
               </button>
             </div>
 
             {/* Scrollable Items List */}
-            <div className="p-6 space-y-4 overflow-y-auto flex-1 bg-slate-50/50 dark:bg-slate-900">
+            <div className="p-5 space-y-3 overflow-y-auto flex-1 bg-slate-50/40 dark:bg-slate-955/15">
               {activeSubMenu.items.map((subItem, idx) => {
+                const Icon = getSubItemIcon(subItem.label);
                 if (subItem.isToggle) {
                   return (
                     <div
                       key={idx}
-                      className="w-full flex items-center justify-between p-4 bg-white dark:bg-slate-955 border border-slate-150/30 dark:border-slate-855 rounded-2xl text-left shadow-3xs animate-fade-in"
+                      className="w-full flex items-center justify-between p-4 bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800/60 rounded-2xl text-left shadow-3xs hover:bg-slate-50/50 dark:hover:bg-slate-900/40 transition-colors duration-250 animate-fade-in"
                     >
-                      <div className="min-w-0 pr-3">
-                        <span className="font-bold text-sm text-slate-855 dark:text-white block">{subItem.label}</span>
-                        <span className="text-[10px] text-slate-405 dark:text-slate-500 font-bold block mt-0.5 leading-relaxed">{subItem.sub}</span>
+                      <div className="flex items-start gap-3.5 min-w-0 pr-3">
+                        <div className={`w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 ${parentColor}`}>
+                          <Icon className="w-5 h-5" strokeWidth={2.4} />
+                        </div>
+                        <div className="min-w-0">
+                          <span className="font-black text-[14px] text-slate-800 dark:text-slate-200 block truncate">{subItem.label}</span>
+                          <span className="text-[10px] text-slate-400 dark:text-slate-500 font-bold block mt-0.5 leading-relaxed">{subItem.sub}</span>
+                        </div>
                       </div>
                       
                       <button 
                         onClick={subItem.action}
-                        className={`relative inline-flex h-7 w-12 items-center rounded-full transition-colors duration-300 focus:outline-none flex-shrink-0 ${subItem.value ? 'bg-[#7C3AED]' : 'bg-slate-250 dark:bg-slate-800'}`}
+                        className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors duration-300 focus:outline-none flex-shrink-0 ${subItem.value ? 'bg-[#7C3AED]' : 'bg-slate-200 dark:bg-slate-800'}`}
                       >
-                        <span className={`inline-block h-5 w-5 transform rounded-full bg-white shadow-md transition-transform duration-300 ${subItem.value ? 'translate-x-6' : 'translate-x-1'}`} />
+                        <span className={`inline-block h-4.5 w-4.5 transform rounded-full bg-white shadow-md transition-transform duration-300 ${subItem.value ? 'translate-x-5.5' : 'translate-x-0.5'}`} />
                       </button>
                     </div>
                   );
@@ -532,13 +553,18 @@ const SettingsPage = ({
                   <button
                     key={idx}
                     onClick={subItem.action}
-                    className="w-full flex items-center justify-between p-4 bg-white hover:bg-slate-50/50 dark:bg-slate-955 dark:hover:bg-slate-905 border border-slate-150/30 dark:border-slate-855 rounded-2xl transition-all active:scale-98 text-left shadow-3xs animate-fade-in"
+                    className="w-full flex items-center justify-between p-4 bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800/60 rounded-2xl transition-all duration-250 hover:-translate-y-0.5 active:translate-y-0 hover:bg-slate-50/50 dark:hover:bg-slate-900/40 hover:border-indigo-500/20 dark:hover:border-indigo-500/20 text-left shadow-3xs group animate-fade-in"
                   >
-                    <div className="min-w-0 pr-3">
-                      <span className="font-bold text-sm text-slate-855 dark:text-white block">{subItem.label}</span>
-                      <span className="text-[10px] text-slate-405 dark:text-slate-500 font-bold block mt-0.5 leading-relaxed">{subItem.sub}</span>
+                    <div className="flex items-start gap-3.5 min-w-0 pr-3">
+                      <div className={`w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 ${parentColor} group-hover:scale-105 transition-transform`}>
+                        <Icon className="w-5 h-5" strokeWidth={2.4} />
+                      </div>
+                      <div className="min-w-0">
+                        <span className="font-black text-[14px] text-slate-800 dark:text-slate-200 block truncate group-hover:text-indigo-500 dark:group-hover:text-indigo-400 transition-colors">{subItem.label}</span>
+                        <span className="text-[10px] text-slate-400 dark:text-slate-500 font-bold block mt-0.5 leading-relaxed">{subItem.sub}</span>
+                      </div>
                     </div>
-                    <ChevronRight className="w-4 h-4 text-indigo-500 dark:text-indigo-400 flex-shrink-0" strokeWidth={2.5} />
+                    <ChevronRight className="w-4 h-4 text-slate-400 group-hover:text-indigo-500 group-hover:translate-x-0.5 transition-all flex-shrink-0" strokeWidth={3} />
                   </button>
                 );
               })}
