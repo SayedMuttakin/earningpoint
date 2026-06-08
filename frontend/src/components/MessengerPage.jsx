@@ -901,11 +901,9 @@ const MessengerPage = ({ onBack, activeChatPartner, setActiveChatPartner }) => {
 
               </PullToRefresh>
             </div>
-          </>
-        ) : (
-          
-          // ────────────────── ACTIVE CONVERSATION SCREEN ──────────────────
-          <>
+          </>) : (
+            // ────────────────── ACTIVE CONVERSATION SCREEN ──────────────────
+            <div className="flex-1 flex flex-col h-full overflow-hidden relative bg-slate-50/50 dark:bg-slate-900/35">
             {/* Chat Room Header */}
             <div className="bg-white dark:bg-slate-950 border-b border-slate-100 dark:border-slate-800 px-4 py-3 flex items-center justify-between shrink-0 shadow-sm z-10 relative">
               <div className="flex items-center gap-2 sm:gap-3">
@@ -978,7 +976,7 @@ const MessengerPage = ({ onBack, activeChatPartner, setActiveChatPartner }) => {
             </div>
 
             {/* Conversation Messages Scroll Body */}
-            <div className="flex-1 overflow-y-auto bg-slate-50/50 dark:bg-slate-900/35 p-4 space-y-4 pb-32">
+            <div className="flex-1 overflow-y-auto bg-slate-50/50 dark:bg-slate-900/35 p-4 space-y-4 pb-4">
               {loadingChat ? (
                 <div className="h-full flex items-center justify-center">
                   <Loader2 className="w-8 h-8 text-indigo-600 animate-spin" />
@@ -1006,21 +1004,9 @@ const MessengerPage = ({ onBack, activeChatPartner, setActiveChatPartner }) => {
                     <div key={i} className={`flex ${isUser ? 'justify-end' : 'justify-start'} w-full animate-fade-in`}>
                       <div className={`flex gap-2 max-w-[80%] items-end ${isUser ? 'flex-row-reverse' : 'flex-row'}`}>
                         {/* Avatar */}
-                        <div className="relative flex-shrink-0">
-                          {isUser ? (
-                            currentUser?.profilePic ? (
-                              <img
-                                src={getProfilePicUrl(currentUser.profilePic)}
-                                alt="me"
-                                className="w-8 h-8 rounded-full object-cover shadow-xs border border-slate-100 dark:border-slate-800"
-                              />
-                            ) : (
-                              <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-indigo-500 to-brand-500 flex items-center justify-center text-white text-[10px] font-black shadow-xs">
-                                {currentUser?.name?.charAt(0).toUpperCase() || 'U'}
-                              </div>
-                            )
-                          ) : (
-                            senderPic ? (
+                        {!isUser && (
+                          <div className="relative flex-shrink-0">
+                            {senderPic ? (
                               <img
                                 src={getProfilePicUrl(senderPic)}
                                 alt="sender"
@@ -1030,9 +1016,9 @@ const MessengerPage = ({ onBack, activeChatPartner, setActiveChatPartner }) => {
                               <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-indigo-500 to-brand-500 flex items-center justify-center text-white text-[10px] font-black shadow-xs">
                                 {senderName.charAt(0).toUpperCase()}
                               </div>
-                            )
-                          )}
-                        </div>
+                            )}
+                          </div>
+                        )}
                         
                         <div className="flex flex-col">
                           {/* Display sender name for group chats */}
@@ -1042,13 +1028,13 @@ const MessengerPage = ({ onBack, activeChatPartner, setActiveChatPartner }) => {
                           {/* speech bubble */}
                           <div 
                             onClick={() => setExpandedMessageId(expandedMessageId === msg._id ? null : msg._id)}
-                            className={`p-3 px-4 rounded-2xl relative shadow-3xs cursor-pointer select-none transition-all active:scale-[0.99] ${
+                            className={`py-2 px-3.5 rounded-2xl relative shadow-3xs cursor-pointer select-none transition-all active:scale-[0.99] ${
                               isUser 
                                 ? 'bg-gradient-to-r from-[#7C3AED] to-[#5B21B6] text-white rounded-br-sm' 
                                 : 'bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200 rounded-bl-sm border border-slate-200/40 dark:border-slate-800/80 shadow-3xs'
                             }`}
                           >
-                            <p className="text-[14px] leading-relaxed break-words font-medium">{msg.content}</p>
+                            <p className="text-[14px] leading-snug break-words font-medium">{msg.content}</p>
                           </div>
 
                           {/* Timestamp show on click */}
@@ -1132,7 +1118,7 @@ const MessengerPage = ({ onBack, activeChatPartner, setActiveChatPartner }) => {
             </div>
 
             {/* Bottom Input form panel */}
-            <div className="absolute bottom-0 left-0 right-0 bg-white dark:bg-slate-950 border-t border-slate-200/60 dark:border-slate-900 p-3 shrink-0 pb-safe pb-4">
+            <div className="bg-white dark:bg-slate-950 border-t border-slate-200/60 dark:border-slate-900 p-3 shrink-0 pb-safe pb-4">
               <form onSubmit={handleSendMessage} className="flex items-center gap-2 max-w-4xl mx-auto">
                 <div className="flex items-center gap-1 text-slate-400 dark:text-slate-500">
                   <button type="button" className="p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-900 hover:text-indigo-650 active:scale-95 transition-all" title="Share Image">
@@ -1175,7 +1161,7 @@ const MessengerPage = ({ onBack, activeChatPartner, setActiveChatPartner }) => {
                 )}
               </form>
             </div>
-          </>
+          </div>
         )}
 
         {/* ────────────────── CALLING SCREENS overlay ────────────────── */}
