@@ -54,6 +54,7 @@ const MessengerPage = ({ onBack, activeChatPartner, setActiveChatPartner }) => {
   const [activeCall, setActiveCall] = useState(null); // 'audio' | 'video' | null
   const [incomingCallData, setIncomingCallData] = useState(null);
   const [onlineUsers, setOnlineUsers] = useState([]);
+  const [expandedMessageId, setExpandedMessageId] = useState(null);
 
   // Status Notes State
   const [notes, setNotes] = useState([]);
@@ -227,6 +228,9 @@ const MessengerPage = ({ onBack, activeChatPartner, setActiveChatPartner }) => {
         (message.sender === currentUser?._id && message.receiver === activePartner._id)
       )) {
         setMessages((prev) => [...prev, message]);
+        if (message.receiver === currentUser?._id && message.sender === activePartner._id) {
+          socket.emit('read_messages', { senderId: activePartner._id, receiverId: currentUser._id });
+        }
       }
       fetchUsers();
     });
@@ -239,12 +243,14 @@ const MessengerPage = ({ onBack, activeChatPartner, setActiveChatPartner }) => {
     });
 
     socket.on('direct_typing', (data) => {
-      if (activePartner && !activePartner.isGroup && data.senderId === activePartner._id && data.isTyping) {
-        setIsPartnerTyping(true);
-        if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
-        typingTimeoutRef.current = setTimeout(() => {
-          setIsPartnerTyping(false);
-        }, 2000);
+      if (activePartner && !activePartner.isGroup && data.senderId === activePartner._id) {
+        setIsPartnerTyping(data.isTyping);
+        if (data.isTyping) {
+          if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
+          typingTimeoutRef.current = setTimeout(() => {
+            setIsPartnerTyping(false);
+          }, 3000);
+        }
       }
     });
 
@@ -255,8 +261,21 @@ const MessengerPage = ({ onBack, activeChatPartner, setActiveChatPartner }) => {
           if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
           typingTimeoutRef.current = setTimeout(() => {
             setTypingGroupMembers(prev => prev.filter(name => name !== data.senderName));
-          }, 2000);
+          }, 3000);
+        } else {
+          setTypingGroupMembers(prev => prev.filter(name => name !== data.senderName));
         }
+      }
+    });
+
+    socket.on('messages_read', (data) => {
+      if (activePartner && !activePartner.isGroup && data.readerId === activePartner._id) {
+        setMessages((prev) => prev.map(msg => {
+          if (msg.sender === currentUser?._id && !msg.isRead) {
+            return { ...msg, isRead: true };
+          }
+          return msg;
+        }));
       }
     });
 
@@ -287,6 +306,7 @@ const MessengerPage = ({ onBack, activeChatPartner, setActiveChatPartner }) => {
       socket.off('receive_group_message');
       socket.off('direct_typing');
       socket.off('group_typing');
+      socket.off('messages_read');
       socket.off('incoming_call');
       socket.off('incoming_group_call');
       socket.off('call_declined');
@@ -315,6 +335,9 @@ const MessengerPage = ({ onBack, activeChatPartner, setActiveChatPartner }) => {
       if (res.ok) {
         const history = await res.json();
         setMessages(history);
+        if (!partner.isGroup && socket) {
+          socket.emit('read_messages', { senderId: partner._id, receiverId: currentUser?._id });
+        }
       }
     } catch (err) {
       console.error('Failed to load chat history:', err);
@@ -327,13 +350,25 @@ const MessengerPage = ({ onBack, activeChatPartner, setActiveChatPartner }) => {
     e.preventDefault();
     if (!messageInput.trim() || !socket || !activePartner || !currentUser) return;
     
+    if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
     if (activePartner.isGroup) {
+      socket.emit('group_typing', {
+        senderId: currentUser._id,
+        senderName: currentUser.name || 'User',
+        groupId: activePartner._id,
+        isTyping: false
+      });
       socket.emit('send_group_message', {
         senderId: currentUser._id,
         groupId: activePartner._id,
         content: messageInput.trim()
       });
     } else {
+      socket.emit('direct_typing', {
+        senderId: currentUser._id,
+        receiverId: activePartner._id,
+        isTyping: false
+      });
       socket.emit('send_direct_message', {
         senderId: currentUser._id,
         receiverId: activePartner._id,
@@ -343,7 +378,8 @@ const MessengerPage = ({ onBack, activeChatPartner, setActiveChatPartner }) => {
     setMessageInput('');
   };
 
-  const handleKeyPress = () => {
+  const handleInputChange = (e) => {
+    setMessageInput(e.target.value);
     if (socket && activePartner && currentUser) {
       if (activePartner.isGroup) {
         socket.emit('group_typing', {
@@ -359,6 +395,24 @@ const MessengerPage = ({ onBack, activeChatPartner, setActiveChatPartner }) => {
           isTyping: true
         });
       }
+
+      if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
+      typingTimeoutRef.current = setTimeout(() => {
+        if (activePartner.isGroup) {
+          socket.emit('group_typing', {
+            senderId: currentUser._id,
+            senderName: currentUser.name || 'User',
+            groupId: activePartner._id,
+            isTyping: false
+          });
+        } else {
+          socket.emit('direct_typing', {
+            senderId: currentUser._id,
+            receiverId: activePartner._id,
+            isTyping: false
+          });
+        }
+      }, 1500);
     }
   };
 
@@ -946,13 +1000,27 @@ const MessengerPage = ({ onBack, activeChatPartner, setActiveChatPartner }) => {
                   );
                   const senderName = msg.sender && typeof msg.sender === 'object' ? msg.sender.name : 'Member';
                   const senderPic = msg.sender && typeof msg.sender === 'object' ? msg.sender.profilePic : '';
+                  const isLastMessage = i === messages.length - 1;
 
                   return (
                     <div key={i} className={`flex ${isUser ? 'justify-end' : 'justify-start'} w-full animate-fade-in`}>
                       <div className={`flex gap-2 max-w-[80%] items-end ${isUser ? 'flex-row-reverse' : 'flex-row'}`}>
-                        {!isUser && (
-                          <div className="relative flex-shrink-0">
-                            {senderPic ? (
+                        {/* Avatar */}
+                        <div className="relative flex-shrink-0">
+                          {isUser ? (
+                            currentUser?.profilePic ? (
+                              <img
+                                src={getProfilePicUrl(currentUser.profilePic)}
+                                alt="me"
+                                className="w-8 h-8 rounded-full object-cover shadow-xs border border-slate-100 dark:border-slate-800"
+                              />
+                            ) : (
+                              <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-indigo-500 to-brand-500 flex items-center justify-center text-white text-[10px] font-black shadow-xs">
+                                {currentUser?.name?.charAt(0).toUpperCase() || 'U'}
+                              </div>
+                            )
+                          ) : (
+                            senderPic ? (
                               <img
                                 src={getProfilePicUrl(senderPic)}
                                 alt="sender"
@@ -962,9 +1030,9 @@ const MessengerPage = ({ onBack, activeChatPartner, setActiveChatPartner }) => {
                               <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-indigo-500 to-brand-500 flex items-center justify-center text-white text-[10px] font-black shadow-xs">
                                 {senderName.charAt(0).toUpperCase()}
                               </div>
-                            )}
-                          </div>
-                        )}
+                            )
+                          )}
+                        </div>
                         
                         <div className="flex flex-col">
                           {/* Display sender name for group chats */}
@@ -972,16 +1040,47 @@ const MessengerPage = ({ onBack, activeChatPartner, setActiveChatPartner }) => {
                             <span className="text-[10px] text-indigo-500 dark:text-indigo-400 font-bold block mb-0.5 ml-1 leading-none">{senderName}</span>
                           )}
                           {/* speech bubble */}
-                          <div className={`p-3 px-4 rounded-2xl relative shadow-3xs ${
-                            isUser 
-                              ? 'bg-gradient-to-r from-[#7C3AED] to-[#5B21B6] text-white rounded-br-sm' 
-                              : 'bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200 rounded-bl-sm border border-slate-200/40 dark:border-slate-800/80 shadow-3xs'
-                          }`}>
+                          <div 
+                            onClick={() => setExpandedMessageId(expandedMessageId === msg._id ? null : msg._id)}
+                            className={`p-3 px-4 rounded-2xl relative shadow-3xs cursor-pointer select-none transition-all active:scale-[0.99] ${
+                              isUser 
+                                ? 'bg-gradient-to-r from-[#7C3AED] to-[#5B21B6] text-white rounded-br-sm' 
+                                : 'bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200 rounded-bl-sm border border-slate-200/40 dark:border-slate-800/80 shadow-3xs'
+                            }`}
+                          >
                             <p className="text-[14px] leading-relaxed break-words font-medium">{msg.content}</p>
-                            <span className={`text-[9px] block mt-1.5 font-bold ${isUser ? 'text-purple-200/90 text-right' : 'text-slate-450'}`}>
+                          </div>
+
+                          {/* Timestamp show on click */}
+                          {expandedMessageId === msg._id && (
+                            <span className={`text-[9px] font-bold block mt-1 px-1 transition-all animate-fade-in ${isUser ? 'text-slate-400 text-right' : 'text-slate-450'}`}>
                               {new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                             </span>
-                          </div>
+                          )}
+
+                          {/* Status Indicator for user's own last message */}
+                          {isUser && isLastMessage && (
+                            <div className="text-[9px] text-slate-400 dark:text-slate-500 font-bold mt-1 text-right flex items-center justify-end gap-1 select-none">
+                              {msg.isRead ? (
+                                <>
+                                  {!activePartner.isGroup && activePartner.profilePic ? (
+                                    <img 
+                                      src={getProfilePicUrl(activePartner.profilePic)} 
+                                      alt="seen" 
+                                      className="w-3.5 h-3.5 rounded-full object-cover border border-white dark:border-slate-900"
+                                      title="Seen"
+                                    />
+                                  ) : (
+                                    <span className="text-emerald-500 font-extrabold">Seen</span>
+                                  )}
+                                </>
+                              ) : onlineUsers.includes(activePartner._id) ? (
+                                <span className="text-[#7C3AED] font-extrabold">Delivered</span>
+                              ) : (
+                                <span className="text-slate-450 font-extrabold">Sent</span>
+                              )}
+                            </div>
+                          )}
                         </div>
                       </div>
                     </div>
@@ -1048,8 +1147,7 @@ const MessengerPage = ({ onBack, activeChatPartner, setActiveChatPartner }) => {
                   <input
                     type="text"
                     value={messageInput}
-                    onChange={(e) => setMessageInput(e.target.value)}
-                    onKeyPress={handleKeyPress}
+                    onChange={handleInputChange}
                     placeholder="Type a message..."
                     className="flex-1 bg-transparent border-none py-2.5 text-slate-800 dark:text-white placeholder-slate-450 focus:ring-0 outline-none text-[15px] font-medium"
                   />

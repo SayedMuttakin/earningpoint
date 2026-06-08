@@ -221,6 +221,23 @@ module.exports = {
         }
       });
 
+      // Mark messages as read
+      socket.on('read_messages', async (data) => {
+        try {
+          const { senderId, receiverId } = data;
+          if (!senderId || !receiverId) return;
+
+          await Message.updateMany(
+            { sender: senderId, receiver: receiverId, isRead: false },
+            { $set: { isRead: true } }
+          );
+
+          io.to(senderId.toString()).emit('messages_read', { readerId: receiverId });
+        } catch (err) {
+          console.error('Socket read_messages error:', err);
+        }
+      });
+
       // Direct messaging typing indicator
       socket.on('direct_typing', (data) => {
         const { senderId, receiverId, isTyping } = data;
