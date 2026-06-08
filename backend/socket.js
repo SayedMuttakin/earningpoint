@@ -3,6 +3,7 @@ const ChatSession = require('./models/ChatSession');
 const Message = require('./models/Message');
 
 let io;
+const activeUsers = new Set();
 
 module.exports = {
   init: (server) => {
@@ -188,7 +189,11 @@ module.exports = {
           const { userId } = data;
           if (userId) {
             socket.join(userId.toString());
+            socket.userId = userId.toString();
+            activeUsers.add(userId.toString());
             console.log(`Socket ${socket.id} joined private room ${userId}`);
+            // Broadcast online users
+            io.emit('online_users', Array.from(activeUsers));
           }
         } catch (err) {
           console.error('Socket join_user_room error:', err);
@@ -291,6 +296,11 @@ module.exports = {
 
       socket.on('disconnect', () => {
         console.log('Socket disconnected:', socket.id);
+        if (socket.userId) {
+          activeUsers.delete(socket.userId);
+          // Broadcast updated online list
+          io.emit('online_users', Array.from(activeUsers));
+        }
       });
     });
 

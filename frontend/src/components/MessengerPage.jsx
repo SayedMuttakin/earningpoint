@@ -53,6 +53,7 @@ const MessengerPage = ({ onBack, activeChatPartner, setActiveChatPartner }) => {
   const [connectionError, setConnectionError] = useState(false);
   const [activeCall, setActiveCall] = useState(null); // 'audio' | 'video' | null
   const [incomingCallData, setIncomingCallData] = useState(null);
+  const [onlineUsers, setOnlineUsers] = useState([]);
 
   // Status Notes State
   const [notes, setNotes] = useState([]);
@@ -277,6 +278,10 @@ const MessengerPage = ({ onBack, activeChatPartner, setActiveChatPartner }) => {
       alert('Call declined.');
     });
 
+    socket.on('online_users', (usersList) => {
+      setOnlineUsers(usersList);
+    });
+
     return () => {
       socket.off('receive_direct_message');
       socket.off('receive_group_message');
@@ -285,6 +290,7 @@ const MessengerPage = ({ onBack, activeChatPartner, setActiveChatPartner }) => {
       socket.off('incoming_call');
       socket.off('incoming_group_call');
       socket.off('call_declined');
+      socket.off('online_users');
     };
   }, [socket, activePartner, currentUser]);
 
@@ -625,6 +631,7 @@ const MessengerPage = ({ onBack, activeChatPartner, setActiveChatPartner }) => {
   );
 
   const directOnlineUsers = chatUsers.filter(u => !u.isGroup);
+  const activeRowUsers = chatUsers.filter(u => !u.isGroup && (onlineUsers.includes(u._id) || notes.some(n => n._id === u._id)));
 
   // Active note lookup helpers
   const myNoteObj = currentUser ? notes.find(n => n._id === currentUser._id) : null;
@@ -732,7 +739,7 @@ const MessengerPage = ({ onBack, activeChatPartner, setActiveChatPartner }) => {
                   </div>
 
                   {/* Online Contacts list */}
-                  {directOnlineUsers.map((user) => {
+                  {activeRowUsers.map((user) => {
                     const userNoteObj = notes.find(n => n._id === user._id);
                     return (
                       <button
@@ -761,7 +768,9 @@ const MessengerPage = ({ onBack, activeChatPartner, setActiveChatPartner }) => {
                             </div>
                           )}
                           {/* Active Online Indicator */}
-                          <span className="absolute bottom-0 right-0 w-3.5 h-3.5 bg-emerald-500 border-2 border-white dark:border-slate-900 rounded-full" />
+                          {onlineUsers.includes(user._id) && (
+                            <span className="absolute bottom-0 right-0 w-3.5 h-3.5 bg-emerald-500 border-2 border-white dark:border-slate-900 rounded-full" />
+                          )}
                         </div>
                         <span className="text-[11px] font-black text-slate-700 dark:text-slate-350 max-w-[65px] truncate">
                           {user.name.split(' ')[0]}
@@ -804,7 +813,7 @@ const MessengerPage = ({ onBack, activeChatPartner, setActiveChatPartner }) => {
                               </div>
                             )}
                             {/* Online badge for direct chats only */}
-                            {!chat.isGroup && (
+                            {!chat.isGroup && onlineUsers.includes(chat._id) && (
                               <span className="absolute bottom-0 right-0 w-3.5 h-3.5 bg-emerald-500 border-2 border-white dark:border-slate-900 rounded-full" />
                             )}
                           </div>
@@ -874,7 +883,7 @@ const MessengerPage = ({ onBack, activeChatPartner, setActiveChatPartner }) => {
                       {activePartner.name.charAt(0).toUpperCase()}
                     </div>
                   )}
-                  {!activePartner.isGroup && (
+                  {!activePartner.isGroup && onlineUsers.includes(activePartner._id) && (
                     <span className="absolute bottom-0 right-0 w-3 h-3 bg-emerald-500 border-2 border-white dark:border-slate-900 rounded-full" />
                   )}
                 </div>
@@ -883,9 +892,15 @@ const MessengerPage = ({ onBack, activeChatPartner, setActiveChatPartner }) => {
                   <h1 className="text-base sm:text-lg font-black text-slate-855 dark:text-white flex items-center gap-1.5 leading-tight">
                     {activePartner.name}
                   </h1>
-                  <p className="text-[10.5px] font-bold text-emerald-500 flex items-center gap-1 mt-0.5 animate-pulse">
-                    Active Now
-                  </p>
+                  {activePartner.isGroup || onlineUsers.includes(activePartner._id) ? (
+                    <p className="text-[10.5px] font-bold text-emerald-500 flex items-center gap-1 mt-0.5 animate-pulse">
+                      Active Now
+                    </p>
+                  ) : (
+                    <p className="text-[10.5px] font-bold text-slate-450 flex items-center gap-1 mt-0.5">
+                      Offline
+                    </p>
+                  )}
                 </div>
               </div>
 

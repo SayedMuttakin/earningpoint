@@ -9,9 +9,18 @@ exports.getUsers = async (req, res) => {
     const currentUser = await User.findById(currentUserId);
     const followingIds = currentUser.following || [];
 
-    // 1. Fetch Direct Users
-    const users = await User.find({ _id: { $ne: currentUserId } })
-      .select('name phoneOrEmail profilePic isPremium');
+    // 1. Fetch Direct Users (only followed users or those with chat history)
+    const messagedUserIds = await Message.distinct('sender', { receiver: currentUserId, group: { $exists: false } });
+    const receivedUserIds = await Message.distinct('receiver', { sender: currentUserId, group: { $exists: false } });
+    const relatedUserIds = [...new Set([
+      ...followingIds.map(id => id.toString()),
+      ...messagedUserIds.map(id => id.toString()),
+      ...receivedUserIds.map(id => id.toString())
+    ])];
+
+    const users = await User.find({ 
+      _id: { $in: relatedUserIds, $ne: currentUserId } 
+    }).select('name phoneOrEmail profilePic isPremium');
 
     const directChats = await Promise.all(users.map(async (u) => {
       const lastMsg = await Message.findOne({
@@ -188,12 +197,25 @@ exports.updateNote = async (req, res) => {
   }
 };
 
-// Get status notes of active users within 24 hours
+// Get status notes of active users within 24 hours (only followed users, chat history, or yourself)
 exports.getNotes = async (req, res) => {
   try {
+    const currentUserId = req.user._id;
+    const currentUser = await User.findById(currentUserId);
+    const followingIds = currentUser.following || [];
+
+    const messagedUserIds = await Message.distinct('sender', { receiver: currentUserId, group: { $exists: false } });
+    const receivedUserIds = await Message.distinct('receiver', { sender: currentUserId, group: { $exists: false } });
+    const relatedUserIds = [...new Set([
+      ...followingIds.map(id => id.toString()),
+      ...messagedUserIds.map(id => id.toString()),
+      ...receivedUserIds.map(id => id.toString())
+    ])];
+
     const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
 
     const users = await User.find({
+      _id: { $in: [...relatedUserIds, currentUserId.toString()] },
       note: { $ne: '' },
       noteCreatedAt: { $gte: twentyFourHoursAgo }
     }).select('name profilePic note noteCreatedAt');
@@ -201,6 +223,6 @@ exports.getNotes = async (req, res) => {
     res.json(users);
   } catch (error) {
     console.error('Error fetching active notes:', error);
-    res.status(500).json({ message: 'Internal server error' });
+    res.status(555).json({ message: 'Internal server error' });
   }
 };
