@@ -733,7 +733,17 @@ const MessengerPage = ({ onBack, activeChatPartner, setActiveChatPartner, socket
     const pc = new RTCPeerConnection({
       iceServers: [
         { urls: 'stun:stun.l.google.com:19302' },
-        { urls: 'stun:stun1.l.google.com:19302' }
+        { urls: 'stun:stun1.l.google.com:19302' },
+        { urls: 'stun:openrelay.metered.ca:80' },
+        {
+          urls: [
+            'turn:openrelay.metered.ca:80',
+            'turn:openrelay.metered.ca:443',
+            'turns:openrelay.metered.ca:443?transport=tcp'
+          ],
+          username: 'openrelayproject',
+          credential: 'openrelayproject'
+        }
       ]
     });
     
@@ -1490,11 +1500,26 @@ const MessengerPage = ({ onBack, activeChatPartner, setActiveChatPartner, socket
                   id="remoteVideo" 
                   autoPlay 
                   playsInline 
+                  ref={(el) => {
+                    if (el && remoteStreamRef.current) {
+                      el.srcObject = remoteStreamRef.current;
+                      el.play().catch(e => console.error('Error playing remote video from ref:', e));
+                    }
+                  }}
                   className="w-full h-full object-cover"
                 />
               ) : (
                 <>
-                  <audio id="remoteAudio" autoPlay />
+                  <audio 
+                    id="remoteAudio" 
+                    autoPlay 
+                    ref={(el) => {
+                      if (el && remoteStreamRef.current) {
+                        el.srcObject = remoteStreamRef.current;
+                        el.play().catch(e => console.error('Error playing remote audio from ref:', e));
+                      }
+                    }}
+                  />
                   {activePartner?.profilePic ? (
                     <img
                       src={getProfilePicUrl(activePartner.profilePic)}
@@ -1516,6 +1541,11 @@ const MessengerPage = ({ onBack, activeChatPartner, setActiveChatPartner, socket
                     autoPlay 
                     playsInline 
                     muted 
+                    ref={(el) => {
+                      if (el && localStreamRef.current) {
+                        el.srcObject = localStreamRef.current;
+                      }
+                    }}
                     className="w-full h-full object-cover"
                   />
                 ) : currentUser?.profilePic ? (
