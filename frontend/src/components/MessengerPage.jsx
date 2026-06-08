@@ -106,6 +106,7 @@ const MessengerPage = ({ onBack, activeChatPartner, setActiveChatPartner, socket
   const localStreamRef = useRef(null);
   const remoteStreamRef = useRef(null);
   const callTypeRef = useRef('audio');
+  const candidateQueueRef = useRef([]);
 
   const activeCallRef = useRef(activeCall);
   useEffect(() => { activeCallRef.current = activeCall; }, [activeCall]);
@@ -206,6 +207,13 @@ const MessengerPage = ({ onBack, activeChatPartner, setActiveChatPartner, socket
     fetchUsers();
     fetchNotes();
   }, []);
+
+  // Sync with activeChatPartner prop (e.g., when call is incoming or initiated from another page)
+  useEffect(() => {
+    if (activeChatPartner) {
+      handleOpenChat(activeChatPartner);
+    }
+  }, [activeChatPartner]);
 
   // Default favorites populator
   useEffect(() => {
@@ -353,22 +361,30 @@ const MessengerPage = ({ onBack, activeChatPartner, setActiveChatPartner, socket
             targetId: senderId,
             signal: { type: 'answer', sdp: answer.sdp }
           });
+          
+          // Process queued candidates
+          await processCandidateQueue();
         } else if (signal.type === 'answer') {
           if (pc) {
             await pc.setRemoteDescription(new RTCSessionDescription(signal));
+            // Process queued candidates
+            await processCandidateQueue();
           }
         } else if (signal.type === 'candidate') {
-          if (pc && signal.candidate) {
-            await pc.addIceCandidate(new RTCIceCandidate(signal.candidate));
+          if (pc && pc.remoteDescription) {
+            if (signal.candidate) {
+              await pc.addIceCandidate(new RTCIceCandidate(signal.candidate));
+            }
+          } else {
+            // Queue candidate if peer connection or remote description is not ready yet
+            if (signal.candidate) {
+              candidateQueueRef.current.push(signal.candidate);
+            }
           }
         }
       } catch (err) {
         console.error('Error handling WebRTC signal:', err);
       }
-    });
-
-    socket.on('online_users', (usersList) => {
-      setOnlineUsers(usersList);
     });
 
     return () => {
@@ -383,7 +399,6 @@ const MessengerPage = ({ onBack, activeChatPartner, setActiveChatPartner, socket
       socket.off('call_accepted');
       socket.off('call_ended');
       socket.off('webrtc_signal');
-      socket.off('online_users');
     };
   }, [socket, activePartner, currentUser]);
 
@@ -749,8 +764,10 @@ const MessengerPage = ({ onBack, activeChatPartner, setActiveChatPartner, socket
         const remoteAudio = document.getElementById('remoteAudio');
         if (remoteVideo) {
           remoteVideo.srcObject = remoteStream;
+          remoteVideo.play().catch(e => console.error('Error playing remote video:', e));
         } else if (remoteAudio) {
           remoteAudio.srcObject = remoteStream;
+          remoteAudio.play().catch(e => console.error('Error playing remote audio:', e));
         }
       }, 500);
     };
@@ -773,8 +790,24 @@ const MessengerPage = ({ onBack, activeChatPartner, setActiveChatPartner, socket
       peerConnectionRef.current = null;
     }
     remoteStreamRef.current = null;
+    candidateQueueRef.current = [];
     setActiveCall(null);
     setIncomingCallData(null);
+  };
+
+  const processCandidateQueue = async () => {
+    const pc = peerConnectionRef.current;
+    if (pc && pc.remoteDescription && candidateQueueRef.current.length > 0) {
+      console.log(`Processing ${candidateQueueRef.current.length} queued ICE candidates`);
+      for (const cand of candidateQueueRef.current) {
+        try {
+          await pc.addIceCandidate(new RTCIceCandidate(cand));
+        } catch (e) {
+          console.error('Error adding queued candidate:', e);
+        }
+      }
+      candidateQueueRef.current = [];
+    }
   };
 
   const handleStartCall = (type) => {
@@ -858,7 +891,7 @@ const MessengerPage = ({ onBack, activeChatPartner, setActiveChatPartner, socket
   );
 
   const directOnlineUsers = chatUsers.filter(u => !u.isGroup);
-  const activeRowUsers = chatUsers.filter(u => !u.isGroup && (onlineUsers.includes(u._id) || notes.some(n => n._id === u._id)));
+  const activeRowUsers = chatUsers.filter(u => !u.isGroup && (onlineUsers.includes(u._id?.toString()) || notes.some(n => n._id?.toString() === u._id?.toString())));
 
   // Active note lookup helpers
   const myNoteObj = currentUser ? notes.find(n => n._id === currentUser._id) : null;
@@ -995,7 +1028,7 @@ const MessengerPage = ({ onBack, activeChatPartner, setActiveChatPartner, socket
                             </div>
                           )}
                           {/* Active Online Indicator */}
-                          {onlineUsers.includes(user._id) && (
+                          {onlineUsers.includes(user._id?.toString()) && (
                             <span className="absolute bottom-0 right-0 w-3.5 h-3.5 bg-emerald-500 border-2 border-white dark:border-slate-900 rounded-full" />
                           )}
                         </div>
@@ -1040,7 +1073,7 @@ const MessengerPage = ({ onBack, activeChatPartner, setActiveChatPartner, socket
                               </div>
                             )}
                             {/* Online badge for direct chats only */}
-                            {!chat.isGroup && onlineUsers.includes(chat._id) && (
+                            {!chat.isGroup && onlineUsers.includes(chat._id?.toString()) && (
                               <span className="absolute bottom-0 right-0 w-3.5 h-3.5 bg-emerald-500 border-2 border-white dark:border-slate-900 rounded-full" />
                             )}
                           </div>
@@ -1108,7 +1141,7 @@ const MessengerPage = ({ onBack, activeChatPartner, setActiveChatPartner, socket
                       {activePartner.name.charAt(0).toUpperCase()}
                     </div>
                   )}
-                  {!activePartner.isGroup && onlineUsers.includes(activePartner._id) && (
+                  {!activePartner.isGroup && onlineUsers.includes(activePartner._id?.toString()) && (
                     <span className="absolute bottom-0 right-0 w-3 h-3 bg-emerald-500 border-2 border-white dark:border-slate-900 rounded-full" />
                   )}
                 </div>
@@ -1117,7 +1150,7 @@ const MessengerPage = ({ onBack, activeChatPartner, setActiveChatPartner, socket
                   <h1 className="text-base sm:text-lg font-black text-slate-855 dark:text-white flex items-center gap-1.5 leading-tight">
                     {activePartner.name}
                   </h1>
-                  {activePartner.isGroup || onlineUsers.includes(activePartner._id) ? (
+                  {activePartner.isGroup || onlineUsers.includes(activePartner._id?.toString()) ? (
                     <p className="text-[10.5px] font-bold text-emerald-500 flex items-center gap-1 mt-0.5 animate-pulse">
                       Active Now
                     </p>
@@ -1241,7 +1274,7 @@ const MessengerPage = ({ onBack, activeChatPartner, setActiveChatPartner, socket
                                     <span className="text-emerald-500 font-extrabold">Seen</span>
                                   )}
                                 </>
-                              ) : onlineUsers.includes(activePartner._id) ? (
+                              ) : onlineUsers.includes(activePartner._id?.toString()) ? (
                                 <span className="text-[#7C3AED] font-extrabold">Delivered</span>
                               ) : (
                                 <span className="text-slate-400 font-extrabold">Sent</span>
