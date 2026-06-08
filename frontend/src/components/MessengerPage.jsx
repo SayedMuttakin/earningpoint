@@ -25,6 +25,21 @@ const MessengerPage = ({ onBack, activeChatPartner, setActiveChatPartner }) => {
   });
   const [showEditFavoritesModal, setShowEditFavoritesModal] = useState(false);
   const [favoritesSearchQuery, setFavoritesSearchQuery] = useState('');
+  const [socket, setSocket] = useState(null);
+  const [messages, setMessages] = useState([]);
+  const [messageInput, setMessageInput] = useState('');
+  const [isPartnerTyping, setIsPartnerTyping] = useState(false);
+  const [loadingUsers, setLoadingUsers] = useState(true);
+  const [loadingChat, setLoadingChat] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
+  const [socketConnected, setSocketConnected] = useState(false);
+  const [connectionError, setConnectionError] = useState(false);
+  const [activeCall, setActiveCall] = useState(null); // 'audio' | 'video' | null
+
+  const messagesEndRef = useRef(null);
+  const typingTimeoutRef = useRef(null);
+  const audioContextRef = useRef(null);
+  const ringIntervalRef = useRef(null);
 
   // Default favorites populator
   useEffect(() => {
@@ -62,9 +77,6 @@ const MessengerPage = ({ onBack, activeChatPartner, setActiveChatPartner }) => {
     }
   };
   
-  // Chat States
-  const [socket, setSocket] = useState(null);
-
   useEffect(() => {
     if (activeChatPartner) {
       handleOpenChat(activeChatPartner);
@@ -92,22 +104,6 @@ const MessengerPage = ({ onBack, activeChatPartner, setActiveChatPartner }) => {
       document.removeEventListener('appBackButton', handleHardwareBack);
     };
   }, [activeCall, showEditFavoritesModal, activePartner, setActiveChatPartner]);
-  const [messages, setMessages] = useState([]);
-  const [messageInput, setMessageInput] = useState('');
-  const [isPartnerTyping, setIsPartnerTyping] = useState(false);
-  const [loadingUsers, setLoadingUsers] = useState(true);
-  const [loadingChat, setLoadingChat] = useState(false);
-  const [refreshing, setRefreshing] = useState(false);
-  const [socketConnected, setSocketConnected] = useState(false);
-  const [connectionError, setConnectionError] = useState(false);
-  
-  // Call States
-  const [activeCall, setActiveCall] = useState(null); // 'audio' | 'video' | null
-
-  const messagesEndRef = useRef(null);
-  const typingTimeoutRef = useRef(null);
-  const audioContextRef = useRef(null);
-  const ringIntervalRef = useRef(null);
 
   // Auto-scroll to bottom
   const scrollToBottom = () => {
