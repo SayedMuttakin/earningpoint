@@ -15,7 +15,6 @@ import { AdMobService } from './utils/admob';
 // Lazy load other sub-pages/components to split bundle size and make initial load super fast
 const CartPage = lazy(() => import('./components/CartPage'));
 const CheckoutPage = lazy(() => import('./components/CheckoutPage'));
-const ProfilePage = lazy(() => import('./components/ProfilePage'));
 const VerificationPage = lazy(() => import('./components/VerificationPage'));
 const LanguagePage = lazy(() => import('./components/LanguagePage'));
 const ChangePasswordPage = lazy(() => import('./components/ChangePasswordPage'));
@@ -323,22 +322,18 @@ function App() {
             />
           )}
           {activeTab === 'PaymentSuccess' && <PaymentSuccess paymentMethod={selectedPaymentMethod} onBack={() => showBackAd(() => handleBackNavigation())} />}
-          {activeTab === 'EditProfile' && <ProfilePage 
-            onBack={() => handleBackNavigation()}
-            onVerifyClick={() => setActiveTab('Verify')} 
-            onLanguageClick={() => setActiveTab('Language')} 
-            onPasswordClick={() => setActiveTab('ChangePassword')}
-            onReferralsClick={() => setActiveTab('Referrals')}
-            onLeaderboardClick={() => setActiveTab('Leaderboard')}
-            onTransactionsClick={() => setActiveTab('TransactionHistory')}
-            onSupportClick={() => setActiveTab('Support')}
-            onTermsClick={() => setActiveTab('TermsPrivacy')}
-            onDeleteClick={() => setActiveTab('DeleteAccount')}
-            onNotificationClick={() => setActiveTab('Notification')}
-            onSettingsClick={() => setActiveTab('Setting')}
-            darkMode={darkMode}
-            onToggleDarkMode={handleToggleDarkMode}
-          />}
+          {activeTab === 'EditProfile' && (
+            <PublicProfilePage 
+              userId="me"
+              currentUser={currentUser}
+              isOwnProfile={true}
+              startEditing={true}
+              onBack={() => handleBackNavigation()}
+              setActiveTab={setActiveTab}
+              setSelectedReelId={setSelectedReelId}
+              setActiveChatPartner={setActiveChatPartner}
+            />
+          )}
           {activeTab === 'Verify' && <VerificationPage onBack={() => showBackAd(() => handleBackNavigation())} />}
           {activeTab === 'Language' && <LanguagePage onBack={() => showBackAd(() => handleBackNavigation())} />}
           {activeTab === 'ChangePassword' && <ChangePasswordPage onBack={() => showBackAd(() => handleBackNavigation())} />}

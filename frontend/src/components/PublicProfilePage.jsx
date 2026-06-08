@@ -93,7 +93,7 @@ const compressImage = (base64Str, maxWidth = 1024, maxHeight = 1024, quality = 0
   });
 };
 
-const PublicProfilePage = ({ userId, onBack, currentUser, isOwnProfile, setActiveTab, setSelectedReelId, setActiveChatPartner }) => {
+const PublicProfilePage = ({ userId, onBack, currentUser, isOwnProfile, setActiveTab, setSelectedReelId, setActiveChatPartner, startEditing }) => {
   const [profile, setProfile] = useState(null);
   const [videos, setVideos] = useState([]);
   const [posts, setPosts] = useState([]);
@@ -119,10 +119,61 @@ const PublicProfilePage = ({ userId, onBack, currentUser, isOwnProfile, setActiv
   // Post Detail Modal State
   const [selectedDetailPost, setSelectedDetailPost] = useState(null);
 
+  // Edit Profile Modal State
+  const [showEditProfileModal, setShowEditProfileModal] = useState(false);
+  const [editName, setEditName] = useState('');
+  const [editBio, setEditBio] = useState('');
+  const [editWebsite, setEditWebsite] = useState('');
+  const [editLocation, setEditLocation] = useState('');
+
   // Refs for File Uploads
   const fileInputRef = useRef(null);
   const coverInputRef = useRef(null);
   const highlightCoverInputRef = useRef(null);
+
+  // Open edit modal if startEditing is true
+  useEffect(() => {
+    if (startEditing) {
+      setShowEditProfileModal(true);
+    }
+  }, [startEditing]);
+
+  // Populate edit fields when profile changes
+  useEffect(() => {
+    if (profile) {
+      setEditName(profile.name || '');
+      setEditBio(profile.bio || '');
+      setEditWebsite(profile.website || '');
+      setEditLocation(profile.location || '');
+    }
+  }, [profile, showEditProfileModal]);
+
+  const handleEditProfileSubmit = async (e) => {
+    e.preventDefault();
+    try {
+      const token = localStorage.getItem('token');
+      const res = await fetch(`${API_BASE}/api/profile/update`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          name: editName.trim(),
+          bio: editBio.trim(),
+          website: editWebsite.trim(),
+          location: editLocation.trim()
+        })
+      });
+
+      if (res.ok) {
+        setShowEditProfileModal(false);
+        fetchPublicProfile();
+      }
+    } catch (err) {
+      console.error('Failed to update profile details:', err);
+    }
+  };
 
   const isOwn = isOwnProfile || userId === 'me' || (profile && currentUser && (profile._id === currentUser._id || profile._id === currentUser.id));
 
@@ -454,7 +505,7 @@ const PublicProfilePage = ({ userId, onBack, currentUser, isOwnProfile, setActiv
             <ArrowLeft className="w-6 h-6" />
           </button>
         )}
-        <h2 className="font-extrabold text-sm truncate max-w-[50%]">{profile.username}</h2>
+        <div className="w-10" />
         <div className="flex items-center gap-2">
           <button className="p-2 hover:bg-slate-200/50 dark:hover:bg-slate-900 rounded-full text-slate-700 dark:text-slate-350">
             <Bell className="w-5 h-5" />
@@ -614,7 +665,7 @@ const PublicProfilePage = ({ userId, onBack, currentUser, isOwnProfile, setActiv
         {isOwn ? (
           <div className="flex items-center gap-3 select-none justify-center px-4 mt-4 w-full">
             <button 
-              onClick={() => setActiveTab('EditProfile')}
+              onClick={() => setShowEditProfileModal(true)}
               className="flex-1 py-2.5 rounded-full font-black text-sm bg-indigo-600 hover:bg-indigo-700 text-white transition-all active:scale-95 shadow-md shadow-indigo-600/15"
             >
               Edit Profile
@@ -1233,6 +1284,132 @@ const PublicProfilePage = ({ userId, onBack, currentUser, isOwnProfile, setActiv
                 {selectedDetailPost.commentsCount} Comments
               </span>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Edit Profile Modal */}
+      {showEditProfileModal && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/75 backdrop-blur-xs animate-fade-in" onClick={() => setShowEditProfileModal(false)}>
+          <div 
+            className="bg-white dark:bg-slate-900 rounded-3xl p-5 w-full max-w-md border border-slate-200/50 dark:border-slate-800 shadow-2xl flex flex-col max-h-[85vh] animate-slide-up"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Header */}
+            <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800/80">
+              <h3 className="font-extrabold text-base text-slate-850 dark:text-white">Edit Profile Details</h3>
+              <button 
+                onClick={() => setShowEditProfileModal(false)} 
+                className="p-1.5 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full text-slate-500 dark:text-slate-400 transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Form Scroll Container */}
+            <form onSubmit={handleEditProfileSubmit} className="flex-1 overflow-y-auto py-4 space-y-4 no-scrollbar text-left">
+              {/* Cover and Avatar Previews inside modal */}
+              <div className="space-y-2">
+                <label className="text-[11px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider block">Photos</label>
+                <div className="flex gap-4 items-center">
+                  {/* Profile Avatar Trigger */}
+                  <div 
+                    onClick={() => fileInputRef.current?.click()}
+                    className="relative w-16 h-16 rounded-full overflow-hidden border border-slate-250 dark:border-slate-800 bg-slate-100 flex items-center justify-center cursor-pointer group shrink-0"
+                  >
+                    {profile.profilePic ? (
+                      <img src={profile.profilePic.startsWith('data:') || profile.profilePic.startsWith('http') ? profile.profilePic : `${API_BASE}/api/image?file=${encodeURIComponent(profile.profilePic)}`} alt="" className="w-full h-full object-cover group-hover:opacity-80" />
+                    ) : (
+                      <User className="w-6 h-6 text-slate-455" />
+                    )}
+                    <div className="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
+                      <Camera className="w-4 h-4 text-white" />
+                    </div>
+                  </div>
+
+                  {/* Cover Banner Trigger */}
+                  <div 
+                    onClick={() => coverInputRef.current?.click()}
+                    className="relative h-16 flex-1 rounded-xl overflow-hidden border border-slate-250 dark:border-slate-800 bg-slate-100 flex items-center justify-center cursor-pointer group"
+                  >
+                    {profile.coverPic ? (
+                      <img src={profile.coverPic.startsWith('data:') || profile.coverPic.startsWith('http') ? profile.coverPic : `${API_BASE}/api/image?file=${encodeURIComponent(profile.coverPic)}`} alt="" className="w-full h-full object-cover group-hover:opacity-80" />
+                    ) : (
+                      <div className="w-full h-full bg-gradient-to-r from-violet-600 via-indigo-600 to-purple-700 opacity-90" />
+                    )}
+                    <div className="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
+                      <Camera className="w-4 h-4 text-white" />
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Name Input */}
+              <div className="space-y-1.5">
+                <label className="text-[11px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Display Name</label>
+                <input
+                  type="text"
+                  placeholder="Your name"
+                  value={editName}
+                  onChange={(e) => setEditName(e.target.value)}
+                  required
+                  className="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-2xl text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all dark:text-white"
+                />
+              </div>
+
+              {/* Bio Input */}
+              <div className="space-y-1.5">
+                <label className="text-[11px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Bio</label>
+                <textarea
+                  placeholder="Tell us about yourself..."
+                  value={editBio}
+                  onChange={(e) => setEditBio(e.target.value)}
+                  rows={3}
+                  className="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-2xl text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all dark:text-white resize-none"
+                />
+              </div>
+
+              {/* Website Input */}
+              <div className="space-y-1.5">
+                <label className="text-[11px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Website URL</label>
+                <input
+                  type="text"
+                  placeholder="e.g. www.example.com"
+                  value={editWebsite}
+                  onChange={(e) => setEditWebsite(e.target.value)}
+                  className="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-2xl text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all dark:text-white"
+                />
+              </div>
+
+              {/* Location Input */}
+              <div className="space-y-1.5">
+                <label className="text-[11px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Location</label>
+                <input
+                  type="text"
+                  placeholder="e.g. Dhaka, Bangladesh"
+                  value={editLocation}
+                  onChange={(e) => setEditLocation(e.target.value)}
+                  className="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-2xl text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all dark:text-white"
+                />
+              </div>
+
+              {/* Actions */}
+              <div className="flex items-center gap-3 pt-3 border-t border-slate-100 dark:border-slate-800/80">
+                <button
+                  type="button"
+                  onClick={() => setShowEditProfileModal(false)}
+                  className="flex-1 py-2.5 rounded-xl text-xs font-black bg-slate-50 dark:bg-slate-955 hover:bg-slate-100 dark:hover:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-750 dark:text-slate-350 transition-all active:scale-95"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="flex-1 py-2.5 rounded-xl text-xs font-black bg-indigo-600 hover:bg-indigo-700 text-white transition-all active:scale-95"
+                >
+                  Save Changes
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}
