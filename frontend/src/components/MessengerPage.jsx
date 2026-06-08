@@ -29,7 +29,7 @@ const formatRelativeTime = (timeStr) => {
   return `${diffDays}d`;
 };
 
-const MessengerPage = ({ onBack, activeChatPartner, setActiveChatPartner }) => {
+const MessengerPage = ({ onBack, activeChatPartner, setActiveChatPartner, socket, onlineUsers, incomingCallData, setIncomingCallData }) => {
   // ────────────────── STATE HOOKS ──────────────────
   const [currentUser, setCurrentUser] = useState(null);
   const [chatUsers, setChatUsers] = useState([]); // Consolidated Direct Chats + Groups
@@ -41,7 +41,6 @@ const MessengerPage = ({ onBack, activeChatPartner, setActiveChatPartner }) => {
   });
   const [showEditFavoritesModal, setShowEditFavoritesModal] = useState(false);
   const [favoritesSearchQuery, setFavoritesSearchQuery] = useState('');
-  const [socket, setSocket] = useState(null);
   const [messages, setMessages] = useState([]);
   const [messageInput, setMessageInput] = useState('');
   const [isPartnerTyping, setIsPartnerTyping] = useState(false);
@@ -49,12 +48,21 @@ const MessengerPage = ({ onBack, activeChatPartner, setActiveChatPartner }) => {
   const [loadingUsers, setLoadingUsers] = useState(true);
   const [loadingChat, setLoadingChat] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
-  const [socketConnected, setSocketConnected] = useState(false);
-  const [connectionError, setConnectionError] = useState(false);
   const [activeCall, setActiveCall] = useState(null); // 'audio' | 'video' | null
-  const [incomingCallData, setIncomingCallData] = useState(null);
-  const [onlineUsers, setOnlineUsers] = useState([]);
   const [expandedMessageId, setExpandedMessageId] = useState(null);
+
+  const socketConnected = !!socket;
+  const connectionError = !socket;
+
+  // Manage Ringtone when incomingCallData changes
+  useEffect(() => {
+    if (incomingCallData) {
+      startRingtone();
+    } else {
+      stopRingtone();
+    }
+    return () => stopRingtone();
+  }, [incomingCallData]);
 
   // Status Notes State
   const [notes, setNotes] = useState([]);
@@ -177,46 +185,15 @@ const MessengerPage = ({ onBack, activeChatPartner, setActiveChatPartner }) => {
   }, [chatUsers, favorites.length]);
 
   // ────────────────── WEBSOCKET SETUP ──────────────────
+  // Setup Group Rooms
   useEffect(() => {
-    const newSocket = io(API_BASE, {
-      transports: ['websocket', 'polling'],
-      timeout: 10000,
-      reconnectionAttempts: 3,
-    });
-    setSocket(newSocket);
-
-    newSocket.on('connect', () => {
-      setSocketConnected(true);
-      setConnectionError(false);
-    });
-
-    newSocket.on('connect_error', () => {
-      setSocketConnected(false);
-      setConnectionError(true);
-    });
-
-    newSocket.on('disconnect', () => {
-      setSocketConnected(false);
-    });
-
-    return () => {
-      newSocket.disconnect();
-      stopRingtone();
-    };
-  }, []);
-
-  // Setup Rooms & Listeners
-  useEffect(() => {
-    if (socketConnected && socket && currentUser?._id) {
-      socket.emit('join_user_room', { userId: currentUser._id });
-      
-      // Join group chat rooms
+    if (socket && chatUsers.length > 0) {
       const groupChats = chatUsers.filter(u => u.isGroup);
       groupChats.forEach(g => {
         socket.emit('join_group_room', { groupId: g._id });
       });
     }
-  }, [socketConnected, socket, currentUser, chatUsers]);
+  }, [socket, chatUsers]);
 
   // Listen for socket events
   useEffect(() => {
@@ -787,7 +764,7 @@ const MessengerPage = ({ onBack, activeChatPartner, setActiveChatPartner }) => {
                         <Plus className="w-3 h-3" strokeWidth={3} />
                       </span>
                     </button>
-                    <span className="text-[11px] font-bold text-slate-450 dark:text-slate-500 mt-1 max-w-[65px] truncate">
+                    <span className="text-[11px] font-bold text-slate-400 dark:text-slate-500 mt-1 max-w-[65px] truncate">
                       Your note
                     </span>
                   </div>
@@ -949,7 +926,7 @@ const MessengerPage = ({ onBack, activeChatPartner, setActiveChatPartner }) => {
                       Active Now
                     </p>
                   ) : (
-                    <p className="text-[10.5px] font-bold text-slate-450 flex items-center gap-1 mt-0.5">
+                    <p className="text-[10.5px] font-bold text-slate-400 flex items-center gap-1 mt-0.5">
                       Offline
                     </p>
                   )}
@@ -996,8 +973,16 @@ const MessengerPage = ({ onBack, activeChatPartner, setActiveChatPartner }) => {
                       ? msg.sender._id === currentUser?._id 
                       : msg.sender === currentUser?._id
                   );
-                  const senderName = msg.sender && typeof msg.sender === 'object' ? msg.sender.name : 'Member';
-                  const senderPic = msg.sender && typeof msg.sender === 'object' ? msg.sender.profilePic : '';
+                  const senderName = isUser 
+                    ? (currentUser?.name || 'Me') 
+                    : (activePartner.isGroup 
+                        ? (msg.sender && typeof msg.sender === 'object' ? msg.sender.name : 'Member')
+                        : activePartner.name);
+                  const senderPic = isUser 
+                    ? currentUser?.profilePic 
+                    : (activePartner.isGroup 
+                        ? (msg.sender && typeof msg.sender === 'object' ? msg.sender.profilePic : '')
+                        : activePartner.profilePic);
                   const isLastMessage = i === messages.length - 1;
 
                   return (
@@ -1039,7 +1024,7 @@ const MessengerPage = ({ onBack, activeChatPartner, setActiveChatPartner }) => {
 
                           {/* Timestamp show on click */}
                           {expandedMessageId === msg._id && (
-                            <span className={`text-[9px] font-bold block mt-1 px-1 transition-all animate-fade-in ${isUser ? 'text-slate-400 text-right' : 'text-slate-450'}`}>
+                            <span className={`text-[9px] font-bold block mt-1 px-1 transition-all animate-fade-in ${isUser ? 'text-slate-400 text-right' : 'text-slate-400'}`}>
                               {new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                             </span>
                           )}
@@ -1063,7 +1048,7 @@ const MessengerPage = ({ onBack, activeChatPartner, setActiveChatPartner }) => {
                               ) : onlineUsers.includes(activePartner._id) ? (
                                 <span className="text-[#7C3AED] font-extrabold">Delivered</span>
                               ) : (
-                                <span className="text-slate-450 font-extrabold">Sent</span>
+                                <span className="text-slate-400 font-extrabold">Sent</span>
                               )}
                             </div>
                           )}
@@ -1090,9 +1075,9 @@ const MessengerPage = ({ onBack, activeChatPartner, setActiveChatPartner }) => {
                       </div>
                     )}
                     <div className="bg-white dark:bg-slate-900 border border-slate-200/45 dark:border-slate-800 p-3.5 px-4 rounded-2xl rounded-bl-sm flex items-center gap-1 shadow-3xs">
-                      <span className="w-1.5 h-1.5 bg-slate-450 rounded-full animate-bounce [animation-delay:-0.3s]"></span>
-                      <span className="w-1.5 h-1.5 bg-slate-450 rounded-full animate-bounce [animation-delay:-0.15s]"></span>
-                      <span className="w-1.5 h-1.5 bg-slate-450 rounded-full animate-bounce"></span>
+                      <span className="w-1.5 h-1.5 bg-slate-400 rounded-full animate-bounce [animation-delay:-0.3s]"></span>
+                      <span className="w-1.5 h-1.5 bg-slate-400 rounded-full animate-bounce [animation-delay:-0.15s]"></span>
+                      <span className="w-1.5 h-1.5 bg-slate-400 rounded-full animate-bounce"></span>
                     </div>
                   </div>
                 </div>
@@ -1102,13 +1087,13 @@ const MessengerPage = ({ onBack, activeChatPartner, setActiveChatPartner }) => {
               {typingGroupMembers.length > 0 && (
                 <div className="flex justify-start animate-fade-in">
                   <div className="bg-white dark:bg-slate-900 border border-slate-250/20 dark:border-slate-800 px-3.5 py-2 rounded-2xl flex items-center gap-2 shadow-3xs">
-                    <span className="text-[10px] text-slate-450 dark:text-slate-400 font-bold">
+                    <span className="text-[10px] text-slate-400 dark:text-slate-400 font-bold">
                       {typingGroupMembers.join(', ')} {typingGroupMembers.length === 1 ? 'is' : 'are'} typing...
                     </span>
                     <div className="flex items-center gap-0.5">
-                      <span className="w-1 h-1 bg-slate-450 rounded-full animate-bounce [animation-delay:-0.3s]" />
-                      <span className="w-1 h-1 bg-slate-450 rounded-full animate-bounce [animation-delay:-0.15s]" />
-                      <span className="w-1 h-1 bg-slate-450 rounded-full animate-bounce" />
+                      <span className="w-1 h-1 bg-slate-400 rounded-full animate-bounce [animation-delay:-0.3s]" />
+                      <span className="w-1 h-1 bg-slate-400 rounded-full animate-bounce [animation-delay:-0.15s]" />
+                      <span className="w-1 h-1 bg-slate-400 rounded-full animate-bounce" />
                     </div>
                   </div>
                 </div>
@@ -1135,7 +1120,7 @@ const MessengerPage = ({ onBack, activeChatPartner, setActiveChatPartner }) => {
                     value={messageInput}
                     onChange={handleInputChange}
                     placeholder="Type a message..."
-                    className="flex-1 bg-transparent border-none py-2.5 text-slate-800 dark:text-white placeholder-slate-450 focus:ring-0 outline-none text-[15px] font-medium"
+                    className="flex-1 bg-transparent border-none py-2.5 text-slate-800 dark:text-white placeholder-slate-400 focus:ring-0 outline-none text-[15px] font-medium"
                   />
                   <button type="button" className="p-1.5 text-slate-400 dark:text-slate-500 hover:text-[#7C3AED] transition-colors" title="Emojis">
                     <Smile className="w-5.5 h-5.5" />
@@ -1173,7 +1158,7 @@ const MessengerPage = ({ onBack, activeChatPartner, setActiveChatPartner }) => {
                 Zenivio Secure Call
               </span>
               <h2 className="text-3xl font-black mt-4">{activePartner?.name}</h2>
-              <p className="text-slate-450 text-sm font-medium animate-pulse mt-1">
+              <p className="text-slate-400 text-sm font-medium animate-pulse mt-1">
                 Ringing...
               </p>
             </div>
@@ -1226,7 +1211,7 @@ const MessengerPage = ({ onBack, activeChatPartner, setActiveChatPartner }) => {
                 Incoming {incomingCallData.type === 'video' ? 'Video' : 'Audio'} Call
               </span>
               <h2 className="text-3xl font-black mt-4">{incomingCallData.callerName}</h2>
-              <p className="text-slate-450 text-sm font-medium animate-pulse mt-1">
+              <p className="text-slate-400 text-sm font-medium animate-pulse mt-1">
                 {incomingCallData.isGroup ? 'Zenivio Group Call' : 'Private Call'}
               </p>
             </div>
@@ -1319,7 +1304,7 @@ const MessengerPage = ({ onBack, activeChatPartner, setActiveChatPartner }) => {
               </div>
               
               <div className="p-6 space-y-4">
-                <p className="text-xs text-slate-450 dark:text-slate-400 font-bold leading-normal">
+                <p className="text-xs text-slate-400 dark:text-slate-400 font-bold leading-normal">
                   Share what's on your mind. Friends will see your note above your avatar for 24 hours. (Max 60 chars)
                 </p>
                 <div className="bg-slate-50 dark:bg-slate-950 border border-slate-200/50 dark:border-slate-800/80 rounded-2xl p-4 shadow-inner">
@@ -1390,7 +1375,7 @@ const MessengerPage = ({ onBack, activeChatPartner, setActiveChatPartner }) => {
 
               {/* Group Name input */}
               <div className="px-6 py-4 space-y-2 shrink-0 border-b border-slate-100 dark:border-slate-800/80">
-                <label className="text-xs font-black text-slate-450 dark:text-slate-400 uppercase tracking-wide">Group Name</label>
+                <label className="text-xs font-black text-slate-400 dark:text-slate-400 uppercase tracking-wide">Group Name</label>
                 <input 
                   type="text"
                   required
@@ -1404,7 +1389,7 @@ const MessengerPage = ({ onBack, activeChatPartner, setActiveChatPartner }) => {
               {/* Search contacts for group */}
               <div className="px-6 py-3 border-b border-slate-100 dark:border-slate-800 shrink-0">
                 <div className="flex items-center bg-slate-50 dark:bg-slate-950 rounded-xl px-3 py-1 border border-slate-205 dark:border-slate-800 shadow-inner">
-                  <Search className="w-4 h-4 text-slate-450 mr-2 shrink-0" />
+                  <Search className="w-4 h-4 text-slate-400 mr-2 shrink-0" />
                   <input 
                     type="text"
                     placeholder="Search friends..."

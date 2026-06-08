@@ -1,4 +1,5 @@
 import React, { useState, useEffect, lazy, Suspense } from 'react';
+import { io } from 'socket.io-client';
 import AuthLayout from './components/AuthLayout';
 import RegistrationForm from './components/RegistrationForm';
 import LoginForm from './components/LoginForm';
@@ -130,6 +131,59 @@ function App() {
   const [darkMode, setDarkMode] = useState(() => localStorage.getItem('darkMode') === 'true');
   const [selectedNewsId, setSelectedNewsId] = useState(null);
   const [activeChatPartner, setActiveChatPartner] = useState(null);
+  const [socket, setSocket] = useState(null);
+  const [onlineUsers, setOnlineUsers] = useState([]);
+  const [incomingCallData, setIncomingCallData] = useState(null);
+
+  useEffect(() => {
+    if (isAuthenticated && currentUser?._id) {
+      const newSocket = io(API_BASE, {
+        transports: ['websocket', 'polling'],
+        timeout: 10000,
+        reconnectionAttempts: 3,
+      });
+      setSocket(newSocket);
+
+      newSocket.on('connect', () => {
+        newSocket.emit('join_user_room', { userId: currentUser._id });
+      });
+
+      newSocket.on('online_users', (usersList) => {
+        setOnlineUsers(usersList);
+      });
+
+      newSocket.on('incoming_call', (data) => {
+        const callerPartner = {
+          _id: data.callerId,
+          name: data.callerName,
+          isGroup: false,
+          profilePic: ''
+        };
+        setActiveChatPartner(callerPartner);
+        setIncomingCallData({ ...data, isGroup: false });
+        _setActiveTab('Messenger');
+      });
+
+      newSocket.on('incoming_group_call', (data) => {
+        const callerPartner = {
+          _id: data.groupId,
+          name: data.callerName + "'s Group",
+          isGroup: true,
+          profilePic: ''
+        };
+        setActiveChatPartner(callerPartner);
+        setIncomingCallData({ ...data, isGroup: true });
+        _setActiveTab('Messenger');
+      });
+
+      return () => {
+        newSocket.disconnect();
+      };
+    } else {
+      setSocket(null);
+    }
+  }, [isAuthenticated, currentUser]);
+
   const [selectedNotificationPostId, setSelectedNotificationPostId] = useState(null);
   const [activePublicProfileUserId, setActivePublicProfileUserId] = useState(null);
   const [currentUser, setCurrentUser] = useState(null);
@@ -378,6 +432,10 @@ function App() {
               }} 
               activeChatPartner={activeChatPartner}
               setActiveChatPartner={setActiveChatPartner}
+              socket={socket}
+              onlineUsers={onlineUsers}
+              incomingCallData={incomingCallData}
+              setIncomingCallData={setIncomingCallData}
             />
           )}
           {activeTab === 'Updates' && (
