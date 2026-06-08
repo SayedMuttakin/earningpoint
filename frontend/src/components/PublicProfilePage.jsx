@@ -745,19 +745,65 @@ const PublicProfilePage = ({ userId, onBack, currentUser, isOwnProfile, setActiv
               >
                 <div className="p-[2px] bg-slate-200 dark:bg-slate-800 rounded-full group-hover:scale-105 transition-transform duration-200">
                   <div className="w-16 h-16 rounded-full overflow-hidden border-2 border-white dark:border-slate-950 bg-slate-100 flex items-center justify-center">
-                    {hl.cover ? (
-                      <img
-                        src={hl.cover.startsWith('http') || hl.cover.startsWith('/api') || hl.cover.startsWith('data:')
-                          ? hl.cover
-                          : `${API_BASE}/api/image?file=${encodeURIComponent(hl.cover)}`}
-                        alt={hl.title}
-                        className="w-full h-full object-cover"
-                      />
-                    ) : (
-                      <div className="w-full h-full bg-gradient-to-tr from-rose-400 to-indigo-500 flex items-center justify-center text-white font-black text-base uppercase">
-                        {hl.title?.charAt(0) || 'H'}
-                      </div>
-                    )}
+                    {(() => {
+                      if (hl.cover) {
+                        return (
+                          <img
+                            src={hl.cover.startsWith('http') || hl.cover.startsWith('/api') || hl.cover.startsWith('data:')
+                              ? hl.cover
+                              : `${API_BASE}/api/image?file=${encodeURIComponent(hl.cover)}`}
+                            alt={hl.title}
+                            className="w-full h-full object-cover"
+                          />
+                        );
+                      }
+                      
+                      // Fallback to first post with media (image or video)
+                      if (hl.posts && hl.posts.length > 0) {
+                        const mediaPost = hl.posts.find(p => p && (p.image || p.video));
+                        if (mediaPost) {
+                          if (mediaPost.image) {
+                            return (
+                              <img
+                                src={mediaPost.image.startsWith('http') || mediaPost.image.startsWith('/api') || mediaPost.image.startsWith('data:')
+                                  ? mediaPost.image
+                                  : `${API_BASE}/api/image?file=${encodeURIComponent(mediaPost.image)}`}
+                                alt={hl.title}
+                                className="w-full h-full object-cover"
+                              />
+                            );
+                          } else if (mediaPost.video) {
+                            return (
+                              <video
+                                src={mediaPost.video.startsWith('http') || mediaPost.video.startsWith('/api') || mediaPost.video.startsWith('data:')
+                                  ? mediaPost.video
+                                  : `${API_BASE}/api/image?file=${encodeURIComponent(mediaPost.video)}`}
+                                className="w-full h-full object-cover"
+                                muted
+                                playsInline
+                              />
+                            );
+                          }
+                        }
+                        
+                        // Fallback to first post text content snippet if no media
+                        const textPost = hl.posts.find(p => p && p.content);
+                        if (textPost) {
+                          return (
+                            <div className="w-full h-full bg-gradient-to-tr from-rose-400 to-indigo-500 flex items-center justify-center p-1.5 text-[8px] leading-tight text-white font-bold text-center overflow-hidden break-words select-none">
+                              {textPost.content.substring(0, 15)}
+                            </div>
+                          );
+                        }
+                      }
+                      
+                      // Final fallback
+                      return (
+                        <div className="w-full h-full bg-gradient-to-tr from-rose-400 to-indigo-500 flex items-center justify-center text-white font-black text-base uppercase">
+                          {hl.title?.charAt(0) || 'H'}
+                        </div>
+                      );
+                    })()}
                   </div>
                 </div>
                 
@@ -1413,6 +1459,22 @@ const PublicProfilePage = ({ userId, onBack, currentUser, isOwnProfile, setActiv
           </div>
         </div>
       )}
+
+      {/* Hidden File Inputs for Edit Profile Modal triggers */}
+      <input
+        type="file"
+        ref={fileInputRef}
+        className="hidden"
+        accept="image/*"
+        onChange={handleAvatarUpload}
+      />
+      <input
+        type="file"
+        ref={coverInputRef}
+        className="hidden"
+        accept="image/*"
+        onChange={handleCoverUpload}
+      />
     </div>
   );
 };
