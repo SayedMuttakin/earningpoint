@@ -134,6 +134,10 @@ function App() {
   const [socket, setSocket] = useState(null);
   const [onlineUsers, setOnlineUsers] = useState([]);
   const [incomingCallData, setIncomingCallData] = useState(null);
+  const [selectedNotificationPostId, setSelectedNotificationPostId] = useState(null);
+  const [activePublicProfileUserId, setActivePublicProfileUserId] = useState(null);
+  const [currentUser, setCurrentUser] = useState(null);
+  const [initialSettingsSubMenu, setInitialSettingsSubMenu] = useState(null);
 
   useEffect(() => {
     if (isAuthenticated && currentUser?._id) {
@@ -183,11 +187,6 @@ function App() {
       setSocket(null);
     }
   }, [isAuthenticated, currentUser]);
-
-  const [selectedNotificationPostId, setSelectedNotificationPostId] = useState(null);
-  const [activePublicProfileUserId, setActivePublicProfileUserId] = useState(null);
-  const [currentUser, setCurrentUser] = useState(null);
-  const [initialSettingsSubMenu, setInitialSettingsSubMenu] = useState(null);
 
   const navigateToSettingsSubMenu = (subMenuKey) => {
     setInitialSettingsSubMenu(subMenuKey);
