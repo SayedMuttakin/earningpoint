@@ -48,7 +48,8 @@ const SettingsPage = ({
   onNotificationClick,
   onSupportClick,
   onVerifyClick,
-  initialSubMenuKey
+  initialSubMenuKey,
+  onCloseSubMenu
 }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -61,6 +62,11 @@ const SettingsPage = ({
   // Modals / Menu Active State
   const [showProfileModal, setShowProfileModal] = useState(false);
   const [activeSubMenu, setActiveSubMenu] = useState(null);
+
+  const closeSubMenu = () => {
+    setActiveSubMenu(null);
+    onCloseSubMenu && onCloseSubMenu();
+  };
   
   const [editName, setEditName] = useState('');
   const [editEmail, setEditEmail] = useState('');
@@ -78,7 +84,7 @@ const SettingsPage = ({
         setShowProfileModal(false);
       } else if (activeSubMenu) {
         e.preventDefault();
-        setActiveSubMenu(null);
+        closeSubMenu();
       }
     };
     document.addEventListener('appBackButton', handleHardwareBack);
@@ -142,9 +148,9 @@ const SettingsPage = ({
     account_settings: {
       title: 'Account Settings',
       items: [
-        { label: 'Profile', sub: 'Update your display name and email address', action: () => { setActiveSubMenu(null); setShowProfileModal(true); } },
+        { label: 'Profile', sub: 'Update your display name and email address', action: () => { closeSubMenu(); setShowProfileModal(true); } },
         { label: 'Security', sub: 'Manage your active sessions and device security', action: () => alert('Security configuration is optimized for this device.') },
-        { label: 'Password', sub: 'Change your account login password', action: () => { setActiveSubMenu(null); onPasswordClick(); } },
+        { label: 'Password', sub: 'Change your account login password', action: () => { closeSubMenu(); onPasswordClick(); } },
       ]
     },
     notifications: {
@@ -158,7 +164,7 @@ const SettingsPage = ({
     privacy: {
       title: 'Privacy Settings',
       items: [
-        { label: 'Profile Privacy', sub: 'Read our terms of service and privacy policies', action: () => { setActiveSubMenu(null); onTermsClick(); } },
+        { label: 'Profile Privacy', sub: 'Read our terms of service and privacy policies', action: () => { closeSubMenu(); onTermsClick(); } },
         { label: 'Blocked Users', sub: 'Manage restricted and blocked users list', action: () => alert('You have not blocked any users yet.') },
         { label: 'Activity Status', sub: 'Show or hide when you are active on the app', action: () => alert('Your activity status is active and visible.') },
       ]
@@ -190,7 +196,7 @@ const SettingsPage = ({
     appearance: {
       title: 'Language & Appearance',
       items: [
-        { label: 'Language', sub: 'Select your preferred display language', action: () => { setActiveSubMenu(null); onLanguageClick(); } },
+        { label: 'Language', sub: 'Select your preferred display language', action: () => { closeSubMenu(); onLanguageClick(); } },
         { label: 'Dark Mode', sub: 'Toggle dark mode and system theme settings', isToggle: true, value: darkMode, action: onToggleDarkMode },
         { label: 'Theme', sub: 'Select accents and background themes', action: () => alert('Theme settings are managed via Dark Mode.') },
       ]
@@ -198,16 +204,16 @@ const SettingsPage = ({
     support: {
       title: 'Help & Support',
       items: [
-        { label: 'Report Problem', sub: 'Encountered a bug? File a report with our dev team', action: () => { setActiveSubMenu(null); onSupportClick(); } },
-        { label: 'Contact Support', sub: 'Chat with our support executive for queries', action: () => { setActiveSubMenu(null); onSupportClick(); } },
-        { label: 'FAQ', sub: 'Read frequently asked questions and answers', action: () => { setActiveSubMenu(null); onSupportClick(); } },
+        { label: 'Report Problem', sub: 'Encountered a bug? File a report with our dev team', action: () => { closeSubMenu(); onSupportClick(); } },
+        { label: 'Contact Support', sub: 'Chat with our support executive for queries', action: () => { closeSubMenu(); onSupportClick(); } },
+        { label: 'FAQ', sub: 'Read frequently asked questions and answers', action: () => { closeSubMenu(); onSupportClick(); } },
       ]
     },
     actions: {
       title: 'Account Actions',
       items: [
-        { label: 'Logout', sub: 'Sign out from this device', action: () => { setActiveSubMenu(null); onLogout(); } },
-        { label: 'Delete Account', sub: 'Permanently remove your account and all data', action: () => { setActiveSubMenu(null); onDeleteClick(); } },
+        { label: 'Logout', sub: 'Sign out from this device', action: () => { closeSubMenu(); onLogout(); } },
+        { label: 'Delete Account', sub: 'Permanently remove your account and all data', action: () => { closeSubMenu(); onDeleteClick(); } },
       ]
     }
   };
@@ -251,7 +257,7 @@ const SettingsPage = ({
       color: 'bg-blue-50/75 dark:bg-blue-950/20', 
       label: 'Verification', 
       sub: 'Verify your identity and account status', 
-      action: () => { setActiveSubMenu(null); onVerifyClick(); }
+      action: () => { closeSubMenu(); onVerifyClick(); }
     },
     { 
       id: 'messenger', 
@@ -345,7 +351,7 @@ const SettingsPage = ({
                 if (showProfileModal) {
                   setShowProfileModal(false);
                 } else if (activeSubMenu) {
-                  setActiveSubMenu(null);
+                  closeSubMenu();
                 } else {
                   onBack();
                 }
@@ -478,7 +484,7 @@ const SettingsPage = ({
       {activeSubMenu && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
           <div 
-            onClick={() => setActiveSubMenu(null)}
+            onClick={closeSubMenu}
             className="absolute inset-0 bg-slate-955/70 backdrop-blur-sm animate-fade-in"
           />
           <div 
@@ -488,10 +494,10 @@ const SettingsPage = ({
             <div className="px-6 py-5 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between flex-shrink-0">
               <div>
                 <h3 className="text-base font-black text-slate-855 dark:text-white">{activeSubMenu.title}</h3>
-                <p className="text-[10px] text-slate-400 dark:text-slate-500 font-bold mt-0.5">Configure your preferences</p>
+                <p className="text-[10px] text-slate-405 dark:text-slate-500 font-bold mt-0.5">Configure your preferences</p>
               </div>
               <button 
-                onClick={() => setActiveSubMenu(null)}
+                onClick={closeSubMenu}
                 className="p-1.5 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400 transition-colors"
               >
                 <X className="w-5 h-5" />

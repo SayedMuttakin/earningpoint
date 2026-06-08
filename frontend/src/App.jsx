@@ -365,6 +365,7 @@ function App() {
               onSupportClick={() => setActiveTab('Support')}
               onVerifyClick={() => setActiveTab('Verify')}
               initialSubMenuKey={initialSettingsSubMenu}
+              onCloseSubMenu={() => setInitialSettingsSubMenu(null)}
             />
           )}
           
