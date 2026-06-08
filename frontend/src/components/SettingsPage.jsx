@@ -47,7 +47,8 @@ const SettingsPage = ({
   onDeleteClick, 
   onNotificationClick,
   onSupportClick,
-  onVerifyClick
+  onVerifyClick,
+  initialSubMenuKey
 }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -210,6 +211,14 @@ const SettingsPage = ({
       ]
     }
   };
+
+  useEffect(() => {
+    if (initialSubMenuKey && subMenuData[initialSubMenuKey]) {
+      setActiveSubMenu(subMenuData[initialSubMenuKey]);
+    } else {
+      setActiveSubMenu(null);
+    }
+  }, [initialSubMenuKey]);
 
   const allItems = [
     { 

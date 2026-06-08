@@ -133,6 +133,12 @@ function App() {
   const [selectedNotificationPostId, setSelectedNotificationPostId] = useState(null);
   const [activePublicProfileUserId, setActivePublicProfileUserId] = useState(null);
   const [currentUser, setCurrentUser] = useState(null);
+  const [initialSettingsSubMenu, setInitialSettingsSubMenu] = useState(null);
+
+  const navigateToSettingsSubMenu = (subMenuKey) => {
+    setInitialSettingsSubMenu(subMenuKey);
+    setActiveTab('Setting');
+  };
 
   useEffect(() => {
     const fetchUser = async () => {
@@ -271,6 +277,7 @@ function App() {
           activePublicProfileUserId={activePublicProfileUserId} 
           darkMode={darkMode}
           onToggleDarkMode={handleToggleDarkMode}
+          navigateToSettingsSubMenu={navigateToSettingsSubMenu}
         />
         <Suspense fallback={<PageLoader />}>
           {activeTab === 'Home' && (
@@ -357,6 +364,7 @@ function App() {
               onNotificationClick={() => setActiveTab('Notification')}
               onSupportClick={() => setActiveTab('Support')}
               onVerifyClick={() => setActiveTab('Verify')}
+              initialSubMenuKey={initialSettingsSubMenu}
             />
           )}
           

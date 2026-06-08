@@ -15,7 +15,8 @@ const Navbar = ({
   currentUser, 
   activePublicProfileUserId, 
   darkMode, 
-  onToggleDarkMode 
+  onToggleDarkMode,
+  navigateToSettingsSubMenu
 }) => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
@@ -58,7 +59,7 @@ const Navbar = ({
       color: 'bg-violet-100 dark:bg-violet-950/40 text-violet-600 dark:text-violet-405', 
       label: 'Account Settings', 
       sub: 'Manage your profile, security and account', 
-      action: () => { setIsSidebarOpen(false); setActiveTab && setActiveTab('EditProfile'); }
+      action: () => { setIsSidebarOpen(false); navigateToSettingsSubMenu ? navigateToSettingsSubMenu('account_settings') : (setActiveTab && setActiveTab('EditProfile')); }
     },
     { 
       id: 'notifications', 
@@ -66,7 +67,7 @@ const Navbar = ({
       color: 'bg-amber-100 dark:bg-amber-950/40 text-amber-600 dark:text-amber-405', 
       label: 'Notifications', 
       sub: 'Control alerts and notification preferences', 
-      action: () => { setIsSidebarOpen(false); setActiveTab && setActiveTab('Notification'); }
+      action: () => { setIsSidebarOpen(false); navigateToSettingsSubMenu ? navigateToSettingsSubMenu('notifications') : (setActiveTab && setActiveTab('Notification')); }
     },
     { 
       id: 'privacy', 
@@ -74,7 +75,7 @@ const Navbar = ({
       color: 'bg-emerald-100 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-405', 
       label: 'Privacy', 
       sub: 'Manage privacy and visibility settings', 
-      action: () => { setIsSidebarOpen(false); setActiveTab && setActiveTab('TermsPrivacy'); }
+      action: () => { setIsSidebarOpen(false); navigateToSettingsSubMenu ? navigateToSettingsSubMenu('privacy') : (setActiveTab && setActiveTab('TermsPrivacy')); }
     },
     { 
       id: 'verification', 
@@ -90,7 +91,7 @@ const Navbar = ({
       color: 'bg-blue-100 dark:bg-blue-950/40 text-blue-600 dark:text-blue-405', 
       label: 'Messenger', 
       sub: 'Chat and messaging preferences', 
-      action: () => { setIsSidebarOpen(false); setActiveTab && setActiveTab('Messenger'); }
+      action: () => { setIsSidebarOpen(false); navigateToSettingsSubMenu ? navigateToSettingsSubMenu('messenger') : (setActiveTab && setActiveTab('Messenger')); }
     },
     { 
       id: 'performance', 
@@ -98,7 +99,7 @@ const Navbar = ({
       color: 'bg-purple-100 dark:bg-purple-950/40 text-purple-650 dark:text-purple-405', 
       label: 'App Performance', 
       sub: 'Data saver, optimization and app performance', 
-      action: () => { setIsSidebarOpen(false); setActiveTab && setActiveTab('Setting'); }
+      action: () => { setIsSidebarOpen(false); navigateToSettingsSubMenu ? navigateToSettingsSubMenu('performance') : (setActiveTab && setActiveTab('Setting')); }
     },
     { 
       id: 'storage', 
@@ -106,7 +107,7 @@ const Navbar = ({
       color: 'bg-sky-100 dark:bg-sky-950/40 text-sky-600 dark:text-sky-405', 
       label: 'Storage & Data', 
       sub: 'Manage storage, data usage and cache', 
-      action: () => { setIsSidebarOpen(false); setActiveTab && setActiveTab('Setting'); }
+      action: () => { setIsSidebarOpen(false); navigateToSettingsSubMenu ? navigateToSettingsSubMenu('storage') : (setActiveTab && setActiveTab('Setting')); }
     },
     { 
       id: 'appearance', 
@@ -114,7 +115,7 @@ const Navbar = ({
       color: 'bg-pink-100 dark:bg-pink-950/40 text-pink-600 dark:text-pink-405', 
       label: 'Language & Appearance', 
       sub: 'Theme, dark mode and language', 
-      action: () => { setIsSidebarOpen(false); setActiveTab && setActiveTab('Language'); }
+      action: () => { setIsSidebarOpen(false); navigateToSettingsSubMenu ? navigateToSettingsSubMenu('appearance') : (setActiveTab && setActiveTab('Language')); }
     },
     { 
       id: 'support', 
@@ -122,7 +123,7 @@ const Navbar = ({
       color: 'bg-green-100 dark:bg-green-950/40 text-green-600 dark:text-green-405', 
       label: 'Help & Support', 
       sub: 'Get help, report issues and more', 
-      action: () => { setIsSidebarOpen(false); setActiveTab && setActiveTab('Support'); }
+      action: () => { setIsSidebarOpen(false); navigateToSettingsSubMenu ? navigateToSettingsSubMenu('support') : (setActiveTab && setActiveTab('Support')); }
     },
     { 
       id: 'actions', 
@@ -130,7 +131,7 @@ const Navbar = ({
       color: 'bg-rose-100 dark:bg-rose-950/40 text-rose-600 dark:text-rose-455', 
       label: 'Account Actions', 
       sub: 'Logout or delete your account', 
-      action: () => { setIsSidebarOpen(false); onLogout && onLogout(); }
+      action: () => { setIsSidebarOpen(false); navigateToSettingsSubMenu ? navigateToSettingsSubMenu('actions') : (onLogout && onLogout()); }
     }
   ];
 
