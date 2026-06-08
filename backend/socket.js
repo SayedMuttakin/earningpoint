@@ -224,6 +224,71 @@ module.exports = {
         }
       });
 
+      // Group messaging room join
+      socket.on('join_group_room', (data) => {
+        try {
+          const { groupId } = data;
+          if (groupId) {
+            socket.join(groupId.toString());
+            console.log(`Socket ${socket.id} joined group room ${groupId}`);
+          }
+        } catch (err) {
+          console.error('Socket join_group_room error:', err);
+        }
+      });
+
+      // Send group message
+      socket.on('send_group_message', async (data) => {
+        try {
+          const { senderId, groupId, content } = data;
+          if (!senderId || !groupId || !content) return;
+
+          const savedMessage = await Message.create({
+            sender: senderId,
+            group: groupId,
+            content: content
+          });
+
+          const populatedMessage = await Message.findById(savedMessage._id)
+            .populate('sender', 'name profilePic');
+
+          // Broadcast to all group members in the room
+          io.to(groupId.toString()).emit('receive_group_message', populatedMessage);
+        } catch (err) {
+          console.error('Socket send_group_message error:', err);
+        }
+      });
+
+      // Group typing indicator
+      socket.on('group_typing', (data) => {
+        const { senderId, senderName, groupId, isTyping } = data;
+        if (groupId) {
+          socket.to(groupId.toString()).emit('group_typing', { senderId, senderName, groupId, isTyping });
+        }
+      });
+
+      // calling sockets
+      socket.on('call_user', (data) => {
+        const { callerId, callerName, receiverId, type } = data;
+        if (receiverId) {
+          io.to(receiverId.toString()).emit('incoming_call', { callerId, callerName, type });
+        }
+      });
+
+      socket.on('decline_call', (data) => {
+        const { callerId } = data;
+        if (callerId) {
+          io.to(callerId.toString()).emit('call_declined');
+        }
+      });
+
+      socket.on('group_call', (data) => {
+        const { callerId, callerName, groupId, type } = data;
+        if (groupId) {
+          socket.to(groupId.toString()).emit('incoming_group_call', { callerId, callerName, groupId, type });
+        }
+      });
+
       socket.on('disconnect', () => {
         console.log('Socket disconnected:', socket.id);
       });

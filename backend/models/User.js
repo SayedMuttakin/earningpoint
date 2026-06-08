@@ -46,6 +46,14 @@ const UserSchema = new mongoose.Schema({
     type: String,
     default: '',
   },
+  note: {
+    type: String,
+    default: '',
+  },
+  noteCreatedAt: {
+    type: Date,
+    default: null,
+  },
   highlights: [{
     title: { type: String, default: 'Highlight' },
     cover: { type: String, default: '' },
