@@ -493,29 +493,6 @@ const PublicProfilePage = ({ userId, onBack, currentUser, isOwnProfile, setActiv
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 pb-24 text-slate-850 dark:text-slate-100 flex flex-col no-scrollbar">
-      {/* Top Navigation Bar */}
-      <header className="sticky top-0 z-50 bg-slate-50/90 dark:bg-slate-950/90 backdrop-blur-md px-4 py-3 flex items-center justify-between border-b border-slate-200/50 dark:border-slate-900">
-        {isOwn ? (
-          <div className="w-10" />
-        ) : (
-          <button 
-            onClick={onBack}
-            className="p-2 hover:bg-slate-200/50 dark:hover:bg-slate-900 rounded-full text-slate-700 dark:text-slate-350 active:scale-90 transition-transform"
-          >
-            <ArrowLeft className="w-6 h-6" />
-          </button>
-        )}
-        <div className="w-10" />
-        <div className="flex items-center gap-2">
-          <button className="p-2 hover:bg-slate-200/50 dark:hover:bg-slate-900 rounded-full text-slate-700 dark:text-slate-350">
-            <Bell className="w-5 h-5" />
-          </button>
-          <button className="p-2 hover:bg-slate-200/50 dark:hover:bg-slate-900 rounded-full text-slate-700 dark:text-slate-350">
-            <Share2 className="w-5 h-5" />
-          </button>
-        </div>
-      </header>
-
       {/* Main Cover Banner */}
       <div className="relative w-full h-44 sm:h-52 bg-slate-200 dark:bg-slate-800 overflow-hidden group">
         {profile.coverPic ? (
@@ -531,24 +508,14 @@ const PublicProfilePage = ({ userId, onBack, currentUser, isOwnProfile, setActiv
             <span className="text-white/20 font-black tracking-widest text-lg select-none">ZENIVIO</span>
           </div>
         )}
-        
-        {isOwn && (
-          <>
-            <button
-              disabled={imageCompressing}
-              onClick={() => coverInputRef.current?.click()}
-              className="absolute bottom-3 right-3 p-2 bg-black/60 hover:bg-black/80 backdrop-blur-md text-white rounded-full transition-all active:scale-90 shadow-md border border-white/20 flex items-center justify-center disabled:opacity-50"
-            >
-              {imageCompressing ? <Loader2 className="w-4 h-4 animate-spin" /> : <Camera className="w-4 h-4" />}
-            </button>
-            <input
-              type="file"
-              ref={coverInputRef}
-              className="hidden"
-              accept="image/*"
-              onChange={handleCoverUpload}
-            />
-          </>
+
+        {!isOwn && (
+          <button
+            onClick={onBack}
+            className="absolute top-4 left-4 p-2.5 bg-black/40 hover:bg-black/60 backdrop-blur-md text-white rounded-full z-50 transition-all active:scale-90 shadow-md border border-white/10 flex items-center justify-center cursor-pointer"
+          >
+            <ArrowLeft className="w-5 h-5" strokeWidth={2.5} />
+          </button>
         )}
       </div>
 
@@ -573,25 +540,6 @@ const PublicProfilePage = ({ userId, onBack, currentUser, isOwnProfile, setActiv
               )}
             </div>
           </div>
-          
-          {isOwn && (
-            <>
-              <button
-                disabled={imageCompressing}
-                onClick={() => fileInputRef.current?.click()}
-                className="absolute bottom-1 right-1 p-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-full transition-all active:scale-90 shadow-lg border-2 border-white dark:border-slate-950 flex items-center justify-center disabled:opacity-50"
-              >
-                {imageCompressing ? <Loader2 className="w-4 h-4 animate-spin" /> : <Camera className="w-4 h-4" />}
-              </button>
-              <input
-                type="file"
-                ref={fileInputRef}
-                className="hidden"
-                accept="image/*"
-                onChange={handleAvatarUpload}
-              />
-            </>
-          )}
           
           {!isOwn && (
             <span className="absolute bottom-1 right-1 w-5 h-5 bg-emerald-500 rounded-full border-4 border-white dark:border-slate-950 shadow-md animate-pulse" />
