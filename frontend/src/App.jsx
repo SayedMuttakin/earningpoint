@@ -264,7 +264,15 @@ function App() {
   if (isAuthenticated) {
     return (
       <div className="min-h-screen bg-slate-100/50 dark:bg-slate-950 transition-colors duration-300">
-        <Navbar onLogout={handleLogout} activeTab={activeTab} setActiveTab={setActiveTab} currentUser={currentUser} activePublicProfileUserId={activePublicProfileUserId} />
+        <Navbar 
+          onLogout={handleLogout} 
+          activeTab={activeTab} 
+          setActiveTab={setActiveTab} 
+          currentUser={currentUser} 
+          activePublicProfileUserId={activePublicProfileUserId} 
+          darkMode={darkMode}
+          onToggleDarkMode={handleToggleDarkMode}
+        />
         <Suspense fallback={<PageLoader />}>
           {activeTab === 'Home' && (
             <HomePage 

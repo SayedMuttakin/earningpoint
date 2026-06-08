@@ -1,10 +1,23 @@
 import React, { useState, useEffect } from 'react';
-import { Home, Bell, ShoppingCart, User, Settings, Menu, X, Video, Newspaper } from 'lucide-react';
+import { 
+  Home, Bell, ShoppingCart, User, Settings, Menu, X, Video, Newspaper,
+  Lock, Globe, Shield, ShieldCheck, Trash2, ChevronRight, Moon, Sun, 
+  Database, HelpCircle, FileText, LogOut, ArrowLeft, Smartphone, 
+  CheckCircle2, Search, Rocket, Palette, Headphones, MessageCircle 
+} from 'lucide-react';
 import { API_BASE } from '../config';
+import VerifiedBadge from './VerifiedBadge';
 
-
-const Navbar = ({ onLogout, activeTab, setActiveTab, currentUser, activePublicProfileUserId }) => {
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+const Navbar = ({ 
+  onLogout, 
+  activeTab, 
+  setActiveTab, 
+  currentUser, 
+  activePublicProfileUserId, 
+  darkMode, 
+  onToggleDarkMode 
+}) => {
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
 
   useEffect(() => {
@@ -29,32 +42,207 @@ const Navbar = ({ onLogout, activeTab, setActiveTab, currentUser, activePublicPr
     }
   };
 
+  const getAvatarUrl = (u) => {
+    if (!u) return `https://ui-avatars.com/api/?name=User&background=7C3AED&color=fff&bold=true`;
+    const pic = u.profilePic || u.googleAvatar;
+    if (!pic) return `https://ui-avatars.com/api/?name=${encodeURIComponent(u.name || 'User')}&background=7C3AED&color=fff&bold=true`;
+    return pic.startsWith('http') || pic.startsWith('/api') || pic.startsWith('data:') 
+      ? pic 
+      : `${API_BASE}/api/image?file=${encodeURIComponent(pic)}`;
+  };
+
+  const allItems = [
+    { 
+      id: 'account_settings', 
+      icon: User, 
+      color: 'bg-violet-100 dark:bg-violet-950/40 text-violet-600 dark:text-violet-405', 
+      label: 'Account Settings', 
+      sub: 'Manage your profile, security and account', 
+      action: () => { setIsSidebarOpen(false); setActiveTab && setActiveTab('EditProfile'); }
+    },
+    { 
+      id: 'notifications', 
+      icon: Bell, 
+      color: 'bg-amber-100 dark:bg-amber-950/40 text-amber-600 dark:text-amber-405', 
+      label: 'Notifications', 
+      sub: 'Control alerts and notification preferences', 
+      action: () => { setIsSidebarOpen(false); setActiveTab && setActiveTab('Notification'); }
+    },
+    { 
+      id: 'privacy', 
+      icon: Shield, 
+      color: 'bg-emerald-100 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-405', 
+      label: 'Privacy', 
+      sub: 'Manage privacy and visibility settings', 
+      action: () => { setIsSidebarOpen(false); setActiveTab && setActiveTab('TermsPrivacy'); }
+    },
+    { 
+      id: 'verification', 
+      icon: ShieldCheck, 
+      color: 'bg-blue-100 dark:bg-blue-950/40 text-blue-600 dark:text-blue-405', 
+      label: 'Verification', 
+      sub: 'Verify your identity and account status', 
+      action: () => { setIsSidebarOpen(false); setActiveTab && setActiveTab('Verify'); }
+    },
+    { 
+      id: 'messenger', 
+      icon: MessageCircle, 
+      color: 'bg-blue-100 dark:bg-blue-950/40 text-blue-600 dark:text-blue-405', 
+      label: 'Messenger', 
+      sub: 'Chat and messaging preferences', 
+      action: () => { setIsSidebarOpen(false); setActiveTab && setActiveTab('Messenger'); }
+    },
+    { 
+      id: 'performance', 
+      icon: Rocket, 
+      color: 'bg-purple-100 dark:bg-purple-950/40 text-purple-650 dark:text-purple-405', 
+      label: 'App Performance', 
+      sub: 'Data saver, optimization and app performance', 
+      action: () => { setIsSidebarOpen(false); setActiveTab && setActiveTab('Setting'); }
+    },
+    { 
+      id: 'storage', 
+      icon: Database, 
+      color: 'bg-sky-100 dark:bg-sky-950/40 text-sky-600 dark:text-sky-405', 
+      label: 'Storage & Data', 
+      sub: 'Manage storage, data usage and cache', 
+      action: () => { setIsSidebarOpen(false); setActiveTab && setActiveTab('Setting'); }
+    },
+    { 
+      id: 'appearance', 
+      icon: Palette, 
+      color: 'bg-pink-100 dark:bg-pink-950/40 text-pink-600 dark:text-pink-405', 
+      label: 'Language & Appearance', 
+      sub: 'Theme, dark mode and language', 
+      action: () => { setIsSidebarOpen(false); setActiveTab && setActiveTab('Language'); }
+    },
+    { 
+      id: 'support', 
+      icon: Headphones, 
+      color: 'bg-green-100 dark:bg-green-950/40 text-green-600 dark:text-green-405', 
+      label: 'Help & Support', 
+      sub: 'Get help, report issues and more', 
+      action: () => { setIsSidebarOpen(false); setActiveTab && setActiveTab('Support'); }
+    },
+    { 
+      id: 'actions', 
+      icon: LogOut, 
+      color: 'bg-rose-100 dark:bg-rose-950/40 text-rose-600 dark:text-rose-455', 
+      label: 'Account Actions', 
+      sub: 'Logout or delete your account', 
+      action: () => { setIsSidebarOpen(false); onLogout && onLogout(); }
+    }
+  ];
+
   return (
     <>
+      <style>{`
+        @keyframes slideIn {
+          from { transform: translateX(-100%); }
+          to { transform: translateX(0); }
+        }
+        .animate-slide-in {
+          animation: slideIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+        @keyframes fadeIn {
+          from { opacity: 0; }
+          to { opacity: 1; }
+        }
+        .animate-fade-in {
+          animation: fadeIn 0.25s ease-out forwards;
+        }
+        .no-scrollbar::-webkit-scrollbar {
+          display: none;
+        }
+        .no-scrollbar {
+          -ms-overflow-style: none;
+          scrollbar-width: none;
+        }
+      `}</style>
+
+      {/* Sliding Sidebar Drawer */}
+      {isSidebarOpen && (
+        <>
+          {/* Backdrop */}
+          <div 
+            className="fixed inset-0 z-[60] bg-slate-955/70 backdrop-blur-xs animate-fade-in"
+            onClick={() => setIsSidebarOpen(false)}
+          />
+          {/* Drawer Panel */}
+          <div className="fixed top-0 left-0 h-full w-[60%] md:w-[60vw] max-w-[85vw] bg-white dark:bg-slate-900 shadow-2xl z-[70] flex flex-col overflow-hidden animate-slide-in">
+            {/* Header / Profile Card */}
+            <div className="px-6 py-6 border-b border-slate-100 dark:border-slate-800 bg-gradient-to-br from-indigo-500/5 via-purple-500/5 to-transparent dark:from-indigo-950/10 dark:via-purple-950/5">
+              <div className="flex items-center gap-4">
+                <div className="relative w-14 h-14 rounded-full p-0.5 bg-gradient-to-tr from-brand-500 to-indigo-500 flex-shrink-0">
+                  <img 
+                    src={getAvatarUrl(currentUser)} 
+                    alt="Profile" 
+                    className="w-full h-full object-cover rounded-full border-2 border-white dark:border-slate-900"
+                  />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-center gap-1.5">
+                    <span className="font-black text-base text-slate-800 dark:text-white block truncate leading-tight">
+                      {currentUser?.name || 'User'}
+                    </span>
+                    {currentUser?.isEmailVerified && (
+                      <VerifiedBadge iconClassName="w-[17.5px] h-[17.5px] fill-blue-500 text-white flex-shrink-0" />
+                    )}
+                  </div>
+                  <span className="text-[10px] text-slate-400 dark:text-slate-500 font-bold block truncate mt-0.5">
+                    {currentUser?.phoneOrEmail || ''}
+                  </span>
+                </div>
+                <button 
+                  onClick={() => setIsSidebarOpen(false)}
+                  className="p-1.5 rounded-full bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-400 dark:text-slate-350 transition-colors flex-shrink-0"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+            </div>
+
+            {/* Panel: Categories (Full Width List, No sub-menus, No scrollbar visible) */}
+            <div className="flex-1 overflow-y-auto no-scrollbar px-6 py-5 space-y-2 bg-slate-55/10 dark:bg-slate-955/10">
+              {allItems.map((item) => (
+                <button
+                  key={item.id}
+                  onClick={item.action}
+                  className="w-full flex items-center justify-between p-4 hover:bg-slate-100/50 dark:hover:bg-slate-800/30 rounded-2xl transition-colors text-left"
+                >
+                  <div className="flex items-center gap-4 min-w-0 flex-1 pr-2">
+                    <div className={`w-10 h-10 flex-shrink-0 rounded-full flex items-center justify-center ${item.color} shadow-3xs`}>
+                      <item.icon className="w-5 h-5" strokeWidth={2.4} />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <span className="font-black text-sm text-slate-800 dark:text-slate-200 block whitespace-nowrap truncate">{item.label}</span>
+                    </div>
+                  </div>
+                  <ChevronRight className="w-4 h-4 text-indigo-500 dark:text-indigo-400 flex-shrink-0" strokeWidth={3} />
+                </button>
+              ))}
+              
+              <div className="pt-8 pb-4 text-center text-[10px] text-slate-400 dark:text-slate-600 font-bold">
+                Zenivio v2.1.0 • Built with ❤️
+              </div>
+            </div>
+          </div>
+        </>
+      )}
+
       {/* Desktop & Top Mobile Navbar */}
       {activeTab !== 'Video' && (
         <nav className="sticky top-0 z-50 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-700 shadow-sm">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="flex justify-between h-16 relative">
-              {/* Left Side: Mobile Menu Button with Dropdown */}
+              {/* Left Side: Mobile Menu Button with Drawer Trigger */}
               <div className="relative flex items-center">
                 <button 
-                  onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+                  onClick={() => setIsSidebarOpen(true)}
                   className="text-slate-500 dark:text-slate-400 hover:text-brand-600 p-2 transition-colors relative z-50"
                 >
-                  {isMobileMenuOpen ? <X className="h-7 w-7" /> : <Menu className="h-7 w-7" />}
+                  <Menu className="h-7 w-7" />
                 </button>
-                
-                {/* Dropdown Menu for Setting */}
-                {isMobileMenuOpen && (
-                  <div 
-                    className="absolute top-14 left-0 mt-2 w-48 bg-white dark:bg-slate-800 rounded-2xl shadow-xl border border-slate-100 dark:border-slate-700 py-2.5 z-50 overflow-hidden animate-fade-in-up"
-                  >
-                    <button onClick={() => { setIsMobileMenuOpen(false); setActiveTab && setActiveTab('Setting'); }} className="w-full text-left px-5 py-3 text-sm font-medium text-slate-700 dark:text-slate-350 hover:bg-slate-50 dark:hover:bg-slate-700 hover:text-brand-600 flex items-center gap-3 transition-colors">
-                      <Settings className="w-4.5 h-4.5" /> Setting
-                    </button>
-                  </div>
-                )}
               </div>
 
               {/* Center Side: Logo & Brand (Centered) */}

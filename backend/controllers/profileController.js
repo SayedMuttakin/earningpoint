@@ -28,20 +28,49 @@ exports.getProfile = async (req, res) => {
   }
 };
 
-// PUT /api/profile — Update profile info (name, location, profilePic)
+// PUT /api/profile — Update profile info (name, location, bio, profilePic, coverPic, website, highlights)
 exports.updateProfile = async (req, res) => {
   try {
-    const { name, location, bio, profilePic } = req.body;
+    const { name, location, bio, profilePic, coverPic, website, highlights } = req.body;
     const user = await User.findById(req.user._id);
 
     if (!user) {
       return res.status(404).json({ message: 'User not found' });
     }
 
+    const Post = require('../models/Post');
+
     if (name !== undefined) user.name = name;
     if (location !== undefined) user.location = location;
     if (bio !== undefined) user.bio = bio;
-    if (profilePic !== undefined) user.profilePic = profilePic;
+    if (website !== undefined) user.website = website;
+    if (highlights !== undefined) user.highlights = highlights;
+
+    if (profilePic !== undefined && profilePic !== user.profilePic) {
+      user.profilePic = profilePic;
+      // Automatically generate a timeline post
+      const newPost = new Post({
+        content: `updated their profile picture.`,
+        image: profilePic,
+        authorId: user._id,
+        authorName: user.name || 'User',
+        isVerified: user.isEmailVerified || false
+      });
+      await newPost.save();
+    }
+
+    if (coverPic !== undefined && coverPic !== user.coverPic) {
+      user.coverPic = coverPic;
+      // Automatically generate a timeline post
+      const newPost = new Post({
+        content: `updated their cover photo.`,
+        image: coverPic,
+        authorId: user._id,
+        authorName: user.name || 'User',
+        isVerified: user.isEmailVerified || false
+      });
+      await newPost.save();
+    }
 
     await user.save();
 
@@ -236,7 +265,9 @@ exports.getPublicProfile = async (req, res) => {
       targetUserId = currentUserId;
     }
 
-    const user = await User.findById(targetUserId).select('name email profilePic googleAvatar isEmailVerified followers following bio');
+    const user = await User.findById(targetUserId)
+      .select('name email profilePic coverPic googleAvatar isEmailVerified followers following bio location website highlights')
+      .populate('highlights.posts');
     if (!user) {
       return res.status(404).json({ message: 'User not found' });
     }
@@ -262,12 +293,16 @@ exports.getPublicProfile = async (req, res) => {
         name: user.name,
         username: user.email ? user.email.split('@')[0] : 'user',
         profilePic: user.profilePic,
+        coverPic: user.coverPic || '',
         googleAvatar: user.googleAvatar,
         isEmailVerified: user.isEmailVerified,
         followersCount: user.followers ? user.followers.length : 0,
         followingCount: user.following ? user.following.length : 0,
         totalLikes,
         bio: user.bio || 'Follow and support me!',
+        location: user.location || '',
+        website: user.website || '',
+        highlights: user.highlights || [],
         isFollowing
       },
       videos: videos.map(v => ({

@@ -38,6 +38,19 @@ const UserSchema = new mongoose.Schema({
     type: String,
     default: '',
   },
+  coverPic: {
+    type: String,
+    default: '',
+  },
+  website: {
+    type: String,
+    default: '',
+  },
+  highlights: [{
+    title: { type: String, default: 'Highlight' },
+    cover: { type: String, default: '' },
+    posts: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Post' }]
+  }],
   darkMode: {
     type: Boolean,
     default: false,
