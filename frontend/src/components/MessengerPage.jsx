@@ -85,6 +85,50 @@ const MessengerPage = ({ onBack, activeChatPartner, setActiveChatPartner, socket
     return () => stopRingtone();
   }, [incomingCallData]);
 
+  // Attach remote stream to video/audio element whenever stream is ready
+  useEffect(() => {
+    if (!remoteStreamReady || !remoteStreamRef.current) return;
+    const stream = remoteStreamRef.current;
+    const tryAttach = () => {
+      if (callTypeRef.current === 'video') {
+        const el = remoteVideoRef.current || document.getElementById('remoteVideo');
+        if (el && el.srcObject !== stream) {
+          el.srcObject = stream;
+          el.muted = false;
+          el.volume = 1.0;
+          el.play().catch(() => {});
+        }
+      } else {
+        const el = remoteAudioRef.current || document.getElementById('remoteAudio');
+        if (el && el.srcObject !== stream) {
+          el.srcObject = stream;
+          el.muted = false;
+          el.volume = 1.0;
+          el.play().catch(() => {
+            el.muted = true;
+            el.play().then(() => { el.muted = false; }).catch(() => {});
+          });
+        }
+      }
+    };
+    tryAttach();
+    const t1 = setTimeout(tryAttach, 500);
+    const t2 = setTimeout(tryAttach, 1500);
+    return () => { clearTimeout(t1); clearTimeout(t2); };
+  }, [remoteStreamReady, activeCall]);
+
+  // Also attach local stream to local video element
+  useEffect(() => {
+    if (activeCall === 'ongoing' && callTypeRef.current === 'video' && localStreamRef.current) {
+      const el = localVideoRef.current || document.getElementById('localVideo');
+      if (el && el.srcObject !== localStreamRef.current) {
+        el.srcObject = localStreamRef.current;
+        el.muted = true;
+        el.play().catch(() => {});
+      }
+    }
+  }, [activeCall]);
+
   // Status Notes State
   const [notes, setNotes] = useState([]);
   const [showNoteModal, setShowNoteModal] = useState(false);
@@ -107,6 +151,10 @@ const MessengerPage = ({ onBack, activeChatPartner, setActiveChatPartner, socket
   const remoteStreamRef = useRef(null);
   const callTypeRef = useRef('audio');
   const candidateQueueRef = useRef([]);
+  const remoteVideoRef = useRef(null);
+  const remoteAudioRef = useRef(null);
+  const localVideoRef = useRef(null);
+  const [remoteStreamReady, setRemoteStreamReady] = useState(false);
 
   const activeCallRef = useRef(activeCall);
   useEffect(() => { activeCallRef.current = activeCall; }, [activeCall]);
@@ -777,42 +825,13 @@ const MessengerPage = ({ onBack, activeChatPartner, setActiveChatPartner, socket
         });
       }
     };
-    
     // Handle remote stream
     pc.ontrack = (event) => {
       const remoteStream = event.streams[0];
+      if (!remoteStream) return;
       remoteStreamRef.current = remoteStream;
-      
-      const attachRemoteStream = () => {
-        const remoteVideo = document.getElementById('remoteVideo');
-        const remoteAudio = document.getElementById('remoteAudio');
-        if (remoteVideo) {
-          remoteVideo.srcObject = remoteStream;
-          remoteVideo.muted = false;
-          remoteVideo.play().catch(e => console.error('Error playing remote video:', e));
-        } else if (remoteAudio) {
-          remoteAudio.srcObject = remoteStream;
-          // Must unmute after user interaction (browser policy)
-          remoteAudio.muted = false;
-          remoteAudio.volume = 1.0;
-          const playPromise = remoteAudio.play();
-          if (playPromise !== undefined) {
-            playPromise.catch(err => {
-              console.warn('Autoplay blocked, trying muted first:', err);
-              // Fallback: play muted, then unmute
-              remoteAudio.muted = true;
-              remoteAudio.play().then(() => {
-                remoteAudio.muted = false;
-              }).catch(e2 => console.error('Audio play failed entirely:', e2));
-            });
-          }
-        }
-      };
-
-      // Try immediately and also after a delay
-      attachRemoteStream();
-      setTimeout(attachRemoteStream, 500);
-      setTimeout(attachRemoteStream, 1500);
+      // Toggle to trigger the useEffect that attaches stream to DOM elements
+      setRemoteStreamReady(v => !v);
     };
     
     return pc;
@@ -834,6 +853,7 @@ const MessengerPage = ({ onBack, activeChatPartner, setActiveChatPartner, socket
     }
     remoteStreamRef.current = null;
     candidateQueueRef.current = [];
+    setRemoteStreamReady(false);
     setActiveCall(null);
     setIncomingCallData(null);
   };
@@ -1525,96 +1545,100 @@ const MessengerPage = ({ onBack, activeChatPartner, setActiveChatPartner, socket
           </div>
         )}
 
-        {/* Ongoing Call Simulator */}
+        {/* ─────── Ongoing Call Screen ─────── */}
         {activeCall === 'ongoing' && (
-          <div className="fixed inset-0 z-[100] bg-slate-950/98 backdrop-blur-lg flex flex-col items-center justify-between py-20 px-6 text-white animate-fade-in">
-            <div className="flex flex-col items-center gap-1 mt-12">
-              <span className="text-emerald-500 font-black tracking-widest text-xs uppercase animate-pulse">
-                Zenivio Call Connected
-              </span>
-              <h2 className="text-3xl font-black mt-4">{activePartner?.name}</h2>
-              <p className="text-emerald-400 text-xs font-bold mt-1">Ongoing call: {formatDuration(callDuration)}</p>
-            </div>
+          <div className="fixed inset-0 z-[100] bg-black text-white animate-fade-in" style={{ fontFamily: 'inherit' }}>
 
-            <div className="w-44 h-44 rounded-3xl bg-slate-900 border border-slate-800 shadow-2xl overflow-hidden relative">
-              {callTypeRef.current === 'video' ? (
-                <video 
-                  id="remoteVideo" 
-                  autoPlay 
-                  playsInline 
-                  ref={(el) => {
-                    if (el && remoteStreamRef.current) {
-                      el.srcObject = remoteStreamRef.current;
-                      el.muted = false;
-                      el.volume = 1.0;
-                      el.play().catch(e => console.error('Error playing remote video from ref:', e));
-                    }
-                  }}
-                  className="w-full h-full object-cover"
+            {/* ── VIDEO CALL LAYOUT ── */}
+            {callTypeRef.current === 'video' ? (
+              <>
+                {/* Remote video — full screen background */}
+                <video
+                  id="remoteVideo"
+                  ref={remoteVideoRef}
+                  autoPlay
+                  playsInline
+                  className="absolute inset-0 w-full h-full object-cover bg-black"
+                  style={{ zIndex: 1 }}
                 />
-              ) : (
-                <>
-                  <audio 
-                    id="remoteAudio" 
+                {/* Fallback overlay if no video yet */}
+                {!remoteStreamReady && (
+                  <div className="absolute inset-0 flex flex-col items-center justify-center bg-slate-950" style={{ zIndex: 2 }}>
+                    <div className="w-28 h-28 rounded-full bg-gradient-to-tr from-indigo-600 to-purple-600 flex items-center justify-center mb-4 shadow-2xl overflow-hidden">
+                      {activePartner?.profilePic
+                        ? <img src={getProfilePicUrl(activePartner.profilePic)} className="w-full h-full object-cover" alt="partner" />
+                        : <UserIcon className="w-14 h-14 text-white" />}
+                    </div>
+                    <p className="text-white font-bold text-lg">{activePartner?.name}</p>
+                    <p className="text-emerald-400 text-xs mt-1 animate-pulse">Connecting video...</p>
+                  </div>
+                )}
+
+                {/* Top info bar */}
+                <div className="absolute top-0 left-0 right-0 flex flex-col items-center pt-12 pb-6" style={{ zIndex: 10, background: 'linear-gradient(to bottom, rgba(0,0,0,0.7) 0%, transparent 100%)' }}>
+                  <p className="text-white font-black text-xl">{activePartner?.name}</p>
+                  <p className="text-emerald-400 text-xs font-bold mt-1">{formatDuration(callDuration)}</p>
+                </div>
+
+                {/* Local video — small corner overlay (bottom-right) */}
+                <div className="absolute bottom-28 right-4 w-28 h-40 rounded-2xl overflow-hidden border-2 border-white/30 shadow-xl bg-slate-900" style={{ zIndex: 10 }}>
+                  <video
+                    id="localVideo"
+                    ref={localVideoRef}
                     autoPlay
                     playsInline
-                    ref={(el) => {
-                      if (el) {
-                        el.volume = 1.0;
-                        if (remoteStreamRef.current) {
-                          el.srcObject = remoteStreamRef.current;
-                          el.muted = false;
-                          const p = el.play();
-                          if (p) p.catch(() => {
-                            el.muted = true;
-                            el.play().then(() => { el.muted = false; }).catch(() => {});
-                          });
-                        }
-                      }
-                    }}
-                  />
-                  {activePartner?.profilePic ? (
-                    <img
-                      src={getProfilePicUrl(activePartner.profilePic)}
-                      alt="ongoing"
-                      className="w-full h-full object-cover"
-                    />
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center bg-indigo-950/40 text-indigo-400">
-                      <UserIcon className="w-16 h-16" />
-                    </div>
-                  )}
-                </>
-              )}
-              {/* Self view preview inset (matches professional videocall mock) */}
-              <div className="absolute bottom-2 right-2 w-14 h-20 bg-slate-800 border border-slate-700 rounded-lg overflow-hidden shadow-md">
-                {callTypeRef.current === 'video' ? (
-                  <video 
-                    id="localVideo" 
-                    autoPlay 
-                    playsInline 
-                    muted 
-                    ref={(el) => {
-                      if (el && localStreamRef.current) {
-                        el.srcObject = localStreamRef.current;
-                      }
-                    }}
+                    muted
                     className="w-full h-full object-cover"
                   />
-                ) : currentUser?.profilePic ? (
-                  <img src={getProfilePicUrl(currentUser.profilePic)} alt="self" className="w-full h-full object-cover" />
-                ) : (
-                  <div className="w-full h-full bg-slate-700 flex items-center justify-center"><UserIcon className="w-4 h-4 text-slate-400" /></div>
-                )}
-              </div>
-            </div>
+                </div>
 
-            <button 
-              onClick={handleEndCall}
-              className="w-16 h-16 bg-rose-500 hover:bg-rose-600 active:scale-95 transition-all rounded-full flex items-center justify-center shadow-lg shadow-rose-500/45"
-            >
-              <PhoneOff className="w-7 h-7 text-white" />
-            </button>
+                {/* Bottom controls */}
+                <div className="absolute bottom-0 left-0 right-0 flex items-center justify-center pb-10 gap-8" style={{ zIndex: 10, background: 'linear-gradient(to top, rgba(0,0,0,0.8) 0%, transparent 100%)' }}>
+                  <button
+                    onClick={handleEndCall}
+                    className="w-16 h-16 bg-rose-500 hover:bg-rose-600 active:scale-95 transition-all rounded-full flex items-center justify-center shadow-lg shadow-rose-500/50"
+                  >
+                    <PhoneOff className="w-7 h-7 text-white" />
+                  </button>
+                </div>
+              </>
+            ) : (
+              /* ── AUDIO CALL LAYOUT ── */
+              <div className="flex flex-col items-center justify-between w-full h-full bg-gradient-to-b from-slate-900 to-slate-950 py-20 px-6">
+                {/* Hidden audio element for remote stream */}
+                <audio
+                  id="remoteAudio"
+                  ref={remoteAudioRef}
+                  autoPlay
+                  playsInline
+                  style={{ display: 'none' }}
+                />
+
+                <div className="flex flex-col items-center gap-1 mt-8">
+                  <span className="text-emerald-500 font-black tracking-widest text-xs uppercase animate-pulse">Connected</span>
+                  <h2 className="text-3xl font-black mt-3 text-white">{activePartner?.name}</h2>
+                  <p className="text-emerald-400 text-sm font-bold mt-1">{formatDuration(callDuration)}</p>
+                </div>
+
+                <div className="relative">
+                  <div className="absolute inset-0 rounded-full bg-emerald-500/20 scale-125 animate-ping" style={{ animationDuration: '2.5s' }} />
+                  <div className="absolute inset-0 rounded-full bg-emerald-500/10 scale-150 animate-pulse" />
+                  <div className="w-36 h-36 rounded-full bg-gradient-to-tr from-indigo-600 to-purple-600 flex items-center justify-center relative border-4 border-indigo-400/30 shadow-2xl overflow-hidden">
+                    {activePartner?.profilePic
+                      ? <img src={getProfilePicUrl(activePartner.profilePic)} className="w-full h-full object-cover" alt="partner" />
+                      : <UserIcon className="w-16 h-16 text-white" />}
+                  </div>
+                </div>
+
+                <button
+                  onClick={handleEndCall}
+                  className="w-18 h-18 bg-rose-500 hover:bg-rose-600 active:scale-95 transition-all rounded-full flex items-center justify-center shadow-xl shadow-rose-500/40 mb-4"
+                  style={{ width: '4.5rem', height: '4.5rem' }}
+                >
+                  <PhoneOff className="w-7 h-7 text-white" />
+                </button>
+              </div>
+            )}
           </div>
         )}
 
