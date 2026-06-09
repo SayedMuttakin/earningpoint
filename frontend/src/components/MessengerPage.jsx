@@ -30,11 +30,11 @@ const formatRelativeTime = (timeStr) => {
 };
 
 const MessengerPage = ({ onBack, activeChatPartner, setActiveChatPartner, socket, onlineUsers, incomingCallData, setIncomingCallData }) => {
-  // ────────────────── STATE HOOKS ──────────────────
+  // ────────────────── ALL STATE HOOKS ──────────────────
   const [currentUser, setCurrentUser] = useState(null);
-  const [chatUsers, setChatUsers] = useState([]); // Consolidated Direct Chats + Groups
+  const [chatUsers, setChatUsers] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
-  const [activePartner, setActivePartner] = useState(null); // Selected user or group object
+  const [activePartner, setActivePartner] = useState(null);
   const [favorites, setFavorites] = useState(() => {
     const saved = localStorage.getItem('messenger_favorites');
     return saved ? JSON.parse(saved) : [];
@@ -48,12 +48,48 @@ const MessengerPage = ({ onBack, activeChatPartner, setActiveChatPartner, socket
   const [loadingUsers, setLoadingUsers] = useState(true);
   const [loadingChat, setLoadingChat] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
-  const [activeCall, setActiveCall] = useState(null); // 'audio' | 'video' | null
+  const [activeCall, setActiveCall] = useState(null);
   const [expandedMessageId, setExpandedMessageId] = useState(null);
   const [callDuration, setCallDuration] = useState(0);
+  // Status Notes State
+  const [notes, setNotes] = useState([]);
+  const [showNoteModal, setShowNoteModal] = useState(false);
+  const [noteInput, setNoteInput] = useState('');
+  // Group Creation State
+  const [showCreateGroupModal, setShowCreateGroupModal] = useState(false);
+  const [groupNameInput, setGroupNameInput] = useState('');
+  const [selectedGroupMembers, setSelectedGroupMembers] = useState([]);
+  const [groupSearchQuery, setGroupSearchQuery] = useState('');
 
   const socketConnected = !!socket;
   const connectionError = !socket;
+
+  // ────────────────── ALL REF HOOKS ──────────────────
+  const messagesEndRef = useRef(null);
+  const typingTimeoutRef = useRef(null);
+  const audioContextRef = useRef(null);
+  const ringIntervalRef = useRef(null);
+  // WebRTC Call Refs
+  const peerConnectionRef = useRef(null);
+  const localStreamRef = useRef(null);
+  const remoteStreamRef = useRef(null);
+  const callTypeRef = useRef('audio');
+  const candidateQueueRef = useRef([]);
+  const remoteVideoRef = useRef(null);
+  const remoteAudioRef = useRef(null);
+  const localVideoRef = useRef(null);
+  // Stable refs for async callbacks
+  const activeCallRef = useRef(activeCall);
+  const activePartnerRef = useRef(activePartner);
+  const incomingCallDataRef = useRef(incomingCallData);
+  // remoteStreamReady toggles to trigger useEffect stream attachment
+  const [remoteStreamReady, setRemoteStreamReady] = useState(false);
+
+  // ────────────────── USE EFFECTS ──────────────────
+  // Keep stable refs in sync
+  useEffect(() => { activeCallRef.current = activeCall; }, [activeCall]);
+  useEffect(() => { activePartnerRef.current = activePartner; }, [activePartner]);
+  useEffect(() => { incomingCallDataRef.current = incomingCallData; }, [incomingCallData]);
 
   // Manage Call Duration Timer
   useEffect(() => {
@@ -83,11 +119,12 @@ const MessengerPage = ({ onBack, activeChatPartner, setActiveChatPartner, socket
       stopRingtone();
     }
     return () => stopRingtone();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [incomingCallData]);
 
   // Attach remote stream to video/audio element whenever stream is ready
   useEffect(() => {
-    if (!remoteStreamReady || !remoteStreamRef.current) return;
+    if (!remoteStreamRef.current) return;
     const stream = remoteStreamRef.current;
     const tryAttach = () => {
       if (callTypeRef.current === 'video') {
@@ -117,7 +154,7 @@ const MessengerPage = ({ onBack, activeChatPartner, setActiveChatPartner, socket
     return () => { clearTimeout(t1); clearTimeout(t2); };
   }, [remoteStreamReady, activeCall]);
 
-  // Also attach local stream to local video element
+  // Attach local stream to local video element when call is ongoing
   useEffect(() => {
     if (activeCall === 'ongoing' && callTypeRef.current === 'video' && localStreamRef.current) {
       const el = localVideoRef.current || document.getElementById('localVideo');
@@ -128,42 +165,6 @@ const MessengerPage = ({ onBack, activeChatPartner, setActiveChatPartner, socket
       }
     }
   }, [activeCall]);
-
-  // Status Notes State
-  const [notes, setNotes] = useState([]);
-  const [showNoteModal, setShowNoteModal] = useState(false);
-  const [noteInput, setNoteInput] = useState('');
-
-  // Group Creation State
-  const [showCreateGroupModal, setShowCreateGroupModal] = useState(false);
-  const [groupNameInput, setGroupNameInput] = useState('');
-  const [selectedGroupMembers, setSelectedGroupMembers] = useState([]);
-  const [groupSearchQuery, setGroupSearchQuery] = useState('');
-
-  const messagesEndRef = useRef(null);
-  const typingTimeoutRef = useRef(null);
-  const audioContextRef = useRef(null);
-  const ringIntervalRef = useRef(null);
-
-  // WebRTC Call Refs & State trackers
-  const peerConnectionRef = useRef(null);
-  const localStreamRef = useRef(null);
-  const remoteStreamRef = useRef(null);
-  const callTypeRef = useRef('audio');
-  const candidateQueueRef = useRef([]);
-  const remoteVideoRef = useRef(null);
-  const remoteAudioRef = useRef(null);
-  const localVideoRef = useRef(null);
-  const [remoteStreamReady, setRemoteStreamReady] = useState(false);
-
-  const activeCallRef = useRef(activeCall);
-  useEffect(() => { activeCallRef.current = activeCall; }, [activeCall]);
-
-  const activePartnerRef = useRef(activePartner);
-  useEffect(() => { activePartnerRef.current = activePartner; }, [activePartner]);
-
-  const incomingCallDataRef = useRef(incomingCallData);
-  useEffect(() => { incomingCallDataRef.current = incomingCallData; }, [incomingCallData]);
 
   // Auto-scroll to bottom
   const scrollToBottom = () => {
