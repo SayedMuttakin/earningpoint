@@ -349,12 +349,8 @@ const MessengerPage = ({ onBack, activeChatPartner, setActiveChatPartner, socket
       }
     });
 
-    // Calling Listeners
-    socket.on('incoming_call', (data) => {
-      setIncomingCallData({ ...data, isGroup: false });
-      startRingtone();
-    });
-
+    // Calling Listeners — incoming_call is handled in App.jsx for global scope
+    // Only handle incoming_group_call here if not already handled in App.jsx
     socket.on('incoming_group_call', (data) => {
       setIncomingCallData({ ...data, isGroup: true });
       startRingtone();
@@ -362,7 +358,8 @@ const MessengerPage = ({ onBack, activeChatPartner, setActiveChatPartner, socket
 
     socket.on('call_declined', () => {
       cleanUpCall();
-      alert('Call declined.');
+      // Don't use alert - just clean up silently or show toast
+      console.log('Call was declined.');
     });
 
     socket.on('call_accepted', async (data) => {
@@ -374,12 +371,14 @@ const MessengerPage = ({ onBack, activeChatPartner, setActiveChatPartner, socket
       if (!partner) return;
 
       try {
+        const myId = currentUser?._id;
         const stream = await startLocalStream(callType);
-        const pc = createPeerConnection(partner._id, stream);
+        const pc = createPeerConnection(partner._id, stream, myId);
         const offer = await pc.createOffer();
         await pc.setLocalDescription(offer);
         socket.emit('webrtc_signal', {
           targetId: partner._id,
+          senderId: myId,
           signal: { type: 'offer', sdp: offer.sdp }
         });
       } catch (err) {
@@ -390,12 +389,13 @@ const MessengerPage = ({ onBack, activeChatPartner, setActiveChatPartner, socket
 
     socket.on('call_ended', () => {
       cleanUpCall();
-      alert('Call ended.');
+      console.log('Call ended.');
     });
 
     socket.on('webrtc_signal', async (data) => {
       const { senderId, signal } = data;
       let pc = peerConnectionRef.current;
+      const myId = currentUser?._id;
       
       try {
         if (signal.type === 'offer') {
@@ -410,6 +410,7 @@ const MessengerPage = ({ onBack, activeChatPartner, setActiveChatPartner, socket
           await pc.setLocalDescription(answer);
           socket.emit('webrtc_signal', {
             targetId: senderId,
+            senderId: myId,
             signal: { type: 'answer', sdp: answer.sdp }
           });
           
@@ -792,12 +793,12 @@ const MessengerPage = ({ onBack, activeChatPartner, setActiveChatPartner, socket
     }
   };
 
-  const createPeerConnection = (targetId, stream) => {
+  const createPeerConnection = (targetId, stream, myId) => {
     const pc = new RTCPeerConnection({
       iceServers: [
         { urls: 'stun:stun.l.google.com:19302' },
         { urls: 'stun:stun1.l.google.com:19302' },
-        { urls: 'stun:openrelay.metered.ca:80' },
+        { urls: 'stun:stun2.l.google.com:19302' },
         {
           urls: [
             'turn:openrelay.metered.ca:80',
@@ -807,7 +808,8 @@ const MessengerPage = ({ onBack, activeChatPartner, setActiveChatPartner, socket
           username: 'openrelayproject',
           credential: 'openrelayproject'
         }
-      ]
+      ],
+      iceCandidatePoolSize: 10
     });
     
     peerConnectionRef.current = pc;
@@ -817,15 +819,25 @@ const MessengerPage = ({ onBack, activeChatPartner, setActiveChatPartner, socket
       pc.addTrack(track, stream);
     });
     
-    // Handle ICE candidates
+    // Handle ICE candidates — include our own userId as senderId
     pc.onicecandidate = (event) => {
       if (event.candidate && socket) {
         socket.emit('webrtc_signal', {
           targetId,
+          senderId: myId || currentUser?._id,
           signal: { type: 'candidate', candidate: event.candidate }
         });
       }
     };
+
+    // Log connection state for debugging
+    pc.onconnectionstatechange = () => {
+      console.log('WebRTC connection state:', pc.connectionState);
+    };
+    pc.oniceconnectionstatechange = () => {
+      console.log('ICE connection state:', pc.iceConnectionState);
+    };
+
     // Handle remote stream
     pc.ontrack = (event) => {
       const remoteStream = event.streams[0];
@@ -836,6 +848,7 @@ const MessengerPage = ({ onBack, activeChatPartner, setActiveChatPartner, socket
     };
     
     return pc;
+
   };
 
   const cleanUpCall = () => {

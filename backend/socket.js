@@ -319,9 +319,11 @@ module.exports = {
       });
 
       socket.on('webrtc_signal', (data) => {
-        const { targetId, signal } = data;
+        const { targetId, senderId, signal } = data;
         if (targetId) {
-          io.to(targetId.toString()).emit('webrtc_signal', { senderId: socket.userId, signal });
+          // Use senderId from data (reliable) or fallback to socket.userId
+          const resolvedSenderId = senderId || socket.userId;
+          io.to(targetId.toString()).emit('webrtc_signal', { senderId: resolvedSenderId, signal });
         }
       });
 
