@@ -665,6 +665,19 @@ const MessengerPage = ({ onBack, activeChatPartner, setActiveChatPartner, socket
   };
 
   // ────────────────── CALLING SIMULATION SOUNDS ──────────────────
+  const stopRingtone = () => {
+    if (ringIntervalRef.current) {
+      clearInterval(ringIntervalRef.current);
+      ringIntervalRef.current = null;
+    }
+    if (audioContextRef.current) {
+      try {
+        audioContextRef.current.close();
+      } catch (e) {}
+      audioContextRef.current = null;
+    }
+  };
+
   const startRingtone = () => {
     // Stop any existing ringtone first
     stopRingtone();
@@ -707,19 +720,6 @@ const MessengerPage = ({ onBack, activeChatPartner, setActiveChatPartner, socket
       ringIntervalRef.current = setInterval(playRing, 3000);
     } catch (e) {
       console.error('Failed to play synthetic ringtone:', e);
-    }
-  };
-
-  const stopRingtone = () => {
-    if (ringIntervalRef.current) {
-      clearInterval(ringIntervalRef.current);
-      ringIntervalRef.current = null;
-    }
-    if (audioContextRef.current) {
-      try {
-        audioContextRef.current.close();
-      } catch (e) {}
-      audioContextRef.current = null;
     }
   };
 
