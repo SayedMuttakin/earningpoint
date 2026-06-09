@@ -350,9 +350,11 @@ const MessengerPage = ({ onBack, activeChatPartner, setActiveChatPartner, socket
       
       try {
         if (signal.type === 'offer') {
-          const callType = incomingCallDataRef.current?.type || 'audio';
+          const callType = incomingCallDataRef.current?.type || callTypeRef.current || 'audio';
           callTypeRef.current = callType;
-          const stream = await startLocalStream(callType);
+          // Reuse already-started stream if available (from handleAnswerCall), else get new one
+          const stream = localStreamRef.current || await startLocalStream(callType);
+          if (!localStreamRef.current) localStreamRef.current = stream;
           pc = createPeerConnection(senderId, stream);
           await pc.setRemoteDescription(new RTCSessionDescription(signal));
           const answer = await pc.createAnswer();
@@ -616,13 +618,21 @@ const MessengerPage = ({ onBack, activeChatPartner, setActiveChatPartner, socket
 
   // ────────────────── CALLING SIMULATION SOUNDS ──────────────────
   const startRingtone = () => {
+    // Stop any existing ringtone first
+    stopRingtone();
     try {
       const AudioContext = window.AudioContext || window.webkitAudioContext;
       if (!AudioContext) return;
       const ctx = new AudioContext();
       audioContextRef.current = ctx;
 
+      // Resume context if suspended (browser autoplay policy)
+      if (ctx.state === 'suspended') {
+        ctx.resume();
+      }
+
       const playRing = () => {
+        if (!audioContextRef.current) return;
         const osc1 = ctx.createOscillator();
         const osc2 = ctx.createOscillator();
         const gainNode = ctx.createGain();
@@ -635,19 +645,14 @@ const MessengerPage = ({ onBack, activeChatPartner, setActiveChatPartner, socket
         gainNode.connect(ctx.destination);
 
         gainNode.gain.setValueAtTime(0, ctx.currentTime);
-        gainNode.gain.linearRampToValueAtTime(0.12, ctx.currentTime + 0.1);
-        gainNode.gain.setValueAtTime(0.12, ctx.currentTime + 1.8);
+        gainNode.gain.linearRampToValueAtTime(0.15, ctx.currentTime + 0.1);
+        gainNode.gain.setValueAtTime(0.15, ctx.currentTime + 1.8);
         gainNode.gain.linearRampToValueAtTime(0, ctx.currentTime + 2.0);
 
-        osc1.start();
-        osc2.start();
-
-        setTimeout(() => {
-          try {
-            osc1.stop();
-            osc2.stop();
-          } catch (e) {}
-        }, 2200);
+        osc1.start(ctx.currentTime);
+        osc2.start(ctx.currentTime);
+        osc1.stop(ctx.currentTime + 2.1);
+        osc2.stop(ctx.currentTime + 2.1);
       };
 
       playRing();
@@ -705,6 +710,11 @@ const MessengerPage = ({ onBack, activeChatPartner, setActiveChatPartner, socket
   };
 
   const startLocalStream = async (type) => {
+    // If stream already exists, stop old tracks first
+    if (localStreamRef.current) {
+      try { localStreamRef.current.getTracks().forEach(t => t.stop()); } catch(e) {}
+      localStreamRef.current = null;
+    }
     try {
       const constraints = {
         audio: true,
@@ -713,13 +723,17 @@ const MessengerPage = ({ onBack, activeChatPartner, setActiveChatPartner, socket
       const stream = await navigator.mediaDevices.getUserMedia(constraints);
       localStreamRef.current = stream;
       
-      // If we have a local video element, set its srcObject
-      setTimeout(() => {
-        const localVideo = document.getElementById('localVideo');
-        if (localVideo) {
-          localVideo.srcObject = stream;
-        }
-      }, 500);
+      // Attach to local video element if video call
+      if (type === 'video') {
+        setTimeout(() => {
+          const localVideo = document.getElementById('localVideo');
+          if (localVideo) {
+            localVideo.srcObject = stream;
+            localVideo.muted = true;
+            localVideo.play().catch(e => console.error('Local video play error:', e));
+          }
+        }, 300);
+      }
       
       return stream;
     } catch (err) {
@@ -769,17 +783,36 @@ const MessengerPage = ({ onBack, activeChatPartner, setActiveChatPartner, socket
       const remoteStream = event.streams[0];
       remoteStreamRef.current = remoteStream;
       
-      setTimeout(() => {
+      const attachRemoteStream = () => {
         const remoteVideo = document.getElementById('remoteVideo');
         const remoteAudio = document.getElementById('remoteAudio');
         if (remoteVideo) {
           remoteVideo.srcObject = remoteStream;
+          remoteVideo.muted = false;
           remoteVideo.play().catch(e => console.error('Error playing remote video:', e));
         } else if (remoteAudio) {
           remoteAudio.srcObject = remoteStream;
-          remoteAudio.play().catch(e => console.error('Error playing remote audio:', e));
+          // Must unmute after user interaction (browser policy)
+          remoteAudio.muted = false;
+          remoteAudio.volume = 1.0;
+          const playPromise = remoteAudio.play();
+          if (playPromise !== undefined) {
+            playPromise.catch(err => {
+              console.warn('Autoplay blocked, trying muted first:', err);
+              // Fallback: play muted, then unmute
+              remoteAudio.muted = true;
+              remoteAudio.play().then(() => {
+                remoteAudio.muted = false;
+              }).catch(e2 => console.error('Audio play failed entirely:', e2));
+            });
+          }
         }
-      }, 500);
+      };
+
+      // Try immediately and also after a delay
+      attachRemoteStream();
+      setTimeout(attachRemoteStream, 500);
+      setTimeout(attachRemoteStream, 1500);
     };
     
     return pc;
@@ -858,11 +891,20 @@ const MessengerPage = ({ onBack, activeChatPartner, setActiveChatPartner, socket
     }, 30000);
   };
 
-  const handleAnswerCall = () => {
+  const handleAnswerCall = async () => {
     stopRingtone();
     const callerId = incomingCallDataRef.current?.callerId;
     const callType = incomingCallDataRef.current?.type || 'audio';
     callTypeRef.current = callType;
+    
+    // Pre-initialize local stream immediately on user gesture
+    // This is critical for browser audio/video permission and autoplay policy
+    try {
+      await startLocalStream(callType);
+    } catch (err) {
+      console.error('Could not start local stream on answer:', err);
+      // Don't block the call accept even if stream fails
+    }
     
     if (socket && callerId) {
       socket.emit('accept_call', { callerId, receiverId: currentUser?._id });
@@ -1503,6 +1545,8 @@ const MessengerPage = ({ onBack, activeChatPartner, setActiveChatPartner, socket
                   ref={(el) => {
                     if (el && remoteStreamRef.current) {
                       el.srcObject = remoteStreamRef.current;
+                      el.muted = false;
+                      el.volume = 1.0;
                       el.play().catch(e => console.error('Error playing remote video from ref:', e));
                     }
                   }}
@@ -1512,11 +1556,20 @@ const MessengerPage = ({ onBack, activeChatPartner, setActiveChatPartner, socket
                 <>
                   <audio 
                     id="remoteAudio" 
-                    autoPlay 
+                    autoPlay
+                    playsInline
                     ref={(el) => {
-                      if (el && remoteStreamRef.current) {
-                        el.srcObject = remoteStreamRef.current;
-                        el.play().catch(e => console.error('Error playing remote audio from ref:', e));
+                      if (el) {
+                        el.volume = 1.0;
+                        if (remoteStreamRef.current) {
+                          el.srcObject = remoteStreamRef.current;
+                          el.muted = false;
+                          const p = el.play();
+                          if (p) p.catch(() => {
+                            el.muted = true;
+                            el.play().then(() => { el.muted = false; }).catch(() => {});
+                          });
+                        }
                       }
                     }}
                   />
