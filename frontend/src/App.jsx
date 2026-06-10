@@ -46,18 +46,19 @@ const PageLoader = () => (
 
 
 function App() {
-  // Check if URL has a password reset token (from email link) or reelId (from shared link)
+  // Check if URL has a password reset token, reelId, or profileId
   const urlParams = new URLSearchParams(window.location.search);
   const resetToken = urlParams.get('token');
   const reelIdFromUrl = urlParams.get('reelId');
+  const profileIdFromUrl = urlParams.get('profileId');
   const [resetPasswordToken, setResetPasswordToken] = useState(resetToken || null);
 
   const [showSplash, setShowSplash] = useState(true);
   const [showOnboarding, setShowOnboarding] = useState(() => !localStorage.getItem('hasSeenOnboarding'));
   const [isLogin, setIsLogin] = useState(true);
   const [isAuthenticated, setIsAuthenticated] = useState(() => !!localStorage.getItem('token'));
-  const [activeTab, _setActiveTab] = useState(reelIdFromUrl ? 'Video' : 'Home');
-  const [navigationHistory, setNavigationHistory] = useState([reelIdFromUrl ? 'Video' : 'Home']);
+  const [activeTab, _setActiveTab] = useState(reelIdFromUrl ? 'Video' : (profileIdFromUrl ? 'PublicProfile' : 'Home'));
+  const [navigationHistory, setNavigationHistory] = useState([reelIdFromUrl ? 'Video' : (profileIdFromUrl ? 'PublicProfile' : 'Home')]);
 
   const setActiveTab = (tab) => {
     setNavigationHistory(prev => {
@@ -135,7 +136,7 @@ function App() {
   const [onlineUsers, setOnlineUsers] = useState([]);
   const [incomingCallData, setIncomingCallData] = useState(null);
   const [selectedNotificationPostId, setSelectedNotificationPostId] = useState(null);
-  const [activePublicProfileUserId, setActivePublicProfileUserId] = useState(null);
+  const [activePublicProfileUserId, setActivePublicProfileUserId] = useState(profileIdFromUrl || null);
   const [currentUser, setCurrentUser] = useState(null);
   const [initialSettingsSubMenu, setInitialSettingsSubMenu] = useState(null);
 

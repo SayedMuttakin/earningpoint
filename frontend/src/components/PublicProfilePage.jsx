@@ -621,13 +621,14 @@ const PublicProfilePage = ({ userId, onBack, currentUser, isOwnProfile, setActiv
             
             <button 
               onClick={() => {
+                const shareUrl = `${window.location.origin}${window.location.pathname}?profileId=${profile._id}`;
                 if (navigator.share) {
                   navigator.share({
                     title: `${profile.name}'s Profile`,
-                    url: window.location.href
+                    url: shareUrl
                   }).catch(console.error);
                 } else {
-                  navigator.clipboard.writeText(window.location.href);
+                  navigator.clipboard.writeText(shareUrl);
                   alert('Profile link copied to clipboard!');
                 }
               }}
