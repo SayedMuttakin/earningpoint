@@ -126,8 +126,12 @@ const formatRelativeTime = (timeStr) => {
 
 const MessengerPage = ({ onBack, activeChatPartner, setActiveChatPartner, socket, onlineUsers, incomingCallData, setIncomingCallData }) => {
   // ────────────────── ALL STATE HOOKS ──────────────────
-  const [currentUser, setCurrentUser] = useState(null);
-  const [chatUsers, setChatUsers] = useState([]);
+  const [currentUser, setCurrentUser] = useState(() => {
+    try { return JSON.parse(localStorage.getItem('cached_current_user')) || null; } catch { return null; }
+  });
+  const [chatUsers, setChatUsers] = useState(() => {
+    try { return JSON.parse(localStorage.getItem('cached_chat_users')) || []; } catch { return []; }
+  });
   const [searchQuery, setSearchQuery] = useState('');
   const [activePartner, setActivePartner] = useState(null);
   const [favorites, setFavorites] = useState(() => {
@@ -140,7 +144,7 @@ const MessengerPage = ({ onBack, activeChatPartner, setActiveChatPartner, socket
   const [messageInput, setMessageInput] = useState('');
   const [isPartnerTyping, setIsPartnerTyping] = useState(false);
   const [typingGroupMembers, setTypingGroupMembers] = useState([]);
-  const [loadingUsers, setLoadingUsers] = useState(true);
+  const [loadingUsers, setLoadingUsers] = useState(() => !localStorage.getItem('cached_chat_users'));
   const [loadingChat, setLoadingChat] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const [activeCall, setActiveCall] = useState(null);
@@ -330,6 +334,7 @@ const MessengerPage = ({ onBack, activeChatPartner, setActiveChatPartner, socket
       if (profileRes.ok) {
         const pData = await profileRes.json();
         setCurrentUser(pData);
+        try { localStorage.setItem('cached_current_user', JSON.stringify(pData)); } catch {}
       }
 
       const usersRes = await fetch(`${API_BASE}/api/messages/users`, {
@@ -338,6 +343,7 @@ const MessengerPage = ({ onBack, activeChatPartner, setActiveChatPartner, socket
       if (usersRes.ok) {
         const uData = await usersRes.json();
         setChatUsers(uData);
+        try { localStorage.setItem('cached_chat_users', JSON.stringify(uData)); } catch {}
       }
     } catch (err) {
       console.error('Failed to fetch Messenger data:', err);

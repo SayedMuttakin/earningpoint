@@ -334,7 +334,8 @@ function App() {
           navigateToSettingsSubMenu={navigateToSettingsSubMenu}
         />
         <Suspense fallback={<PageLoader />}>
-          {activeTab === 'Home' && (
+          {/* HomePage is always mounted but hidden when not active — prevents re-fetching on every tab switch */}
+          <div style={{ display: activeTab === 'Home' ? 'block' : 'none' }}>
             <HomePage 
               onBuyNow={handleBuyNow} 
               setActiveTab={setActiveTab} 
@@ -348,7 +349,7 @@ function App() {
                 setActiveTab('PublicProfile');
               }}
             />
-          )}
+          </div>
           {activeTab === 'Video' && (
             <VideoReelsPage selectedReelId={selectedReelId} onBack={() => handleBackNavigation()} />
           )}
@@ -424,7 +425,8 @@ function App() {
           )}
           
           {activeTab === 'Support' && <SupportPage onBack={() => handleBackNavigation()} />}
-          {activeTab === 'Messenger' && (
+          {/* MessengerPage is always mounted but hidden when not active — keeps socket alive and chat list cached */}
+          <div style={{ display: activeTab === 'Messenger' ? 'block' : 'none' }}>
             <MessengerPage 
               onBack={() => {
                 setActiveChatPartner(null);
@@ -437,7 +439,7 @@ function App() {
               incomingCallData={incomingCallData}
               setIncomingCallData={setIncomingCallData}
             />
-          )}
+          </div>
           {activeTab === 'Updates' && (
             <UpdatesPage 
               onBack={() => {

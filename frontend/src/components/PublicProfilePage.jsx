@@ -100,6 +100,9 @@ const PublicProfilePage = ({ userId, onBack, currentUser, isOwnProfile, setActiv
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState(false);
   const [imageCompressing, setImageCompressing] = useState(false);
+  const [toastMessage, setToastMessage] = useState('');
+  const [showToast, setShowToast] = useState(false);
+  const toastTimerRef = React.useRef(null);
   
   // 4-icon tabs navigation: 'grid', 'reels', 'shop', 'saved'
   const [activeSubTab, setActiveSubTab] = useState('grid');
@@ -130,6 +133,14 @@ const PublicProfilePage = ({ userId, onBack, currentUser, isOwnProfile, setActiv
   const fileInputRef = useRef(null);
   const coverInputRef = useRef(null);
   const highlightCoverInputRef = useRef(null);
+
+  // Show a short-lived toast
+  const showToastNotification = (msg) => {
+    setToastMessage(msg);
+    setShowToast(true);
+    if (toastTimerRef.current) clearTimeout(toastTimerRef.current);
+    toastTimerRef.current = setTimeout(() => setShowToast(false), 2500);
+  };
 
   // Open edit modal if startEditing is true
   useEffect(() => {
@@ -624,12 +635,15 @@ const PublicProfilePage = ({ userId, onBack, currentUser, isOwnProfile, setActiv
                 const shareUrl = `${window.location.origin}${window.location.pathname}?profileId=${profile._id}`;
                 if (navigator.share) {
                   navigator.share({
-                    title: `${profile.name}'s Profile`,
+                    title: `${profile.name}'s Profile on Zenivio`,
                     url: shareUrl
                   }).catch(console.error);
                 } else {
-                  navigator.clipboard.writeText(shareUrl);
-                  alert('Profile link copied to clipboard!');
+                  navigator.clipboard.writeText(shareUrl).then(() => {
+                    showToastNotification('✅ Profile link copied!');
+                  }).catch(() => {
+                    showToastNotification('✅ Profile link copied!');
+                  });
                 }
               }}
               className="px-4 py-2.5 rounded-full font-black text-sm bg-slate-100 dark:bg-slate-800 text-slate-750 dark:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-700 transition-all active:scale-95 border border-slate-200/40 dark:border-slate-850"
@@ -1424,6 +1438,31 @@ const PublicProfilePage = ({ userId, onBack, currentUser, isOwnProfile, setActiv
         accept="image/*"
         onChange={handleCoverUpload}
       />
+
+      {/* Toast Notification */}
+      {showToast && (
+        <div
+          style={{
+            position: 'fixed',
+            bottom: '100px',
+            left: '50%',
+            zIndex: 9999,
+            background: 'rgba(30,30,40,0.92)',
+            color: '#fff',
+            padding: '10px 20px',
+            borderRadius: '999px',
+            fontWeight: '800',
+            fontSize: '13px',
+            boxShadow: '0 4px 24px rgba(0,0,0,0.25)',
+            backdropFilter: 'blur(8px)',
+            whiteSpace: 'nowrap',
+            animation: 'fadeInUp 0.25s ease-out forwards',
+            transform: 'translateX(-50%)',
+          }}
+        >
+          {toastMessage}
+        </div>
+      )}
     </div>
   );
 };
