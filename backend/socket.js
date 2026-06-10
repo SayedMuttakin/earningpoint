@@ -203,13 +203,14 @@ module.exports = {
       // Send direct message
       socket.on('send_direct_message', async (data) => {
         try {
-          const { senderId, receiverId, content } = data;
+          const { senderId, receiverId, content, messageType } = data;
           if (!senderId || !receiverId || !content) return;
 
           const savedMessage = await Message.create({
             sender: senderId,
             receiver: receiverId,
-            content: content
+            content: content,
+            messageType: messageType || 'text'
           });
 
           // Broadcast to receiver
@@ -262,13 +263,14 @@ module.exports = {
       // Send group message
       socket.on('send_group_message', async (data) => {
         try {
-          const { senderId, groupId, content } = data;
+          const { senderId, groupId, content, messageType } = data;
           if (!senderId || !groupId || !content) return;
 
           const savedMessage = await Message.create({
             sender: senderId,
             group: groupId,
-            content: content
+            content: content,
+            messageType: messageType || 'text'
           });
 
           const populatedMessage = await Message.findById(savedMessage._id)

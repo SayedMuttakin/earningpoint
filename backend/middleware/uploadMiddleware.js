@@ -22,17 +22,18 @@ const storage = multer.diskStorage({
   }
 });
 
-// File filter to allow images and videos
+// File filter to allow images, videos, and audio (voice messages)
 const fileFilter = (req, file, cb) => {
-  const allowedExts = /jpeg|jpg|png|gif|webp|mp4|webm|ogg|mov/;
-  const allowedMimes = /image\/(jpeg|jpg|png|gif|webp)|video\/(mp4|webm|ogg|quicktime|mov)/;
+  const allowedExts = /jpeg|jpg|png|gif|webp|mp4|webm|ogg|mov|wav|mp3|m4a|aac|opus|3gp|oga/;
   const extname = allowedExts.test(path.extname(file.originalname).toLowerCase());
-  const mimetype = allowedMimes.test(file.mimetype);
+  const mimetype = file.mimetype.startsWith('image/') || 
+                   file.mimetype.startsWith('video/') || 
+                   file.mimetype.startsWith('audio/');
 
-  if (mimetype && extname) {
+  if (mimetype || extname) {
     return cb(null, true);
   } else {
-    cb(new Error('Error: Images or Videos Only! (jpeg, jpg, png, gif, webp, mp4, webm, ogg, mov)'));
+    cb(new Error('Error: Images, Videos, or Audio Only!'));
   }
 };
 

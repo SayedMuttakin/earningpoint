@@ -8,12 +8,107 @@ import { io } from 'socket.io-client';
 import { API_BASE } from '../config';
 import PullToRefresh from './PullToRefresh';
 
+const EMOJIS = [
+  '😀', '😃', '😄', '😁', '😆', '😅', '😂', '🤣', '😊', '😇',
+  '🙂', '🙃', '😉', '😌', '😍', '🥰', '😘', '😗', '😙', '😚',
+  '😋', '😛', '😝', '😜', '🤪', '🤨', '🧐', '🤓', '😎', '🤩',
+  '🥳', '😏', '😒', '😞', '😔', '😟', '😕', '🙁', '☹️', '😣',
+  '😖', '😫', '😩', '🥺', '😢', '😭', '😤', '😠', '😡', '🤬',
+  '🤯', '😳', '🥵', '🥶', '😱', '😨', '😰', '😥', '😓', '🤗',
+  '🤔', '🤭', '🤫', '🤥', '😶', '😐', '😑', '😬', '🙄', '😯',
+  '😦', '😧', '😮', '😲', '🥱', '😴', '🤤', '😪', '😵', '🤐',
+  '🥴', '🤢', '🤮', '🤧', '😷', '🤒', '🤕', '🤑', '🤠', '😈',
+  '👿', '👹', '👺', '🤡', '💩', '👻', '💀', '☠️', '👽', '👾',
+  '🤖', '🎃', '😺', '😸', '😹', '😻', '😼', '😽', '🙀', '😿',
+  '😾', '👋', '🤚', '🖐️', '✋', '🖖', '👌', '🤏', '✌️', '🤞',
+  '🤟', '🤘', '🤙', '👈', '👉', '👆', '🖕', '👇', '☝️', '👍',
+  '👎', '✊', '👊', '🤛', '🤜', '👏', '🙌', '👐', '🤲', '🤝',
+  '🙏', '✍️', '💅', '🤳', '💪', '🦵', '🦶', '👂', '🦻', '👃',
+  '🧠', '🦷', '🦴', '👀', '👁️', '👅', '👄', '💋', '🩸', '❤️',
+  '🧡', '💛', '💚', '💙', '💜', '🖤', '🤍', '🤎', '💔', '❣️',
+  '💕', '💞', '💓', '💗', '💖', '💘', '💝', '💟', '🔥', '✨'
+];
+
 const getProfilePicUrl = (pic) => {
   if (!pic) return '';
   if (pic.startsWith('http') || pic.startsWith('/api') || pic.startsWith('data:')) {
     return pic;
   }
   return `${API_BASE}/api/image?file=${pic}`;
+};
+
+const AudioPlayer = ({ src }) => {
+  const audioRef = useRef(null);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [currentTime, setCurrentTime] = useState(0);
+  const [duration, setDuration] = useState(0);
+
+  const togglePlay = (e) => {
+    e.stopPropagation();
+    if (!audioRef.current) return;
+    if (isPlaying) {
+      audioRef.current.pause();
+    } else {
+      audioRef.current.play();
+    }
+  };
+
+  const onTimeUpdate = () => {
+    setCurrentTime(audioRef.current.currentTime);
+  };
+
+  const onLoadedMetadata = () => {
+    setDuration(audioRef.current.duration);
+  };
+
+  const onEnded = () => {
+    setIsPlaying(false);
+    setCurrentTime(0);
+  };
+
+  const formatAudioTime = (time) => {
+    if (isNaN(time)) return '0:00';
+    const mins = Math.floor(time / 60);
+    const secs = Math.floor(time % 60);
+    return `${mins}:${secs < 10 ? '0' : ''}${secs}`;
+  };
+
+  return (
+    <div className="flex items-center gap-3 bg-slate-100 dark:bg-slate-800/90 py-2 px-3 rounded-2xl w-60 text-slate-850 dark:text-slate-150 border border-slate-200/40 dark:border-slate-800/80 shadow-3xs" onClick={(e) => e.stopPropagation()}>
+      <audio 
+        ref={audioRef} 
+        src={src} 
+        onPlay={() => setIsPlaying(true)}
+        onPause={() => setIsPlaying(false)}
+        onTimeUpdate={onTimeUpdate}
+        onLoadedMetadata={onLoadedMetadata}
+        onEnded={onEnded}
+      />
+      <button 
+        type="button" 
+        onClick={togglePlay}
+        className="w-8 h-8 rounded-full bg-[#7C3AED] hover:bg-[#6D28D9] text-white flex items-center justify-center shrink-0 active:scale-90 transition-transform"
+      >
+        {isPlaying ? (
+          <svg className="w-3.5 h-3.5 fill-current" viewBox="0 0 24 24"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>
+        ) : (
+          <svg className="w-3.5 h-3.5 fill-current ml-0.5" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+        )}
+      </button>
+      <div className="flex-1 min-w-0">
+        <div className="h-1 bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden">
+          <div 
+            className="bg-[#7C3AED] h-full" 
+            style={{ width: `${duration ? (currentTime / duration) * 100 : 0}%` }}
+          />
+        </div>
+        <div className="flex justify-between text-[10px] text-slate-400 dark:text-slate-500 mt-1 font-bold">
+          <span>{formatAudioTime(currentTime)}</span>
+          <span>{formatAudioTime(duration)}</span>
+        </div>
+      </div>
+    </div>
+  );
 };
 
 const formatRelativeTime = (timeStr) => {
@@ -61,6 +156,12 @@ const MessengerPage = ({ onBack, activeChatPartner, setActiveChatPartner, socket
   const [selectedGroupMembers, setSelectedGroupMembers] = useState([]);
   const [groupSearchQuery, setGroupSearchQuery] = useState('');
 
+  // Rich Media State Hooks
+  const [isUploadingImage, setIsUploadingImage] = useState(false);
+  const [isRecording, setIsRecording] = useState(false);
+  const [recordingDuration, setRecordingDuration] = useState(0);
+  const [showEmojiPicker, setShowEmojiPicker] = useState(false);
+
   const socketConnected = !!socket;
   const connectionError = !socket;
 
@@ -78,6 +179,15 @@ const MessengerPage = ({ onBack, activeChatPartner, setActiveChatPartner, socket
   const remoteVideoRef = useRef(null);
   const remoteAudioRef = useRef(null);
   const localVideoRef = useRef(null);
+
+  // Rich Media Refs
+  const imageInputRef = useRef(null);
+  const mediaRecorderRef = useRef(null);
+  const audioChunksRef = useRef([]);
+  const recordingTimerRef = useRef(null);
+  const recordingStartTimeRef = useRef(0);
+  const emojiPickerRef = useRef(null);
+  const emojiButtonRef = useRef(null);
   // Stable refs for async callbacks
   const activeCallRef = useRef(activeCall);
   const activePartnerRef = useRef(activePartner);
@@ -484,6 +594,182 @@ const MessengerPage = ({ onBack, activeChatPartner, setActiveChatPartner, socket
     } finally {
       setLoadingChat(false);
     }
+  };
+
+  // Click outside emoji picker logic
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (
+        emojiPickerRef.current && 
+        !emojiPickerRef.current.contains(e.target) &&
+        emojiButtonRef.current &&
+        !emojiButtonRef.current.contains(e.target)
+      ) {
+        setShowEmojiPicker(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  // Cleanup recording timer on unmount
+  useEffect(() => {
+    return () => {
+      if (recordingTimerRef.current) {
+        clearInterval(recordingTimerRef.current);
+      }
+    };
+  }, []);
+
+  const sendMediaMessage = (fileUrl, type) => {
+    if (!socket || !activePartner || !currentUser) return;
+    
+    if (activePartner.isGroup) {
+      socket.emit('send_group_message', {
+        senderId: currentUser._id,
+        groupId: activePartner._id,
+        content: fileUrl,
+        messageType: type
+      });
+    } else {
+      socket.emit('send_direct_message', {
+        senderId: currentUser._id,
+        receiverId: activePartner._id,
+        content: fileUrl,
+        messageType: type
+      });
+    }
+  };
+
+  const handleImageUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    setIsUploadingImage(true);
+    const formData = new FormData();
+    formData.append('file', file);
+
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`${API_BASE}/api/messages/upload`, {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${token}`
+        },
+        body: formData
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to upload image');
+      }
+
+      const data = await response.json();
+      if (data.filename) {
+        sendMediaMessage(data.filename, 'image');
+      }
+    } catch (err) {
+      console.error('Failed to upload image:', err);
+    } finally {
+      setIsUploadingImage(false);
+      if (imageInputRef.current) {
+        imageInputRef.current.value = '';
+      }
+    }
+  };
+
+  const startVoiceRecording = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      audioChunksRef.current = [];
+      const mediaRecorder = new MediaRecorder(stream);
+      mediaRecorderRef.current = mediaRecorder;
+
+      mediaRecorder.ondataavailable = (event) => {
+        if (event.data && event.data.size > 0) {
+          audioChunksRef.current.push(event.data);
+        }
+      };
+
+      mediaRecorder.onstop = async () => {
+        stream.getTracks().forEach(track => track.stop());
+
+        const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
+        if (audioBlob.size === 0) return;
+
+        const duration = Math.round((Date.now() - recordingStartTimeRef.current) / 1000);
+        if (duration < 1) return;
+
+        const audioFile = new File([audioBlob], `voice_${Date.now()}.webm`, { type: 'audio/webm' });
+        const formData = new FormData();
+        formData.append('file', audioFile);
+
+        try {
+          const token = localStorage.getItem('token');
+          const response = await fetch(`${API_BASE}/api/messages/upload`, {
+            method: 'POST',
+            headers: {
+              Authorization: `Bearer ${token}`
+            },
+            body: formData
+          });
+
+          if (!response.ok) {
+            throw new Error('Failed to upload voice note');
+          }
+
+          const data = await response.json();
+          if (data.filename) {
+            sendMediaMessage(data.filename, 'voice');
+          }
+        } catch (err) {
+          console.error('Failed to upload voice note:', err);
+        }
+      };
+
+      recordingStartTimeRef.current = Date.now();
+      mediaRecorder.start(250);
+      setIsRecording(true);
+      setRecordingDuration(0);
+
+      recordingTimerRef.current = setInterval(() => {
+        setRecordingDuration(prev => prev + 1);
+      }, 1000);
+
+    } catch (err) {
+      console.error('Failed to access microphone:', err);
+      alert('Could not access microphone. Please verify permissions.');
+    }
+  };
+
+  const stopVoiceRecording = (shouldSend = true) => {
+    if (!mediaRecorderRef.current || mediaRecorderRef.current.state === 'inactive') return;
+
+    if (recordingTimerRef.current) {
+      clearInterval(recordingTimerRef.current);
+      recordingTimerRef.current = null;
+    }
+
+    if (!shouldSend) {
+      mediaRecorderRef.current.onstop = () => {
+        const stream = mediaRecorderRef.current.stream;
+        if (stream) {
+          stream.getTracks().forEach(track => track.stop());
+        }
+      };
+    }
+
+    mediaRecorderRef.current.stop();
+    setIsRecording(false);
+  };
+
+  const formatRecordTime = (secs) => {
+    const mins = Math.floor(secs / 60);
+    const remainingSecs = secs % 60;
+    return `${mins}:${remainingSecs < 10 ? '0' : ''}${remainingSecs}`;
+  };
+
+  const handleEmojiClick = (emoji) => {
+    setMessageInput(prev => prev + emoji);
   };
 
   const handleSendMessage = (e) => {
@@ -1247,24 +1533,6 @@ const MessengerPage = ({ onBack, activeChatPartner, setActiveChatPartner, socket
                   )}
                 </div>
               </div>
-
-              {/* Call Buttons in Chat Room Header */}
-              <div className="flex items-center gap-1">
-                <button 
-                  onClick={() => handleStartCall('audio')}
-                  className="p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-900 text-indigo-650 dark:text-indigo-400 active:scale-95 transition-all"
-                  title="Voice Call"
-                >
-                  <Phone className="w-5 h-5" strokeWidth={2.2} />
-                </button>
-                <button 
-                  onClick={() => handleStartCall('video')}
-                  className="p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-900 text-indigo-650 dark:text-indigo-400 active:scale-95 transition-all"
-                  title="Video Call"
-                >
-                  <Video className="w-5.5 h-5.5" strokeWidth={2.2} />
-                </button>
-              </div>
             </div>
 
             {/* Conversation Messages Scroll Body */}
@@ -1328,13 +1596,31 @@ const MessengerPage = ({ onBack, activeChatPartner, setActiveChatPartner, socket
                           {/* speech bubble */}
                           <div 
                             onClick={() => setExpandedMessageId(expandedMessageId === msg._id ? null : msg._id)}
-                            className={`py-2 px-3.5 rounded-2xl relative shadow-3xs cursor-pointer select-none transition-all active:scale-[0.99] ${
-                              isUser 
-                                ? 'bg-gradient-to-r from-[#7C3AED] to-[#5B21B6] text-white rounded-br-sm' 
-                                : 'bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200 rounded-bl-sm border border-slate-200/40 dark:border-slate-800/80 shadow-3xs'
+                            className={`rounded-2xl relative shadow-3xs cursor-pointer select-none transition-all active:scale-[0.99] ${
+                              msg.messageType === 'image' || msg.messageType === 'voice'
+                                ? 'bg-transparent overflow-hidden' 
+                                : isUser 
+                                  ? 'py-2 px-3.5 bg-gradient-to-r from-[#7C3AED] to-[#5B21B6] text-white rounded-br-sm' 
+                                  : 'py-2 px-3.5 bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200 rounded-bl-sm border border-slate-200/40 dark:border-slate-800/80 shadow-3xs'
                             }`}
                           >
-                            <p className="text-[14px] leading-snug break-words font-medium">{msg.content}</p>
+                            {msg.messageType === 'image' ? (
+                              <div className="max-w-xs rounded-2xl overflow-hidden border border-slate-200/40 dark:border-slate-800 shadow-md">
+                                <img 
+                                  src={getProfilePicUrl(msg.content)} 
+                                  alt="Shared image" 
+                                  className="max-h-60 object-cover cursor-pointer hover:opacity-90 transition-opacity"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    window.open(getProfilePicUrl(msg.content), '_blank');
+                                  }}
+                                />
+                              </div>
+                            ) : msg.messageType === 'voice' ? (
+                              <AudioPlayer src={getProfilePicUrl(msg.content)} />
+                            ) : (
+                              <p className="text-[14px] leading-snug break-words font-medium">{msg.content}</p>
+                            )}
                           </div>
 
                           {/* Timestamp show on click */}
@@ -1418,46 +1704,128 @@ const MessengerPage = ({ onBack, activeChatPartner, setActiveChatPartner, socket
             </div>
 
             {/* Bottom Input form panel */}
-            <div className="bg-white dark:bg-slate-950 border-t border-slate-200/60 dark:border-slate-900 p-3 shrink-0 pb-safe pb-4">
+            <div className="bg-white dark:bg-slate-950 border-t border-slate-200/60 dark:border-slate-900 p-3 shrink-0 pb-safe pb-4 relative">
+              {/* Custom Emoji Picker Popover */}
+              {showEmojiPicker && (
+                <div 
+                  ref={emojiPickerRef}
+                  className="absolute bottom-16 right-4 w-72 h-52 bg-white/95 dark:bg-slate-900/95 border border-slate-200 dark:border-slate-800 rounded-2xl p-2.5 shadow-2xl z-50 overflow-y-auto grid grid-cols-6 gap-1 scrollbar-thin select-none"
+                >
+                  {EMOJIS.map((emoji, index) => (
+                    <button
+                      key={index}
+                      type="button"
+                      onClick={() => handleEmojiClick(emoji)}
+                      className="text-2xl p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 active:scale-90 transition-all text-center flex items-center justify-center"
+                    >
+                      {emoji}
+                    </button>
+                  ))}
+                </div>
+              )}
+
+              {/* Hidden file input for image uploads */}
+              <input 
+                type="file"
+                ref={imageInputRef}
+                onChange={handleImageUpload}
+                accept="image/*"
+                className="hidden"
+              />
+
               <form onSubmit={handleSendMessage} className="flex items-center gap-2 max-w-4xl mx-auto">
-                <div className="flex items-center gap-1 text-slate-400 dark:text-slate-500">
-                  <button type="button" className="p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-900 hover:text-indigo-650 active:scale-95 transition-all" title="Share Image">
-                    <Image className="w-5 h-5" />
-                  </button>
-                  <button type="button" className="p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-900 hover:text-indigo-650 active:scale-95 transition-all" title="Record Voice">
-                    <Mic className="w-5 h-5" />
-                  </button>
-                </div>
-
-                <div className="flex-1 flex items-center bg-slate-100 dark:bg-slate-900 rounded-full px-4 py-0.5 border border-transparent focus-within:bg-white dark:focus-within:bg-slate-950 focus-within:border-slate-200 dark:focus-within:border-slate-800 transition-all duration-200 shadow-inner">
-                  <input
-                    type="text"
-                    value={messageInput}
-                    onChange={handleInputChange}
-                    placeholder="Type a message..."
-                    className="flex-1 bg-transparent border-none py-2.5 text-slate-800 dark:text-white placeholder-slate-400 focus:ring-0 outline-none text-[15px] font-medium"
-                  />
-                  <button type="button" className="p-1.5 text-slate-400 dark:text-slate-500 hover:text-[#7C3AED] transition-colors" title="Emojis">
-                    <Smile className="w-5.5 h-5.5" />
-                  </button>
-                </div>
-
-                {messageInput.trim() ? (
-                  <button
-                    type="submit"
-                    className="w-10 h-10 bg-[#7C3AED] hover:bg-[#6D28D9] active:scale-95 text-white rounded-full flex items-center justify-center shrink-0 transition-all shadow-sm"
-                  >
-                    <Send className="w-4.5 h-4.5" />
-                  </button>
+                {isRecording ? (
+                  // Recording UI
+                  <div className="flex-1 flex items-center justify-between bg-red-550/10 dark:bg-red-950/20 border border-red-200/50 dark:border-red-900/30 rounded-full px-4 py-2 transition-all duration-200">
+                    <div className="flex items-center gap-2">
+                      <span className="w-2.5 h-2.5 rounded-full bg-red-500 animate-pulse" />
+                      <span className="text-red-500 dark:text-red-400 text-sm font-black tracking-wider">
+                        Recording Voice: {formatRecordTime(recordingDuration)}
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <button 
+                        type="button" 
+                        onClick={() => stopVoiceRecording(false)}
+                        className="p-2 text-rose-500 hover:bg-rose-100 dark:hover:bg-rose-900/50 rounded-full transition-colors active:scale-95" 
+                        title="Cancel Recording"
+                      >
+                        <X className="w-5 h-5" />
+                      </button>
+                      <button 
+                        type="button" 
+                        onClick={() => stopVoiceRecording(true)}
+                        className="p-2 text-emerald-500 hover:bg-emerald-100 dark:hover:bg-emerald-900/50 rounded-full transition-colors active:scale-95" 
+                        title="Send Voice Note"
+                      >
+                        <Send className="w-5 h-5" />
+                      </button>
+                    </div>
+                  </div>
                 ) : (
-                  <button
-                    type="button"
-                    onClick={handleSendThumbsUp}
-                    className="w-10 h-10 hover:bg-slate-100 dark:hover:bg-slate-900 text-[#7C3AED] active:scale-90 rounded-full flex items-center justify-center shrink-0 transition-all"
-                    title="Send Like"
-                  >
-                    <ThumbsUp className="w-5 h-5 fill-[#7C3AED]" />
-                  </button>
+                  // Normal input UI
+                  <>
+                    <div className="flex items-center gap-1 text-slate-400 dark:text-slate-500">
+                      <button 
+                        type="button" 
+                        onClick={() => imageInputRef.current?.click()}
+                        disabled={isUploadingImage}
+                        className={`p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-900 hover:text-indigo-650 active:scale-95 transition-all ${isUploadingImage ? 'opacity-50 cursor-not-allowed' : ''}`} 
+                        title="Share Image"
+                      >
+                        {isUploadingImage ? (
+                          <Loader2 className="w-5 h-5 animate-spin text-indigo-600" />
+                        ) : (
+                          <Image className="w-5 h-5" />
+                        )}
+                      </button>
+                      <button 
+                        type="button" 
+                        onClick={startVoiceRecording}
+                        className="p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-900 hover:text-indigo-650 active:scale-95 transition-all" 
+                        title="Record Voice"
+                      >
+                        <Mic className="w-5 h-5" />
+                      </button>
+                    </div>
+
+                    <div className="flex-1 flex items-center bg-slate-100 dark:bg-slate-900 rounded-full px-4 py-0.5 border border-transparent focus-within:bg-white dark:focus-within:bg-slate-950 focus-within:border-slate-200 dark:focus-within:border-slate-800 transition-all duration-200 shadow-inner">
+                      <input
+                        type="text"
+                        value={messageInput}
+                        onChange={handleInputChange}
+                        placeholder="Type a message..."
+                        className="flex-1 bg-transparent border-none py-2.5 text-slate-800 dark:text-white placeholder-slate-400 focus:ring-0 outline-none text-[15px] font-medium"
+                      />
+                      <button 
+                        type="button" 
+                        ref={emojiButtonRef}
+                        onClick={() => setShowEmojiPicker(!showEmojiPicker)}
+                        className={`p-1.5 transition-colors ${showEmojiPicker ? 'text-[#7C3AED]' : 'text-slate-400 dark:text-slate-500 hover:text-[#7C3AED]'}`} 
+                        title="Emojis"
+                      >
+                        <Smile className="w-5.5 h-5.5" />
+                      </button>
+                    </div>
+
+                    {messageInput.trim() ? (
+                      <button
+                        type="submit"
+                        className="w-10 h-10 bg-[#7C3AED] hover:bg-[#6D28D9] active:scale-95 text-white rounded-full flex items-center justify-center shrink-0 transition-all shadow-sm"
+                      >
+                        <Send className="w-4.5 h-4.5" />
+                      </button>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={handleSendThumbsUp}
+                        className="w-10 h-10 hover:bg-slate-100 dark:hover:bg-slate-900 text-[#7C3AED] active:scale-90 rounded-full flex items-center justify-center shrink-0 transition-all"
+                        title="Send Like"
+                      >
+                        <ThumbsUp className="w-5 h-5 fill-[#7C3AED]" />
+                      </button>
+                    )}
+                  </>
                 )}
               </form>
             </div>
