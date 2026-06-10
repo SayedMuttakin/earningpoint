@@ -240,3 +240,100 @@ exports.uploadFile = async (req, res) => {
     res.status(500).json({ message: 'Internal server error' });
   }
 };
+
+// ── STORY FUNCTIONS ──────────────────────────────────────────────
+
+// Add a new story (expires in 24 hours)
+exports.addStory = async (req, res) => {
+  try {
+    const userId = req.user._id;
+    const { text, emoji, bgGradient, textColor, fontStyle } = req.body;
+
+    const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
+
+    // Remove expired stories and add new one atomically
+    const user = await User.findByIdAndUpdate(
+      userId,
+      {
+        $pull: { stories: { createdAt: { $lt: twentyFourHoursAgo } } }
+      },
+      { new: true }
+    );
+
+    // Push new story
+    user.stories.push({
+      text: text || '',
+      emoji: emoji || '',
+      bgGradient: bgGradient || 'linear-gradient(135deg, #7C3AED 0%, #2563EB 100%)',
+      textColor: textColor || '#ffffff',
+      fontStyle: fontStyle || 'normal',
+      createdAt: new Date()
+    });
+    await user.save();
+
+    // Return the newly added story
+    const newStory = user.stories[user.stories.length - 1];
+    res.status(201).json(newStory);
+  } catch (error) {
+    console.error('Error adding story:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+};
+
+// Delete a specific story by ID
+exports.deleteStory = async (req, res) => {
+  try {
+    const userId = req.user._id;
+    const storyId = req.params.storyId;
+
+    await User.findByIdAndUpdate(userId, {
+      $pull: { stories: { _id: storyId } }
+    });
+
+    res.json({ message: 'Story deleted' });
+  } catch (error) {
+    console.error('Error deleting story:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+};
+
+// Get all active (24h) stories from following/chat users + yourself
+exports.getStories = async (req, res) => {
+  try {
+    const currentUserId = req.user._id;
+    const currentUser = await User.findById(currentUserId);
+    const followingIds = currentUser.following || [];
+
+    const messagedUserIds = await Message.distinct('sender', { receiver: currentUserId, group: { $exists: false } });
+    const receivedUserIds = await Message.distinct('receiver', { sender: currentUserId, group: { $exists: false } });
+    const relatedUserIds = [...new Set([
+      currentUserId.toString(),
+      ...followingIds.map(id => id.toString()),
+      ...messagedUserIds.map(id => id.toString()),
+      ...receivedUserIds.map(id => id.toString())
+    ])];
+
+    const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
+
+    const users = await User.find({
+      _id: { $in: relatedUserIds },
+      'stories.0': { $exists: true }
+    }).select('name profilePic stories');
+
+    // Filter expired stories and users with no active stories
+    const result = users.map(u => {
+      const activeStories = u.stories.filter(s => new Date(s.createdAt) >= twentyFourHoursAgo);
+      return {
+        _id: u._id,
+        name: u.name,
+        profilePic: u.profilePic,
+        stories: activeStories
+      };
+    }).filter(u => u.stories.length > 0);
+
+    res.json(result);
+  } catch (error) {
+    console.error('Error fetching stories:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+};

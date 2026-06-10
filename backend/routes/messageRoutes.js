@@ -9,7 +9,10 @@ const {
   getGroupHistory, 
   updateNote, 
   getNotes,
-  uploadFile
+  uploadFile,
+  addStory,
+  deleteStory,
+  getStories
 } = require('../controllers/messageController');
 
 router.get('/users', protect, getUsers);
@@ -19,5 +22,10 @@ router.get('/history/group/:groupId', protect, getGroupHistory);
 router.put('/note', protect, updateNote);
 router.get('/notes', protect, getNotes);
 router.post('/upload', protect, upload.single('file'), uploadFile);
+
+// Story routes
+router.get('/stories', protect, getStories);
+router.post('/story', protect, addStory);
+router.delete('/story/:storyId', protect, deleteStory);
 
 module.exports = router;

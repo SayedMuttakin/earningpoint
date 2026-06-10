@@ -166,6 +166,21 @@ const MessengerPage = ({ onBack, activeChatPartner, setActiveChatPartner, socket
   const [recordingDuration, setRecordingDuration] = useState(0);
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
 
+  // Story State Hooks
+  const [stories, setStories] = useState([]);
+  const [showStoryCreator, setShowStoryCreator] = useState(false);
+  const [storyText, setStoryText] = useState('');
+  const [storyEmoji, setStoryEmoji] = useState('');
+  const [storyBg, setStoryBg] = useState('linear-gradient(135deg, #7C3AED 0%, #2563EB 100%)');
+  const [storyTextColor, setStoryTextColor] = useState('#ffffff');
+  const [storyFontStyle, setStoryFontStyle] = useState('normal');
+  const [isSavingStory, setIsSavingStory] = useState(false);
+  // Story Viewer
+  const [viewingStoryUser, setViewingStoryUser] = useState(null); // { _id, name, profilePic, stories[] }
+  const [viewingStoryIndex, setViewingStoryIndex] = useState(0);
+  const storyProgressTimer = useRef(null);
+  const [storyProgress, setStoryProgress] = useState(0);
+
   const socketConnected = !!socket;
   const connectionError = !socket;
 
@@ -368,9 +383,104 @@ const MessengerPage = ({ onBack, activeChatPartner, setActiveChatPartner, socket
     }
   };
 
+  const fetchStories = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) return;
+      const res = await fetch(`${API_BASE}/api/messages/stories`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setStories(data);
+      }
+    } catch (err) {
+      console.error('Failed to fetch stories:', err);
+    }
+  };
+
+  const handleSaveStory = async () => {
+    if (!storyText.trim() && !storyEmoji) return;
+    setIsSavingStory(true);
+    try {
+      const token = localStorage.getItem('token');
+      const res = await fetch(`${API_BASE}/api/messages/story`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({
+          text: storyText,
+          emoji: storyEmoji,
+          bgGradient: storyBg,
+          textColor: storyTextColor,
+          fontStyle: storyFontStyle
+        })
+      });
+      if (res.ok) {
+        setShowStoryCreator(false);
+        setStoryText('');
+        setStoryEmoji('');
+        setStoryBg('linear-gradient(135deg, #7C3AED 0%, #2563EB 100%)');
+        setStoryFontStyle('normal');
+        fetchStories();
+      }
+    } catch (err) {
+      console.error('Failed to save story:', err);
+    } finally {
+      setIsSavingStory(false);
+    }
+  };
+
+  const handleDeleteStory = async (storyId) => {
+    try {
+      const token = localStorage.getItem('token');
+      await fetch(`${API_BASE}/api/messages/story/${storyId}`, {
+        method: 'DELETE',
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      fetchStories();
+      setViewingStoryUser(null);
+    } catch (err) {
+      console.error('Failed to delete story:', err);
+    }
+  };
+
+  const openStoryViewer = (storyUser, index = 0) => {
+    setViewingStoryUser(storyUser);
+    setViewingStoryIndex(index);
+    setStoryProgress(0);
+  };
+
+  // Auto-progress story viewer
+  useEffect(() => {
+    if (!viewingStoryUser) return;
+    if (storyProgressTimer.current) clearInterval(storyProgressTimer.current);
+    setStoryProgress(0);
+    const totalDuration = 5000; // 5 seconds per story
+    const interval = 50;
+    let elapsed = 0;
+    storyProgressTimer.current = setInterval(() => {
+      elapsed += interval;
+      const progress = Math.min((elapsed / totalDuration) * 100, 100);
+      setStoryProgress(progress);
+      if (elapsed >= totalDuration) {
+        clearInterval(storyProgressTimer.current);
+        // Go to next story
+        const nextIdx = viewingStoryIndex + 1;
+        if (nextIdx < viewingStoryUser.stories.length) {
+          setViewingStoryIndex(nextIdx);
+          setStoryProgress(0);
+        } else {
+          setViewingStoryUser(null);
+        }
+      }
+    }, interval);
+    return () => { if (storyProgressTimer.current) clearInterval(storyProgressTimer.current); };
+  }, [viewingStoryUser, viewingStoryIndex]);
+
   useEffect(() => {
     fetchUsers();
     fetchNotes();
+    fetchStories();
   }, []);
 
   // Sync with activeChatPartner prop (e.g., when call is incoming or initiated from another page)
@@ -1336,87 +1446,131 @@ const MessengerPage = ({ onBack, activeChatPartner, setActiveChatPartner, socket
             <div className="flex-1 overflow-y-auto w-full px-4.5 pb-24 bg-white dark:bg-slate-950">
               <PullToRefresh onRefresh={handleRefresh} refreshing={refreshing}>
                 
-                {/* Notes & Active Users Row (Instagram-style Bubble notes) */}
-                <div className="flex gap-5 overflow-x-auto py-5 pb-3.5 scrollbar-none snap-x px-1">
-                  
-                  {/* Your Note circle */}
-                  <div className="flex flex-col items-center gap-1.5 shrink-0 snap-start relative">
-                    <button 
-                      onClick={() => {
-                        setNoteInput(myNoteObj ? myNoteObj.note : '');
-                        setShowNoteModal(true);
-                      }}
-                      className="relative focus:outline-none transition-transform active:scale-95 cursor-pointer"
-                    >
-                      {/* Note Thought Bubble */}
-                      <div className="absolute -top-4.5 left-1/2 -translate-x-1/2 bg-white dark:bg-slate-850 px-2.5 py-1 rounded-full text-[10px] font-bold shadow-md border border-slate-100 dark:border-slate-800/80 whitespace-nowrap max-w-[84px] truncate leading-tight z-10">
-                        {myNoteObj ? myNoteObj.note : 'Your note'}
-                        {/* Triangular tip pointing down */}
-                        <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-1.5 h-1.5 bg-white dark:bg-slate-850 rotate-45 border-r border-b border-slate-100 dark:border-slate-800/80" />
-                      </div>
-                      
-                      {currentUser?.profilePic ? (
-                        <img 
-                          src={getProfilePicUrl(currentUser.profilePic)} 
-                          alt="Your Profile" 
-                          className="w-14 h-14 rounded-full object-cover border border-slate-200 dark:border-slate-800 shadow-3xs"
-                        />
-                      ) : (
-                        <div className="w-14 h-14 rounded-full bg-gradient-to-tr from-indigo-500 to-brand-500 flex items-center justify-center text-white font-black text-lg border border-slate-200 dark:border-slate-800 shadow-3xs">
-                          {currentUser?.name?.charAt(0).toUpperCase() || 'U'}
-                        </div>
-                      )}
-                      {/* Plus icon indicator to set note */}
-                      <span className="absolute bottom-0 right-0 w-4.5 h-4.5 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-2 border-white dark:border-slate-900 rounded-full flex items-center justify-center shadow-3xs">
-                        <Plus className="w-3 h-3" strokeWidth={3} />
-                      </span>
-                    </button>
-                    <span className="text-[11px] font-bold text-slate-400 dark:text-slate-500 mt-1 max-w-[65px] truncate">
-                      Your note
-                    </span>
-                  </div>
+                {/* ── STORIES ROW ── */}
+                {(() => {
+                  const myStoryUser = stories.find(s => s._id?.toString() === currentUser?._id?.toString());
+                  const STORY_BG_PRESETS = [
+                    'linear-gradient(135deg, #7C3AED 0%, #2563EB 100%)',
+                    'linear-gradient(135deg, #f97316 0%, #ec4899 100%)',
+                    'linear-gradient(135deg, #10b981 0%, #0ea5e9 100%)',
+                    'linear-gradient(135deg, #f59e0b 0%, #ef4444 100%)',
+                    'linear-gradient(135deg, #8b5cf6 0%, #ec4899 100%)',
+                    'linear-gradient(135deg, #06b6d4 0%, #6366f1 100%)',
+                    'linear-gradient(135deg, #22c55e 0%, #16a34a 100%)',
+                    'linear-gradient(135deg, #1e293b 0%, #334155 100%)',
+                  ];
+                  return (
+                    <div className="flex gap-4 overflow-x-auto py-4 pb-3 scrollbar-none snap-x px-1">
 
-                  {/* Online Contacts list */}
-                  {activeRowUsers.map((user) => {
-                    const userNoteObj = notes.find(n => n._id === user._id);
-                    return (
-                      <button
-                        key={user._id}
-                        onClick={() => handleOpenChat(user)}
-                        className="flex flex-col items-center gap-1.5 shrink-0 snap-start relative active:scale-95 transition-transform"
-                      >
-                        {/* Thought Note Bubble */}
-                        {userNoteObj && (
-                          <div className="absolute -top-4.5 left-1/2 -translate-x-1/2 bg-white dark:bg-slate-850 px-2.5 py-1 rounded-full text-[10px] font-bold shadow-md border border-slate-150/40 dark:border-slate-800/80 whitespace-nowrap max-w-[84px] truncate leading-tight z-10">
-                            {userNoteObj.note}
-                            <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-1.5 h-1.5 bg-white dark:bg-slate-850 rotate-45 border-r border-b border-slate-150/40 dark:border-slate-800/80" />
-                          </div>
-                        )}
-
-                        <div className="relative">
-                          {user.profilePic ? (
-                            <img
-                              src={getProfilePicUrl(user.profilePic)}
-                              alt={user.name}
-                              className="w-14 h-14 rounded-full object-cover border border-slate-150/40 dark:border-slate-800"
-                            />
-                          ) : (
-                            <div className="w-14 h-14 rounded-full bg-gradient-to-tr from-indigo-500 to-brand-500 flex items-center justify-center text-white font-black text-lg border border-slate-100 dark:border-slate-800">
-                              {user.name.charAt(0).toUpperCase()}
+                      {/* Your Story circle */}
+                      <div className="flex flex-col items-center gap-1.5 shrink-0 snap-start">
+                        <button
+                          onClick={() => {
+                            if (myStoryUser) {
+                              openStoryViewer(myStoryUser);
+                            } else {
+                              setShowStoryCreator(true);
+                            }
+                          }}
+                          className="relative focus:outline-none transition-transform active:scale-95"
+                        >
+                          {/* Gradient story ring if has story */}
+                          <div className={`p-[2.5px] rounded-full ${myStoryUser ? '' : 'bg-slate-200 dark:bg-slate-800'}`}
+                            style={myStoryUser ? { background: 'linear-gradient(135deg, #f97316, #ec4899, #7C3AED)' } : {}}>
+                            <div className="p-[2px] bg-white dark:bg-slate-900 rounded-full">
+                              {currentUser?.profilePic ? (
+                                <img
+                                  src={getProfilePicUrl(currentUser.profilePic)}
+                                  alt="Your Story"
+                                  className="w-14 h-14 rounded-full object-cover"
+                                />
+                              ) : (
+                                <div className="w-14 h-14 rounded-full bg-gradient-to-tr from-indigo-500 to-brand-500 flex items-center justify-center text-white font-black text-lg">
+                                  {currentUser?.name?.charAt(0).toUpperCase() || 'U'}
+                                </div>
+                              )}
                             </div>
+                          </div>
+                          {/* Add story plus button */}
+                          {!myStoryUser && (
+                            <span className="absolute bottom-0 right-0 w-5 h-5 bg-[#7C3AED] text-white border-2 border-white dark:border-slate-900 rounded-full flex items-center justify-center shadow-md">
+                              <Plus className="w-3 h-3" strokeWidth={3} />
+                            </span>
                           )}
-                          {/* Active Online Indicator */}
-                          {onlineUsers.includes(user._id?.toString()) && (
-                            <span className="absolute bottom-0 right-0 w-3.5 h-3.5 bg-emerald-500 border-2 border-white dark:border-slate-900 rounded-full" />
-                          )}
-                        </div>
-                        <span className="text-[11px] font-black text-slate-700 dark:text-slate-350 max-w-[65px] truncate">
-                          {user.name.split(' ')[0]}
+                        </button>
+                        <span className="text-[11px] font-bold text-slate-400 dark:text-slate-500 max-w-[65px] truncate">
+                          {myStoryUser ? 'My story' : 'Add story'}
                         </span>
-                      </button>
-                    );
-                  })}
-                </div>
+                      </div>
+
+                      {/* Other users' stories */}
+                      {stories.filter(s => s._id?.toString() !== currentUser?._id?.toString()).map((storyUser) => (
+                        <button
+                          key={storyUser._id}
+                          onClick={() => openStoryViewer(storyUser)}
+                          className="flex flex-col items-center gap-1.5 shrink-0 snap-start active:scale-95 transition-transform"
+                        >
+                          <div className="p-[2.5px] rounded-full" style={{ background: 'linear-gradient(135deg, #f97316, #ec4899, #7C3AED)' }}>
+                            <div className="p-[2px] bg-white dark:bg-slate-900 rounded-full">
+                              {storyUser.profilePic ? (
+                                <img
+                                  src={getProfilePicUrl(storyUser.profilePic)}
+                                  alt={storyUser.name}
+                                  className="w-14 h-14 rounded-full object-cover"
+                                />
+                              ) : (
+                                <div className="w-14 h-14 rounded-full bg-gradient-to-tr from-indigo-500 to-brand-500 flex items-center justify-center text-white font-black text-lg">
+                                  {storyUser.name?.charAt(0).toUpperCase() || 'U'}
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                          <span className="text-[11px] font-black text-slate-700 dark:text-slate-350 max-w-[65px] truncate">
+                            {storyUser.name?.split(' ')[0]}
+                          </span>
+                        </button>
+                      ))}
+
+                      {/* Notes row (existing contacts with notes — thought bubble style) */}
+                      {activeRowUsers.map((user) => {
+                        const userNoteObj = notes.find(n => n._id === user._id);
+                        const hasStory = stories.some(s => s._id?.toString() === user._id?.toString());
+                        if (hasStory) return null; // Already shown in story row
+                        return (
+                          <button
+                            key={user._id}
+                            onClick={() => handleOpenChat(user)}
+                            className="flex flex-col items-center gap-1.5 shrink-0 snap-start relative active:scale-95 transition-transform"
+                          >
+                            {/* Note thought bubble */}
+                            {userNoteObj && (
+                              <div className="absolute -top-5 left-1/2 -translate-x-1/2 bg-white dark:bg-slate-850 px-2.5 py-1 rounded-full text-[10px] font-bold shadow-md border border-slate-150/40 dark:border-slate-800/80 whitespace-nowrap max-w-[84px] truncate leading-tight z-10">
+                                {userNoteObj.note}
+                                <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-1.5 h-1.5 bg-white dark:bg-slate-850 rotate-45 border-r border-b border-slate-150/40 dark:border-slate-800/80" />
+                              </div>
+                            )}
+                            <div className="relative">
+                              {user.profilePic ? (
+                                <img src={getProfilePicUrl(user.profilePic)} alt={user.name} className="w-14 h-14 rounded-full object-cover border border-slate-150/40 dark:border-slate-800" />
+                              ) : (
+                                <div className="w-14 h-14 rounded-full bg-gradient-to-tr from-indigo-500 to-brand-500 flex items-center justify-center text-white font-black text-lg border border-slate-100 dark:border-slate-800">
+                                  {user.name.charAt(0).toUpperCase()}
+                                </div>
+                              )}
+                              {onlineUsers.includes(user._id?.toString()) && (
+                                <span className="absolute bottom-0 right-0 w-3.5 h-3.5 bg-emerald-500 border-2 border-white dark:border-slate-900 rounded-full" />
+                              )}
+                            </div>
+                            <span className="text-[11px] font-black text-slate-700 dark:text-slate-350 max-w-[65px] truncate">
+                              {user.name.split(' ')[0]}
+                            </span>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  );
+                })()}
+
 
                 {/* Combined Conversation List */}
                 <div className="mt-4 space-y-1">
@@ -2030,7 +2184,238 @@ const MessengerPage = ({ onBack, activeChatPartner, setActiveChatPartner, socket
           </div>
         )}
 
+        {/* ────────────────── STORY CREATOR MODAL ────────────────── */}
+        {showStoryCreator && (() => {
+          const STORY_BG_PRESETS = [
+            { bg: 'linear-gradient(135deg, #7C3AED 0%, #2563EB 100%)', label: 'Purple' },
+            { bg: 'linear-gradient(135deg, #f97316 0%, #ec4899 100%)', label: 'Sunset' },
+            { bg: 'linear-gradient(135deg, #10b981 0%, #0ea5e9 100%)', label: 'Ocean' },
+            { bg: 'linear-gradient(135deg, #f59e0b 0%, #ef4444 100%)', label: 'Fire' },
+            { bg: 'linear-gradient(135deg, #8b5cf6 0%, #ec4899 100%)', label: 'Pink' },
+            { bg: 'linear-gradient(135deg, #06b6d4 0%, #6366f1 100%)', label: 'Sky' },
+            { bg: 'linear-gradient(135deg, #22c55e 0%, #16a34a 100%)', label: 'Forest' },
+            { bg: 'linear-gradient(135deg, #1e293b 0%, #475569 100%)', label: 'Dark' },
+          ];
+          const QUICK_EMOJIS = ['😀','😍','🥰','🤩','😎','🥳','🔥','✨','💯','❤️','💜','🎉','🌈','👑','🌟','🎶','💫','🙌'];
+          return (
+            <div className="fixed inset-0 z-[110] flex flex-col" style={{ background: storyBg }}>
+              {/* Header */}
+              <div className="flex items-center justify-between px-4 pt-12 pb-3 shrink-0">
+                <button
+                  onClick={() => { setShowStoryCreator(false); setStoryText(''); setStoryEmoji(''); }}
+                  className="w-9 h-9 rounded-full bg-black/30 text-white flex items-center justify-center active:scale-90 transition-transform"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+                <span className="text-white font-black text-base">Create Story</span>
+                <button
+                  onClick={handleSaveStory}
+                  disabled={isSavingStory || (!storyText.trim() && !storyEmoji)}
+                  className="px-4 py-1.5 rounded-full bg-white text-[#7C3AED] font-black text-sm disabled:opacity-50 active:scale-95 transition-all shadow-lg"
+                >
+                  {isSavingStory ? '...' : 'Share'}
+                </button>
+              </div>
+
+              {/* Live Preview Area */}
+              <div className="flex-1 flex flex-col items-center justify-center px-8 gap-4">
+                {storyEmoji && (
+                  <div className="text-6xl leading-none select-none animate-bounce" style={{ animationDuration: '2s' }}>
+                    {storyEmoji}
+                  </div>
+                )}
+                {storyText ? (
+                  <p
+                    className="text-center text-2xl leading-snug select-none max-w-xs"
+                    style={{
+                      color: storyTextColor,
+                      fontWeight: storyFontStyle === 'bold' ? '900' : storyFontStyle === 'italic' ? '600' : '600',
+                      fontStyle: storyFontStyle === 'italic' ? 'italic' : 'normal',
+                      textShadow: '0 2px 8px rgba(0,0,0,0.3)'
+                    }}
+                  >
+                    {storyText}
+                  </p>
+                ) : (
+                  <p className="text-white/40 text-base font-bold">Tap below to write something...</p>
+                )}
+              </div>
+
+              {/* Bottom Controls Panel */}
+              <div className="shrink-0 bg-black/40 backdrop-blur-md rounded-t-3xl px-5 pt-4 pb-8 space-y-4">
+
+                {/* Text Input */}
+                <div className="flex items-center bg-white/20 rounded-2xl px-4 py-2 gap-2">
+                  <input
+                    type="text"
+                    value={storyText}
+                    onChange={e => setStoryText(e.target.value.slice(0, 80))}
+                    placeholder="Type your story text..."
+                    className="flex-1 bg-transparent text-white placeholder-white/60 outline-none font-semibold text-sm"
+                    autoFocus
+                  />
+                  <span className="text-white/50 text-[10px] font-black">{storyText.length}/80</span>
+                </div>
+
+                {/* Quick Emoji Row */}
+                <div className="flex gap-2 overflow-x-auto scrollbar-none pb-1">
+                  {QUICK_EMOJIS.map(em => (
+                    <button
+                      key={em}
+                      onClick={() => setStoryEmoji(storyEmoji === em ? '' : em)}
+                      className={`text-2xl p-1 rounded-xl shrink-0 transition-transform active:scale-90 ${storyEmoji === em ? 'bg-white/30 scale-110' : ''}`}
+                    >
+                      {em}
+                    </button>
+                  ))}
+                </div>
+
+                {/* Font Style Picker */}
+                <div className="flex items-center gap-2">
+                  <span className="text-white/60 text-[10px] font-black uppercase tracking-wider shrink-0">Style</span>
+                  {[
+                    { key: 'normal', label: 'Aa' },
+                    { key: 'bold', label: 'Aa' },
+                    { key: 'italic', label: 'Aa' },
+                  ].map(f => (
+                    <button
+                      key={f.key}
+                      onClick={() => setStoryFontStyle(f.key)}
+                      className={`px-3 py-1 rounded-full text-sm border transition-all active:scale-90 ${storyFontStyle === f.key ? 'bg-white text-[#7C3AED] border-white font-black' : 'bg-white/15 text-white border-white/30'}`}
+                      style={{
+                        fontWeight: f.key === 'bold' ? '900' : '600',
+                        fontStyle: f.key === 'italic' ? 'italic' : 'normal',
+                      }}
+                    >
+                      {f.label}
+                    </button>
+                  ))}
+                  {/* Text color toggle */}
+                  <button
+                    onClick={() => setStoryTextColor(c => c === '#ffffff' ? '#000000' : c === '#000000' ? '#FFED4A' : '#ffffff')}
+                    className="ml-auto px-3 py-1 rounded-full border border-white/40 text-white bg-white/15 text-xs font-black active:scale-90 transition-all"
+                    style={{ color: storyTextColor }}
+                  >
+                    Color
+                  </button>
+                </div>
+
+                {/* Background Gradient Picker */}
+                <div className="flex items-center gap-2">
+                  <span className="text-white/60 text-[10px] font-black uppercase tracking-wider shrink-0">BG</span>
+                  <div className="flex gap-2 overflow-x-auto scrollbar-none flex-1">
+                    {STORY_BG_PRESETS.map(p => (
+                      <button
+                        key={p.bg}
+                        onClick={() => setStoryBg(p.bg)}
+                        className={`w-8 h-8 rounded-full shrink-0 transition-transform active:scale-90 ${storyBg === p.bg ? 'scale-125 ring-2 ring-white' : ''}`}
+                        style={{ background: p.bg }}
+                        title={p.label}
+                      />
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
+          );
+        })()}
+
+        {/* ────────────────── STORY VIEWER MODAL ────────────────── */}
+        {viewingStoryUser && (() => {
+          const story = viewingStoryUser.stories[viewingStoryIndex];
+          if (!story) { setViewingStoryUser(null); return null; }
+          const isOwnStory = viewingStoryUser._id?.toString() === currentUser?._id?.toString();
+          const timeAgo = formatRelativeTime(story.createdAt);
+          return (
+            <div
+              className="fixed inset-0 z-[110] flex flex-col"
+              style={{ background: story.bgGradient || 'linear-gradient(135deg, #7C3AED, #2563EB)' }}
+              onClick={() => {
+                const nextIdx = viewingStoryIndex + 1;
+                if (nextIdx < viewingStoryUser.stories.length) {
+                  setViewingStoryIndex(nextIdx);
+                } else {
+                  setViewingStoryUser(null);
+                }
+              }}
+            >
+              {/* Progress bars */}
+              <div className="flex gap-1 px-3 pt-12 pb-2 shrink-0">
+                {viewingStoryUser.stories.map((_, i) => (
+                  <div key={i} className="flex-1 h-0.5 bg-white/30 rounded-full overflow-hidden">
+                    <div
+                      className="h-full bg-white transition-none"
+                      style={{
+                        width: i < viewingStoryIndex ? '100%' : i === viewingStoryIndex ? `${storyProgress}%` : '0%'
+                      }}
+                    />
+                  </div>
+                ))}
+              </div>
+
+              {/* Header */}
+              <div className="flex items-center justify-between px-4 py-2 shrink-0" onClick={e => e.stopPropagation()}>
+                <div className="flex items-center gap-3">
+                  {viewingStoryUser.profilePic ? (
+                    <img src={getProfilePicUrl(viewingStoryUser.profilePic)} className="w-9 h-9 rounded-full object-cover border-2 border-white/60" alt="" />
+                  ) : (
+                    <div className="w-9 h-9 rounded-full bg-white/20 flex items-center justify-center text-white font-black">
+                      {viewingStoryUser.name?.charAt(0).toUpperCase()}
+                    </div>
+                  )}
+                  <div>
+                    <p className="text-white font-black text-sm leading-tight">{viewingStoryUser.name}</p>
+                    <p className="text-white/60 text-[10px] font-bold">{timeAgo}</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2">
+                  {isOwnStory && (
+                    <button
+                      onClick={e => { e.stopPropagation(); if (window.confirm('Delete this story?')) handleDeleteStory(story._id); }}
+                      className="w-8 h-8 rounded-full bg-rose-500/80 text-white flex items-center justify-center active:scale-90"
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
+                  )}
+                  <button
+                    onClick={e => { e.stopPropagation(); setViewingStoryUser(null); }}
+                    className="w-9 h-9 rounded-full bg-black/30 text-white flex items-center justify-center active:scale-90"
+                  >
+                    <X className="w-5 h-5" />
+                  </button>
+                </div>
+              </div>
+
+              {/* Story Content */}
+              <div className="flex-1 flex flex-col items-center justify-center px-8 gap-5">
+                {story.emoji && (
+                  <div className="text-8xl leading-none select-none">{story.emoji}</div>
+                )}
+                {story.text && (
+                  <p
+                    className="text-center text-3xl leading-snug select-none max-w-xs"
+                    style={{
+                      color: story.textColor || '#ffffff',
+                      fontWeight: story.fontStyle === 'bold' ? '900' : '700',
+                      fontStyle: story.fontStyle === 'italic' ? 'italic' : 'normal',
+                      textShadow: '0 3px 16px rgba(0,0,0,0.4)',
+                    }}
+                  >
+                    {story.text}
+                  </p>
+                )}
+              </div>
+
+              {/* Tap hint */}
+              <div className="shrink-0 pb-16 text-center">
+                <p className="text-white/40 text-xs font-bold">Tap to skip</p>
+              </div>
+            </div>
+          );
+        })()}
+
         {/* ────────────────── STATUS NOTES EDITING MODAL ────────────────── */}
+
         {showNoteModal && (
           <div className="fixed inset-0 z-[100] bg-slate-950/60 backdrop-blur-sm flex items-center justify-center p-4 animate-fade-in text-slate-800 dark:text-white">
             <div className="bg-white dark:bg-slate-900 w-full max-w-sm rounded-[2rem] border border-slate-150/40 dark:border-slate-800 shadow-2xl flex flex-col overflow-hidden animate-scale-up">
