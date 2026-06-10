@@ -236,22 +236,18 @@ const Navbar = ({
         <nav className="sticky top-0 z-50 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-700 shadow-sm">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="flex justify-between h-16 relative">
-              {/* Left Side: Mobile Menu Button with Drawer Trigger */}
-              <div className="relative flex items-center">
+              {/* Left Side: Mobile Menu Button and Brand */}
+              <div className="flex items-center gap-1 sm:gap-2 relative z-50">
                 <button 
                   onClick={() => setIsSidebarOpen(true)}
-                  className="text-slate-500 dark:text-slate-400 hover:text-brand-600 p-2 transition-colors relative z-50"
+                  className="text-slate-500 dark:text-slate-400 hover:text-brand-600 p-2 transition-colors"
                 >
                   <Menu className="h-7 w-7" />
                 </button>
-              </div>
-
-              {/* Center Side: Logo & Brand (Centered) */}
-              <div className="absolute left-1/2 -translate-x-1/2 flex items-center gap-2 sm:gap-3 cursor-pointer h-16" onClick={() => setActiveTab && setActiveTab('Home')}>
-                <div className="w-9 h-9 sm:w-10 sm:h-10 flex items-center justify-center transform hover:scale-110 transition-transform duration-300">
-                   <img src="/zenivio-logo.png" alt="Zenivio Logo" className="w-full h-full object-contain" />
-                </div>
-                <span className="text-xl sm:text-2xl font-black bg-gradient-to-r from-brand-500 to-brand-700 bg-clip-text text-transparent transform hover:scale-105 transition-all duration-300">
+                <span 
+                  className="text-lg sm:text-xl font-black bg-gradient-to-r from-brand-500 to-brand-700 bg-clip-text text-transparent cursor-pointer transform hover:scale-105 transition-all duration-300 select-none"
+                  onClick={() => setActiveTab && setActiveTab('Home')}
+                >
                   Zenivio
                 </span>
               </div>
