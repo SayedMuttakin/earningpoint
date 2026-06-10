@@ -245,7 +245,7 @@ const Navbar = ({
                   <Menu className="h-7 w-7" />
                 </button>
                 <span 
-                  className="text-lg sm:text-xl font-black bg-gradient-to-r from-brand-500 to-brand-700 bg-clip-text text-transparent cursor-pointer transform hover:scale-105 transition-all duration-300 select-none"
+                  className="text-xl sm:text-2xl font-black bg-gradient-to-r from-brand-500 to-brand-700 bg-clip-text text-transparent cursor-pointer transform hover:scale-105 transition-all duration-300 select-none"
                   onClick={() => setActiveTab && setActiveTab('Home')}
                 >
                   Zenivio
