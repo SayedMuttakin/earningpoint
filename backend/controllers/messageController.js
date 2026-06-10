@@ -243,27 +243,32 @@ exports.uploadFile = async (req, res) => {
 
 // ── STORY FUNCTIONS ──────────────────────────────────────────────
 
-// Add a new story (expires in 24 hours)
+// Add a new story (expires in 24 hours, max 10 per user)
 exports.addStory = async (req, res) => {
   try {
     const userId = req.user._id;
     const { text, emoji, bgGradient, textColor, fontStyle } = req.body;
+    const imageFilename = req.file ? req.file.filename : '';
 
     const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
 
-    // Remove expired stories and add new one atomically
+    // Remove expired stories
     const user = await User.findByIdAndUpdate(
       userId,
-      {
-        $pull: { stories: { createdAt: { $lt: twentyFourHoursAgo } } }
-      },
+      { $pull: { stories: { createdAt: { $lt: twentyFourHoursAgo } } } },
       { new: true }
     );
+
+    // Max 10 active stories per user
+    if (user.stories.length >= 10) {
+      return res.status(400).json({ message: 'Maximum 10 stories allowed at once' });
+    }
 
     // Push new story
     user.stories.push({
       text: text || '',
       emoji: emoji || '',
+      image: imageFilename,
       bgGradient: bgGradient || 'linear-gradient(135deg, #7C3AED 0%, #2563EB 100%)',
       textColor: textColor || '#ffffff',
       fontStyle: fontStyle || 'normal',
@@ -271,7 +276,6 @@ exports.addStory = async (req, res) => {
     });
     await user.save();
 
-    // Return the newly added story
     const newStory = user.stories[user.stories.length - 1];
     res.status(201).json(newStory);
   } catch (error) {

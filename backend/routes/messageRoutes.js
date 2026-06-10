@@ -25,7 +25,7 @@ router.post('/upload', protect, upload.single('file'), uploadFile);
 
 // Story routes
 router.get('/stories', protect, getStories);
-router.post('/story', protect, addStory);
+router.post('/story', protect, upload.single('image'), addStory);
 router.delete('/story/:storyId', protect, deleteStory);
 
 module.exports = router;

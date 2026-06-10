@@ -171,6 +171,8 @@ const MessengerPage = ({ onBack, activeChatPartner, setActiveChatPartner, socket
   const [showStoryCreator, setShowStoryCreator] = useState(false);
   const [storyText, setStoryText] = useState('');
   const [storyEmoji, setStoryEmoji] = useState('');
+  const [storyImage, setStoryImage] = useState(null);         // File object
+  const [storyImagePreview, setStoryImagePreview] = useState(''); // data URL for preview
   const [storyBg, setStoryBg] = useState('linear-gradient(135deg, #7C3AED 0%, #2563EB 100%)');
   const [storyTextColor, setStoryTextColor] = useState('#ffffff');
   const [storyFontStyle, setStoryFontStyle] = useState('normal');
@@ -207,6 +209,7 @@ const MessengerPage = ({ onBack, activeChatPartner, setActiveChatPartner, socket
   const recordingStartTimeRef = useRef(0);
   const emojiPickerRef = useRef(null);
   const emojiButtonRef = useRef(null);
+  const storyImageInputRef = useRef(null); // For story photo picker
   // Stable refs for async callbacks
   const activeCallRef = useRef(activeCall);
   const activePartnerRef = useRef(activePartner);
@@ -400,25 +403,29 @@ const MessengerPage = ({ onBack, activeChatPartner, setActiveChatPartner, socket
   };
 
   const handleSaveStory = async () => {
-    if (!storyText.trim() && !storyEmoji) return;
+    if (!storyText.trim() && !storyEmoji && !storyImage) return;
     setIsSavingStory(true);
     try {
       const token = localStorage.getItem('token');
+      const formData = new FormData();
+      formData.append('text', storyText);
+      formData.append('emoji', storyEmoji);
+      formData.append('bgGradient', storyBg);
+      formData.append('textColor', storyTextColor);
+      formData.append('fontStyle', storyFontStyle);
+      if (storyImage) formData.append('image', storyImage);
+
       const res = await fetch(`${API_BASE}/api/messages/story`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-        body: JSON.stringify({
-          text: storyText,
-          emoji: storyEmoji,
-          bgGradient: storyBg,
-          textColor: storyTextColor,
-          fontStyle: storyFontStyle
-        })
+        headers: { Authorization: `Bearer ${token}` },
+        body: formData
       });
       if (res.ok) {
         setShowStoryCreator(false);
         setStoryText('');
         setStoryEmoji('');
+        setStoryImage(null);
+        setStoryImagePreview('');
         setStoryBg('linear-gradient(135deg, #7C3AED 0%, #2563EB 100%)');
         setStoryFontStyle('normal');
         fetchStories();
@@ -2197,30 +2204,40 @@ const MessengerPage = ({ onBack, activeChatPartner, setActiveChatPartner, socket
             { bg: 'linear-gradient(135deg, #1e293b 0%, #475569 100%)', label: 'Dark' },
           ];
           const QUICK_EMOJIS = ['😀','😍','🥰','🤩','😎','🥳','🔥','✨','💯','❤️','💜','🎉','🌈','👑','🌟','🎶','💫','🙌'];
+          const bgStyle = storyImagePreview
+            ? { backgroundImage: `url(${storyImagePreview})`, backgroundSize: 'cover', backgroundPosition: 'center' }
+            : { background: storyBg };
           return (
-            <div className="fixed inset-0 z-[110] flex flex-col" style={{ background: storyBg }}>
+            <div className="fixed inset-0 z-[110] flex flex-col" style={bgStyle}>
+              {/* Overlay when image is set */}
+              {storyImagePreview && <div className="absolute inset-0 bg-black/20" />}
+
               {/* Header */}
-              <div className="flex items-center justify-between px-4 pt-12 pb-3 shrink-0">
+              <div className="relative flex items-center justify-between px-4 pt-12 pb-3 shrink-0 z-10">
                 <button
-                  onClick={() => { setShowStoryCreator(false); setStoryText(''); setStoryEmoji(''); }}
+                  onClick={() => {
+                    setShowStoryCreator(false);
+                    setStoryText(''); setStoryEmoji('');
+                    setStoryImage(null); setStoryImagePreview('');
+                  }}
                   className="w-9 h-9 rounded-full bg-black/30 text-white flex items-center justify-center active:scale-90 transition-transform"
                 >
                   <X className="w-5 h-5" />
                 </button>
-                <span className="text-white font-black text-base">Create Story</span>
+                <span className="text-white font-black text-base drop-shadow">Create Story</span>
                 <button
                   onClick={handleSaveStory}
-                  disabled={isSavingStory || (!storyText.trim() && !storyEmoji)}
+                  disabled={isSavingStory || (!storyText.trim() && !storyEmoji && !storyImage)}
                   className="px-4 py-1.5 rounded-full bg-white text-[#7C3AED] font-black text-sm disabled:opacity-50 active:scale-95 transition-all shadow-lg"
                 >
-                  {isSavingStory ? '...' : 'Share'}
+                  {isSavingStory ? '...' : 'Share ✓'}
                 </button>
               </div>
 
               {/* Live Preview Area */}
-              <div className="flex-1 flex flex-col items-center justify-center px-8 gap-4">
+              <div className="relative flex-1 flex flex-col items-center justify-center px-8 gap-4 z-10">
                 {storyEmoji && (
-                  <div className="text-6xl leading-none select-none animate-bounce" style={{ animationDuration: '2s' }}>
+                  <div className="text-6xl leading-none select-none drop-shadow-lg" style={{ filter: 'drop-shadow(0 2px 8px rgba(0,0,0,0.4))' }}>
                     {storyEmoji}
                   </div>
                 )}
@@ -2229,32 +2246,62 @@ const MessengerPage = ({ onBack, activeChatPartner, setActiveChatPartner, socket
                     className="text-center text-2xl leading-snug select-none max-w-xs"
                     style={{
                       color: storyTextColor,
-                      fontWeight: storyFontStyle === 'bold' ? '900' : storyFontStyle === 'italic' ? '600' : '600',
+                      fontWeight: storyFontStyle === 'bold' ? '900' : '600',
                       fontStyle: storyFontStyle === 'italic' ? 'italic' : 'normal',
-                      textShadow: '0 2px 8px rgba(0,0,0,0.3)'
+                      textShadow: '0 2px 12px rgba(0,0,0,0.5)'
                     }}
                   >
                     {storyText}
                   </p>
-                ) : (
-                  <p className="text-white/40 text-base font-bold">Tap below to write something...</p>
+                ) : !storyImagePreview && (
+                  <p className="text-white/40 text-base font-bold text-center">📸 Add a photo or type something...</p>
+                )}
+
+                {/* Photo picker button in middle if no image */}
+                {!storyImagePreview && (
+                  <button
+                    onClick={() => storyImageInputRef.current?.click()}
+                    className="mt-2 flex items-center gap-2 px-5 py-2.5 rounded-2xl bg-white/20 backdrop-blur-sm text-white font-bold text-sm border border-white/30 active:scale-95 transition-all"
+                  >
+                    <span className="text-lg">📷</span> Add Photo
+                  </button>
+                )}
+
+                {/* Remove photo button */}
+                {storyImagePreview && (
+                  <button
+                    onClick={() => { setStoryImage(null); setStoryImagePreview(''); }}
+                    className="absolute top-2 right-2 w-8 h-8 rounded-full bg-black/50 text-white flex items-center justify-center active:scale-90"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
                 )}
               </div>
 
               {/* Bottom Controls Panel */}
-              <div className="shrink-0 bg-black/40 backdrop-blur-md rounded-t-3xl px-5 pt-4 pb-8 space-y-4">
+              <div className="relative shrink-0 bg-black/50 backdrop-blur-md rounded-t-3xl px-5 pt-4 pb-8 space-y-4 z-10">
 
-                {/* Text Input */}
-                <div className="flex items-center bg-white/20 rounded-2xl px-4 py-2 gap-2">
-                  <input
-                    type="text"
-                    value={storyText}
-                    onChange={e => setStoryText(e.target.value.slice(0, 80))}
-                    placeholder="Type your story text..."
-                    className="flex-1 bg-transparent text-white placeholder-white/60 outline-none font-semibold text-sm"
-                    autoFocus
-                  />
-                  <span className="text-white/50 text-[10px] font-black">{storyText.length}/80</span>
+                {/* Photo + Text Input Row */}
+                <div className="flex items-center gap-2">
+                  {/* Photo picker button */}
+                  <button
+                    onClick={() => storyImageInputRef.current?.click()}
+                    className="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center text-xl shrink-0 active:scale-90 transition-transform border border-white/30"
+                    title="Add Photo"
+                  >
+                    📷
+                  </button>
+                  {/* Text Input */}
+                  <div className="flex-1 flex items-center bg-white/20 rounded-2xl px-4 py-2 gap-2">
+                    <input
+                      type="text"
+                      value={storyText}
+                      onChange={e => setStoryText(e.target.value.slice(0, 80))}
+                      placeholder="Type your story text..."
+                      className="flex-1 bg-transparent text-white placeholder-white/60 outline-none font-semibold text-sm"
+                    />
+                    <span className="text-white/50 text-[10px] font-black">{storyText.length}/80</span>
+                  </div>
                 </div>
 
                 {/* Quick Emoji Row */}
@@ -2270,7 +2317,7 @@ const MessengerPage = ({ onBack, activeChatPartner, setActiveChatPartner, socket
                   ))}
                 </div>
 
-                {/* Font Style Picker */}
+                {/* Font Style + Color Row */}
                 <div className="flex items-center gap-2">
                   <span className="text-white/60 text-[10px] font-black uppercase tracking-wider shrink-0">Style</span>
                   {[
@@ -2282,43 +2329,59 @@ const MessengerPage = ({ onBack, activeChatPartner, setActiveChatPartner, socket
                       key={f.key}
                       onClick={() => setStoryFontStyle(f.key)}
                       className={`px-3 py-1 rounded-full text-sm border transition-all active:scale-90 ${storyFontStyle === f.key ? 'bg-white text-[#7C3AED] border-white font-black' : 'bg-white/15 text-white border-white/30'}`}
-                      style={{
-                        fontWeight: f.key === 'bold' ? '900' : '600',
-                        fontStyle: f.key === 'italic' ? 'italic' : 'normal',
-                      }}
+                      style={{ fontWeight: f.key === 'bold' ? '900' : '600', fontStyle: f.key === 'italic' ? 'italic' : 'normal' }}
                     >
                       {f.label}
                     </button>
                   ))}
-                  {/* Text color toggle */}
                   <button
                     onClick={() => setStoryTextColor(c => c === '#ffffff' ? '#000000' : c === '#000000' ? '#FFED4A' : '#ffffff')}
-                    className="ml-auto px-3 py-1 rounded-full border border-white/40 text-white bg-white/15 text-xs font-black active:scale-90 transition-all"
+                    className="ml-auto px-3 py-1 rounded-full border border-white/40 bg-white/15 text-xs font-black active:scale-90 transition-all"
                     style={{ color: storyTextColor }}
                   >
                     Color
                   </button>
                 </div>
 
-                {/* Background Gradient Picker */}
-                <div className="flex items-center gap-2">
-                  <span className="text-white/60 text-[10px] font-black uppercase tracking-wider shrink-0">BG</span>
-                  <div className="flex gap-2 overflow-x-auto scrollbar-none flex-1">
-                    {STORY_BG_PRESETS.map(p => (
-                      <button
-                        key={p.bg}
-                        onClick={() => setStoryBg(p.bg)}
-                        className={`w-8 h-8 rounded-full shrink-0 transition-transform active:scale-90 ${storyBg === p.bg ? 'scale-125 ring-2 ring-white' : ''}`}
-                        style={{ background: p.bg }}
-                        title={p.label}
-                      />
-                    ))}
+                {/* Background Gradient Picker — only show if no image */}
+                {!storyImagePreview && (
+                  <div className="flex items-center gap-2">
+                    <span className="text-white/60 text-[10px] font-black uppercase tracking-wider shrink-0">BG</span>
+                    <div className="flex gap-2 overflow-x-auto scrollbar-none flex-1">
+                      {STORY_BG_PRESETS.map(p => (
+                        <button
+                          key={p.bg}
+                          onClick={() => setStoryBg(p.bg)}
+                          className={`w-8 h-8 rounded-full shrink-0 transition-transform active:scale-90 ${storyBg === p.bg ? 'scale-125 ring-2 ring-white' : ''}`}
+                          style={{ background: p.bg }}
+                          title={p.label}
+                        />
+                      ))}
+                    </div>
                   </div>
-                </div>
+                )}
               </div>
+
+              {/* Hidden image file input */}
+              <input
+                ref={storyImageInputRef}
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={e => {
+                  const file = e.target.files?.[0];
+                  if (!file) return;
+                  setStoryImage(file);
+                  const reader = new FileReader();
+                  reader.onload = ev => setStoryImagePreview(ev.target.result);
+                  reader.readAsDataURL(file);
+                  e.target.value = '';
+                }}
+              />
             </div>
           );
         })()}
+
 
         {/* ────────────────── STORY VIEWER MODAL ────────────────── */}
         {viewingStoryUser && (() => {
@@ -2326,10 +2389,16 @@ const MessengerPage = ({ onBack, activeChatPartner, setActiveChatPartner, socket
           if (!story) { setViewingStoryUser(null); return null; }
           const isOwnStory = viewingStoryUser._id?.toString() === currentUser?._id?.toString();
           const timeAgo = formatRelativeTime(story.createdAt);
+          const hasImage = !!story.image;
+          const imageUrl = hasImage ? `${API_BASE}/api/image?file=${encodeURIComponent(story.image)}` : null;
+          const viewerBg = hasImage ? `url(${imageUrl})` : (story.bgGradient || 'linear-gradient(135deg, #7C3AED, #2563EB)');
           return (
             <div
               className="fixed inset-0 z-[110] flex flex-col"
-              style={{ background: story.bgGradient || 'linear-gradient(135deg, #7C3AED, #2563EB)' }}
+              style={hasImage
+                ? { backgroundImage: viewerBg, backgroundSize: 'cover', backgroundPosition: 'center' }
+                : { background: viewerBg }
+              }
               onClick={() => {
                 const nextIdx = viewingStoryIndex + 1;
                 if (nextIdx < viewingStoryUser.stories.length) {
@@ -2339,8 +2408,11 @@ const MessengerPage = ({ onBack, activeChatPartner, setActiveChatPartner, socket
                 }
               }}
             >
+              {/* Dark overlay for image readability */}
+              {hasImage && <div className="absolute inset-0 bg-black/30" />}
+
               {/* Progress bars */}
-              <div className="flex gap-1 px-3 pt-12 pb-2 shrink-0">
+              <div className="relative flex gap-1 px-3 pt-12 pb-2 shrink-0 z-10">
                 {viewingStoryUser.stories.map((_, i) => (
                   <div key={i} className="flex-1 h-0.5 bg-white/30 rounded-full overflow-hidden">
                     <div
@@ -2354,7 +2426,7 @@ const MessengerPage = ({ onBack, activeChatPartner, setActiveChatPartner, socket
               </div>
 
               {/* Header */}
-              <div className="flex items-center justify-between px-4 py-2 shrink-0" onClick={e => e.stopPropagation()}>
+              <div className="relative flex items-center justify-between px-4 py-2 shrink-0 z-10" onClick={e => e.stopPropagation()}>
                 <div className="flex items-center gap-3">
                   {viewingStoryUser.profilePic ? (
                     <img src={getProfilePicUrl(viewingStoryUser.profilePic)} className="w-9 h-9 rounded-full object-cover border-2 border-white/60" alt="" />
@@ -2372,9 +2444,9 @@ const MessengerPage = ({ onBack, activeChatPartner, setActiveChatPartner, socket
                   {isOwnStory && (
                     <button
                       onClick={e => { e.stopPropagation(); if (window.confirm('Delete this story?')) handleDeleteStory(story._id); }}
-                      className="w-8 h-8 rounded-full bg-rose-500/80 text-white flex items-center justify-center active:scale-90"
+                      className="px-3 py-1.5 rounded-full bg-rose-500/80 text-white text-xs font-black flex items-center gap-1 active:scale-90"
                     >
-                      <X className="w-4 h-4" />
+                      🗑️ Delete
                     </button>
                   )}
                   <button
@@ -2387,9 +2459,9 @@ const MessengerPage = ({ onBack, activeChatPartner, setActiveChatPartner, socket
               </div>
 
               {/* Story Content */}
-              <div className="flex-1 flex flex-col items-center justify-center px-8 gap-5">
+              <div className="relative flex-1 flex flex-col items-center justify-center px-8 gap-5 z-10">
                 {story.emoji && (
-                  <div className="text-8xl leading-none select-none">{story.emoji}</div>
+                  <div className="text-8xl leading-none select-none" style={{ filter: 'drop-shadow(0 4px 16px rgba(0,0,0,0.4))' }}>{story.emoji}</div>
                 )}
                 {story.text && (
                   <p
@@ -2398,7 +2470,7 @@ const MessengerPage = ({ onBack, activeChatPartner, setActiveChatPartner, socket
                       color: story.textColor || '#ffffff',
                       fontWeight: story.fontStyle === 'bold' ? '900' : '700',
                       fontStyle: story.fontStyle === 'italic' ? 'italic' : 'normal',
-                      textShadow: '0 3px 16px rgba(0,0,0,0.4)',
+                      textShadow: '0 3px 20px rgba(0,0,0,0.6)',
                     }}
                   >
                     {story.text}
@@ -2406,8 +2478,21 @@ const MessengerPage = ({ onBack, activeChatPartner, setActiveChatPartner, socket
                 )}
               </div>
 
-              {/* Tap hint */}
-              <div className="shrink-0 pb-16 text-center">
+              {/* Bottom area — Add Another Story button for own stories */}
+              <div className="relative shrink-0 pb-12 flex flex-col items-center gap-3 z-10" onClick={e => e.stopPropagation()}>
+                {isOwnStory && (
+                  <button
+                    onClick={() => {
+                      setViewingStoryUser(null);
+                      setStoryText(''); setStoryEmoji('');
+                      setStoryImage(null); setStoryImagePreview('');
+                      setShowStoryCreator(true);
+                    }}
+                    className="flex items-center gap-2 px-5 py-2.5 rounded-full bg-white/20 backdrop-blur-sm text-white font-bold text-sm border border-white/30 active:scale-95 transition-all"
+                  >
+                    <span>➕</span> Add Another Story
+                  </button>
+                )}
                 <p className="text-white/40 text-xs font-bold">Tap to skip</p>
               </div>
             </div>

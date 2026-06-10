@@ -57,6 +57,7 @@ const UserSchema = new mongoose.Schema({
   stories: [{
     text: { type: String, default: '' },
     emoji: { type: String, default: '' },
+    image: { type: String, default: '' },
     bgGradient: { type: String, default: 'linear-gradient(135deg, #7C3AED 0%, #2563EB 100%)' },
     textColor: { type: String, default: '#ffffff' },
     fontStyle: { type: String, default: 'normal' },
