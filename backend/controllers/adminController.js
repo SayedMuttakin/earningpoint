@@ -543,7 +543,9 @@ exports.updateGlobalSettings = async (req, res) => {
       fortuneWheelConfig,
       promoBanner,
       promoBanners,
-      admobConfig
+      admobConfig,
+      referralCampaignTarget,
+      referralCampaignReward
     } = req.body;
     
     let settings = await GlobalSetting.findOne({ configKey: 'main_config' });
@@ -562,6 +564,8 @@ exports.updateGlobalSettings = async (req, res) => {
     if (promoBanner !== undefined) settings.promoBanner = promoBanner;
     if (promoBanners !== undefined) settings.promoBanners = promoBanners;
     if (admobConfig !== undefined) settings.admobConfig = admobConfig;
+    if (referralCampaignTarget !== undefined) settings.referralCampaignTarget = Number(referralCampaignTarget);
+    if (referralCampaignReward !== undefined) settings.referralCampaignReward = Number(referralCampaignReward);
 
     await settings.save();
     res.json({ message: 'Settings updated successfully', settings });

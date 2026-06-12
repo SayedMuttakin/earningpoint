@@ -1,38 +1,61 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { API_BASE } from '../config';
-import { ChevronLeft, Share2, Copy, Check, Users, X, Link, ShieldCheck, Clock } from 'lucide-react';
+import { 
+  ChevronLeft, Copy, Check, Users, Link, 
+  Wallet, Flame, Gift, Lock, Info, CheckCircle2, Tag, HelpCircle
+} from 'lucide-react';
 import PullToRefresh from './PullToRefresh';
 import BannerAd from './BannerAd';
 import { Share } from '@capacitor/share';
 
 const APP_URL = 'https://zenivio.it.com';
 
-const BigAdBanner = ({ globalSettings }) => {
-  return (
-    <div className="w-full flex justify-center mt-2">
-      <BannerAd globalSettings={globalSettings} />
-    </div>
-  );
-};
-
-// Mask phone/email for privacy: show first 3 and last 2 chars
 const maskPhone = (phone) => {
   if (!phone || phone.length < 6) return phone || '—';
   return phone.slice(0, 3) + '••••' + phone.slice(-2);
 };
 
-const ReferralsPage = ({ onBack, globalSettings }) => {
+const ReferralsPage = ({ onBack }) => {
   const [refreshing, setRefreshing] = useState(false);
   const [copied, setCopied] = useState(false);
   const [linkCopied, setLinkCopied] = useState(false);
-  const [showShareSheet, setShowShareSheet] = useState(false);
   const [referralData, setReferralData] = useState({
     referralCode: 'Loading...',
     friendsInvited: 0,
     completedReferrals: 0,
     totalEarned: 0,
     referrals: [],
+    campaignClaimed: false,
+    referredByCode: null
   });
+
+  const [globalSettings, setGlobalSettings] = useState({
+    referralCampaignTarget: 5,
+    referralCampaignReward: 300,
+    bkashNumber: '',
+    nagadNumber: '',
+    rocketNumber: '',
+    admobConfig: {}
+  });
+
+  // Apply Referral Code states
+  const [inputReferralCode, setInputReferralCode] = useState('');
+  const [applying, setApplying] = useState(false);
+  const [applyError, setApplyError] = useState('');
+  const [applySuccess, setApplySuccess] = useState('');
+  const [claimingCampaign, setClaimingCampaign] = useState(false);
+
+  const fetchGlobalSettings = async () => {
+    try {
+      const res = await fetch(`${API_BASE}/api/earning/settings`);
+      const data = await res.json();
+      if (res.ok && data) {
+        setGlobalSettings(data);
+      }
+    } catch (error) {
+      console.error('Error fetching global settings:', error);
+    }
+  };
 
   const fetchReferrals = useCallback(async () => {
     try {
@@ -49,6 +72,8 @@ const ReferralsPage = ({ onBack, globalSettings }) => {
           completedReferrals: data.completedReferrals || 0,
           totalEarned: data.totalEarned,
           referrals: data.referrals || [],
+          campaignClaimed: !!data.campaignClaimed,
+          referredByCode: data.referredByCode || null
         });
       }
     } catch (err) {
@@ -58,9 +83,21 @@ const ReferralsPage = ({ onBack, globalSettings }) => {
     }
   }, []);
 
-  useEffect(() => { fetchReferrals(); }, [fetchReferrals]);
+  useEffect(() => {
+    fetchReferrals();
+    fetchGlobalSettings();
+    // Prefill pending referral code if stored in localStorage
+    const savedCode = localStorage.getItem('pending_referral_code');
+    if (savedCode) {
+      setInputReferralCode(savedCode);
+    }
+  }, [fetchReferrals]);
 
-  const handleRefresh = () => { setRefreshing(true); fetchReferrals(); };
+  const handleRefresh = () => {
+    setRefreshing(true);
+    fetchReferrals();
+    fetchGlobalSettings();
+  };
 
   const handleCopy = () => {
     navigator.clipboard.writeText(referralData.referralCode);
@@ -86,235 +123,408 @@ const ReferralsPage = ({ onBack, globalSettings }) => {
     } catch (err) {
       console.log('Capacitor share fallback:', err);
     }
-    setShowShareSheet(true);
-  };
-
-  const handleCopyLink = () => {
+    // Fallback: Copy link
     navigator.clipboard.writeText(getShareUrl());
     setLinkCopied(true);
     setTimeout(() => setLinkCopied(false), 2500);
+    alert('Referral link copied to clipboard!');
   };
 
-  const handleWhatsApp = () => {
-    const msg = encodeURIComponent(`${getShareText()} ${getShareUrl()}`);
-    window.open(`https://wa.me/?text=${msg}`, '_blank');
-    setShowShareSheet(false);
+  const handlePaste = async () => {
+    try {
+      const text = await navigator.clipboard.readText();
+      if (text) {
+        setInputReferralCode(text.trim().toUpperCase());
+      }
+    } catch (err) {
+      console.error('Clipboard paste failed:', err);
+      // fallback to input focus
+    }
   };
 
-  const handleMessenger = () => {
-    const url = encodeURIComponent(getShareUrl());
-    window.open(`fb-messenger://share?link=${url}`, '_blank');
-    setShowShareSheet(false);
+  const handleApplyReferral = async () => {
+    if (!inputReferralCode || !inputReferralCode.trim()) {
+      setApplyError('Please enter a referral code.');
+      return;
+    }
+    setApplying(true);
+    setApplyError('');
+    setApplySuccess('');
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`${API_BASE}/api/referrals/apply`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ referralCode: inputReferralCode.trim().toUpperCase() })
+      });
+      const data = await response.json();
+      if (response.ok) {
+        setApplySuccess(data.message || 'Referral code applied successfully!');
+        localStorage.removeItem('pending_referral_code');
+        fetchReferrals();
+      } else {
+        setApplyError(data.message || 'Failed to apply referral code.');
+      }
+    } catch (err) {
+      setApplyError('Server connection error. Please try again.');
+    } finally {
+      setApplying(false);
+    }
   };
 
-  const handleFacebook = () => {
-    const url = encodeURIComponent(getShareUrl());
-    window.open(`https://www.facebook.com/sharer/sharer.php?u=${url}`, '_blank');
-    setShowShareSheet(false);
+  const handleClaimCampaign = async () => {
+    setClaimingCampaign(true);
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`${API_BASE}/api/referrals/claim-campaign`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      const data = await response.json();
+      if (response.ok) {
+        alert(data.message || 'Campaign reward claimed successfully!');
+        fetchReferrals();
+      } else {
+        alert(data.message || 'Failed to claim campaign reward.');
+      }
+    } catch (err) {
+      alert('Server connection error. Please try again.');
+    } finally {
+      setClaimingCampaign(false);
+    }
   };
 
-  const handleTelegram = () => {
-    const url = encodeURIComponent(getShareUrl());
-    const text = encodeURIComponent(getShareText());
-    window.open(`https://t.me/share/url?url=${url}&text=${text}`, '_blank');
-    setShowShareSheet(false);
-  };
+  const campaignTarget = globalSettings.referralCampaignTarget || 5;
+  const campaignReward = globalSettings.referralCampaignReward || 300;
+
+  // Render progress steps array
+  const steps = [];
+  for (let i = 1; i <= campaignTarget; i++) {
+    steps.push(i);
+  }
 
   const pendingReferrals = referralData.referrals.filter(r => !r.vpnPurchased);
   const completedReferralsList = referralData.referrals.filter(r => r.vpnPurchased);
 
   return (
     <PullToRefresh onRefresh={handleRefresh} refreshing={refreshing}>
-      <div className="w-full min-h-screen bg-slate-50 flex flex-col pb-24">
-        <div className="sticky top-0 z-10 bg-white border-b border-slate-100 shadow-sm">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex items-center">
-            <button onClick={onBack} className="w-10 h-10 rounded-full bg-slate-50 flex items-center justify-center hover:bg-slate-100 transition-colors mr-4">
-              <ChevronLeft className="w-6 h-6 text-slate-700" />
+      <div className="w-full min-h-screen bg-slate-50 dark:bg-slate-950 flex flex-col pb-24">
+        {/* Header */}
+        <div className="sticky top-0 z-10 bg-white dark:bg-slate-900 border-b border-slate-100 dark:border-slate-800 shadow-3xs">
+          <div className="max-w-md mx-auto px-4 py-3 flex items-center justify-between">
+            <button onClick={onBack} className="w-9 h-9 rounded-full bg-slate-50 dark:bg-slate-800 flex items-center justify-center hover:bg-slate-100 dark:hover:bg-slate-700 active:scale-90 transition-transform">
+              <ChevronLeft className="w-5 h-5 text-slate-700 dark:text-slate-300" />
             </button>
-            <h1 className="text-xl font-bold text-slate-900">My Referrals</h1>
+            <div className="text-center flex-1">
+              <h1 className="text-sm font-black text-slate-800 dark:text-white leading-tight">Referral Code</h1>
+              <p className="text-[10px] text-slate-400 dark:text-slate-500 font-bold mt-0.5 leading-none">Unlock rewards with a referral code</p>
+            </div>
+            <button onClick={() => alert('Invite friends by sharing your referral code. When they join and purchase a VPN plan, you both get ৳60 cash, plus you can claim milestone campaign rewards!')} className="w-9 h-9 rounded-full bg-slate-50 dark:bg-slate-800 flex items-center justify-center text-slate-700 dark:text-slate-350">
+              <HelpCircle className="w-5 h-5" />
+            </button>
           </div>
         </div>
 
-        <div className="max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-8 flex justify-center">
-          <div className="w-full max-w-xl flex flex-col items-center gap-6">
-
-            {/* Main invite card */}
-            <div className="bg-white w-full rounded-3xl p-6 sm:p-8 shadow-sm border border-slate-200 text-center relative overflow-hidden animate-fade-in-up">
-              <div className="absolute top-0 right-0 -mr-8 -mt-8 w-32 h-32 bg-brand-50 rounded-full opacity-50 pointer-events-none" />
-              <div className="absolute bottom-0 left-0 -ml-8 -mb-8 w-24 h-24 bg-brand-100 rounded-full opacity-50 pointer-events-none" />
-              <div className="w-16 h-16 sm:w-20 sm:h-20 bg-brand-50 rounded-full flex items-center justify-center text-brand-600 mx-auto mb-4 sm:mb-6 shadow-sm relative z-10">
-                <Users className="w-8 h-8 sm:w-10 sm:h-10" />
-              </div>
-              <h2 className="text-2xl sm:text-3xl font-black text-slate-900 mb-2 sm:mb-3 relative z-10">Invite Friends &amp; Earn</h2>
-              <p className="text-sm sm:text-base text-slate-600 mb-6 sm:mb-8 max-w-sm mx-auto relative z-10 font-medium">
-                Share your code. When your friend purchases a <span className="text-brand-600 font-bold">VPN plan</span>, you <strong>both</strong> earn a <span className="text-brand-600 font-bold">60 TK Bonus!</span>
-              </p>
-
-              <div className="bg-slate-50 border border-slate-200 rounded-2xl p-4 sm:p-6 relative z-10 mb-4 sm:mb-6">
-                <span className="text-[10px] sm:text-xs font-bold text-slate-400 uppercase tracking-wider mb-2 block">Your Unique Referral Code</span>
-                <div className="flex items-center justify-between bg-white border border-slate-200 rounded-xl p-1.5 sm:p-2 pl-4 sm:pl-6 shadow-sm mb-2">
-                  <span className="font-mono text-base sm:text-2xl font-bold text-slate-800 tracking-normal sm:tracking-wider truncate">
-                    {referralData.referralCode}
-                  </span>
-                  <button onClick={handleCopy} className={`w-10 h-10 sm:w-12 sm:h-12 flex-shrink-0 flex items-center justify-center rounded-lg transition-all ${copied ? 'bg-green-500 text-white' : 'bg-brand-50 text-brand-600 hover:bg-brand-100'}`}>
-                    {copied ? <Check className="w-4 h-4 sm:w-5 sm:h-5" /> : <Copy className="w-4 h-4 sm:w-5 sm:h-5" />}
+        <div className="max-w-md mx-auto w-full px-4 pt-6 space-y-5">
+          {/* Main Card: Your Referral Code */}
+          <div className="bg-gradient-to-r from-violet-650 to-indigo-650 text-white rounded-3xl p-6 shadow-md relative overflow-hidden flex flex-col justify-between min-h-[160px]">
+            {/* Background design elements */}
+            <div className="absolute top-0 right-0 -mr-8 -mt-8 w-24 h-24 bg-white/10 rounded-full blur-xl pointer-events-none" />
+            <div className="absolute bottom-0 left-0 -ml-8 -mb-8 w-20 h-20 bg-white/10 rounded-full blur-xl pointer-events-none" />
+            
+            <div className="flex justify-between items-start gap-4">
+              <div className="space-y-1 relative z-10 flex-1">
+                <span className="text-[10px] font-black text-indigo-250 uppercase tracking-widest block">Your Referral Code</span>
+                
+                {/* Code display inside card */}
+                <div className="flex items-center justify-between py-2.5 px-4 bg-white/10 border border-white/20 rounded-2xl mt-2 select-all">
+                  <span className="font-mono text-lg font-black tracking-widest truncate">{referralData.referralCode}</span>
+                  <button 
+                    onClick={handleCopy} 
+                    className={`p-2 rounded-xl transition-all ${copied ? 'bg-emerald-500 text-white' : 'hover:bg-white/10 text-white'}`}
+                  >
+                    {copied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
                   </button>
                 </div>
-                <p className="text-[11px] text-slate-500 font-medium italic">Note: Your username is your unique referral code.</p>
-                <button onClick={handleCopyLink} className={`mt-3 w-full flex items-center justify-center gap-2 py-2 rounded-xl border text-sm font-semibold transition-all ${linkCopied ? 'bg-green-500 text-white border-green-500' : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-100'}`}>
-                  {linkCopied ? <Check className="w-4 h-4" /> : <Link className="w-4 h-4" />}
-                  {linkCopied ? 'Link Copied!' : 'Copy Referral Link'}
+              </div>
+
+              {/* Pedestal gift illustration */}
+              <div className="w-14 h-14 bg-white/10 rounded-full flex items-center justify-center text-2xl shadow-inner flex-shrink-0 animate-bounce relative z-10" style={{ animationDuration: '3s' }}>
+                🎁
+              </div>
+            </div>
+
+            <p className="text-[10px] text-slate-100 font-bold leading-normal mt-4 relative z-10">
+              Share your code with friends and earn exciting rewards together!
+            </p>
+          </div>
+
+          {/* What you can do section */}
+          <div>
+            <h3 className="text-xs font-black text-slate-800 dark:text-white uppercase tracking-wider mb-3 ml-1">What you can do</h3>
+            <div className="grid grid-cols-4 gap-2">
+              {[
+                { label: 'Invite Friends', desc: 'Share your code with friends', icon: Users, color: 'bg-violet-100 text-violet-600 dark:bg-violet-950/40 dark:text-violet-400' },
+                { label: 'Earn Rewards', desc: 'Get coins & bonuses for successful invites', icon: Gift, color: 'bg-amber-100 text-amber-600 dark:bg-amber-950/40 dark:text-amber-400' },
+                { label: 'Complete Tasks', desc: 'More tasks, more earnings', icon: CheckCircle2, color: 'bg-blue-100 text-blue-600 dark:bg-blue-950/40 dark:text-blue-400' },
+                { label: 'Withdraw', desc: 'Withdraw your earnings anytime', icon: Wallet, color: 'bg-emerald-100 text-emerald-600 dark:bg-emerald-950/40 dark:text-emerald-400' },
+              ].map((item, idx) => (
+                <div key={idx} className="bg-white dark:bg-slate-900 border border-slate-150/40 dark:border-slate-800 rounded-2xl p-2.5 text-center flex flex-col items-center justify-between min-h-[110px] shadow-3xs hover:-translate-y-0.5 transition-transform duration-200">
+                  <div className={`w-8 h-8 rounded-full flex items-center justify-center ${item.color} flex-shrink-0`}>
+                    <item.icon className="w-4 h-4" strokeWidth={2.5} />
+                  </div>
+                  <div className="mt-2 flex-1 flex flex-col justify-center">
+                    <span className="font-black text-[9.5px] text-slate-800 dark:text-slate-200 block leading-tight">{item.label}</span>
+                    <span className="text-[7.5px] text-slate-400 dark:text-slate-500 font-bold block leading-tight mt-0.5">{item.desc}</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Have a Referral Code Section */}
+          <div className="bg-white dark:bg-slate-900 border border-slate-150/40 dark:border-slate-800 rounded-3xl p-5 shadow-3xs">
+            <h3 className="text-sm font-black text-slate-800 dark:text-white">Have a Referral Code?</h3>
+            <p className="text-[10px] text-slate-400 dark:text-slate-500 font-bold mt-0.5">Enter the referral code you received from your friend</p>
+
+            {referralData.referredByCode ? (
+              // Already submitted a code
+              <div className="flex items-center gap-2.5 py-3 px-4 bg-emerald-50 dark:bg-emerald-900/15 text-emerald-600 dark:text-emerald-400 rounded-2xl text-[11px] font-black border border-emerald-100 dark:border-emerald-950/30 mt-4 animate-fade-in">
+                <span>✓ Referral code <strong>"{referralData.referredByCode}"</strong> applied successfully!</span>
+              </div>
+            ) : (
+              // Submit code field
+              <div className="mt-4 space-y-3">
+                <div className="flex items-center gap-1 bg-slate-50 dark:bg-slate-900/20 border border-slate-200/50 dark:border-slate-800 rounded-2xl p-1.5 focus-within:border-indigo-500/50 transition-colors">
+                  <div className="pl-2.5 flex items-center justify-center text-[#7C3AED] dark:text-indigo-400 flex-shrink-0">
+                    <Tag className="w-4 h-4" />
+                  </div>
+                  <input
+                    type="text"
+                    placeholder="Enter referral code"
+                    value={inputReferralCode}
+                    onChange={(e) => setInputReferralCode(e.target.value.trim().toUpperCase())}
+                    className="flex-1 bg-transparent px-2 py-1 text-xs font-bold text-slate-800 dark:text-white outline-none border-0 placeholder-slate-400 dark:placeholder-slate-600 uppercase"
+                  />
+                  <button 
+                    onClick={handlePaste}
+                    className="flex items-center gap-1 px-3 py-1.5 bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-750 text-[#7C3AED] dark:text-indigo-400 rounded-xl text-[9.5px] font-black shadow-3xs cursor-pointer active:scale-95 transition-transform"
+                  >
+                    Paste
+                  </button>
+                </div>
+
+                {applyError && (
+                  <p className="text-[9.5px] text-rose-500 font-black ml-1.5 animate-pulse">❌ {applyError}</p>
+                )}
+                {applySuccess && (
+                  <p className="text-[9.5px] text-emerald-500 font-black ml-1.5">✅ {applySuccess}</p>
+                )}
+
+                <div className="flex items-start gap-1.5 text-[9px] text-slate-450 dark:text-slate-500 font-bold leading-relaxed px-1">
+                  <Info className="w-3.5 h-3.5 flex-shrink-0 text-[#7C3AED]" />
+                  <span>Each code can be used only once per account.</span>
+                </div>
+
+                <button
+                  onClick={handleApplyReferral}
+                  disabled={applying || !inputReferralCode.trim()}
+                  className="w-full py-3.5 bg-gradient-to-r from-[#7C3AED] to-[#5B21B6] disabled:opacity-50 text-white rounded-2xl text-xs font-black shadow-md shadow-indigo-650/20 active:scale-95 transition-transform flex items-center justify-center gap-2 cursor-pointer"
+                >
+                  <Gift className="w-4 h-4" /> {applying ? 'Submitting...' : 'Submit Code & Get Reward'}
                 </button>
-              </div>
 
-              <button onClick={handleShare} className="w-full bg-brand-600 hover:bg-brand-700 text-white font-bold py-3 sm:py-4 rounded-xl transition-all shadow-md active:scale-95 flex items-center justify-center gap-2 text-base sm:text-lg relative z-10">
-                <Share2 className="w-4 h-4 sm:w-5 sm:h-5" /> Share Link Now
-              </button>
-            </div>
-
-            {/* Stats row */}
-            <div className="w-full grid grid-cols-3 gap-3 sm:gap-4 animate-fade-in-up" style={{ animationDelay: '0.1s' }}>
-              <div className="bg-white rounded-2xl p-4 border border-slate-200 shadow-sm text-center">
-                <span className="text-2xl font-black text-slate-900 block mb-1">{referralData.friendsInvited}</span>
-                <span className="text-xs font-medium text-slate-500">Invited</span>
-              </div>
-              <div className="bg-white rounded-2xl p-4 border border-emerald-200 shadow-sm text-center">
-                <span className="text-2xl font-black text-emerald-600 block mb-1">{referralData.completedReferrals}</span>
-                <span className="text-xs font-medium text-slate-500">VPN Bought</span>
-              </div>
-              <div className="bg-white rounded-2xl p-4 border border-slate-200 shadow-sm text-center">
-                <span className="text-2xl font-black text-brand-600 block mb-1">৳{referralData.totalEarned}</span>
-                <span className="text-xs font-medium text-slate-500">Earned</span>
-              </div>
-            </div>
-
-            <BannerAd globalSettings={globalSettings} />
-
-            {/* ─── Referral List ──────────────────────────────────────────── */}
-            {referralData.referrals.length > 0 && (
-              <div className="w-full animate-fade-in-up" style={{ animationDelay: '0.15s' }}>
-                <h3 className="text-base font-black text-slate-800 mb-3 flex items-center gap-2">
-                  <Users className="w-5 h-5 text-brand-500" /> Referral List
-                </h3>
-
-                {/* Completed (VPN purchased) */}
-                {completedReferralsList.length > 0 && (
-                  <div className="mb-4">
-                    <div className="flex items-center gap-2 mb-2">
-                      <ShieldCheck className="w-4 h-4 text-emerald-500" />
-                      <span className="text-xs font-black text-emerald-600 uppercase tracking-wider">VPN Purchased ({completedReferralsList.length})</span>
-                    </div>
-                    <div className="flex flex-col gap-2">
-                      {completedReferralsList.map((r) => (
-                        <div key={r.id} className="bg-white border border-emerald-200 rounded-2xl px-4 py-3 flex items-center gap-3 shadow-sm">
-                          <div className="w-10 h-10 rounded-full bg-emerald-100 flex items-center justify-center flex-shrink-0">
-                            <ShieldCheck className="w-5 h-5 text-emerald-500" />
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <p className="text-sm font-bold text-slate-800 truncate">{r.name || 'User'}</p>
-                            <p className="text-xs text-slate-400 font-mono">{maskPhone(r.phone)}</p>
-                          </div>
-                          <div className="text-right shrink-0">
-                            <span className="text-xs font-black text-emerald-600 bg-emerald-50 px-2 py-1 rounded-full block mb-0.5">✅ Verified</span>
-                            <span className="text-[10px] text-slate-400">+{r.bonusAwarded}৳</span>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {/* Pending (no VPN yet) */}
-                {pendingReferrals.length > 0 && (
-                  <div>
-                    <div className="flex items-center gap-2 mb-2">
-                      <Clock className="w-4 h-4 text-amber-500" />
-                      <span className="text-xs font-black text-amber-600 uppercase tracking-wider">Waiting for VPN ({pendingReferrals.length})</span>
-                    </div>
-                    <div className="flex flex-col gap-2">
-                      {pendingReferrals.map((r) => (
-                        <div key={r.id} className="bg-white border border-amber-200 rounded-2xl px-4 py-3 flex items-center gap-3 shadow-sm opacity-80">
-                          <div className="w-10 h-10 rounded-full bg-amber-100 flex items-center justify-center flex-shrink-0">
-                            <Clock className="w-5 h-5 text-amber-500" />
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <p className="text-sm font-bold text-slate-700 truncate">{r.name || 'User'}</p>
-                            <p className="text-xs text-slate-400 font-mono">{maskPhone(r.phone)}</p>
-                          </div>
-                          <div className="text-right shrink-0">
-                            <span className="text-xs font-bold text-amber-600 bg-amber-50 px-2 py-1 rounded-full block mb-0.5">⏳ Pending</span>
-                            <span className="text-[10px] text-slate-400">No VPN yet</span>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                    <p className="text-xs text-slate-400 text-center mt-3 font-medium">
-                      💡 Ask your pending friends to purchase a VPN plan to unlock your 60৳ bonus!
-                    </p>
-                  </div>
-                )}
+                <div className="flex items-center justify-center gap-1 text-[8.5px] text-slate-400 dark:text-slate-600 font-bold pt-1">
+                  <Lock className="w-3 h-3" /> Your referral code will be used securely
+                </div>
               </div>
             )}
+          </div>
 
-            {/* Promo banner */}
-            <div className="w-full bg-gradient-to-r from-brand-600 to-indigo-600 rounded-2xl p-5 sm:p-6 text-white text-center shadow-lg relative overflow-hidden animate-fade-in-up" style={{ animationDelay: '0.2s' }}>
-               <div className="relative z-10">
-                 <h3 className="text-lg sm:text-xl font-black mb-1 sm:mb-2">Earn Without Limits!</h3>
-                 <p className="text-xs sm:text-sm font-medium opacity-90">Invite as many friends as you want. There is no cap on how much you can earn from referrals.</p>
-               </div>
-               <div className="absolute top-0 right-0 -mt-8 -mr-8 w-32 h-32 bg-white opacity-10 rounded-full blur-2xl"></div>
+          {/* Milestone Campaign Section */}
+          <div className="bg-gradient-to-r from-violet-900 to-indigo-900 text-white rounded-3xl p-5 shadow-lg relative overflow-hidden border border-indigo-950 flex flex-col gap-4">
+            <div className="absolute top-0 right-0 -mr-6 -mt-6 w-20 h-20 bg-white/5 rounded-full blur-xl pointer-events-none" />
+            
+            <div className="flex items-start justify-between gap-4">
+              <div className="flex-1">
+                <div className="flex items-center gap-1.5 bg-white/10 px-2.5 py-1 rounded-full text-[9px] font-black text-white w-max">
+                  <Flame className="w-3 h-3 text-orange-400 fill-orange-400 animate-pulse" />
+                  <span>Current Campaign</span>
+                </div>
+                
+                <h3 className="text-[15px] font-black tracking-wide block mt-3 uppercase text-slate-200">
+                  Refer {campaignTarget} Friends
+                </h3>
+                <h2 className="text-xl font-black text-yellow-350 block mt-0.5 tracking-tight">
+                  Earn ৳{campaignReward} Cash
+                </h2>
+              </div>
+
+              {/* Pedestal Box artwork */}
+              <div className="text-3xl animate-pulse flex-shrink-0" style={{ animationDuration: '4s' }}>
+                🎁
+              </div>
             </div>
 
-            <BigAdBanner globalSettings={globalSettings} />
+            {/* Progress Panel */}
+            <div className="bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200 rounded-2xl p-4 flex flex-col gap-4 shadow-md">
+              <div className="flex items-center justify-between">
+                <span className="text-[11px] font-black text-slate-800 dark:text-white">Your Progress</span>
+                <span className="text-[9.5px] font-black text-white bg-[#7C3AED] px-2 py-0.5 rounded-full">
+                  {referralData.completedReferrals} / {campaignTarget}
+                </span>
+              </div>
+
+              {/* Progress step bar checklist */}
+              <div className="flex items-center justify-between px-2.5 relative">
+                {/* Horizontal line behind circles */}
+                <div className="absolute left-6 right-6 top-1/2 -translate-y-1/2 h-0.5 bg-slate-200 dark:bg-slate-800 z-0" />
+                {/* Active progress line color fill */}
+                <div 
+                  className="absolute left-6 top-1/2 -translate-y-1/2 h-0.5 bg-emerald-500 z-0 transition-all duration-500" 
+                  style={{ 
+                    width: `${Math.min(((referralData.completedReferrals - 1) / (campaignTarget - 1)) * 100, 100)}%` 
+                  }}
+                />
+
+                {steps.map((step) => {
+                  const isCompleted = step <= referralData.completedReferrals;
+                  const isActive = step === referralData.completedReferrals + 1 && step <= campaignTarget;
+                  
+                  return (
+                    <div key={step} className="relative z-10 flex items-center justify-center">
+                      {isCompleted ? (
+                        <div className="w-6 h-6 rounded-full bg-emerald-500 text-white flex items-center justify-center shadow-sm">
+                          <Check className="w-3.5 h-3.5 stroke-[3]" />
+                        </div>
+                      ) : isActive ? (
+                        <div className="w-6 h-6 rounded-full bg-white dark:bg-slate-900 border-2 border-[#7C3AED] text-[#7C3AED] dark:text-indigo-400 flex items-center justify-center font-black text-[10px] shadow-sm">
+                          {step}
+                        </div>
+                      ) : (
+                        <div className="w-6 h-6 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-600 flex items-center justify-center font-black text-[10px]">
+                          {step}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+
+              {/* Actions Button */}
+              {referralData.campaignClaimed ? (
+                <button
+                  disabled
+                  className="w-full py-2.5 bg-slate-100 dark:bg-slate-900 text-slate-400 dark:text-slate-600 font-black rounded-xl text-[10.5px] flex items-center justify-center gap-1.5 cursor-not-allowed border border-slate-200/30"
+                >
+                  <Check className="w-4 h-4" /> Campaign Reward Claimed
+                </button>
+              ) : referralData.completedReferrals >= campaignTarget ? (
+                <button
+                  onClick={handleClaimCampaign}
+                  disabled={claimingCampaign}
+                  className="w-full py-2.5 bg-yellow-400 hover:bg-yellow-500 disabled:opacity-50 text-slate-900 font-black rounded-xl text-[10.5px] shadow-md hover:scale-[1.01] active:scale-[0.99] transition-all flex items-center justify-center gap-1.5 cursor-pointer"
+                >
+                  <Wallet className="w-3.5 h-3.5" /> {claimingCampaign ? 'Claiming...' : `Claim ৳${campaignReward} Cash Now!`}
+                </button>
+              ) : (
+                <button
+                  disabled
+                  className="w-full py-2.5 bg-slate-50 dark:bg-slate-900 text-slate-450 dark:text-slate-600 font-bold rounded-xl text-[10px] flex items-center justify-center gap-1.5 cursor-default border border-slate-100 dark:border-slate-800"
+                >
+                  <Wallet className="w-3.5 h-3.5 text-slate-400" /> Complete {campaignTarget} Referrals to get ৳{campaignReward}
+                </button>
+              )}
+            </div>
           </div>
+
+          {/* Stats Summary row */}
+          <div className="grid grid-cols-3 gap-3">
+            <div className="bg-white dark:bg-slate-900 border border-slate-150/40 dark:border-slate-800 rounded-2xl p-3 shadow-3xs text-center">
+              <span className="text-xl font-black text-slate-800 dark:text-white block mb-0.5">{referralData.friendsInvited}</span>
+              <span className="text-[9px] font-black text-slate-400 uppercase tracking-wider">Invited</span>
+            </div>
+            <div className="bg-white dark:bg-slate-900 border border-emerald-150/40 dark:border-emerald-800/40 rounded-2xl p-3 shadow-3xs text-center">
+              <span className="text-xl font-black text-emerald-600 dark:text-emerald-400 block mb-0.5">{referralData.completedReferrals}</span>
+              <span className="text-[9px] font-black text-slate-400 uppercase tracking-wider">VPN Bought</span>
+            </div>
+            <div className="bg-white dark:bg-slate-900 border border-slate-150/40 dark:border-slate-800 rounded-2xl p-3 shadow-3xs text-center">
+              <span className="text-xl font-black text-[#7C3AED] dark:text-indigo-400 block mb-0.5">৳{referralData.totalEarned}</span>
+              <span className="text-[9px] font-black text-slate-400 uppercase tracking-wider">Earned</span>
+            </div>
+          </div>
+
+          {/* Referral List bottom section */}
+          {referralData.referrals.length > 0 && (
+            <div className="space-y-3">
+              <h3 className="text-xs font-black text-slate-800 dark:text-white uppercase tracking-wider ml-1 flex items-center gap-2">
+                <Users className="w-4 h-4 text-[#7C3AED]" /> Referral List
+              </h3>
+
+              {/* Verified Referrals list */}
+              {completedReferralsList.length > 0 && (
+                <div className="space-y-2">
+                  <div className="flex items-center gap-1.5 ml-1">
+                    <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />
+                    <span className="text-[9.5px] font-black text-emerald-600 uppercase tracking-wider">VPN Purchased ({completedReferralsList.length})</span>
+                  </div>
+                  {completedReferralsList.map((r) => (
+                    <div key={r.id} className="bg-white dark:bg-slate-900 border border-emerald-100 dark:border-emerald-950/40 rounded-2xl px-4 py-3 flex items-center justify-between shadow-3xs">
+                      <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 rounded-full bg-emerald-50 dark:bg-emerald-900/20 flex items-center justify-center text-emerald-500">
+                          <CheckCircle2 className="w-4 h-4" />
+                        </div>
+                        <div>
+                          <span className="font-bold text-xs text-slate-800 dark:text-white block">{r.name}</span>
+                          <span className="text-[9px] text-slate-400 dark:text-slate-500 font-mono block mt-0.5">{maskPhone(r.phone)}</span>
+                        </div>
+                      </div>
+                      <div className="text-right flex flex-col items-end">
+                        <span className="text-[9px] font-black text-emerald-600 bg-emerald-50 dark:bg-emerald-950/40 px-2 py-0.5 rounded-full block">Verified</span>
+                        <span className="text-[9px] text-slate-450 dark:text-slate-500 font-bold block mt-1">+{r.bonusAwarded}৳</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {/* Pending Referrals list */}
+              {pendingReferrals.length > 0 && (
+                <div className="space-y-2 pt-2">
+                  <div className="flex items-center gap-1.5 ml-1">
+                    <Info className="w-3.5 h-3.5 text-amber-500" />
+                    <span className="text-[9.5px] font-black text-amber-600 uppercase tracking-wider">Waiting for VPN ({pendingReferrals.length})</span>
+                  </div>
+                  {pendingReferrals.map((r) => (
+                    <div key={r.id} className="bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-850 rounded-2xl px-4 py-3 flex items-center justify-between shadow-3xs opacity-85">
+                      <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 rounded-full bg-slate-50 dark:bg-slate-800 flex items-center justify-center text-slate-400">
+                          <Users className="w-4 h-4" />
+                        </div>
+                        <div>
+                          <span className="font-bold text-xs text-slate-750 dark:text-slate-300 block">{r.name}</span>
+                          <span className="text-[9px] text-slate-400 font-mono block mt-0.5">{maskPhone(r.phone)}</span>
+                        </div>
+                      </div>
+                      <div className="text-right flex flex-col items-end">
+                        <span className="text-[9px] font-black text-amber-600 bg-amber-50 dark:bg-amber-900/20 px-2 py-0.5 rounded-full block">Pending</span>
+                        <span className="text-[8px] text-slate-400 font-bold block mt-1">No VPN plan</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+          
+          <BannerAd globalSettings={globalSettings} />
         </div>
       </div>
-
-      {/* Share Bottom Sheet */}
-      {showShareSheet && (
-        <div className="fixed inset-0 z-50 flex items-end justify-center" onClick={() => setShowShareSheet(false)}>
-          <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" />
-          <div className="relative w-full max-w-lg bg-white rounded-t-3xl px-6 pt-5 pb-10 shadow-2xl" onClick={e => e.stopPropagation()} style={{ animation: 'slideUp 0.3s ease-out' }}>
-            <div className="w-10 h-1 bg-slate-200 rounded-full mx-auto mb-5" />
-            <div className="flex items-center justify-between mb-5">
-              <h3 className="text-base font-bold text-slate-800">Share via</h3>
-              <button onClick={() => setShowShareSheet(false)} className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center">
-                <X className="w-4 h-4 text-slate-600" />
-              </button>
-            </div>
-            <div className="grid grid-cols-4 gap-4 mb-5">
-              <button onClick={handleWhatsApp} className="flex flex-col items-center gap-2">
-                <div className="w-14 h-14 rounded-2xl bg-green-50 flex items-center justify-center active:scale-95 transition-transform">
-                  <svg viewBox="0 0 24 24" className="w-8 h-8 fill-green-500"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
-                </div>
-                <span className="text-xs font-semibold text-slate-600">WhatsApp</span>
-              </button>
-              <button onClick={handleFacebook} className="flex flex-col items-center gap-2">
-                <div className="w-14 h-14 rounded-2xl bg-blue-50 flex items-center justify-center active:scale-95 transition-transform">
-                  <svg viewBox="0 0 24 24" className="w-8 h-8 fill-blue-600"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
-                </div>
-                <span className="text-xs font-semibold text-slate-600">Facebook</span>
-              </button>
-              <button onClick={handleMessenger} className="flex flex-col items-center gap-2">
-                <div className="w-14 h-14 rounded-2xl bg-purple-50 flex items-center justify-center active:scale-95 transition-transform">
-                  <svg viewBox="0 0 24 24" className="w-8 h-8 fill-blue-500"><path d="M12 0C5.373 0 0 4.975 0 11.111c0 3.497 1.745 6.616 4.472 8.652V24l4.086-2.242c1.09.301 2.246.464 3.442.464 6.627 0 12-4.975 12-11.111C24 4.975 18.627 0 12 0zm1.193 14.963l-3.056-3.259-5.963 3.259 6.559-6.963 3.13 3.259 5.889-3.259-6.559 6.963z"/></svg>
-                </div>
-                <span className="text-xs font-semibold text-slate-600">Messenger</span>
-              </button>
-              <button onClick={handleTelegram} className="flex flex-col items-center gap-2">
-                <div className="w-14 h-14 rounded-2xl bg-sky-50 flex items-center justify-center active:scale-95 transition-transform">
-                  <svg viewBox="0 0 24 24" className="w-8 h-8 fill-sky-500"><path d="M11.944 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0a12 12 0 0 0-.056 0zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 0 1 .171.325c.016.093.036.306.02.472-.18 1.898-.962 6.502-1.36 8.627-.168.9-.499 1.201-.82 1.23-.696.065-1.225-.46-1.9-.902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.78-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.48.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635z"/></svg>
-                </div>
-                <span className="text-xs font-semibold text-slate-600">Telegram</span>
-              </button>
-            </div>
-            <button onClick={() => { handleCopyLink(); setShowShareSheet(false); }} className={`w-full flex items-center justify-center gap-2 py-3 rounded-xl border text-sm font-bold transition-all ${linkCopied ? 'bg-green-500 text-white border-green-500' : 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100'}`}>
-              {linkCopied ? <Check className="w-5 h-5" /> : <Link className="w-5 h-5" />}
-              {linkCopied ? 'Link Copied!' : 'Copy Link'}
-            </button>
-          </div>
-        </div>
-      )}
     </PullToRefresh>
   );
 };

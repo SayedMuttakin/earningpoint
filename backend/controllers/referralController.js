@@ -25,12 +25,22 @@ exports.getReferrals = async (req, res) => {
       bonusAwarded: r.bonusAwarded,
     }));
 
+    const referrerRecord = await Referral.findOne({ referredUserId: req.user._id })
+      .populate('referrerId', 'referralCode');
+
+    const campaignClaimed = await Transaction.exists({
+      userId: req.user._id,
+      type: 'referral_campaign_reward'
+    });
+
     res.json({
       referralCode: user.referralCode,
       friendsInvited: referrals.length,
       completedReferrals, // VPN-activated referrals
       totalEarned,
       referrals: referralList,
+      campaignClaimed: !!campaignClaimed,
+      referredByCode: referrerRecord?.referrerId?.referralCode || null
     });
   } catch (error) {
     console.error(error);
@@ -134,5 +144,67 @@ exports.activateReferralBonus = async (activatedUserId) => {
     );
   } catch (error) {
     console.error('activateReferralBonus error:', error);
+  }
+};
+
+// POST /api/referrals/claim-campaign — Claim milestone campaign reward
+exports.claimCampaignReward = async (req, res) => {
+  try {
+    const GlobalSetting = require('../models/GlobalSetting');
+    const settings = await GlobalSetting.findOne({ configKey: 'main_config' });
+    const target = settings?.referralCampaignTarget || 5;
+    const reward = settings?.referralCampaignReward || 300;
+
+    // Count completed referrals for this user
+    const completedCount = await Referral.countDocuments({
+      referrerId: req.user._id,
+      status: 'completed'
+    });
+
+    if (completedCount < target) {
+      return res.status(400).json({ 
+        message: `You need at least ${target} verified referrals to claim this reward. Current: ${completedCount}` 
+      });
+    }
+
+    // Check if already claimed
+    const existing = await Transaction.findOne({
+      userId: req.user._id,
+      type: 'referral_campaign_reward'
+    });
+
+    if (existing) {
+      return res.status(400).json({ message: 'You have already claimed this campaign reward!' });
+    }
+
+    // Credit user balance
+    const user = await User.findById(req.user._id);
+    user.balance = (user.balance || 0) + reward;
+    await user.save();
+
+    // Create transaction record
+    await Transaction.create({
+      userId: req.user._id,
+      type: 'referral_campaign_reward',
+      amount: reward,
+      description: `Referral Campaign Reward — Invited ${target} friends!`,
+      status: 'completed'
+    });
+
+    // Create notification
+    createNotification(
+      req.user._id,
+      'Campaign Reward Claimed! 🏆',
+      `Congratulations! You claimed ৳${reward} cash reward for inviting ${target} friends.`,
+      'earning'
+    );
+
+    res.json({
+      message: `Successfully claimed ৳${reward} cash reward!`,
+      newBalance: user.balance
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: error.message || 'Server Error' });
   }
 };

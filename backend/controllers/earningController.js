@@ -746,7 +746,9 @@ exports.getGlobalSettings = async (req, res) => {
       promoBanners: settings.promoBanners,
       nativeAdsConfig: settings.nativeAdsConfig,
       fortuneWheelConfig: settings.fortuneWheelConfig,
-      admobConfig: settings.admobConfig
+      admobConfig: settings.admobConfig,
+      referralCampaignTarget: settings.referralCampaignTarget,
+      referralCampaignReward: settings.referralCampaignReward
     });
   } catch (error) {
     res.status(500).json({ message: error.message });

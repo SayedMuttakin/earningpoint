@@ -97,6 +97,17 @@ const GlobalSettingSchema = new mongoose.Schema({
     interstitialAdUnitId: { type: String, default: '' },
     rewardedAdUnitId: { type: String, default: '' },
     appOpenAdUnitId: { type: String, default: '' }
+  },
+  // Referral Campaign Configuration
+  referralCampaignTarget: {
+    type: Number,
+    required: true,
+    default: 5
+  },
+  referralCampaignReward: {
+    type: Number,
+    required: true,
+    default: 300
   }
 }, { timestamps: true });
 

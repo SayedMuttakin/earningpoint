@@ -15,6 +15,8 @@ const Settings = ({ ADMIN_API, authHeaders, onLogout }) => {
     bkashNumber: '01700-000000',
     nagadNumber: '01700-000000',
     rocketNumber: '01700-000000',
+    referralCampaignTarget: 5,
+    referralCampaignReward: 300,
     promoBanner: { imageUrl: '', linkUrl: '', isActive: false },
     promoBanners: [
       { imageUrl: '', linkUrl: '', isActive: false },
@@ -267,6 +269,42 @@ const Settings = ({ ADMIN_API, authHeaders, onLogout }) => {
           <button type="submit" disabled={settingsLoading}
             className="w-full py-3 mt-2 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white font-bold rounded-xl transition-all disabled:opacity-50 shadow-lg shadow-indigo-500/20 active:scale-95">
             {settingsLoading ? 'Saving...' : 'Update AdMob Settings'}
+          </button>
+        </form>
+      </div>
+
+      {/* Referral Campaign Configuration */}
+      <div className="bg-[#111827] border border-slate-800 rounded-2xl p-6">
+        <h3 className="text-white font-bold text-base mb-1">Referral Campaign Settings</h3>
+        <p className="text-slate-500 text-xs mb-5">Configure the target number of referrals and the cash reward for the active milestone campaign.</p>
+
+        <form onSubmit={handleUpdateSettings} className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label className="text-slate-400 text-xs font-bold uppercase tracking-wider block mb-2">Target Referrals Count</label>
+              <input 
+                type="number" 
+                value={globalSettings.referralCampaignTarget || 5} 
+                onChange={(e) => setGlobalSettings({...globalSettings, referralCampaignTarget: Number(e.target.value)})}
+                placeholder="e.g. 5"
+                className="w-full bg-slate-800 border border-slate-700 focus:border-indigo-500 rounded-xl px-4 py-3 text-white text-sm outline-none" 
+              />
+            </div>
+            <div>
+              <label className="text-slate-400 text-xs font-bold uppercase tracking-wider block mb-2">Campaign Cash Reward (৳)</label>
+              <input 
+                type="number" 
+                value={globalSettings.referralCampaignReward || 300} 
+                onChange={(e) => setGlobalSettings({...globalSettings, referralCampaignReward: Number(e.target.value)})}
+                placeholder="e.g. 300"
+                className="w-full bg-slate-800 border border-slate-700 focus:border-indigo-500 rounded-xl px-4 py-3 text-white text-sm outline-none" 
+              />
+            </div>
+          </div>
+          
+          <button type="submit" disabled={settingsLoading}
+            className="w-full py-3 mt-2 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white font-bold rounded-xl transition-all disabled:opacity-50 shadow-lg shadow-indigo-500/20 active:scale-95">
+            {settingsLoading ? 'Saving...' : 'Update Campaign Settings'}
           </button>
         </form>
       </div>

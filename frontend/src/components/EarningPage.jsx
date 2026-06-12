@@ -379,6 +379,8 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
     nagadNumber: '01700-000000',
     rocketNumber: '01700-000000',
     premiumIpPackages: [],
+    referralCampaignTarget: 5,
+    referralCampaignReward: 300,
     nativeAdsConfig: [
       { id: 'ad-1', name: 'Native Ad Click Ad 1', icon: 'Tv', coins: 10, quizType: 'math', isActive: true },
       { id: 'ad-2', name: 'Native Ad Click Ad 2', icon: 'Video', coins: 10, quizType: 'math', isActive: true },
@@ -413,6 +415,8 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
           bkashNumber: data.bkashNumber || '01700-000000',
           nagadNumber: data.nagadNumber || '01700-000000',
           rocketNumber: data.rocketNumber || '01700-000000',
+          referralCampaignTarget: data.referralCampaignTarget || 5,
+          referralCampaignReward: data.referralCampaignReward || 300,
           premiumIpPackages: data.premiumIpPackages || [],
           nativeAdsConfig: data.nativeAdsConfig || prev.nativeAdsConfig,
           fortuneWheelConfig: data.fortuneWheelConfig ? {

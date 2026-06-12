@@ -125,12 +125,11 @@ const GoogleButton = ({ onSuccess }) => {
 
 const RegistrationForm = ({ onToggleForm, onRegisterSuccess }) => {
   const [formData, setFormData] = useState({ 
-    name: '', 
     username: '',
+    name: '', 
     phoneOrEmail: '', 
     password: '',
     confirmPassword: '',
-    referCode: '',
     country: 'BGD' 
   });
   const [isLoading, setIsLoading] = useState(false);
@@ -141,41 +140,8 @@ const RegistrationForm = ({ onToggleForm, onRegisterSuccess }) => {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [activeField, setActiveField] = useState('');
   
-  const [referrerName, setReferrerName] = useState(null);
-  const [isCheckingReferrer, setIsCheckingReferrer] = useState(false);
-
   const [isCheckingUsername, setIsCheckingUsername] = useState(false);
   const [usernameStatus, setUsernameStatus] = useState(null);
-
-  // Debounced refer code check
-  useEffect(() => {
-    const checkReferrer = async () => {
-      if (!formData.referCode) {
-        setReferrerName(null);
-        return;
-      }
-      setIsCheckingReferrer(true);
-      try {
-        const response = await fetch(`${API_BASE}/api/auth/referrer/${formData.referCode}`);
-        const data = await response.json();
-        if (response.ok) {
-          setReferrerName(data.name);
-        } else {
-          setReferrerName(null);
-        }
-      } catch (err) {
-        setReferrerName(null);
-      } finally {
-        setIsCheckingReferrer(false);
-      }
-    };
-
-    const timer = setTimeout(() => {
-      checkReferrer();
-    }, 500);
-
-    return () => clearTimeout(timer);
-  }, [formData.referCode]);
 
   // Debounced username availability check
   useEffect(() => {
@@ -215,7 +181,7 @@ const RegistrationForm = ({ onToggleForm, onRegisterSuccess }) => {
     const params = new URLSearchParams(window.location.search);
     const refToken = params.get('ref');
     if (refToken) {
-      setFormData(prev => ({ ...prev, referCode: refToken }));
+      localStorage.setItem('pending_referral_code', refToken);
     }
   }, []);
 
@@ -274,7 +240,6 @@ const RegistrationForm = ({ onToggleForm, onRegisterSuccess }) => {
           username: formData.username,
           phoneOrEmail: formData.phoneOrEmail,
           password: formData.password,
-          referCode: formData.referCode,
           country: selectedCountryObj.name
         })
       });
@@ -524,31 +489,6 @@ const RegistrationForm = ({ onToggleForm, onRegisterSuccess }) => {
             )}
         </div>
 
-        <div>
-          <div className="relative">
-            <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-              <Users className={`h-5 w-5 transition-colors ${activeField === 'referCode' ? 'text-[#087b7a]' : 'text-slate-400'}`} />
-            </div>
-            <input
-              id="referCode"
-              name="referCode"
-              type="text"
-              onFocus={() => setActiveField('referCode')}
-              onBlur={() => setActiveField('')}
-              className={`pl-12 pr-4 block w-full border-2 rounded-full py-3 bg-white outline-none transition-all duration-300 text-sm font-medium text-slate-700 ${activeField === 'referCode' ? 'border-[#087b7a]' : 'border-slate-200'}`}
-              placeholder="Refer Code (Optional)"
-              value={formData.referCode}
-              onChange={handleChange}
-            />
-          </div>
-          {isCheckingReferrer ? (
-            <p className="text-xs text-[#087b7a] font-bold ml-4 mt-1.5 animate-pulse">Checking...</p>
-          ) : formData.referCode && referrerName ? (
-            <p className="text-xs text-[#087b7a] font-bold ml-4 mt-1.5">Referred by: {referrerName}</p>
-          ) : formData.referCode ? (
-            <p className="text-xs text-red-500 font-bold ml-4 mt-1.5">Invalid refer code</p>
-          ) : null}
-        </div>
 
         {error && (
           <div className="bg-red-50 text-red-500 p-2 rounded-lg text-sm text-center border border-red-100 mt-2">
