@@ -232,14 +232,14 @@ const ReferralsPage = ({ onBack }) => {
 
         <div className="max-w-md mx-auto w-full px-4 pt-6 space-y-5">
           {/* Main Card: Your Referral Code */}
-          <div className="bg-gradient-to-r from-violet-650 to-indigo-650 text-white rounded-3xl p-6 shadow-md relative overflow-hidden flex flex-col justify-between min-h-[160px]">
+          <div className="bg-gradient-to-r from-violet-600 to-indigo-700 text-white rounded-3xl p-6 shadow-md relative overflow-hidden flex flex-col justify-between min-h-[160px]">
             {/* Background design elements */}
             <div className="absolute top-0 right-0 -mr-8 -mt-8 w-24 h-24 bg-white/10 rounded-full blur-xl pointer-events-none" />
             <div className="absolute bottom-0 left-0 -ml-8 -mb-8 w-20 h-20 bg-white/10 rounded-full blur-xl pointer-events-none" />
             
             <div className="flex justify-between items-start gap-4">
               <div className="space-y-1 relative z-10 flex-1">
-                <span className="text-[10px] font-black text-indigo-250 uppercase tracking-widest block">Your Referral Code</span>
+                <span className="text-[10px] font-black text-indigo-200 uppercase tracking-widest block">Your Referral Code</span>
                 
                 {/* Code display inside card */}
                 <div className="flex items-center justify-between py-2.5 px-4 bg-white/10 border border-white/20 rounded-2xl mt-2 select-all">
@@ -274,7 +274,7 @@ const ReferralsPage = ({ onBack }) => {
                 { label: 'Complete Tasks', desc: 'More tasks, more earnings', icon: CheckCircle2, color: 'bg-blue-100 text-blue-600 dark:bg-blue-950/40 dark:text-blue-400' },
                 { label: 'Withdraw', desc: 'Withdraw your earnings anytime', icon: Wallet, color: 'bg-emerald-100 text-emerald-600 dark:bg-emerald-950/40 dark:text-emerald-400' },
               ].map((item, idx) => (
-                <div key={idx} className="bg-white dark:bg-slate-900 border border-slate-150/40 dark:border-slate-800 rounded-2xl p-2.5 text-center flex flex-col items-center justify-between min-h-[110px] shadow-3xs hover:-translate-y-0.5 transition-transform duration-200">
+                <div key={idx} className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-2.5 text-center flex flex-col items-center justify-between min-h-[110px] shadow-3xs hover:-translate-y-0.5 transition-transform duration-200">
                   <div className={`w-8 h-8 rounded-full flex items-center justify-center ${item.color} flex-shrink-0`}>
                     <item.icon className="w-4 h-4" strokeWidth={2.5} />
                   </div>
@@ -288,7 +288,7 @@ const ReferralsPage = ({ onBack }) => {
           </div>
 
           {/* Have a Referral Code Section */}
-          <div className="bg-white dark:bg-slate-900 border border-slate-150/40 dark:border-slate-800 rounded-3xl p-5 shadow-3xs">
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-5 shadow-3xs">
             <h3 className="text-sm font-black text-slate-800 dark:text-white">Have a Referral Code?</h3>
             <p className="text-[10px] text-slate-400 dark:text-slate-500 font-bold mt-0.5">Enter the referral code you received from your friend</p>
 
@@ -347,7 +347,7 @@ const ReferralsPage = ({ onBack }) => {
           </div>
 
           {/* Milestone Campaign Section */}
-          <div className="bg-gradient-to-r from-violet-900 to-indigo-900 text-white rounded-3xl p-5 shadow-lg relative overflow-hidden border border-indigo-950 flex flex-col gap-4">
+          <div className="bg-gradient-to-r from-violet-850 to-indigo-950 text-white rounded-3xl p-5 shadow-lg relative overflow-hidden border border-indigo-950 flex flex-col gap-4">
             <div className="absolute top-0 right-0 -mr-6 -mt-6 w-20 h-20 bg-white/5 rounded-full blur-xl pointer-events-none" />
             
             <div className="flex items-start justify-between gap-4">
@@ -383,12 +383,12 @@ const ReferralsPage = ({ onBack }) => {
               {/* Progress step bar checklist */}
               <div className="flex items-center justify-between px-2.5 relative">
                 {/* Horizontal line behind circles */}
-                <div className="absolute left-6 right-6 top-1/2 -translate-y-1/2 h-0.5 bg-slate-200 dark:bg-slate-800 z-0" />
+                <div className="absolute left-[16px] right-[16px] top-1/2 -translate-y-1/2 h-0.5 bg-slate-200 dark:bg-slate-800 z-0" />
                 {/* Active progress line color fill */}
                 <div 
-                  className="absolute left-6 top-1/2 -translate-y-1/2 h-0.5 bg-emerald-500 z-0 transition-all duration-500" 
+                  className="absolute left-[16px] top-1/2 -translate-y-1/2 h-0.5 bg-emerald-500 z-0 transition-all duration-500" 
                   style={{ 
-                    width: `${Math.min(((referralData.completedReferrals - 1) / (campaignTarget - 1)) * 100, 100)}%` 
+                    width: `${Math.min((referralData.completedReferrals / (campaignTarget - 1)) * 100, 100)}%` 
                   }}
                 />
 
@@ -399,15 +399,15 @@ const ReferralsPage = ({ onBack }) => {
                   return (
                     <div key={step} className="relative z-10 flex items-center justify-center">
                       {isCompleted ? (
-                        <div className="w-6 h-6 rounded-full bg-emerald-500 text-white flex items-center justify-center shadow-sm">
-                          <Check className="w-3.5 h-3.5 stroke-[3]" />
+                        <div className="w-8 h-8 rounded-full bg-emerald-500 text-white flex items-center justify-center shadow-sm">
+                          <Check className="w-4 h-4 stroke-[3]" />
                         </div>
                       ) : isActive ? (
-                        <div className="w-6 h-6 rounded-full bg-white dark:bg-slate-900 border-2 border-[#7C3AED] text-[#7C3AED] dark:text-indigo-400 flex items-center justify-center font-black text-[10px] shadow-sm">
+                        <div className="w-8 h-8 rounded-full bg-white dark:bg-slate-900 border-2 border-[#7C3AED] text-[#7C3AED] dark:text-indigo-400 flex items-center justify-center font-black text-xs shadow-sm">
                           {step}
                         </div>
                       ) : (
-                        <div className="w-6 h-6 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-600 flex items-center justify-center font-black text-[10px]">
+                        <div className="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-450 dark:text-slate-500 flex items-center justify-center font-black text-xs">
                           {step}
                         </div>
                       )}
@@ -445,15 +445,15 @@ const ReferralsPage = ({ onBack }) => {
 
           {/* Stats Summary row */}
           <div className="grid grid-cols-3 gap-3">
-            <div className="bg-white dark:bg-slate-900 border border-slate-150/40 dark:border-slate-800 rounded-2xl p-3 shadow-3xs text-center">
+            <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-3 shadow-3xs text-center">
               <span className="text-xl font-black text-slate-800 dark:text-white block mb-0.5">{referralData.friendsInvited}</span>
               <span className="text-[9px] font-black text-slate-400 uppercase tracking-wider">Invited</span>
             </div>
-            <div className="bg-white dark:bg-slate-900 border border-emerald-150/40 dark:border-emerald-800/40 rounded-2xl p-3 shadow-3xs text-center">
+            <div className="bg-white dark:bg-slate-900 border border-emerald-200 dark:border-emerald-800/40 rounded-2xl p-3 shadow-3xs text-center">
               <span className="text-xl font-black text-emerald-600 dark:text-emerald-400 block mb-0.5">{referralData.completedReferrals}</span>
               <span className="text-[9px] font-black text-slate-400 uppercase tracking-wider">VPN Bought</span>
             </div>
-            <div className="bg-white dark:bg-slate-900 border border-slate-150/40 dark:border-slate-800 rounded-2xl p-3 shadow-3xs text-center">
+            <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-3 shadow-3xs text-center">
               <span className="text-xl font-black text-[#7C3AED] dark:text-indigo-400 block mb-0.5">৳{referralData.totalEarned}</span>
               <span className="text-[9px] font-black text-slate-400 uppercase tracking-wider">Earned</span>
             </div>
@@ -485,8 +485,8 @@ const ReferralsPage = ({ onBack }) => {
                         </div>
                       </div>
                       <div className="text-right flex flex-col items-end">
-                        <span className="text-[9px] font-black text-emerald-600 bg-emerald-50 dark:bg-emerald-950/40 px-2 py-0.5 rounded-full block">Verified</span>
-                        <span className="text-[9px] text-slate-450 dark:text-slate-500 font-bold block mt-1">+{r.bonusAwarded}৳</span>
+                        <span className="text-[9px] font-black text-emerald-600 bg-emerald-100 dark:bg-emerald-900/40 px-2 py-0.5 rounded-full block">Verified</span>
+                        <span className="text-[9px] text-emerald-600 dark:text-emerald-400 font-bold block mt-1">+{r.bonusAwarded}৳</span>
                       </div>
                     </div>
                   ))}
@@ -501,13 +501,13 @@ const ReferralsPage = ({ onBack }) => {
                     <span className="text-[9.5px] font-black text-amber-600 uppercase tracking-wider">Waiting for VPN ({pendingReferrals.length})</span>
                   </div>
                   {pendingReferrals.map((r) => (
-                    <div key={r.id} className="bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-850 rounded-2xl px-4 py-3 flex items-center justify-between shadow-3xs opacity-85">
+                    <div key={r.id} className="bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-2xl px-4 py-3 flex items-center justify-between shadow-3xs opacity-85">
                       <div className="flex items-center gap-3">
                         <div className="w-8 h-8 rounded-full bg-slate-50 dark:bg-slate-800 flex items-center justify-center text-slate-400">
                           <Users className="w-4 h-4" />
                         </div>
                         <div>
-                          <span className="font-bold text-xs text-slate-750 dark:text-slate-300 block">{r.name}</span>
+                          <span className="font-bold text-xs text-slate-700 dark:text-slate-300 block">{r.name}</span>
                           <span className="text-[9px] text-slate-400 font-mono block mt-0.5">{maskPhone(r.phone)}</span>
                         </div>
                       </div>
