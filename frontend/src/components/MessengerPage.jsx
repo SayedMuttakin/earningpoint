@@ -1703,7 +1703,17 @@ const MessengerPage = ({ onBack, activeChatPartner, setActiveChatPartner, socket
             </div>
 
             {/* Conversation Messages Scroll Body */}
-            <div className="flex-1 overflow-y-auto bg-slate-50/50 dark:bg-slate-900/35 p-4 space-y-4 pb-4">
+            <div 
+              className={`flex-1 overflow-y-auto p-4 space-y-4 pb-4 transition-colors duration-300 ${
+                localStorage.getItem('chat_wallpaper') === 'solid_dark'
+                  ? 'bg-black'
+                  : localStorage.getItem('chat_wallpaper') === 'gradient_lavender'
+                    ? 'bg-gradient-to-br from-violet-100 to-indigo-100 dark:from-violet-950/40 dark:to-indigo-950/40'
+                    : localStorage.getItem('chat_wallpaper') === 'gradient_sunset'
+                      ? 'bg-gradient-to-br from-amber-50 to-rose-50 dark:from-[#2e262c] dark:to-[#17161b]'
+                      : 'bg-slate-50/50 dark:bg-slate-900/35'
+              }`}
+            >
               {loadingChat ? (
                 <div className="h-full flex items-center justify-center">
                   <Loader2 className="w-8 h-8 text-indigo-600 animate-spin" />
@@ -1767,9 +1777,14 @@ const MessengerPage = ({ onBack, activeChatPartner, setActiveChatPartner, socket
                               msg.messageType === 'image' || msg.messageType === 'voice'
                                 ? 'bg-transparent overflow-hidden' 
                                 : isUser 
-                                  ? 'py-2 px-3.5 bg-gradient-to-r from-[#7C3AED] to-[#5B21B6] text-white rounded-br-sm' 
+                                  ? 'py-2 px-3.5 text-white rounded-br-sm' 
                                   : 'py-2 px-3.5 bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200 rounded-bl-sm border border-slate-200/40 dark:border-slate-800/80 shadow-3xs'
                             }`}
+                            style={
+                              isUser && msg.messageType !== 'image' && msg.messageType !== 'voice'
+                                ? { backgroundColor: localStorage.getItem('chat_theme') || '#7C3AED' }
+                                : {}
+                            }
                           >
                             {msg.messageType === 'image' ? (
                               <div className="max-w-xs rounded-2xl overflow-hidden border border-slate-200/40 dark:border-slate-800 shadow-md">
