@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { API_BASE } from '../config';
 import { 
   ChevronLeft, ChevronRight, Copy, Check, Users, Link, 
-  Wallet, Flame, Gift, Lock, Info, CheckCircle2, Tag, HelpCircle
+  Wallet, Flame, Gift, Lock, Info, CheckCircle2, Tag, HelpCircle, History
 } from 'lucide-react';
 import PullToRefresh from './PullToRefresh';
 import BannerAd from './BannerAd';
@@ -45,6 +45,7 @@ const ReferralsPage = ({ onBack }) => {
   const [applySuccess, setApplySuccess] = useState('');
   const [claimingCampaign, setClaimingCampaign] = useState(false);
   const [showRulesPage, setShowRulesPage] = useState(false);
+  const [activeHistoryTab, setActiveHistoryTab] = useState('all'); // 'all' | 'success' | 'pending'
 
   const fetchGlobalSettings = async () => {
     try {
@@ -595,68 +596,116 @@ const ReferralsPage = ({ onBack }) => {
             </div>
           </div>
 
-          {/* Referral List bottom section */}
-          {referralData.referrals.length > 0 && (
-            <div className="space-y-3">
-              <h3 className="text-xs font-black text-slate-800 dark:text-white uppercase tracking-wider ml-1 flex items-center gap-2">
-                <Users className="w-4 h-4 text-[#7C3AED]" /> Referral List
+          {/* Referral History Card */}
+          <div className="bg-white dark:bg-slate-900 border border-slate-150/60 dark:border-slate-800 rounded-3xl p-5 shadow-3xs flex flex-col gap-4 animate-fade-in">
+            <div className="flex items-center justify-between">
+              <h3 className="text-xs font-black text-slate-800 dark:text-white uppercase tracking-wider flex items-center gap-2">
+                <History className="w-4 h-4 text-[#7C3AED]" /> Referral History
               </h3>
-
-              {/* Verified Referrals list */}
-              {completedReferralsList.length > 0 && (
-                <div className="space-y-2">
-                  <div className="flex items-center gap-1.5 ml-1">
-                    <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />
-                    <span className="text-[9.5px] font-black text-emerald-600 uppercase tracking-wider">VPN Purchased ({completedReferralsList.length})</span>
-                  </div>
-                  {completedReferralsList.map((r) => (
-                    <div key={r.id} className="bg-white dark:bg-slate-900 border border-emerald-100 dark:border-emerald-950/40 rounded-2xl px-4 py-3 flex items-center justify-between shadow-3xs">
-                      <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-full bg-emerald-50 dark:bg-emerald-900/20 flex items-center justify-center text-emerald-500">
-                          <CheckCircle2 className="w-4 h-4" />
-                        </div>
-                        <div>
-                          <span className="font-bold text-xs text-slate-800 dark:text-white block">{r.name}</span>
-                          <span className="text-[9px] text-slate-400 dark:text-slate-500 font-mono block mt-0.5">{maskPhone(r.phone)}</span>
-                        </div>
-                      </div>
-                      <div className="text-right flex flex-col items-end">
-                        <span className="text-[9px] font-black text-emerald-600 bg-emerald-100 dark:bg-emerald-900/40 px-2 py-0.5 rounded-full block">Verified</span>
-                        <span className="text-[9px] text-emerald-600 dark:text-emerald-400 font-bold block mt-1">+{r.bonusAwarded}৳</span>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-
-              {/* Pending Referrals list */}
-              {pendingReferrals.length > 0 && (
-                <div className="space-y-2 pt-2">
-                  <div className="flex items-center gap-1.5 ml-1">
-                    <Info className="w-3.5 h-3.5 text-amber-500" />
-                    <span className="text-[9.5px] font-black text-amber-600 uppercase tracking-wider">Waiting for VPN ({pendingReferrals.length})</span>
-                  </div>
-                  {pendingReferrals.map((r) => (
-                    <div key={r.id} className="bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-2xl px-4 py-3 flex items-center justify-between shadow-3xs opacity-85">
-                      <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-full bg-slate-50 dark:bg-slate-800 flex items-center justify-center text-slate-400">
-                          <Users className="w-4 h-4" />
-                        </div>
-                        <div>
-                          <span className="font-bold text-xs text-slate-700 dark:text-slate-300 block">{r.name}</span>
-                          <span className="text-[9px] text-slate-400 font-mono block mt-0.5">{maskPhone(r.phone)}</span>
-                        </div>
-                      </div>
-                      <div className="text-right flex flex-col items-end">
-                        <span className="text-[9px] font-black text-amber-600 bg-amber-50 dark:bg-amber-900/20 px-2 py-0.5 rounded-full block">Pending</span>
-                        <span className="text-[8px] text-slate-400 font-bold block mt-1">No VPN plan</span>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
+              <span className="text-[10px] text-slate-400 font-bold">Total: {referralData.referrals.length}</span>
             </div>
-          )}
+
+            {/* Filter Tabs */}
+            <div className="flex bg-slate-50 dark:bg-slate-950 p-1 rounded-2xl border border-slate-100 dark:border-slate-850/50">
+              <button
+                onClick={() => setActiveHistoryTab('all')}
+                className={`flex-1 py-1.5 rounded-xl text-[10px] font-black transition-all ${
+                  activeHistoryTab === 'all'
+                    ? 'bg-white dark:bg-slate-800 text-[#7C3AED] dark:text-indigo-400 shadow-2xs'
+                    : 'text-slate-450 dark:text-slate-500 hover:text-slate-700 dark:hover:text-slate-350'
+                }`}
+              >
+                All
+              </button>
+              <button
+                onClick={() => setActiveHistoryTab('success')}
+                className={`flex-1 py-1.5 rounded-xl text-[10px] font-black transition-all flex items-center justify-center gap-1 ${
+                  activeHistoryTab === 'success'
+                    ? 'bg-emerald-500 text-white shadow-2xs'
+                    : 'text-slate-450 dark:text-slate-500 hover:text-slate-700 dark:hover:text-slate-350'
+                }`}
+              >
+                Success ({completedReferralsList.length})
+              </button>
+              <button
+                onClick={() => setActiveHistoryTab('pending')}
+                className={`flex-1 py-1.5 rounded-xl text-[10px] font-black transition-all flex items-center justify-center gap-1 ${
+                  activeHistoryTab === 'pending'
+                    ? 'bg-amber-500 text-white shadow-2xs'
+                    : 'text-slate-450 dark:text-slate-500 hover:text-slate-700 dark:hover:text-slate-350'
+                }`}
+              >
+                Pending ({pendingReferrals.length})
+              </button>
+            </div>
+
+            {/* List Render */}
+            <div className="space-y-2.5 max-h-[280px] overflow-y-auto pr-1">
+              {(() => {
+                const filtered = referralData.referrals.filter(r => {
+                  if (activeHistoryTab === 'success') return r.vpnPurchased;
+                  if (activeHistoryTab === 'pending') return !r.vpnPurchased;
+                  return true;
+                });
+
+                if (filtered.length > 0) {
+                  return filtered.map((r) => {
+                    const isVerified = r.vpnPurchased;
+                    return (
+                      <div 
+                        key={r.id || r._id} 
+                        className={`border rounded-2xl px-4 py-3 flex items-center justify-between transition-all ${
+                          isVerified 
+                            ? 'bg-white dark:bg-slate-900 border-emerald-100 dark:border-emerald-950/40 shadow-4xs' 
+                            : 'bg-white dark:bg-slate-900 border-slate-100 dark:border-slate-800 shadow-4xs opacity-85'
+                        }`}
+                      >
+                        <div className="flex items-center gap-3">
+                          <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
+                            isVerified 
+                              ? 'bg-emerald-55 dark:bg-emerald-900/20 text-emerald-500' 
+                              : 'bg-slate-50 dark:bg-slate-800 text-slate-400'
+                          }`}>
+                            {isVerified ? <CheckCircle2 className="w-4 h-4" /> : <Users className="w-4 h-4" />}
+                          </div>
+                          <div>
+                            <span className="font-bold text-xs text-slate-800 dark:text-white block">{r.name}</span>
+                            <span className="text-[9px] text-slate-400 dark:text-slate-500 font-mono block mt-0.5">{maskPhone(r.phone)}</span>
+                          </div>
+                        </div>
+                        <div className="text-right flex flex-col items-end justify-center">
+                          {isVerified ? (
+                            <>
+                              <span className="text-[8.5px] font-black text-emerald-600 bg-emerald-100 dark:bg-emerald-900/30 px-2 py-0.5 rounded-full block">Successful</span>
+                              <span className="text-[9.5px] text-emerald-600 dark:text-emerald-450 font-black block mt-1">+{r.bonusAwarded}৳</span>
+                            </>
+                          ) : (
+                            <>
+                              <span className="text-[8.5px] font-black text-amber-600 bg-amber-55 dark:bg-amber-900/20 px-2 py-0.5 rounded-full block">Pending</span>
+                              <span className="text-[8px] text-slate-450 dark:text-slate-500 font-bold block mt-1">No VPN Plan</span>
+                            </>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  });
+                } else {
+                  return (
+                    <div className="text-center py-8 px-4 flex flex-col items-center justify-center border border-dashed border-slate-200 dark:border-slate-800 rounded-2xl gap-2 animate-fade-in">
+                      <span className="text-2xl">👥</span>
+                      <p className="text-[10px] text-slate-400 dark:text-slate-500 font-bold">
+                        {activeHistoryTab === 'all'
+                          ? "No referrals yet. Share your code to get started!"
+                          : activeHistoryTab === 'success'
+                          ? "No successful referrals yet."
+                          : "No pending referrals."}
+                      </p>
+                    </div>
+                  );
+                }
+              })()}
+            </div>
+          </div>
           
           <BannerAd globalSettings={globalSettings} />
         </div>
