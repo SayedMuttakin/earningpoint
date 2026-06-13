@@ -232,7 +232,7 @@ const CreatePostPage = ({ currentUser, onBack, setActiveTab }) => {
         <button
           onClick={handlePostSubmit}
           disabled={(!content.trim() && !selectedImage) || postingLoading}
-          className="px-5 py-2 bg-purple-650 hover:bg-purple-700 disabled:bg-slate-200 dark:disabled:bg-slate-800 disabled:text-slate-400 dark:disabled:text-slate-600 text-white font-black text-sm rounded-full shadow-md active:scale-95 transition-all flex items-center gap-2"
+          className="px-5 py-2 bg-brand-600 hover:bg-brand-700 disabled:bg-slate-200 dark:disabled:bg-slate-800 disabled:text-slate-400 dark:disabled:text-slate-600 text-white font-black text-sm rounded-full shadow-md active:scale-95 transition-all flex items-center gap-2"
         >
           {postingLoading ? (
             <><Loader2 className="w-4.5 h-4.5 animate-spin" /> Posting...</>
