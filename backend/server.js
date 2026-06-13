@@ -140,9 +140,15 @@ const startServer = async () => {
     const socketIo = require('./socket');
     socketIo.init(server);
 
-    server.listen(PORT, '0.0.0.0', () => {
-      console.log(`🚀 Server running on port ${PORT} at http://0.0.0.0:${PORT}`);
-    });
+    if (isNaN(PORT)) {
+      server.listen(PORT, () => {
+        console.log(`🚀 Server running on Unix Socket/Pipe: ${PORT}`);
+      });
+    } else {
+      server.listen(PORT, '0.0.0.0', () => {
+        console.log(`🚀 Server running on port ${PORT} at http://0.0.0.0:${PORT}`);
+      });
+    }
   } catch (err) {
     console.error('❌ MongoDB Connection Error:', err.message);
     process.exit(1);

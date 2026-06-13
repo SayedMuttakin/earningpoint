@@ -563,6 +563,22 @@ const CommunityPostCard = ({ post, onFollowToggle, onLikeToggle, onCommentClick,
   );
 };
 
+const fetchWithTimeout = async (url, options = {}, timeout = 5000) => {
+  const controller = new AbortController();
+  const id = setTimeout(() => controller.abort(), timeout);
+  try {
+    const response = await fetch(url, {
+      ...options,
+      signal: controller.signal
+    });
+    clearTimeout(id);
+    return response;
+  } catch (error) {
+    clearTimeout(id);
+    throw error;
+  }
+};
+
 const HomePage = ({ setActiveTab, setSelectedNewsId, setActiveChatPartner, setSelectedReelId, highlightedPostId, setHighlightedPostId, onUserClick }) => {
   const [activeCommentPost, setActiveCommentPost] = useState(null);
   const [newsPosts, setNewsPosts] = useState(() => {
@@ -680,15 +696,15 @@ const HomePage = ({ setActiveTab, setSelectedNewsId, setActiveChatPartner, setSe
       const token = localStorage.getItem('token');
       if (!token) return;
 
-      // Parallelize fetches to load all resources simultaneously
+      // Parallelize fetches to load all resources simultaneously with a 5s timeout
       const [profileRes, newsRes, feedRes] = await Promise.all([
-        fetch(`${API_BASE}/api/profile`, {
+        fetchWithTimeout(`${API_BASE}/api/profile`, {
           headers: { Authorization: `Bearer ${token}` }
-        }).catch(err => { console.error('Profile fetch failed:', err); return null; }),
-        fetch(`${API_BASE}/api/posts`).catch(err => { console.error('News fetch failed:', err); return null; }),
-        fetch(`${API_BASE}/api/posts/feed`, {
+        }, 5000).catch(err => { console.error('Profile fetch failed:', err); return null; }),
+        fetchWithTimeout(`${API_BASE}/api/posts`, {}, 5000).catch(err => { console.error('News fetch failed:', err); return null; }),
+        fetchWithTimeout(`${API_BASE}/api/posts/feed`, {
           headers: { Authorization: `Bearer ${token}` }
-        }).catch(err => { console.error('Feed fetch failed:', err); return null; })
+        }, 5000).catch(err => { console.error('Feed fetch failed:', err); return null; })
       ]);
 
       // Process user profile
@@ -722,7 +738,7 @@ const HomePage = ({ setActiveTab, setSelectedNewsId, setActiveChatPartner, setSe
 
   const fetchGlobalSettings = async () => {
     try {
-      const response = await fetch(`${API_BASE}/api/earning/settings`);
+      const response = await fetchWithTimeout(`${API_BASE}/api/earning/settings`, {}, 5000);
       if (response.ok) {
         const data = await response.json();
         setGlobalSettings(data);
