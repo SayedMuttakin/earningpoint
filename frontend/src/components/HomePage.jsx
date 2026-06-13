@@ -680,36 +680,35 @@ const HomePage = ({ setActiveTab, setSelectedNewsId, setActiveChatPartner, setSe
       const token = localStorage.getItem('token');
       if (!token) return;
 
-      // Fetch current user details
-      try {
-        const userRes = await fetch(`${API_BASE}/api/profile`, {
+      // Parallelize fetches to load all resources simultaneously
+      const [profileRes, newsRes, feedRes] = await Promise.all([
+        fetch(`${API_BASE}/api/profile`, {
           headers: { Authorization: `Bearer ${token}` }
-        });
-        if (userRes.ok) {
-          const userData = await userRes.json();
-          setCurrentUser(userData);
-          safeLocalStorageSet('cached_current_user', JSON.stringify(userData));
-        }
-      } catch (err) {
-        console.error('Failed to fetch user profile in Home:', err);
+        }).catch(err => { console.error('Profile fetch failed:', err); return null; }),
+        fetch(`${API_BASE}/api/posts`).catch(err => { console.error('News fetch failed:', err); return null; }),
+        fetch(`${API_BASE}/api/posts/feed`, {
+          headers: { Authorization: `Bearer ${token}` }
+        }).catch(err => { console.error('Feed fetch failed:', err); return null; })
+      ]);
+
+      // Process user profile
+      if (profileRes && profileRes.ok) {
+        const userData = await profileRes.json();
+        setCurrentUser(userData);
+        safeLocalStorageSet('cached_current_user', JSON.stringify(userData));
       }
 
-      // 1. Fetch updates (news)
-      const newsResponse = await fetch(`${API_BASE}/api/posts`);
-      if (newsResponse.ok) {
-        const data = await newsResponse.json();
-        // updates (where authorId is null)
+      // Process news updates
+      if (newsRes && newsRes.ok) {
+        const data = await newsRes.json();
         const updates = data.filter(p => !p.authorId);
         setNewsPosts(updates);
         safeLocalStorageSet('cached_news_posts', JSON.stringify(updates));
       }
 
-      // 2. Fetch custom feed posts (Community posts)
-      const feedResponse = await fetch(`${API_BASE}/api/posts/feed`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      if (feedResponse.ok) {
-        const feedData = await feedResponse.json();
+      // Process feed posts
+      if (feedRes && feedRes.ok) {
+        const feedData = await feedRes.json();
         setFeedPosts(feedData);
         safeLocalStorageSet('cached_feed_posts', JSON.stringify(feedData));
       }

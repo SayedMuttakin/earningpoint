@@ -83,6 +83,7 @@ const PostSchema = new mongoose.Schema({
 
 // Optimize query performance for loading posts and video reels instantly
 PostSchema.index({ video: 1, createdAt: -1 });
+PostSchema.index({ authorId: 1, createdAt: -1 });
 PostSchema.index({ createdAt: -1 });
 
 module.exports = mongoose.model('Post', PostSchema);

@@ -148,22 +148,15 @@ exports.getPostsFeed = async (req, res) => {
     const currentUserId = req.user._id;
     const followingIds = req.user.following || [];
 
-    // 1. Fetch posts from followed users and current user
-    const followedPosts = await Post.find({
-      authorId: { $in: [...followingIds, currentUserId] }
-    }).populate('authorId', 'name profilePic googleAvatar isEmailVerified').sort({ createdAt: -1 }).limit(30);
+    // Fetch the 40 most recent community posts directly in a single fast indexed query
+    const feedPosts = await Post.find({
+      authorId: { $ne: null } // Exclude admin updates/announcements
+    })
+      .populate('authorId', 'name profilePic googleAvatar isEmailVerified')
+      .sort({ createdAt: -1 })
+      .limit(40);
 
-    // 2. Fetch some posts from non-followed users (recommended posts)
-    // Exclude followed users, the current user, and admin posts
-    const nonFollowedPosts = await Post.find({
-      authorId: { $nin: [...followingIds, currentUserId, null] }
-    }).populate('authorId', 'name profilePic googleAvatar isEmailVerified').sort({ createdAt: -1 }).limit(15);
-
-    // 3. Combine and sort by createdAt descending
-    const feedPosts = [...followedPosts, ...nonFollowedPosts];
-    feedPosts.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
-
-    // 4. Map with isFollowing and isOwnPost indicators
+    // Map following and own post indicators in-memory
     const postsWithStatus = feedPosts.map(post => {
       const isFollowing = post.authorId ? followingIds.includes(post.authorId._id.toString()) : false;
       const isOwnPost = post.authorId ? post.authorId._id.toString() === currentUserId.toString() : false;
