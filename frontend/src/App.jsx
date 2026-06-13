@@ -35,6 +35,7 @@ const ForgotPasswordPage = lazy(() => import('./components/ForgotPasswordPage'))
 const ResetPasswordPage = lazy(() => import('./components/ResetPasswordPage'));
 const VideoReelsPage = lazy(() => import('./components/VideoReelsPage'));
 const PublicProfilePage = lazy(() => import('./components/PublicProfilePage'));
+const CreatePostPage = lazy(() => import('./components/CreatePostPage'));
 
 // Ultra-fast loader fallback — uses inline styles so it renders before CSS parses
 const PageLoader = () => (
@@ -352,6 +353,9 @@ function App() {
           </div>
           {activeTab === 'Video' && (
             <VideoReelsPage selectedReelId={selectedReelId} onBack={() => handleBackNavigation()} />
+          )}
+          {activeTab === 'CreatePost' && (
+            <CreatePostPage currentUser={currentUser} onBack={() => handleBackNavigation()} setActiveTab={setActiveTab} />
           )}
           {activeTab === 'Cart' && <CartPage onBuyNow={handleBuyNow} />}
           {activeTab === 'Checkout' && <CheckoutPage product={selectedProduct} onBack={() => handleBackNavigation()} onSuccess={(method) => { setSelectedPaymentMethod(method); setActiveTab('PaymentSuccess'); }} />}

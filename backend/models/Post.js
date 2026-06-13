@@ -30,6 +30,27 @@ const PostSchema = new mongoose.Schema({
     type: Boolean,
     default: true,
   },
+  privacy: {
+    type: String,
+    enum: ['public', 'friends', 'private'],
+    default: 'public',
+  },
+  feeling: {
+    type: String,
+    default: null,
+  },
+  location: {
+    type: String,
+    default: null,
+  },
+  taggedFriends: [{
+    type: String,
+    default: [],
+  }],
+  bgGradient: {
+    type: String,
+    default: null,
+  },
   likes: [{
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User',

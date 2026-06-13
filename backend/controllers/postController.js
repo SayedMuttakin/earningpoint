@@ -197,7 +197,7 @@ exports.getPostsFeed = async (req, res) => {
 // @access  Private
 exports.createUserPost = async (req, res) => {
   try {
-    const { content, title } = req.body;
+    const { content, title, privacy, feeling, location, taggedFriends, bgGradient } = req.body;
     let imageUrl = null;
     let videoUrl = null;
 
@@ -214,6 +214,15 @@ exports.createUserPost = async (req, res) => {
       return res.status(400).json({ message: 'Content is required' });
     }
 
+    let parsedFriends = [];
+    if (taggedFriends) {
+      try {
+        parsedFriends = typeof taggedFriends === 'string' ? JSON.parse(taggedFriends) : taggedFriends;
+      } catch (e) {
+        parsedFriends = typeof taggedFriends === 'string' ? taggedFriends.split(',').map(f => f.trim()) : taggedFriends;
+      }
+    }
+
     const post = await Post.create({
       content,
       title: title || null,
@@ -221,7 +230,12 @@ exports.createUserPost = async (req, res) => {
       video: videoUrl,
       authorId: req.user._id,
       authorName: req.user.name || 'User',
-      isVerified: req.user.isEmailVerified || false
+      isVerified: req.user.isEmailVerified || false,
+      privacy: privacy || 'public',
+      feeling: feeling || null,
+      location: location || null,
+      taggedFriends: parsedFriends,
+      bgGradient: bgGradient || null
     });
 
     const populatedPost = await Post.findById(post._id).populate('authorId', 'name profilePic googleAvatar isEmailVerified');

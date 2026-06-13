@@ -3,7 +3,7 @@ import {
   Home, Bell, ShoppingCart, User, Settings, Menu, X, Video, Newspaper,
   Lock, Globe, Shield, ShieldCheck, Trash2, ChevronRight, Moon, Sun, 
   Database, HelpCircle, FileText, LogOut, ArrowLeft, Smartphone, 
-  CheckCircle2, Search, Rocket, Palette, Headphones, MessageCircle 
+  CheckCircle2, Search, Rocket, Palette, Headphones, MessageCircle, Plus 
 } from 'lucide-react';
 import { API_BASE } from '../config';
 import VerifiedBadge from './VerifiedBadge';
@@ -309,15 +309,6 @@ const Navbar = ({
             <span className={`text-[10px] font-black mt-1 tracking-wide ${activeTab === 'Home' ? 'text-blue-600 dark:text-blue-400' : 'text-slate-450 dark:text-slate-500'}`}>Home</span>
           </button>
 
-          {/* Video Tab */}
-          <button 
-            onClick={() => setActiveTab && setActiveTab('Video')}
-            className={`flex flex-col items-center justify-center w-12 transition-all duration-300 active:scale-90 ${activeTab === 'Video' ? 'text-purple-500 dark:text-purple-400' : 'text-slate-450 dark:text-slate-500'}`}
-          >
-            <Video className="w-5.5 h-5.5" strokeWidth={activeTab === 'Video' ? 2.5 : 2} fill={activeTab === 'Video' ? 'currentColor' : 'none'} />
-            <span className={`text-[10px] font-black mt-1 tracking-wide ${activeTab === 'Video' ? 'text-purple-600 dark:text-purple-400' : 'text-slate-450 dark:text-slate-500'}`}>Video</span>
-          </button>
-
           {/* News Tab */}
           <button 
             onClick={() => setActiveTab && setActiveTab('Updates')}
@@ -325,6 +316,19 @@ const Navbar = ({
           >
             <Newspaper className="w-5.5 h-5.5" strokeWidth={activeTab === 'Updates' ? 2.5 : 2} fill={activeTab === 'Updates' ? 'currentColor' : 'none'} />
             <span className={`text-[10px] font-black mt-1 tracking-wide ${activeTab === 'Updates' ? 'text-rose-600 dark:text-rose-400' : 'text-slate-450 dark:text-slate-500'}`}>News</span>
+          </button>
+
+          {/* Create Post Tab (Styled Round Plus Button) */}
+          <button 
+            onClick={() => setActiveTab && setActiveTab('CreatePost')}
+            className={`flex items-center justify-center w-12 h-12 rounded-full transition-all duration-300 active:scale-90 shadow-md ${
+              activeTab === 'CreatePost' 
+                ? 'bg-gradient-to-tr from-brand-600 to-indigo-600 text-white shadow-indigo-500/50 scale-105' 
+                : 'bg-gradient-to-tr from-brand-500 to-indigo-500 text-white shadow-brand-500/30'
+            }`}
+            title="Create Post"
+          >
+            <Plus className="w-6 h-6" strokeWidth={3} />
           </button>
 
           {/* Cart Tab */}

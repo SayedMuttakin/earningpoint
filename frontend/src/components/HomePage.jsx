@@ -1,10 +1,21 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Loader2, Plus, Image as ImageIcon, X, Globe, MoreVertical, Search, MessageCircle, Users, Smile, Heart, Send, Bookmark } from 'lucide-react';
 import { API_BASE } from '../config';
 import VerifiedBadge from './VerifiedBadge';
 import PullToRefresh from './PullToRefresh';
 import BannerAd from './BannerAd';
 import NewsSlider from './NewsSlider';
+
+const GRADIENTS_MAP = {
+  aurora: 'bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 text-white',
+  sunset: 'bg-gradient-to-tr from-amber-500 to-rose-600 text-white',
+  neon: 'bg-gradient-to-br from-cyan-500 to-blue-600 text-white',
+  purpleHaze: 'bg-gradient-to-br from-purple-700 to-indigo-900 text-white',
+  emerald: 'bg-gradient-to-tr from-emerald-400 to-teal-700 text-white',
+  obsidian: 'bg-gradient-to-b from-slate-800 to-slate-950 text-white',
+  candy: 'bg-gradient-to-r from-pink-300 via-purple-300 to-indigo-400 text-white',
+  peach: 'bg-gradient-to-r from-orange-400 to-rose-400 text-white',
+};
 
 const formatRelativeTime = (dateStr) => {
   try {
@@ -202,6 +213,21 @@ const CommentsDrawer = ({ post, onClose, onCommentSubmit, currentUserId, onUserC
 const CommunityPostCard = ({ post, onFollowToggle, onLikeToggle, onCommentClick, currentUserId, setSelectedReelId, setActiveTab, onUserClick }) => {
   const [actionLoading, setActionLoading] = useState(false);
   const [isLiking, setIsLiking] = useState(false);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const videoRef = useRef(null);
+
+  const handlePlayPause = (e) => {
+    e.stopPropagation();
+    if (videoRef.current) {
+      if (isPlaying) {
+        videoRef.current.pause();
+        setIsPlaying(false);
+      } else {
+        videoRef.current.play();
+        setIsPlaying(true);
+      }
+    }
+  };
 
   const handleFollowClick = async (e) => {
     e.stopPropagation();
@@ -224,6 +250,26 @@ const CommunityPostCard = ({ post, onFollowToggle, onLikeToggle, onCommentClick,
   const commentsCount = post.comments?.length || 0;
   const shareCount = Math.max(1, Math.floor(likesCount * 0.15));
 
+  const parsedFeeling = (() => {
+    if (!post.feeling) return null;
+    if (typeof post.feeling === 'object') return post.feeling;
+    try {
+      return JSON.parse(post.feeling);
+    } catch (e) {
+      return { label: post.feeling, emoji: '' };
+    }
+  })();
+
+  const parsedTaggedFriends = (() => {
+    if (!post.taggedFriends) return [];
+    if (Array.isArray(post.taggedFriends)) return post.taggedFriends;
+    try {
+      return JSON.parse(post.taggedFriends);
+    } catch (e) {
+      return typeof post.taggedFriends === 'string' ? post.taggedFriends.split(',').map(f => f.trim()) : [];
+    }
+  })();
+
   return (
     <article className="bg-white dark:bg-slate-900 border border-slate-150/40 dark:border-slate-800/80 rounded-[2rem] p-4.5 space-y-3.5 shadow-2xs">
       {/* Header */}
@@ -233,25 +279,21 @@ const CommunityPostCard = ({ post, onFollowToggle, onLikeToggle, onCommentClick,
           <div className="relative select-none">
             <button
               onClick={() => post.authorId && onUserClick && onUserClick(post.authorId)}
-              className="block active:scale-90 transition-transform"
+              className="w-10 h-10 rounded-full p-0.5 bg-gradient-to-tr from-brand-500 to-indigo-500 flex items-center justify-center text-white font-black text-sm relative active:scale-95 transition-transform"
             >
-              <div className="bg-gradient-to-tr from-yellow-500 via-red-500 to-purple-600 p-[1.8px] rounded-full">
-                <div className="bg-white dark:bg-slate-900 p-[1.5px] rounded-full">
-                  {post.authorDetails?.profilePic ? (
-                    <img 
-                      src={post.authorDetails.profilePic.startsWith('http') || post.authorDetails.profilePic.startsWith('/api') || post.authorDetails.profilePic.startsWith('data:') 
-                        ? post.authorDetails.profilePic 
-                        : `${API_BASE}/api/image?file=${encodeURIComponent(post.authorDetails.profilePic)}`} 
-                      alt={post.authorDetails.name || post.authorName} 
-                      className="w-10 h-10 rounded-full object-cover"
-                    />
-                  ) : (
-                    <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-indigo-500 to-brand-500 flex items-center justify-center text-white font-black text-sm">
-                      {post.authorDetails?.name ? post.authorDetails.name.charAt(0).toUpperCase() : (post.authorName ? post.authorName.charAt(0).toUpperCase() : 'U')}
-                    </div>
-                  )}
+              {post.authorDetails?.profilePic ? (
+                <img 
+                  src={post.authorDetails.profilePic.startsWith('http') || post.authorDetails.profilePic.startsWith('/api') || post.authorDetails.profilePic.startsWith('data:') 
+                    ? post.authorDetails.profilePic 
+                    : `${API_BASE}/api/image?file=${encodeURIComponent(post.authorDetails.profilePic)}`} 
+                  alt={post.authorDetails.name || post.authorName} 
+                  className="w-full h-full rounded-full object-cover border-2 border-white dark:border-slate-900"
+                />
+              ) : (
+                <div className="w-full h-full rounded-full bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 border-2 border-white dark:border-slate-900 flex items-center justify-center font-black">
+                  {post.authorDetails?.name ? post.authorDetails.name.charAt(0).toUpperCase() : (post.authorName ? post.authorName.charAt(0).toUpperCase() : 'U')}
                 </div>
-              </div>
+              )}
             </button>
             
             {/* Follow overlay plus badge */}
@@ -272,7 +314,7 @@ const CommunityPostCard = ({ post, onFollowToggle, onLikeToggle, onCommentClick,
           </div>
 
           <div>
-            <h3 className="font-extrabold text-slate-850 dark:text-slate-200 text-sm flex items-center gap-1.5">
+            <h3 className="font-extrabold text-slate-850 dark:text-slate-200 text-sm flex flex-wrap items-center gap-x-1.5 gap-y-0.5">
               <button
                 onClick={() => post.authorId && onUserClick && onUserClick(post.authorId)}
                 className="hover:underline font-extrabold text-left active:opacity-70 transition-opacity"
@@ -280,7 +322,28 @@ const CommunityPostCard = ({ post, onFollowToggle, onLikeToggle, onCommentClick,
                 {post.authorDetails?.name || post.authorName || 'User'}
               </button>
               {post.isVerified && (
-                <VerifiedBadge iconClassName="w-[14px] h-[14px] fill-blue-500 text-white" />
+                <VerifiedBadge iconClassName="w-[14px] h-[14px] fill-blue-500 text-white inline-block flex-shrink-0" />
+              )}
+              {parsedFeeling && (
+                <span className="text-xs font-normal text-slate-500 dark:text-slate-400">
+                  is feeling <span className="font-bold text-slate-700 dark:text-slate-250">{parsedFeeling.label} {parsedFeeling.emoji}</span>
+                </span>
+              )}
+              {parsedTaggedFriends.length > 0 && (
+                <span className="text-xs font-normal text-slate-500 dark:text-slate-400">
+                  with <span className="font-bold text-slate-700 dark:text-slate-250">
+                    {parsedTaggedFriends.length === 1 
+                      ? parsedTaggedFriends[0] 
+                      : parsedTaggedFriends.length === 2 
+                        ? `${parsedTaggedFriends[0]} and ${parsedTaggedFriends[1]}`
+                        : `${parsedTaggedFriends[0]} and ${parsedTaggedFriends.length - 1} others`}
+                  </span>
+                </span>
+              )}
+              {post.location && (
+                <span className="text-xs font-normal text-slate-500 dark:text-slate-400">
+                  at <span className="font-bold text-slate-705 dark:text-slate-200">{post.location}</span>
+                </span>
               )}
               {!post.isOwnPost && post.authorId && (
                 <>
@@ -299,17 +362,16 @@ const CommunityPostCard = ({ post, onFollowToggle, onLikeToggle, onCommentClick,
                 </>
               )}
             </h3>
-            {post.title ? (
-              <p className="text-[11px] text-brand-500 dark:text-brand-400 font-black mt-0.5">
-                {post.title}
-              </p>
-            ) : (
-              <p className="text-[10px] text-slate-400 font-bold flex items-center gap-1 mt-0.5">
-                <span>{formatRelativeTime(post.createdAt)}</span>
-                <span>•</span>
+            <div className="flex items-center gap-1.5 text-[10px] text-slate-400 font-bold mt-0.5">
+              {post.privacy === 'friends' ? (
+                <Users className="w-3 h-3 text-slate-450" />
+              ) : post.privacy === 'private' ? (
+                <Lock className="w-3 h-3 text-slate-450" />
+              ) : (
                 <Globe className="w-3 h-3 text-slate-450" />
-              </p>
-            )}
+              )}
+              <span>{formatRelativeTime(post.createdAt)}</span>
+            </div>
           </div>
         </div>
 
@@ -320,9 +382,15 @@ const CommunityPostCard = ({ post, onFollowToggle, onLikeToggle, onCommentClick,
       </div>
 
       {/* Content text (Shown as a description caption) */}
-      <div className="text-slate-750 dark:text-slate-350 text-xs leading-relaxed whitespace-pre-wrap font-medium pb-1">
-        {post.content}
-      </div>
+      {post.bgGradient && GRADIENTS_MAP[post.bgGradient] ? (
+        <div className={`w-full rounded-2xl p-5 flex items-center justify-center min-h-[160px] text-center text-base md:text-lg font-black shadow-inner my-2 ${GRADIENTS_MAP[post.bgGradient]}`}>
+          {post.content}
+        </div>
+      ) : (
+        <div className="text-slate-750 dark:text-slate-355 text-xs leading-relaxed whitespace-pre-wrap font-medium pb-1">
+          {post.content}
+        </div>
+      )}
 
       {/* Media Attachment (Image or Video) */}
       {post.image && (
@@ -330,7 +398,7 @@ const CommunityPostCard = ({ post, onFollowToggle, onLikeToggle, onCommentClick,
           <img 
             src={post.image.startsWith('http') || post.image.startsWith('/api') || post.image.startsWith('data:') ? post.image : `${API_BASE}/api/image?file=${encodeURIComponent(post.image)}`} 
             alt="Post Content"
-            className="w-full h-auto object-cover max-h-[450px]"
+            className="w-full h-auto object-contain max-h-[450px]"
             loading="lazy"
             decoding="async"
           />
@@ -338,29 +406,29 @@ const CommunityPostCard = ({ post, onFollowToggle, onLikeToggle, onCommentClick,
       )}
 
       {post.video && (
-        <div 
-          onClick={() => {
-            if (setSelectedReelId && setActiveTab) {
-              setSelectedReelId(post._id);
-              setActiveTab('Video');
-            }
-          }}
-          className="relative rounded-2xl overflow-hidden border border-slate-100 dark:border-slate-850 bg-slate-100/40 dark:bg-slate-900/40 mt-1 flex items-center justify-center w-full max-h-[500px] cursor-pointer group select-none"
-        >
+        <div className="relative rounded-2xl overflow-hidden border border-slate-100 dark:border-slate-850 bg-slate-100/40 dark:bg-slate-900/40 mt-1 flex items-center justify-center w-full max-h-[500px] cursor-pointer group select-none">
           <video 
+            ref={videoRef}
             src={post.video.startsWith('http') || post.video.startsWith('/api') || post.video.startsWith('data:') ? post.video : `${API_BASE}/api/image?file=${encodeURIComponent(post.video)}`} 
             className="w-full h-auto object-contain max-h-[500px]"
-            muted
             playsInline
+            controls={isPlaying}
+            onClick={handlePlayPause}
+            onPlay={() => setIsPlaying(true)}
+            onPause={() => setIsPlaying(false)}
           />
-          {/* Glassy Play Icon Overlay */}
-          <div className="absolute inset-0 bg-black/20 flex items-center justify-center group-hover:bg-black/35 transition-colors">
-            <div className="w-14 h-14 rounded-full bg-white/95 text-black flex items-center justify-center shadow-lg transition-transform group-hover:scale-110 active:scale-95">
-              <svg className="w-6 h-6 fill-current translate-x-0.5" viewBox="0 0 24 24">
-                <path d="M8 5v14l11-7z" />
-              </svg>
+          {!isPlaying && (
+            <div 
+              onClick={handlePlayPause}
+              className="absolute inset-0 bg-black/20 flex items-center justify-center group-hover:bg-black/35 transition-colors"
+            >
+              <div className="w-14 h-14 rounded-full bg-white/95 text-black flex items-center justify-center shadow-lg transition-transform group-hover:scale-110 active:scale-95 animate-fade-in">
+                <svg className="w-6 h-6 fill-current translate-x-0.5" viewBox="0 0 24 24">
+                  <path d="M8 5v14l11-7z" />
+                </svg>
+              </div>
             </div>
-          </div>
+          )}
         </div>
       )}
 
@@ -442,12 +510,14 @@ const CommunityPostCard = ({ post, onFollowToggle, onLikeToggle, onCommentClick,
         )}
 
         {/* Caption */}
-        <div className="text-xs leading-relaxed text-slate-750 dark:text-slate-300">
-          <span className="font-extrabold mr-2 text-slate-900 dark:text-white">
-            {post.authorDetails?.name || post.authorName || 'User'}
-          </span>
-          {post.content.length > 120 ? `${post.content.substring(0, 120)}...` : post.content}
-        </div>
+        {!post.bgGradient && (
+          <div className="text-xs leading-relaxed text-slate-750 dark:text-slate-300">
+            <span className="font-extrabold mr-2 text-slate-900 dark:text-white">
+              {post.authorDetails?.name || post.authorName || 'User'}
+            </span>
+            {post.content.length > 120 ? `${post.content.substring(0, 120)}...` : post.content}
+          </div>
+        )}
 
         {/* Inline Comments List (Last 2 comments) */}
         {commentsCount > 0 && (
@@ -536,11 +606,6 @@ const HomePage = ({ setActiveTab, setSelectedNewsId, setActiveChatPartner, setSe
   });
   
   // Post Creation States
-  const [showCreateModal, setShowCreateModal] = useState(false);
-  const [newPostContent, setNewPostContent] = useState('');
-  const [selectedImage, setSelectedImage] = useState(null);
-  const [imagePreview, setImagePreview] = useState(null);
-  const [selectedFileType, setSelectedFileType] = useState('image'); // 'image' or 'video'
   const [postingLoading, setPostingLoading] = useState(false);
 
   // User Search Discovery States
@@ -697,10 +762,7 @@ const HomePage = ({ setActiveTab, setSelectedNewsId, setActiveChatPartner, setSe
 
   useEffect(() => {
     const handleHardwareBack = (e) => {
-      if (showCreateModal) {
-        e.preventDefault();
-        setShowCreateModal(false);
-      } else if (activeCommentPost) {
+      if (activeCommentPost) {
         e.preventDefault();
         setActiveCommentPost(null);
       }
@@ -709,7 +771,7 @@ const HomePage = ({ setActiveTab, setSelectedNewsId, setActiveChatPartner, setSe
     return () => {
       document.removeEventListener('appBackButton', handleHardwareBack);
     };
-  }, [showCreateModal, activeCommentPost]);
+  }, [activeCommentPost]);
 
 
   const handleRefresh = () => {
@@ -815,61 +877,6 @@ const HomePage = ({ setActiveTab, setSelectedNewsId, setActiveChatPartner, setSe
       }
     } catch (err) {
       console.error('Failed to submit comment:', err);
-    }
-  };
-
-  // Create User Post
-  const handleImageChange = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      setSelectedImage(file);
-      setImagePreview(URL.createObjectURL(file));
-      if (file.type.startsWith('video/')) {
-        setSelectedFileType('video');
-      } else {
-        setSelectedFileType('image');
-      }
-    }
-  };
-
-  const handleCreatePostSubmit = async (e) => {
-    e.preventDefault();
-    if (!newPostContent.trim() || postingLoading) return;
-
-    setPostingLoading(true);
-    try {
-      const token = localStorage.getItem('token');
-      const formData = new FormData();
-      formData.append('content', newPostContent.trim());
-      if (selectedImage) {
-        formData.append('image', selectedImage);
-      }
-
-      const res = await fetch(`${API_BASE}/api/posts`, {
-        method: 'POST',
-        headers: { Authorization: `Bearer ${token}` },
-        body: formData
-      });
-
-      if (res.ok) {
-        const createdPost = await res.json();
-        // Prepend new post immediately
-        setFeedPosts(prev => [
-          { ...createdPost, isOwnPost: true, isFollowing: false },
-          ...prev
-        ]);
-        
-        // Reset states
-        setNewPostContent('');
-        setSelectedImage(null);
-        setImagePreview(null);
-        setSelectedFileType('image');
-        setShowCreateModal(false);
-      }
-    } catch (err) {
-      console.error('Failed to publish post:', err);
-    } finally {
-      setPostingLoading(false);
     }
   };
 
@@ -1021,7 +1028,7 @@ const HomePage = ({ setActiveTab, setSelectedNewsId, setActiveChatPartner, setSe
 
         {/* Floating Plus FAB to Create Post (Matches screenshot bottom right button) */}
         <button
-          onClick={() => setShowCreateModal(true)}
+          onClick={() => setActiveTab && setActiveTab('CreatePost')}
           className="fixed bottom-24 right-5 w-14 h-14 bg-gradient-to-tr from-[#7C3AED] to-[#5B21B6] hover:scale-105 active:scale-95 text-white rounded-full flex items-center justify-center shadow-lg shadow-indigo-500/30 z-40 transition-transform duration-300"
           title="Create Post"
         >
@@ -1029,140 +1036,6 @@ const HomePage = ({ setActiveTab, setSelectedNewsId, setActiveChatPartner, setSe
         </button>
       </div>
     </PullToRefresh>
-
-        {/* Create Post Modal Overlay */}
-        {showCreateModal && (
-          <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4">
-            <div className="absolute inset-0 bg-slate-950/80 backdrop-blur-xs" onClick={() => setShowCreateModal(false)} />
-            <div className="relative z-10 bg-white dark:bg-slate-900 rounded-t-3xl sm:rounded-3xl w-full sm:max-w-lg max-h-[calc(100vh-90px)] sm:max-h-[85vh] flex flex-col shadow-2xl overflow-hidden animate-fade-in-up border border-transparent dark:border-slate-800 mb-[76px] sm:mb-0">
-              
-              {/* Header */}
-              <div className="flex items-center justify-between px-5 py-4 border-b border-slate-100 dark:border-slate-800 flex-shrink-0">
-                <h3 className="text-slate-850 dark:text-white font-black text-[16px]">Create Community Post</h3>
-                <button 
-                  onClick={() => setShowCreateModal(false)}
-                  className="p-1.5 rounded-full hover:bg-slate-100 dark:hover:bg-slate-850 text-slate-400 hover:text-slate-600 transition-colors"
-                >
-                  <X className="w-5 h-5" />
-                </button>
-              </div>
-
-              {/* Form */}
-              <form onSubmit={handleCreatePostSubmit} className="flex-1 flex flex-col overflow-y-auto p-5 space-y-4">
-                
-                {/* User Header Profile (Facebook Style) */}
-                <div className="flex items-center gap-3 flex-shrink-0">
-                  <div className="w-11 h-11 rounded-full bg-gradient-to-tr from-indigo-500 to-brand-500 flex items-center justify-center text-white font-black shadow-xs">
-                    {currentUser?.profilePic ? (
-                      <img 
-                        src={currentUser.profilePic.startsWith('http') || currentUser.profilePic.startsWith('/api') || currentUser.profilePic.startsWith('data:') ? currentUser.profilePic : `${API_BASE}/api/image?file=${currentUser.profilePic}`} 
-                        alt="Current User avatar" 
-                        className="w-full h-full rounded-full object-cover"
-                      />
-                    ) : (
-                      <span>{currentUser?.name ? currentUser.name.charAt(0).toUpperCase() : 'U'}</span>
-                    )}
-                  </div>
-                  <div>
-                    <h4 className="font-bold text-slate-800 dark:text-slate-200 text-sm">{currentUser?.name || 'User'}</h4>
-                    <div className="flex items-center gap-1 text-[9.5px] text-slate-500 bg-slate-100 dark:bg-slate-800 dark:text-slate-400 px-2 py-0.5 rounded-md w-fit font-bold mt-0.5">
-                      <Globe className="w-3 h-3" />
-                      <span>Public</span>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Facebook-style Textarea */}
-                <textarea
-                  value={newPostContent}
-                  onChange={(e) => setNewPostContent(e.target.value)}
-                  placeholder={`What's on your mind, ${currentUser?.name || 'User'}?`}
-                  rows={4}
-                  className="w-full bg-transparent text-slate-850 dark:text-white placeholder-slate-400 outline-none border-none resize-none text-[15px] leading-relaxed focus:ring-0 focus:border-transparent mt-2 p-0"
-                />
-
-                {/* Preview Image or Video */}
-                {imagePreview && (
-                  <div className="relative rounded-2xl overflow-hidden border border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 max-h-[180px] w-full flex items-center justify-center flex-shrink-0">
-                    {selectedFileType === 'video' ? (
-                      <video src={imagePreview} controls className="w-full h-full max-h-[180px] object-cover" />
-                    ) : (
-                      <img src={imagePreview} alt="Preview" className="w-full h-full max-h-[180px] object-cover" />
-                    )}
-                    <button 
-                      type="button"
-                      onClick={() => {
-                        setSelectedImage(null);
-                        setImagePreview(null);
-                        setSelectedFileType('image');
-                      }}
-                      className="absolute top-2.5 right-2.5 p-1.5 bg-black/60 hover:bg-black/85 text-white rounded-full transition-colors shadow-md active:scale-90"
-                    >
-                      <X className="w-4 h-4" />
-                    </button>
-                  </div>
-                )}
-
-                <div className="flex-1" />
-
-                {/* Facebook-style Add to Post Toolbar */}
-                <div className="flex items-center justify-between p-3 bg-slate-50 dark:bg-slate-800/40 border border-slate-100 dark:border-slate-800 rounded-2xl flex-shrink-0">
-                  <span className="text-xs font-black text-slate-500 dark:text-slate-400">Add to your post</span>
-                  <div className="flex items-center gap-1">
-                    {/* Photo/Video trigger button */}
-                    <label className="p-2 hover:bg-slate-200 dark:hover:bg-slate-800 text-emerald-500 rounded-full transition-colors active:scale-90 cursor-pointer">
-                      <ImageIcon className="w-5.5 h-5.5" />
-                      <input 
-                        type="file" 
-                        accept="image/*,video/*" 
-                        onChange={handleImageChange} 
-                        className="hidden" 
-                      />
-                    </label>
-                    {/* Mock tag friends button */}
-                    <button 
-                      type="button" 
-                      onClick={() => alert('Tag friends coming soon!')}
-                      className="p-2 hover:bg-slate-200 dark:hover:bg-slate-800 text-blue-500 rounded-full transition-colors active:scale-90"
-                      title="Tag Friends"
-                    >
-                      <Users className="w-5.5 h-5.5" />
-                    </button>
-                    {/* Mock feeling emoji button */}
-                    <button 
-                      type="button"
-                      onClick={() => alert('Feelings/Activity coming soon!')}
-                      className="p-2 hover:bg-slate-200 dark:hover:bg-slate-800 text-amber-500 rounded-full transition-colors active:scale-90"
-                      title="Feeling/Activity"
-                    >
-                      <Smile className="w-5.5 h-5.5" />
-                    </button>
-                  </div>
-                </div>
-
-                {selectedImage && (
-                  <div className="flex items-center gap-1.5 bg-emerald-50 dark:bg-emerald-950/20 px-3.5 py-2 rounded-xl text-emerald-600 dark:text-emerald-450 border border-emerald-100 dark:border-emerald-900/30 text-xs font-black w-fit max-w-full flex-shrink-0">
-                    <span className="truncate">{selectedImage.name}</span>
-                  </div>
-                )}
-
-                {/* Submit button */}
-                <button
-                  type="submit"
-                  disabled={(!newPostContent.trim() && !selectedImage) || postingLoading}
-                  className="w-full py-3 bg-[#1877f2] hover:bg-[#166fe5] text-white font-black rounded-xl shadow-md active:scale-95 transition-all disabled:opacity-50 disabled:bg-slate-200 dark:disabled:bg-slate-800 disabled:text-slate-400 dark:disabled:text-slate-650 flex items-center justify-center gap-2 text-sm flex-shrink-0"
-                >
-                  {postingLoading ? (
-                    <><Loader2 className="w-4.5 h-4.5 animate-spin" /> Publishing...</>
-                  ) : (
-                    'Publish Post'
-                  )}
-                </button>
-              </form>
-
-            </div>
-          </div>
-        )}
 
         {/* Comments Drawer Slide-up Sheet Drawer Overlay */}
         {activeCommentPost && (
