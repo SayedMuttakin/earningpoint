@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { API_BASE } from '../config';
 import { 
-  ChevronLeft, Copy, Check, Users, Link, 
+  ChevronLeft, ChevronRight, Copy, Check, Users, Link, 
   Wallet, Flame, Gift, Lock, Info, CheckCircle2, Tag, HelpCircle
 } from 'lucide-react';
 import PullToRefresh from './PullToRefresh';
@@ -44,6 +44,7 @@ const ReferralsPage = ({ onBack }) => {
   const [applyError, setApplyError] = useState('');
   const [applySuccess, setApplySuccess] = useState('');
   const [claimingCampaign, setClaimingCampaign] = useState(false);
+  const [showRulesPage, setShowRulesPage] = useState(false);
 
   const fetchGlobalSettings = async () => {
     try {
@@ -211,21 +212,236 @@ const ReferralsPage = ({ onBack }) => {
   const pendingReferrals = referralData.referrals.filter(r => !r.vpnPurchased);
   const completedReferralsList = referralData.referrals.filter(r => r.vpnPurchased);
 
+  if (showRulesPage) {
+    const campaignTarget = globalSettings.referralCampaignTarget || 5;
+    const campaignReward = globalSettings.referralCampaignReward || 300;
+    const steps = [];
+    for (let i = 1; i <= campaignTarget; i++) {
+      steps.push(i);
+    }
+    return (
+      <div className="w-full min-h-screen bg-slate-50 dark:bg-slate-950 flex flex-col pb-6 select-none animate-fade-in">
+        {/* Header */}
+        <div className="sticky top-0 z-10 bg-white dark:bg-slate-900 border-b border-slate-100 dark:border-slate-800 shadow-3xs">
+          <div className="max-w-md mx-auto px-4 py-3 flex items-center gap-3">
+            <button 
+              onClick={() => setShowRulesPage(false)} 
+              className="w-9 h-9 rounded-full bg-slate-50 dark:bg-slate-800 flex items-center justify-center hover:bg-slate-100 dark:hover:bg-slate-700 active:scale-90 transition-transform flex-shrink-0"
+            >
+              <ChevronLeft className="w-5 h-5 text-slate-700 dark:text-slate-300" />
+            </button>
+            <div className="flex items-center gap-2">
+              <div className="w-8 h-8 rounded-full bg-indigo-50 dark:bg-indigo-950/30 text-indigo-600 flex items-center justify-center">
+                <Info className="w-4.5 h-4.5" />
+              </div>
+              <div>
+                <h1 className="text-sm font-black text-slate-805 dark:text-white leading-tight">Important Information</h1>
+                <p className="text-[9.5px] text-slate-405 dark:text-slate-500 font-bold mt-0.5 leading-none">Read the rules carefully before referring</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="max-w-md mx-auto w-full px-4 pt-4 space-y-4">
+          {/* Rules Card */}
+          <div className="bg-white dark:bg-slate-900 border border-slate-150/40 dark:border-slate-800 rounded-3xl p-4 shadow-sm flex flex-col gap-4">
+            <div className="flex gap-4 items-center">
+              <div className="w-24 h-24 flex-shrink-0 bg-slate-50 dark:bg-slate-850 rounded-2xl flex items-center justify-center overflow-hidden border border-slate-100 dark:border-slate-800">
+                <img 
+                  src="/refer_megaphone.png" 
+                  alt="Rules Megaphone" 
+                  className="w-20 h-20 object-contain"
+                />
+              </div>
+              <div className="flex-1 space-y-3">
+                {/* Rule 1 */}
+                <div className="flex items-start gap-2.5">
+                  <div className="w-6 h-6 rounded-full bg-violet-100 dark:bg-violet-955/40 text-violet-600 dark:text-violet-400 flex items-center justify-center flex-shrink-0 mt-0.5">
+                    <Check className="w-3.5 h-3.5" strokeWidth={3} />
+                  </div>
+                  <div>
+                    <h4 className="font-extrabold text-xs text-slate-805 dark:text-white leading-tight">One Time Use Only</h4>
+                    <p className="text-[9.5px] text-slate-450 dark:text-slate-500 font-bold mt-0.5 leading-snug">Each referral code can be used only once per account.</p>
+                  </div>
+                </div>
+
+                {/* Rule 2 */}
+                <div className="flex items-start gap-2.5">
+                  <div className="w-6 h-6 rounded-full bg-emerald-100 dark:bg-emerald-955/40 text-emerald-605 dark:text-emerald-400 flex items-center justify-center flex-shrink-0 mt-0.5">
+                    <CheckCircle2 className="w-3.5 h-3.5" strokeWidth={3} />
+                  </div>
+                  <div>
+                    <h4 className="font-extrabold text-xs text-slate-805 dark:text-white leading-tight">Verification Required</h4>
+                    <p className="text-[9.5px] text-slate-450 dark:text-slate-500 font-bold mt-0.5 leading-snug">Rewards are added after the referred user completes registration & verification.</p>
+                  </div>
+                </div>
+
+                {/* Rule 3 */}
+                <div className="flex items-start gap-2.5">
+                  <div className="w-6 h-6 rounded-full bg-rose-100 dark:bg-rose-955/40 text-rose-655 dark:text-rose-455 flex items-center justify-center flex-shrink-0 mt-0.5">
+                    <span className="text-[10px] font-black text-rose-605">✕</span>
+                  </div>
+                  <div>
+                    <h4 className="font-extrabold text-xs text-slate-805 dark:text-white leading-tight">No Fake Accounts</h4>
+                    <p className="text-[9.5px] text-slate-450 dark:text-slate-500 font-bold mt-0.5 leading-snug">Fake, duplicate or invalid accounts will not be eligible for any rewards.</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="h-px bg-slate-100 dark:bg-slate-800" />
+
+            <div className="space-y-3">
+              {/* Rule 4 */}
+              <div className="flex items-start gap-2.5">
+                <div className="w-6 h-6 rounded-full bg-blue-105 dark:bg-blue-955/40 text-blue-600 dark:text-blue-450 flex items-center justify-center flex-shrink-0 mt-0.5">
+                  <Gift className="w-3.5 h-3.5" />
+                </div>
+                <div>
+                  <h4 className="font-extrabold text-xs text-slate-805 dark:text-white leading-tight">Campaign Rewards</h4>
+                  <p className="text-[9.5px] text-slate-450 dark:text-slate-500 font-bold mt-0.5 leading-snug">Extra bonuses will be credited after completing campaign conditions.</p>
+                </div>
+              </div>
+
+              {/* Rule 5 */}
+              <div className="flex items-start gap-2.5">
+                <div className="w-6 h-6 rounded-full bg-amber-105 dark:bg-amber-955/40 text-amber-605 dark:text-amber-400 flex items-center justify-center flex-shrink-0 mt-0.5">
+                  <Lock className="w-3.5 h-3.5" />
+                </div>
+                <div>
+                  <h4 className="font-extrabold text-xs text-slate-805 dark:text-white leading-tight">Right to Change</h4>
+                  <p className="text-[9.5px] text-slate-450 dark:text-slate-500 font-bold mt-0.5 leading-snug">Zenivio reserves the right to modify or cancel any referral campaign at any time.</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Campaign Card */}
+          <div className="bg-gradient-to-r from-violet-900 via-indigo-955 to-purple-950 text-white rounded-3xl p-5 shadow-lg relative overflow-hidden flex flex-col gap-4">
+            <div className="absolute top-0 right-0 -mr-6 -mt-6 w-20 h-20 bg-white/5 rounded-full blur-xl pointer-events-none" />
+            
+            <div className="flex gap-4 items-center">
+              <div className="w-20 h-20 flex-shrink-0 bg-white/5 rounded-2xl flex items-center justify-center overflow-hidden border border-white/10">
+                <img 
+                  src="/clay_gift_pedestal.png" 
+                  alt="Campaign Gift" 
+                  className="w-16 h-16 object-contain animate-pulse"
+                />
+              </div>
+              <div className="flex-1">
+                <div className="flex items-center gap-1.5 bg-white/10 px-2.5 py-1 rounded-full text-[9px] font-black text-white w-max">
+                  <Flame className="w-3 h-3 text-orange-400 fill-orange-400 animate-pulse" />
+                  <span>Current Campaign</span>
+                </div>
+                <h3 className="text-[14px] font-black tracking-wide block mt-2.5 uppercase text-slate-200">
+                  Refer {campaignTarget} Friends
+                </h3>
+                <h2 className="text-lg font-black text-yellow-350 block mt-0.5 tracking-tight">
+                  Earn ৳{campaignReward} Cash
+                </h2>
+              </div>
+            </div>
+
+            {/* Progress Panel */}
+            <div className="bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200 rounded-2xl p-4 flex flex-col gap-4 shadow-md">
+              <div className="flex items-center justify-between">
+                <span className="text-[11px] font-black text-slate-805 dark:text-white">Your Progress</span>
+                <span className="text-[9.5px] font-black text-white bg-indigo-600 px-2.5 py-0.5 rounded-full">
+                  {referralData.completedReferrals} / {campaignTarget}
+                </span>
+              </div>
+
+              {/* Progress step bar */}
+              <div className="flex items-center justify-between px-2.5 relative">
+                <div className="absolute left-[16px] right-[16px] top-1/2 -translate-y-1/2 h-0.5 bg-slate-200 dark:bg-slate-800 z-0" />
+                <div 
+                  className="absolute left-[16px] top-1/2 -translate-y-1/2 h-0.5 bg-emerald-500 z-0 transition-all duration-500" 
+                  style={{ 
+                    width: `${Math.min((referralData.completedReferrals / (campaignTarget - 1)) * 100, 100)}%` 
+                  }}
+                />
+
+                {steps.map((step) => {
+                  const isCompleted = step <= referralData.completedReferrals;
+                  const isActive = step === referralData.completedReferrals + 1 && step <= campaignTarget;
+                  
+                  return (
+                    <div key={step} className="relative z-10 flex items-center justify-center">
+                      {isCompleted ? (
+                        <div className="w-7 h-7 rounded-full bg-emerald-500 text-white flex items-center justify-center shadow-sm">
+                          <Check className="w-3.5 h-3.5 stroke-[3]" />
+                        </div>
+                      ) : isActive ? (
+                        <div className="w-7 h-7 rounded-full bg-white dark:bg-slate-900 border-2 border-indigo-650 text-indigo-600 dark:text-indigo-400 flex items-center justify-center font-black text-[11px] shadow-sm">
+                          {step}
+                        </div>
+                      ) : (
+                        <div className="w-7 h-7 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-450 dark:text-slate-500 flex items-center justify-center font-black text-[11px]">
+                          {step}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+
+              {/* Actions Button */}
+              {referralData.campaignClaimed ? (
+                <button
+                  disabled
+                  className="w-full py-3 bg-slate-100 dark:bg-slate-900 text-slate-405 dark:text-slate-600 font-black rounded-xl text-[10.5px] flex items-center justify-center gap-1.5 cursor-not-allowed border border-slate-200/30"
+                >
+                  <Check className="w-4 h-4" /> Campaign Reward Claimed
+                </button>
+              ) : referralData.completedReferrals >= campaignTarget ? (
+                <button
+                  onClick={handleClaimCampaign}
+                  disabled={claimingCampaign}
+                  className="w-full py-3 bg-yellow-400 hover:bg-yellow-500 disabled:opacity-50 text-slate-900 font-black rounded-xl text-[10.5px] shadow-md hover:scale-[1.01] active:scale-[0.99] transition-all flex items-center justify-center gap-1.5 cursor-pointer"
+                >
+                  <Wallet className="w-3.5 h-3.5" /> {claimingCampaign ? 'Claiming...' : `Claim ৳${campaignReward} Cash Now!`}
+                </button>
+              ) : (
+                <button
+                  disabled
+                  className="w-full py-3 bg-slate-50 dark:bg-slate-900 text-slate-450 dark:text-slate-600 font-bold rounded-xl text-[10px] flex items-center justify-center gap-1.5 cursor-default border border-slate-100 dark:border-slate-800"
+                >
+                  <Wallet className="w-3.5 h-3.5 text-slate-400" /> Complete {campaignTarget} Referrals to get ৳{campaignReward}
+                </button>
+              )}
+            </div>
+          </div>
+
+          {/* Bottom Note Alert */}
+          <div className="bg-indigo-50/20 dark:bg-slate-900 border border-indigo-100/10 dark:border-slate-800 rounded-2xl p-4 flex items-start gap-3 shadow-3xs">
+            <div className="w-8 h-8 rounded-full bg-indigo-100 dark:bg-indigo-950/50 text-indigo-650 flex items-center justify-center flex-shrink-0">
+              <Info className="w-4 h-4" />
+            </div>
+            <p className="text-[10px] font-black text-slate-655 dark:text-slate-400 leading-relaxed pt-0.5">
+              <span className="font-extrabold text-indigo-650 dark:text-indigo-400 mr-1">Note:</span>
+              It may take up to 24 hours to reflect rewards in your account.
+            </p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <PullToRefresh onRefresh={handleRefresh} refreshing={refreshing}>
-      <div className="w-full min-h-screen bg-slate-50 dark:bg-slate-950 flex flex-col pb-24">
+      <div className="w-full min-h-screen bg-slate-50 dark:bg-slate-950 flex flex-col pb-24 animate-fade-in">
         {/* Header */}
         <div className="sticky top-0 z-10 bg-white dark:bg-slate-900 border-b border-slate-100 dark:border-slate-800 shadow-3xs">
           <div className="max-w-md mx-auto px-4 py-3 flex items-center justify-between">
             <button onClick={onBack} className="w-9 h-9 rounded-full bg-slate-50 dark:bg-slate-800 flex items-center justify-center hover:bg-slate-100 dark:hover:bg-slate-700 active:scale-90 transition-transform">
-              <ChevronLeft className="w-5 h-5 text-slate-700 dark:text-slate-300" />
+              <ChevronLeft className="w-5 h-5 text-slate-700 dark:text-slate-350" />
             </button>
             <div className="text-center flex-1">
               <h1 className="text-sm font-black text-slate-800 dark:text-white leading-tight">Referral Code</h1>
               <p className="text-[10px] text-slate-400 dark:text-slate-500 font-bold mt-0.5 leading-none">Unlock rewards with a referral code</p>
             </div>
-            <button onClick={() => alert('Invite friends by sharing your referral code. When they join and purchase a VPN plan, you both get ৳60 cash, plus you can claim milestone campaign rewards!')} className="w-9 h-9 rounded-full bg-slate-50 dark:bg-slate-800 flex items-center justify-center text-slate-700 dark:text-slate-350">
-              <HelpCircle className="w-5 h-5" />
+            <button onClick={() => setShowRulesPage(true)} className="w-9 h-9 rounded-full bg-slate-50 dark:bg-slate-800 flex items-center justify-center text-slate-750 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors animate-pulse-glow" title="Important Rules Notice">
+              <Info className="w-5 h-5" />
             </button>
           </div>
         </div>
@@ -259,10 +475,25 @@ const ReferralsPage = ({ onBack }) => {
               </div>
             </div>
 
-            <p className="text-[10px] text-slate-100 font-bold leading-normal mt-4 relative z-10">
+            <p className="text-[10px] text-slate-105 font-bold leading-normal mt-4 relative z-10">
               Share your code with friends and earn exciting rewards together!
             </p>
           </div>
+
+          {/* Important Rules banner */}
+          <button 
+            onClick={() => setShowRulesPage(true)} 
+            className="w-full flex items-center justify-between p-4 bg-amber-50 hover:bg-amber-100/50 dark:bg-amber-955/10 dark:hover:bg-amber-955/20 border border-amber-100 dark:border-amber-900/30 rounded-3xl text-left transition-all hover:scale-[1.01] active:scale-[0.99] shadow-3xs"
+          >
+            <div className="flex items-center gap-3">
+              <span className="text-xl">⚠️</span>
+              <div>
+                <span className="font-black text-xs text-amber-850 dark:text-amber-300 block">Important Notice & Rules</span>
+                <span className="text-[9.5px] text-amber-600 dark:text-amber-500 font-bold block mt-0.5">Please read before sharing your referral code</span>
+              </div>
+            </div>
+            <ChevronRight className="w-4 h-4 text-amber-500" />
+          </button>
 
           {/* What you can do section */}
           <div>
