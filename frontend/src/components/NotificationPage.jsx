@@ -127,140 +127,143 @@ const NotificationPage = ({ onBack, setActiveTab, setSelectedNotificationPostId 
 
   return (
     <div className="fixed inset-0 z-[9999] bg-slate-50 dark:bg-slate-900 flex flex-col">
-      <PullToRefresh onRefresh={handleRefresh} refreshing={refreshing}>
-        <div className="w-full h-full pb-32">
-          <div className="w-full max-w-3xl mx-auto pt-safe px-3 sm:px-4 py-4 sm:py-8">
-            {/* Header - Premium Minimal */}
-            <div className="flex items-center justify-between mb-6 sticky top-0 bg-slate-50/90 dark:bg-slate-900/90 backdrop-blur-xl z-50 py-3 -mx-3 px-3 sm:mx-0 sm:px-0 border-b border-slate-200/50 dark:border-slate-800/50">
-              <div className="flex items-center gap-3">
-                <button 
-                  onClick={onBack}
-                  className="w-8 h-8 sm:w-10 sm:h-10 flex items-center justify-center bg-white dark:bg-slate-800 rounded-full border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 shadow-sm active:scale-95 transition-all"
+      {/* Header - Premium Minimal (Fixed outside scroll) */}
+      <div className="w-full bg-white/80 dark:bg-slate-900/80 backdrop-blur-md z-50 border-b border-slate-200/50 dark:border-slate-800/50">
+        <div className="w-full max-w-3xl mx-auto pt-safe px-4 py-3 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <button 
+              onClick={onBack}
+              className="w-8 h-8 sm:w-10 sm:h-10 flex items-center justify-center bg-slate-50 dark:bg-slate-800 rounded-full border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 shadow-sm active:scale-95 transition-all"
+            >
+              <ArrowLeft size={18} />
+            </button>
+            <div>
+              <h1 className="text-base sm:text-lg font-black text-slate-900 dark:text-white flex items-center gap-1.5 tracking-tight">
+                <Bell className="w-4 h-4 sm:w-5 sm:h-5 text-indigo-600" /> Notifications
+              </h1>
+              <p className="text-[9px] sm:text-[10px] text-slate-500 font-bold uppercase tracking-[0.2em] mt-0.5">Your Activity</p>
+            </div>
+          </div>
+          
+          {notifications.length > 0 && (
+            <button
+              onClick={markAllAsRead}
+              className="text-[10px] sm:text-xs font-black text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-900/30 px-3 py-1.5 rounded-full flex items-center gap-1 hover:bg-indigo-100 transition-colors shadow-sm"
+            >
+              <CheckCircle2 size={12} /> Mark Read
+            </button>
+          )}
+        </div>
+      </div>
+
+      {/* Scrollable Container */}
+      <div className="flex-1 overflow-y-auto">
+        <PullToRefresh onRefresh={handleRefresh} refreshing={refreshing}>
+          <div className="w-full max-w-3xl mx-auto px-4 py-4 pb-32">
+            {/* Notification List */}
+            <div className="animate-fade-in">
+              {notifications.length === 0 ? (
+                <div 
+                  className="text-center py-16 sm:py-20 bg-white dark:bg-slate-800 rounded-[2rem] border border-slate-100 dark:border-slate-700 shadow-lg overflow-hidden relative animate-fade-in-up"
                 >
-                  <ArrowLeft size={18} />
-                </button>
-                <div>
-                  <h1 className="text-lg sm:text-xl font-black text-slate-900 dark:text-white flex items-center gap-1.5 tracking-tight">
-                    <Bell className="w-4 h-4 sm:w-5 sm:h-5 text-indigo-600" /> Notifications
-                  </h1>
-                  <p className="text-[9px] sm:text-[10px] text-slate-500 font-bold uppercase tracking-[0.2em] mt-0.5">Your Activity</p>
+                  <div className="absolute -top-10 -left-10 w-40 h-40 bg-indigo-600/5 rounded-full blur-3xl opacity-50" />
+                  <div className="absolute -bottom-10 -right-10 w-40 h-40 bg-blue-500/5 rounded-full blur-3xl opacity-50" />
+                  
+                  <div className="relative z-10 p-6 sm:p-8">
+                    <div className="w-20 h-20 bg-slate-50 dark:bg-slate-900 rounded-2xl flex items-center justify-center mx-auto mb-5 shadow-inner ring-1 ring-slate-100 dark:ring-slate-800 rotate-12">
+                      <Bell className="w-10 h-10 text-slate-300 dark:text-slate-600 -rotate-12" />
+                    </div>
+                    <h3 className="text-xl sm:text-2xl font-black text-slate-800 dark:text-white mb-2">No updates yet</h3>
+                    <p className="text-slate-500 dark:text-slate-400 max-w-xs mx-auto text-xs sm:text-sm font-medium leading-relaxed">
+                      Stay tuned! When you earn coins, complete tasks, or receive updates, they'll appear here beautifully.
+                    </p>
+                  </div>
                 </div>
-              </div>
-              
-              {notifications.length > 0 && (
-                <button
-                  onClick={markAllAsRead}
-                  className="text-[10px] sm:text-xs font-black text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-900/30 px-3 py-1.5 rounded-full flex items-center gap-1 hover:bg-indigo-100 transition-colors shadow-sm"
-                >
-                  <CheckCircle2 size={12} /> Mark Read
-                </button>
+              ) : (
+                <div className="space-y-3 sm:space-y-4">
+                  {notifications.map((n, idx) => (
+                    <div
+                      key={n._id}
+                      className={`group relative p-4 sm:p-5 rounded-3xl border transition-all flex gap-3 sm:gap-4 animate-fade-in ${
+                        n.isRead 
+                          ? 'bg-white/50 dark:bg-slate-800/50 border-slate-100 dark:border-slate-700 opacity-80' 
+                          : n.type === 'announcement'
+                            ? 'bg-[#FFF7ED] dark:bg-amber-900/20 border-orange-200 dark:border-amber-500/50 shadow-[0_4px_20px_rgba(251,146,60,0.15)] ring-1 ring-orange-400/30'
+                            : 'bg-white dark:bg-slate-800 border-indigo-600/10 dark:border-indigo-600/20 shadow-lg shadow-indigo-600/5 ring-1 ring-indigo-600/5'
+                      }`}
+                      style={{ animationDelay: `${idx * 0.05}s` }}
+                    >
+                      {!n.isRead && (
+                        <div className={`absolute top-4 right-4 sm:top-5 sm:right-5 w-2 h-2 sm:w-2.5 sm:h-2.5 rounded-full ${n.type === 'announcement' ? 'bg-amber-500 shadow-[0_0_15px_rgba(245,158,11,0.5)]' : 'bg-indigo-600 shadow-[0_0_15px_rgba(79,70,229,0.5)]'}`}>
+                          <div 
+                            className={`absolute inset-0 rounded-full animate-pulse ${n.type === 'announcement' ? 'bg-amber-500' : 'bg-indigo-600'}`}
+                          />
+                        </div>
+                      )}
+                      
+                      <div className={`w-12 h-12 sm:w-14 sm:h-14 rounded-2xl flex items-center justify-center shrink-0 transition-all duration-300 ${
+                        n.isRead 
+                          ? 'bg-slate-50 dark:bg-slate-900 text-slate-400' 
+                          : n.type === 'announcement'
+                            ? 'bg-gradient-to-br from-amber-400 to-orange-500 text-white shadow-inner shadow-white/20'
+                            : 'bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 shadow-inner'
+                      }`}>
+                        {getIcon(n.type)}
+                      </div>
+
+                      <div 
+                        className="flex-1 min-w-0 py-0.5 sm:py-1 cursor-pointer" 
+                        onClick={() => {
+                          if (!n.isRead) markAsRead(n._id);
+                          if (n.type === 'post' && n.postId && setSelectedNotificationPostId && setActiveTab) {
+                            setSelectedNotificationPostId(n.postId);
+                            setActiveTab('Home');
+                            onBack();
+                          } else {
+                            setSelectedNotification(n);
+                          }
+                        }}
+                      >
+                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1.5 sm:gap-2 mb-1 sm:mb-1.5">
+                          <h4 className={`text-[15px] sm:text-base font-black tracking-tight truncate pr-6 sm:pr-8 ${
+                            n.isRead ? 'text-slate-600 dark:text-slate-400' : 'text-slate-900 dark:text-white'
+                          }`}>
+                            {n.title}
+                          </h4>
+                          <span className="text-[9px] sm:text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest flex items-center gap-1.5 bg-slate-50 dark:bg-slate-900 px-2 sm:px-2.5 py-0.5 sm:py-1 rounded-full self-start">
+                            <Clock size={10} className="sm:w-3 sm:h-3" /> {formatTime(n.createdAt)}
+                          </span>
+                        </div>
+                        <p className={`text-[13px] sm:text-sm leading-relaxed ${
+                          n.isRead ? 'text-slate-400 dark:text-slate-500' : 'text-slate-500 dark:text-slate-300 font-medium'
+                        }`}>
+                          {n.message}
+                        </p>
+                      </div>
+
+                      <button 
+                        onClick={() => deleteNotification(n._id)}
+                        className="p-2 sm:p-2.5 text-slate-200 hover:text-rose-500 transition-all rounded-xl hover:bg-rose-50 dark:hover:bg-rose-900/20 flex items-center justify-center self-center"
+                        title="Delete notification"
+                      >
+                        <Trash2 size={16} className="sm:w-5 sm:h-5" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
               )}
             </div>
 
-        {/* Notification List */}
-        <div className="animate-fade-in">
-          {notifications.length === 0 ? (
-            <div 
-              className="text-center py-16 sm:py-20 bg-white dark:bg-slate-800 rounded-[2rem] border border-slate-100 dark:border-slate-700 shadow-lg overflow-hidden relative animate-fade-in-up"
-            >
-              <div className="absolute -top-10 -left-10 w-40 h-40 bg-indigo-600/5 rounded-full blur-3xl opacity-50" />
-              <div className="absolute -bottom-10 -right-10 w-40 h-40 bg-blue-500/5 rounded-full blur-3xl opacity-50" />
-              
-              <div className="relative z-10 p-6 sm:p-8">
-                <div className="w-20 h-20 bg-slate-50 dark:bg-slate-900 rounded-2xl flex items-center justify-center mx-auto mb-5 shadow-inner ring-1 ring-slate-100 dark:ring-slate-800 rotate-12">
-                  <Bell className="w-10 h-10 text-slate-300 dark:text-slate-600 -rotate-12" />
-                </div>
-                <h3 className="text-xl sm:text-2xl font-black text-slate-800 dark:text-white mb-2">No updates yet</h3>
-                <p className="text-slate-500 dark:text-slate-400 max-w-xs mx-auto text-xs sm:text-sm font-medium leading-relaxed">
-                  Stay tuned! When you earn coins, complete tasks, or receive updates, they'll appear here beautifully.
-                </p>
-              </div>
-              </div>
-          ) : (
-            <div className="space-y-3 sm:space-y-4">
-              {notifications.map((n, idx) => (
-                <div
-                  key={n._id}
-                  className={`group relative p-4 sm:p-5 rounded-3xl border transition-all flex gap-3 sm:gap-4 animate-fade-in ${
-                    n.isRead 
-                      ? 'bg-white/50 dark:bg-slate-800/50 border-slate-100 dark:border-slate-700 opacity-80' 
-                      : n.type === 'announcement'
-                        ? 'bg-[#FFF7ED] dark:bg-amber-900/20 border-orange-200 dark:border-amber-500/50 shadow-[0_4px_20px_rgba(251,146,60,0.15)] ring-1 ring-orange-400/30'
-                        : 'bg-white dark:bg-slate-800 border-indigo-600/10 dark:border-indigo-600/20 shadow-lg shadow-indigo-600/5 ring-1 ring-indigo-600/5'
-                  }`}
-                  style={{ animationDelay: `${idx * 0.05}s` }}
-                >
-                  {!n.isRead && (
-                    <div className={`absolute top-4 right-4 sm:top-5 sm:right-5 w-2 h-2 sm:w-2.5 sm:h-2.5 rounded-full ${n.type === 'announcement' ? 'bg-amber-500 shadow-[0_0_15px_rgba(245,158,11,0.5)]' : 'bg-indigo-600 shadow-[0_0_15px_rgba(79,70,229,0.5)]'}`}>
-                    <div 
-                      className={`absolute inset-0 rounded-full animate-pulse ${n.type === 'announcement' ? 'bg-amber-500' : 'bg-indigo-600'}`}
-                    />
-                    </div>
-                  )}
-                  
-                  <div className={`w-12 h-12 sm:w-14 sm:h-14 rounded-2xl flex items-center justify-center shrink-0 transition-all duration-300 ${
-                    n.isRead 
-                      ? 'bg-slate-50 dark:bg-slate-900 text-slate-400' 
-                      : n.type === 'announcement'
-                        ? 'bg-gradient-to-br from-amber-400 to-orange-500 text-white shadow-inner shadow-white/20'
-                        : 'bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 shadow-inner'
-                  }`}>
-                    {getIcon(n.type)}
-                  </div>
-
-                  <div 
-                    className="flex-1 min-w-0 py-0.5 sm:py-1 cursor-pointer" 
-                    onClick={() => {
-                      if (!n.isRead) markAsRead(n._id);
-                      if (n.type === 'post' && n.postId && setSelectedNotificationPostId && setActiveTab) {
-                        setSelectedNotificationPostId(n.postId);
-                        setActiveTab('Home');
-                        onBack();
-                      } else {
-                        setSelectedNotification(n);
-                      }
-                    }}
-                  >
-                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1.5 sm:gap-2 mb-1 sm:mb-1.5">
-                      <h4 className={`text-[15px] sm:text-base font-black tracking-tight truncate pr-6 sm:pr-8 ${
-                        n.isRead ? 'text-slate-600 dark:text-slate-400' : 'text-slate-900 dark:text-white'
-                      }`}>
-                        {n.title}
-                      </h4>
-                      <span className="text-[9px] sm:text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest flex items-center gap-1.5 bg-slate-50 dark:bg-slate-900 px-2 sm:px-2.5 py-0.5 sm:py-1 rounded-full self-start">
-                        <Clock size={10} className="sm:w-3 sm:h-3" /> {formatTime(n.createdAt)}
-                      </span>
-                    </div>
-                    <p className={`text-[13px] sm:text-sm leading-relaxed ${
-                      n.isRead ? 'text-slate-400 dark:text-slate-500' : 'text-slate-500 dark:text-slate-300 font-medium'
-                    }`}>
-                      {n.message}
-                    </p>
-                  </div>
-
-                  <button 
-                    onClick={() => deleteNotification(n._id)}
-                    className="p-2 sm:p-2.5 text-slate-200 hover:text-rose-500 transition-all rounded-xl hover:bg-rose-50 dark:hover:bg-rose-900/20 flex items-center justify-center self-center"
-                    title="Delete notification"
-                  >
-                    <Trash2 size={16} className="sm:w-5 sm:h-5" />
-                  </button>
-                </div>
-              ))}
+            {/* Footer Info */}
+            <div className="mt-16 text-center pb-12">
+              <div className="h-1 w-16 bg-slate-100 dark:bg-slate-800 rounded-full mx-auto mb-6" />
+              <p className="text-[11px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-[0.3em]">
+                 Zenivio Notifications Center
+              </p>
             </div>
-          )}
-        </div>
-
-        {/* Footer Info */}
-        <div className="mt-16 text-center pb-12">
-          <div className="h-1 w-16 bg-slate-100 dark:bg-slate-800 rounded-full mx-auto mb-6" />
-          <p className="text-[11px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-[0.3em]">
-             Zenivio Notifications Center
-          </p>
-        </div>
-        </div>
-        </div>
-      </PullToRefresh>
+          </div>
+        </PullToRefresh>
+      </div>
 
       {/* Notification Details Modal */}
       {selectedNotification && (

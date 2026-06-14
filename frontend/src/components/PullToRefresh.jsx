@@ -11,8 +11,18 @@ const PullToRefresh = ({ onRefresh, refreshing, children, className = "" }) => {
   const maxPull = 150; // Maximum distance to pull down
 
   const handleTouchStart = (e) => {
-    // Only allow pull-to-refresh if scrolled to top
-    if (window.scrollY === 0) {
+    // Only allow pull-to-refresh if scrolled to top of window and all parent elements
+    let parent = containerRef.current;
+    let scrolled = false;
+    while (parent) {
+      if (parent.scrollTop > 0) {
+        scrolled = true;
+        break;
+      }
+      parent = parent.parentElement;
+    }
+
+    if (window.scrollY === 0 && !scrolled) {
       startY.current = e.touches[0].pageY;
       setIsPulling(true);
     }
@@ -21,10 +31,20 @@ const PullToRefresh = ({ onRefresh, refreshing, children, className = "" }) => {
   const handleTouchMove = (e) => {
     if (!isPulling || refreshing) return;
 
+    let parent = containerRef.current;
+    let scrolled = false;
+    while (parent) {
+      if (parent.scrollTop > 0) {
+        scrolled = true;
+        break;
+      }
+      parent = parent.parentElement;
+    }
+
     const currentY = e.touches[0].pageY;
     const diff = currentY - startY.current;
 
-    if (diff > 0 && window.scrollY === 0) {
+    if (diff > 0 && window.scrollY === 0 && !scrolled) {
       // Prevent default scrolling when pulling down at the top
       if (e.cancelable) e.preventDefault();
       

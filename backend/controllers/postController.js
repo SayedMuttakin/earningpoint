@@ -85,7 +85,8 @@ exports.createPost = async (req, res) => {
           user._id, 
           'New Post Updated! 📢', 
           `${authorName || 'Zenivio'} has shared a new update. Check it out now!`, 
-          'post'
+          'post',
+          newPost._id
         )
       );
       await Promise.all(notificationPromises);
