@@ -33,20 +33,24 @@ exports.getProfile = async (req, res) => {
 // PUT /api/profile — Update profile info (name, location, bio, profilePic, coverPic, website, highlights)
 exports.updateProfile = async (req, res) => {
   try {
-    const { name, location, bio, profilePic, coverPic, website, highlights } = req.body;
+    const { name, location, bio, profilePic, coverPic, website, highlights, dob, gender, dobPrivacy, genderPrivacy } = req.body;
     const user = await User.findById(req.user._id);
-
+ 
     if (!user) {
       return res.status(404).json({ message: 'User not found' });
     }
-
+ 
     const Post = require('../models/Post');
-
+ 
     if (name !== undefined) user.name = name;
     if (location !== undefined) user.location = location;
     if (bio !== undefined) user.bio = bio;
     if (website !== undefined) user.website = website;
     if (highlights !== undefined) user.highlights = highlights;
+    if (dob !== undefined) user.dob = dob;
+    if (gender !== undefined) user.gender = gender;
+    if (dobPrivacy !== undefined) user.dobPrivacy = dobPrivacy;
+    if (genderPrivacy !== undefined) user.genderPrivacy = genderPrivacy;
 
     if (profilePic !== undefined && profilePic !== user.profilePic) {
       user.profilePic = profilePic;
@@ -272,7 +276,7 @@ exports.getPublicProfile = async (req, res) => {
     // Fetch user + posts in parallel
     const [user, posts] = await Promise.all([
       User.findById(targetUserId)
-        .select('name email profilePic coverPic googleAvatar isEmailVerified followers following bio location website highlights')
+        .select('name email profilePic coverPic googleAvatar isEmailVerified followers following bio location website highlights dob gender dobPrivacy genderPrivacy')
         .lean(),
       Post.find({ authorId: targetUserId })
         .sort({ createdAt: -1 })
@@ -293,6 +297,10 @@ exports.getPublicProfile = async (req, res) => {
 
     // Is the current user following this target user?
     const isFollowing = user.followers ? user.followers.some(id => id.toString() === currentUserId.toString()) : false;
+    const isOwnProfile = targetUserId.toString() === currentUserId.toString();
+
+    const showDob = isOwnProfile || user.dobPrivacy === 'public';
+    const showGender = isOwnProfile || user.genderPrivacy === 'public';
 
     res.json({
       user: {
@@ -310,7 +318,11 @@ exports.getPublicProfile = async (req, res) => {
         location: user.location || '',
         website: user.website || '',
         highlights: user.highlights || [],
-        isFollowing
+        isFollowing,
+        dob: showDob ? (user.dob || '') : '',
+        gender: showGender ? (user.gender || '') : '',
+        dobPrivacy: user.dobPrivacy || 'public',
+        genderPrivacy: user.genderPrivacy || 'public'
       },
       videos: videos.map(v => ({
         _id: v._id,

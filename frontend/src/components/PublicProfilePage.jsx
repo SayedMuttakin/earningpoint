@@ -21,7 +21,8 @@ import {
   Plus,
   X,
   Volume2,
-  VolumeX
+  VolumeX,
+  Calendar
 } from 'lucide-react';
 import { API_BASE } from '../config';
 import VerifiedBadge from './VerifiedBadge';
@@ -128,6 +129,10 @@ const PublicProfilePage = ({ userId, onBack, currentUser, isOwnProfile, setActiv
   const [editBio, setEditBio] = useState('');
   const [editWebsite, setEditWebsite] = useState('');
   const [editLocation, setEditLocation] = useState('');
+  const [editDob, setEditDob] = useState('');
+  const [editGender, setEditGender] = useState('');
+  const [editDobPrivacy, setEditDobPrivacy] = useState('public');
+  const [editGenderPrivacy, setEditGenderPrivacy] = useState('public');
 
   // Refs for File Uploads
   const fileInputRef = useRef(null);
@@ -156,6 +161,10 @@ const PublicProfilePage = ({ userId, onBack, currentUser, isOwnProfile, setActiv
       setEditBio(profile.bio || '');
       setEditWebsite(profile.website || '');
       setEditLocation(profile.location || '');
+      setEditDob(profile.dob || '');
+      setEditGender(profile.gender || '');
+      setEditDobPrivacy(profile.dobPrivacy || 'public');
+      setEditGenderPrivacy(profile.genderPrivacy || 'public');
     }
   }, [profile, showEditProfileModal]);
 
@@ -173,7 +182,11 @@ const PublicProfilePage = ({ userId, onBack, currentUser, isOwnProfile, setActiv
           name: editName.trim(),
           bio: editBio.trim(),
           website: editWebsite.trim(),
-          location: editLocation.trim()
+          location: editLocation.trim(),
+          dob: editDob,
+          gender: editGender,
+          dobPrivacy: editDobPrivacy,
+          genderPrivacy: editGenderPrivacy
         })
       });
 
@@ -576,9 +589,9 @@ const PublicProfilePage = ({ userId, onBack, currentUser, isOwnProfile, setActiv
             </p>
           )}
 
-          {/* Location & Website row */}
-          {(profile.location || profile.website) && (
-            <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-1 pt-1 text-[11px] font-bold text-slate-500 dark:text-slate-400">
+          {/* Location, Website, Dob & Gender row */}
+          {(profile.location || profile.website || profile.dob || profile.gender) && (
+            <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-1.5 pt-1 text-[11px] font-bold text-slate-500 dark:text-slate-400">
               {profile.location && (
                 <span className="flex items-center gap-1">
                   <MapPin className="w-3.5 h-3.5 text-indigo-500" />
@@ -595,6 +608,18 @@ const PublicProfilePage = ({ userId, onBack, currentUser, isOwnProfile, setActiv
                   <LinkIcon className="w-3.5 h-3.5" />
                   <span className="truncate max-w-[150px]">{profile.website.replace(/(^\w+:|^)\/\//, '')}</span>
                 </a>
+              )}
+              {profile.dob && (
+                <span className="flex items-center gap-1">
+                  <Calendar className="w-3.5 h-3.5 text-pink-500 animate-pulse" />
+                  <span>{new Date(profile.dob).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</span>
+                </span>
+              )}
+              {profile.gender && (
+                <span className="flex items-center gap-1">
+                  <User className="w-3.5 h-3.5 text-indigo-500" />
+                  <span>{profile.gender}</span>
+                </span>
               )}
             </div>
           )}
@@ -1400,6 +1425,58 @@ const PublicProfilePage = ({ userId, onBack, currentUser, isOwnProfile, setActiv
                   onChange={(e) => setEditLocation(e.target.value)}
                   className="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-2xl text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all dark:text-white"
                 />
+              </div>
+
+              {/* Date of Birth Input */}
+              <div className="space-y-1.5">
+                <div className="flex justify-between items-center">
+                  <label className="text-[11px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Date of Birth</label>
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500">Privacy:</span>
+                    <select
+                      value={editDobPrivacy}
+                      onChange={(e) => setEditDobPrivacy(e.target.value)}
+                      className="bg-transparent text-[10px] font-extrabold text-indigo-600 dark:text-indigo-400 outline-none cursor-pointer"
+                    >
+                      <option value="public" className="bg-white dark:bg-slate-900 text-slate-850 dark:text-white">Public (Show)</option>
+                      <option value="private" className="bg-white dark:bg-slate-900 text-slate-850 dark:text-white">Private (Hide)</option>
+                    </select>
+                  </div>
+                </div>
+                <input
+                  type="date"
+                  value={editDob}
+                  onChange={(e) => setEditDob(e.target.value)}
+                  className="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-2xl text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all dark:text-white"
+                />
+              </div>
+
+              {/* Gender Input */}
+              <div className="space-y-1.5">
+                <div className="flex justify-between items-center">
+                  <label className="text-[11px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Gender</label>
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500">Privacy:</span>
+                    <select
+                      value={editGenderPrivacy}
+                      onChange={(e) => setEditGenderPrivacy(e.target.value)}
+                      className="bg-transparent text-[10px] font-extrabold text-indigo-600 dark:text-indigo-400 outline-none cursor-pointer"
+                    >
+                      <option value="public" className="bg-white dark:bg-slate-900 text-slate-850 dark:text-white">Public (Show)</option>
+                      <option value="private" className="bg-white dark:bg-slate-900 text-slate-850 dark:text-white">Private (Hide)</option>
+                    </select>
+                  </div>
+                </div>
+                <select
+                  value={editGender}
+                  onChange={(e) => setEditGender(e.target.value)}
+                  className="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-2xl text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all dark:text-white"
+                >
+                  <option value="">Select Gender</option>
+                  <option value="Male">Male</option>
+                  <option value="Female">Female</option>
+                  <option value="Other">Other</option>
+                </select>
               </div>
 
               {/* Actions */}

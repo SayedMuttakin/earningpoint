@@ -209,6 +209,24 @@ const UserSchema = new mongoose.Schema({
     ref: 'User',
     default: []
   }],
+  dob: {
+    type: String,
+    default: '',
+  },
+  gender: {
+    type: String,
+    default: '',
+  },
+  dobPrivacy: {
+    type: String,
+    enum: ['public', 'private'],
+    default: 'public',
+  },
+  genderPrivacy: {
+    type: String,
+    enum: ['public', 'private'],
+    default: 'public',
+  },
 }, { timestamps: true });
 
 // Auto-generate referral code before saving if not set
