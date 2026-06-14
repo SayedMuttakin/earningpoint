@@ -7,7 +7,7 @@ const AUTH_SELECT_FIELDS = [
   'isEmailVerified', 'isBanned', 'isPremium', 'premiumExpiry',
   'balance', 'points', 'lifetimePoints',
   'referralCode', 'darkMode', 'following', 'followers',
-  'role'
+  'role', 'savedPosts'
 ].join(' ');
 
 const protect = async (req, res, next) => {

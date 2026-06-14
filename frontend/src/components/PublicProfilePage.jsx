@@ -22,7 +22,8 @@ import {
   X,
   Volume2,
   VolumeX,
-  Calendar
+  Calendar,
+  Download
 } from 'lucide-react';
 import { API_BASE } from '../config';
 import VerifiedBadge from './VerifiedBadge';
@@ -94,6 +95,76 @@ const compressImage = (base64Str, maxWidth = 1024, maxHeight = 1024, quality = 0
   });
 };
 
+// Full Screen Image Preview Modal Component
+const ImagePreviewModal = ({ imageUrl, onClose }) => {
+  const [downloading, setDownloading] = useState(false);
+
+  const handleDownload = async (e) => {
+    e.stopPropagation();
+    setDownloading(true);
+    try {
+      const response = await fetch(imageUrl);
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `zenivio_image_${Date.now()}.jpg`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      window.URL.revokeObjectURL(url);
+    } catch (err) {
+      console.error('Download error:', err);
+      window.open(imageUrl, '_blank');
+    } finally {
+      setDownloading(false);
+    }
+  };
+
+  return (
+    <div 
+      className="fixed inset-0 z-[200] flex flex-col items-center justify-center bg-black/95 backdrop-blur-sm animate-fade-in"
+      onClick={onClose}
+    >
+      {/* Top action bar */}
+      <div className="absolute top-4 left-0 right-0 flex items-center justify-between px-6 z-10">
+        <button
+          onClick={handleDownload}
+          disabled={downloading}
+          className="flex items-center gap-2 bg-white/10 hover:bg-white/20 active:scale-95 text-white text-xs font-bold px-4 py-2 rounded-full backdrop-blur-md transition-all"
+        >
+          {downloading ? (
+            <>
+              <Loader2 className="w-4 h-4 animate-spin" />
+              <span>Downloading...</span>
+            </>
+          ) : (
+            <>
+              <Download className="w-4 h-4" />
+              <span>Download</span>
+            </>
+          )}
+        </button>
+        <button
+          onClick={onClose}
+          className="p-2 bg-white/10 hover:bg-white/20 active:scale-95 text-white rounded-full backdrop-blur-md transition-all"
+        >
+          <X className="w-5 h-5" />
+        </button>
+      </div>
+
+      {/* Image Container */}
+      <div className="w-full max-w-4xl max-h-[85vh] p-4 flex items-center justify-center select-none" onClick={(e) => e.stopPropagation()}>
+        <img
+          src={imageUrl}
+          alt="Preview"
+          className="w-auto h-auto max-w-full max-h-[85vh] object-contain rounded-lg shadow-2xl animate-scale-up"
+        />
+      </div>
+    </div>
+  );
+};
+
 const PublicProfilePage = ({ userId, onBack, currentUser, isOwnProfile, setActiveTab, setSelectedReelId, setActiveChatPartner, startEditing }) => {
   const [profile, setProfile] = useState(null);
   const [videos, setVideos] = useState([]);
@@ -122,6 +193,8 @@ const PublicProfilePage = ({ userId, onBack, currentUser, isOwnProfile, setActiv
 
   // Post Detail Modal State
   const [selectedDetailPost, setSelectedDetailPost] = useState(null);
+  const [savedPosts, setSavedPosts] = useState([]);
+  const [previewImageUrl, setPreviewImageUrl] = useState(null);
 
   // Edit Profile Modal State
   const [showEditProfileModal, setShowEditProfileModal] = useState(false);
@@ -146,6 +219,26 @@ const PublicProfilePage = ({ userId, onBack, currentUser, isOwnProfile, setActiv
     if (toastTimerRef.current) clearTimeout(toastTimerRef.current);
     toastTimerRef.current = setTimeout(() => setShowToast(false), 2500);
   };
+
+  useEffect(() => {
+    if (activeSubTab === 'saved' && isOwn) {
+      const fetchSavedPosts = async () => {
+        try {
+          const token = localStorage.getItem('token');
+          const res = await fetch(`${API_BASE}/api/posts/saved`, {
+            headers: { Authorization: `Bearer ${token}` }
+          });
+          if (res.ok) {
+            const data = await res.json();
+            setSavedPosts(data);
+          }
+        } catch (err) {
+          console.error('Failed to fetch saved posts:', err);
+        }
+      };
+      fetchSavedPosts();
+    }
+  }, [activeSubTab, isOwn]);
 
   // Open edit modal if startEditing is true
   useEffect(() => {
@@ -443,6 +536,39 @@ const PublicProfilePage = ({ userId, onBack, currentUser, isOwnProfile, setActiv
       });
     } catch (err) {
       console.error('Failed to delete highlight:', err);
+    }
+  };
+
+  const handleSaveToggleDetail = async (post) => {
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) return;
+      const res = await fetch(`${API_BASE}/api/posts/${post._id}/save`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`
+        }
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setSelectedDetailPost(prev => prev ? { ...prev, isSaved: data.isSaved } : null);
+        showToastNotification(data.isSaved ? 'Post saved! 💾' : 'Post unsaved! ❌');
+        
+        setPosts(prev => prev.map(p => p._id === post._id ? { ...p, isSaved: data.isSaved } : p));
+        setSavedPosts(prev => {
+          if (data.isSaved) {
+            if (!prev.some(p => p._id === post._id)) {
+              return [...prev, { ...post, isSaved: true }];
+            }
+            return prev.map(p => p._id === post._id ? { ...p, isSaved: true } : p);
+          } else {
+            return prev.filter(p => p._id !== post._id);
+          }
+        });
+      }
+    } catch (err) {
+      console.error('Failed to toggle save post:', err);
     }
   };
 
@@ -968,15 +1094,71 @@ const PublicProfilePage = ({ userId, onBack, currentUser, isOwnProfile, setActiv
               </p>
             </div>
           ) : (
-            <div className="text-center py-16 px-4 bg-white dark:bg-slate-900/40 border border-slate-150 dark:border-slate-800 rounded-3xl select-none flex flex-col items-center gap-3">
-              <div className="p-4 bg-pink-50 dark:bg-pink-950/30 rounded-full text-pink-500">
-                <Bookmark className="w-8 h-8" />
+            isOwn ? (
+              savedPosts.length > 0 ? (
+                <div className="grid grid-cols-3 gap-1">
+                  {savedPosts.map(post => (
+                    <div
+                      key={post._id}
+                      onClick={() => setSelectedDetailPost(post)}
+                      className="relative aspect-square overflow-hidden bg-slate-100 dark:bg-slate-900 border border-slate-200/20 shadow-xs cursor-pointer group hover:opacity-95 active:scale-98 transition-all"
+                    >
+                      {post.image ? (
+                        <img
+                          src={post.image.startsWith('http') || post.image.startsWith('/api') || post.image.startsWith('data:')
+                            ? post.image
+                            : `${API_BASE}/api/image?file=${encodeURIComponent(post.image)}`}
+                          alt=""
+                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                        />
+                      ) : (
+                        <div className="w-full h-full p-2 bg-gradient-to-tr from-slate-100 to-slate-200 dark:from-slate-900 dark:to-slate-955 flex flex-col justify-between text-left">
+                          <p className="text-[10px] sm:text-[11px] font-semibold text-slate-800 dark:text-slate-200 line-clamp-4 leading-normal select-none">
+                            {post.content}
+                          </p>
+                          <div className="flex items-center justify-between text-[8px] font-bold text-slate-400 dark:text-slate-500 uppercase mt-1">
+                            <span>Post</span>
+                            <span>{formatRelativeTime(post.createdAt)}</span>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Likes/Comments Hover Overlay */}
+                      <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-4 text-white text-xs font-black z-10 select-none">
+                        <span className="flex items-center gap-1">
+                          <Heart className="w-4 h-4 fill-white text-white" />
+                          {formatCount(post.likesCount)}
+                        </span>
+                        <span className="flex items-center gap-1">
+                          <MessageCircle className="w-4 h-4 fill-white text-white" />
+                          {formatCount(post.commentsCount)}
+                        </span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-16 px-4 bg-white dark:bg-slate-900/40 border border-slate-150 dark:border-slate-800 rounded-3xl select-none flex flex-col items-center gap-3">
+                  <div className="p-4 bg-pink-50 dark:bg-pink-950/30 rounded-full text-pink-500">
+                    <Bookmark className="w-8 h-8" />
+                  </div>
+                  <h4 className="font-extrabold text-sm text-slate-800 dark:text-white mt-1">No Saved Posts</h4>
+                  <p className="text-xs text-slate-400 font-semibold max-w-xs leading-relaxed">
+                    You haven't saved any posts yet.
+                  </p>
+                </div>
+              )
+            ) : (
+              <div className="text-center py-16 px-4 bg-white dark:bg-slate-900/40 border border-slate-150 dark:border-slate-800 rounded-3xl select-none flex flex-col items-center gap-3">
+                <div className="p-4 bg-pink-50 dark:bg-pink-950/30 rounded-full text-pink-500">
+                  <Bookmark className="w-8 h-8" />
+                </div>
+                <h4 className="font-extrabold text-sm text-slate-800 dark:text-white mt-1">No Saved Posts</h4>
+                <p className="text-xs text-slate-400 font-semibold max-w-xs leading-relaxed">
+                  Posts and videos saved by this user are private. Only the profile owner can view their saved items.
+                </p>
               </div>
-              <h4 className="font-extrabold text-sm text-slate-800 dark:text-white mt-1">No Saved Posts</h4>
-              <p className="text-xs text-slate-400 font-semibold max-w-xs leading-relaxed">
-                Posts and videos saved by this user are private. Only the profile owner can view their saved items.
-              </p>
-            </div>
+            )
           )}
         </div>
       </div>
@@ -1278,12 +1460,21 @@ const PublicProfilePage = ({ userId, onBack, currentUser, isOwnProfile, setActiv
                 </div>
               </div>
               
-              <button 
-                onClick={() => setSelectedDetailPost(null)} 
-                className="p-1.5 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full text-slate-500 dark:text-slate-400 transition-colors"
-              >
-                <X className="w-5 h-5" />
-              </button>
+              <div className="flex items-center gap-1">
+                {/* Save/Bookmark Button */}
+                <button
+                  onClick={() => handleSaveToggleDetail(selectedDetailPost)}
+                  className="p-1.5 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full text-slate-500 dark:text-slate-400 transition-colors"
+                >
+                  <Bookmark className={`w-5 h-5 ${selectedDetailPost.isSaved ? 'fill-yellow-500 text-yellow-500' : ''}`} />
+                </button>
+                <button 
+                  onClick={() => setSelectedDetailPost(null)} 
+                  className="p-1.5 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full text-slate-500 dark:text-slate-400 transition-colors"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
             </div>
 
             {/* Content */}
@@ -1295,7 +1486,10 @@ const PublicProfilePage = ({ userId, onBack, currentUser, isOwnProfile, setActiv
               )}
 
               {selectedDetailPost.image && (
-                <div className="rounded-2xl overflow-hidden border border-slate-100 dark:border-slate-850 bg-slate-50 dark:bg-slate-950 flex items-center justify-center w-full max-h-[350px]">
+                <div 
+                  onClick={() => setPreviewImageUrl(selectedDetailPost.image.startsWith('http') || selectedDetailPost.image.startsWith('/api') || selectedDetailPost.image.startsWith('data:') ? selectedDetailPost.image : `${API_BASE}/api/image?file=${encodeURIComponent(selectedDetailPost.image)}`)}
+                  className="rounded-2xl overflow-hidden border border-slate-100 dark:border-slate-850 bg-slate-50 dark:bg-slate-950 flex items-center justify-center w-full max-h-[350px] cursor-pointer hover:opacity-95 transition-opacity"
+                >
                   <img 
                     src={selectedDetailPost.image.startsWith('http') || selectedDetailPost.image.startsWith('/api') || selectedDetailPost.image.startsWith('data:') 
                       ? selectedDetailPost.image 
@@ -1515,6 +1709,14 @@ const PublicProfilePage = ({ userId, onBack, currentUser, isOwnProfile, setActiv
         accept="image/*"
         onChange={handleCoverUpload}
       />
+
+      {/* Full Screen Image Preview Modal */}
+      {previewImageUrl && (
+        <ImagePreviewModal 
+          imageUrl={previewImageUrl} 
+          onClose={() => setPreviewImageUrl(null)} 
+        />
+      )}
 
       {/* Toast Notification */}
       {showToast && (

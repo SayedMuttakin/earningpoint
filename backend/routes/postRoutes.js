@@ -19,6 +19,11 @@ router.get('/videos', postController.getVideoPosts);
 // @access  Private
 router.get('/feed', protect, postController.getPostsFeed);
 
+// @route   GET /api/posts/saved
+// @desc    Get saved posts for authenticated user
+// @access  Private
+router.get('/saved', protect, postController.getSavedPosts);
+
 router.get('/:id', postController.getPostById);
 
 // @route   POST /api/posts
@@ -35,5 +40,10 @@ router.post('/:id/like', protect, postController.toggleLikePost);
 // @desc    Add a comment to a post
 // @access  Private
 router.post('/:id/comment', protect, postController.commentPost);
+
+// @route   POST /api/posts/:id/save
+// @desc    Toggle save post
+// @access  Private
+router.post('/:id/save', protect, postController.toggleSavePost);
 
 module.exports = router;

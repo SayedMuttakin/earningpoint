@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Loader2, Plus, Image as ImageIcon, X, Globe, MoreVertical, Search, MessageCircle, Users, Smile, Heart, Send, Bookmark } from 'lucide-react';
+import { Loader2, Plus, Image as ImageIcon, X, Globe, MoreVertical, Search, MessageCircle, Users, Smile, Heart, Send, Bookmark, Download } from 'lucide-react';
 import { API_BASE } from '../config';
 import VerifiedBadge from './VerifiedBadge';
 import PullToRefresh from './PullToRefresh';
@@ -93,6 +93,76 @@ const BannerSection = ({ onStartEarning }) => {
           <polygon points="70,60 90,60 85,72 75,72" fill="#EAB308" />
           <path d="M80 42l3 6 6 1-4 4 1 6-6-3-6 3 1-6-4-4 6-1z" fill="#FACC15" />
         </svg>
+      </div>
+    </div>
+  );
+};
+
+// Full Screen Image Preview Modal Component
+const ImagePreviewModal = ({ imageUrl, onClose }) => {
+  const [downloading, setDownloading] = useState(false);
+
+  const handleDownload = async (e) => {
+    e.stopPropagation();
+    setDownloading(true);
+    try {
+      const response = await fetch(imageUrl);
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `zenivio_image_${Date.now()}.jpg`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      window.URL.revokeObjectURL(url);
+    } catch (err) {
+      console.error('Download error:', err);
+      window.open(imageUrl, '_blank');
+    } finally {
+      setDownloading(false);
+    }
+  };
+
+  return (
+    <div 
+      className="fixed inset-0 z-[200] flex flex-col items-center justify-center bg-black/95 backdrop-blur-sm animate-fade-in"
+      onClick={onClose}
+    >
+      {/* Top action bar */}
+      <div className="absolute top-4 left-0 right-0 flex items-center justify-between px-6 z-10">
+        <button
+          onClick={handleDownload}
+          disabled={downloading}
+          className="flex items-center gap-2 bg-white/10 hover:bg-white/20 active:scale-95 text-white text-xs font-bold px-4 py-2 rounded-full backdrop-blur-md transition-all"
+        >
+          {downloading ? (
+            <>
+              <Loader2 className="w-4 h-4 animate-spin" />
+              <span>Downloading...</span>
+            </>
+          ) : (
+            <>
+              <Download className="w-4 h-4" />
+              <span>Download</span>
+            </>
+          )}
+        </button>
+        <button
+          onClick={onClose}
+          className="p-2 bg-white/10 hover:bg-white/20 active:scale-95 text-white rounded-full backdrop-blur-md transition-all"
+        >
+          <X className="w-5 h-5" />
+        </button>
+      </div>
+
+      {/* Image Container */}
+      <div className="w-full max-w-4xl max-h-[85vh] p-4 flex items-center justify-center select-none" onClick={(e) => e.stopPropagation()}>
+        <img
+          src={imageUrl}
+          alt="Preview"
+          className="w-auto h-auto max-w-full max-h-[85vh] object-contain rounded-lg shadow-2xl animate-scale-up"
+        />
       </div>
     </div>
   );
@@ -210,11 +280,37 @@ const CommentsDrawer = ({ post, onClose, onCommentSubmit, currentUserId, onUserC
   );
 };
 
-const CommunityPostCard = ({ post, onFollowToggle, onLikeToggle, onCommentClick, currentUserId, setSelectedReelId, setActiveTab, onUserClick }) => {
+const CommunityPostCard = ({ post, onFollowToggle, onLikeToggle, onCommentClick, currentUserId, setSelectedReelId, setActiveTab, onUserClick, onImageClick, showToast }) => {
   const [actionLoading, setActionLoading] = useState(false);
   const [isLiking, setIsLiking] = useState(false);
   const [isPlaying, setIsPlaying] = useState(false);
+  const [showMenu, setShowMenu] = useState(false);
+  const [isSaved, setIsSaved] = useState(post.isSaved || false);
   const videoRef = useRef(null);
+
+  const handleSaveToggle = async (e) => {
+    if (e) e.stopPropagation();
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) return;
+      const res = await fetch(`${API_BASE}/api/posts/${post._id}/save`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`
+        }
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setIsSaved(data.isSaved);
+        if (showToast) {
+          showToast(data.isSaved ? 'Post saved! 💾' : 'Post unsaved! ❌');
+        }
+      }
+    } catch (err) {
+      console.error('Failed to toggle save post:', err);
+    }
+  };
 
   const handlePlayPause = (e) => {
     e.stopPropagation();
@@ -376,9 +472,42 @@ const CommunityPostCard = ({ post, onFollowToggle, onLikeToggle, onCommentClick,
         </div>
 
         {/* Header Right Actions */}
-        <button className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 p-1.5 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800">
-          <MoreVertical className="w-5 h-5" />
-        </button>
+        <div className="relative">
+          <button 
+            onClick={(e) => {
+              e.stopPropagation();
+              setShowMenu(!showMenu);
+            }}
+            className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 p-1.5 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+          >
+            <MoreVertical className="w-5 h-5" />
+          </button>
+
+          {showMenu && (
+            <>
+              <div 
+                className="fixed inset-0 z-30" 
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setShowMenu(false);
+                }}
+              />
+              <div className="absolute right-0 mt-1.5 w-40 bg-white dark:bg-slate-800 rounded-2xl shadow-xl border border-slate-100 dark:border-slate-700/80 py-1.5 z-40 animate-fade-in text-left">
+                <button
+                  onClick={async (e) => {
+                    e.stopPropagation();
+                    setShowMenu(false);
+                    await handleSaveToggle();
+                  }}
+                  className="w-full flex items-center gap-2 px-3.5 py-2 text-xs font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-750 transition-colors"
+                >
+                  <Bookmark className={`w-4 h-4 ${isSaved ? 'fill-yellow-500 text-yellow-500' : ''}`} />
+                  <span>{isSaved ? 'Unsave Post' : 'Save Post'}</span>
+                </button>
+              </div>
+            </>
+          )}
+        </div>
       </div>
 
       {/* Content text (Shown as a description caption) */}
@@ -394,7 +523,10 @@ const CommunityPostCard = ({ post, onFollowToggle, onLikeToggle, onCommentClick,
 
       {/* Media Attachment (Image or Video) */}
       {post.image && (
-        <div className="rounded-2xl overflow-hidden border border-slate-100 dark:border-slate-850 bg-slate-100/40 dark:bg-slate-900/40 mt-1 w-full max-h-[450px] select-none">
+        <div 
+          onClick={() => onImageClick && onImageClick(post.image.startsWith('http') || post.image.startsWith('/api') || post.image.startsWith('data:') ? post.image : `${API_BASE}/api/image?file=${encodeURIComponent(post.image)}`)}
+          className="rounded-2xl overflow-hidden border border-slate-100 dark:border-slate-850 bg-slate-100/40 dark:bg-slate-900/40 mt-1 w-full max-h-[450px] select-none cursor-pointer hover:opacity-95 transition-opacity"
+        >
           <img 
             src={post.image.startsWith('http') || post.image.startsWith('/api') || post.image.startsWith('data:') ? post.image : `${API_BASE}/api/image?file=${encodeURIComponent(post.image)}`} 
             alt="Post Content"
@@ -467,16 +599,22 @@ const CommunityPostCard = ({ post, onFollowToggle, onLikeToggle, onCommentClick,
 
           {/* Share Button */}
           <button 
-            onClick={() => {
+            onClick={(e) => {
+              e.stopPropagation();
+              const shareUrl = `${window.location.origin}?post=${post._id}`;
               if (navigator.share) {
                 navigator.share({
                   title: post.title || 'Zenivio Post',
                   text: post.content,
-                  url: window.location.href
+                  url: shareUrl
                 }).catch(console.error);
               } else {
-                alert('Link copied to clipboard!');
-                navigator.clipboard.writeText(window.location.href);
+                navigator.clipboard.writeText(shareUrl);
+                if (showToast) {
+                  showToast('Link copied to clipboard! 🔗');
+                } else {
+                  alert('Link copied to clipboard!');
+                }
               }
             }}
             className="flex items-center gap-1.5 group active:scale-90 transition-transform"
@@ -489,8 +627,11 @@ const CommunityPostCard = ({ post, onFollowToggle, onLikeToggle, onCommentClick,
         </div>
 
         {/* Bookmark Button */}
-        <button className="text-slate-700 dark:text-slate-350 hover:text-yellow-500 active:scale-90 transition-transform p-0.5">
-          <Bookmark className="w-6 h-6" strokeWidth={2} />
+        <button 
+          onClick={handleSaveToggle}
+          className="text-slate-700 dark:text-slate-350 hover:text-yellow-500 active:scale-90 transition-transform p-0.5"
+        >
+          <Bookmark className={`w-6 h-6 transition-all duration-200 ${isSaved ? 'fill-yellow-500 text-yellow-500 scale-110' : ''}`} strokeWidth={2} />
         </button>
       </div>
 
@@ -623,6 +764,18 @@ const HomePage = ({ setActiveTab, setSelectedNewsId, setActiveChatPartner, setSe
   
   // Post Creation States
   const [postingLoading, setPostingLoading] = useState(false);
+
+  const [toastMessage, setToastMessage] = useState('');
+  const [showToast, setShowToast] = useState(false);
+  const toastTimerRef = useRef(null);
+  const [previewImageUrl, setPreviewImageUrl] = useState(null);
+
+  const showToastNotification = (msg) => {
+    setToastMessage(msg);
+    setShowToast(true);
+    if (toastTimerRef.current) clearTimeout(toastTimerRef.current);
+    toastTimerRef.current = setTimeout(() => setShowToast(false), 2500);
+  };
 
   // User Search Discovery States
   const [userSearchQuery, setUserSearchQuery] = useState('');
@@ -1030,6 +1183,8 @@ const HomePage = ({ setActiveTab, setSelectedNewsId, setActiveChatPartner, setSe
                     setSelectedReelId={setSelectedReelId}
                     setActiveTab={setActiveTab}
                     onUserClick={onUserClick}
+                    onImageClick={setPreviewImageUrl}
+                    showToast={showToastNotification}
                   />
                 ))}
               </div>
@@ -1061,6 +1216,21 @@ const HomePage = ({ setActiveTab, setSelectedNewsId, setActiveChatPartner, setSe
             currentUserId={currentUser?._id}
             onUserClick={onUserClick}
           />
+        )}
+
+        {/* Full Screen Image Preview Modal */}
+        {previewImageUrl && (
+          <ImagePreviewModal 
+            imageUrl={previewImageUrl} 
+            onClose={() => setPreviewImageUrl(null)} 
+          />
+        )}
+
+        {/* Toast Notification */}
+        {showToast && (
+          <div className="fixed bottom-24 left-1/2 -translate-x-1/2 z-[150] bg-slate-900/90 text-white text-xs font-bold px-4 py-2.5 rounded-full shadow-lg backdrop-blur-xs flex items-center gap-2 animate-fade-in">
+            <span>{toastMessage}</span>
+          </div>
         )}
       </>
     );

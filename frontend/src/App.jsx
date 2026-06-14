@@ -47,11 +47,12 @@ const PageLoader = () => (
 
 
 function App() {
-  // Check if URL has a password reset token, reelId, or profileId
+  // Check if URL has a password reset token, reelId, profileId, or post
   const urlParams = new URLSearchParams(window.location.search);
   const resetToken = urlParams.get('token');
   const reelIdFromUrl = urlParams.get('reelId');
   const profileIdFromUrl = urlParams.get('profileId');
+  const postIdFromUrl = urlParams.get('post');
   const [resetPasswordToken, setResetPasswordToken] = useState(resetToken || null);
 
   const [showSplash, setShowSplash] = useState(true);
@@ -136,10 +137,18 @@ function App() {
   const [socket, setSocket] = useState(null);
   const [onlineUsers, setOnlineUsers] = useState([]);
   const [incomingCallData, setIncomingCallData] = useState(null);
-  const [selectedNotificationPostId, setSelectedNotificationPostId] = useState(null);
+  const [selectedNotificationPostId, setSelectedNotificationPostId] = useState(postIdFromUrl || null);
   const [activePublicProfileUserId, setActivePublicProfileUserId] = useState(profileIdFromUrl || null);
   const [currentUser, setCurrentUser] = useState(null);
   const [initialSettingsSubMenu, setInitialSettingsSubMenu] = useState(null);
+
+  useEffect(() => {
+    // Clean up URL query parameters so they don't persist on page reload/navigation
+    if (window.location.search) {
+      const newUrl = window.location.pathname;
+      window.history.replaceState({}, document.title, newUrl);
+    }
+  }, []);
 
   useEffect(() => {
     if (isAuthenticated && currentUser?._id) {

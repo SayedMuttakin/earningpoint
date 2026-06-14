@@ -151,6 +151,7 @@ exports.getPostsFeed = async (req, res) => {
   try {
     const currentUserId = req.user._id;
     const followingIds = req.user.following || [];
+    const savedPostsIds = req.user.savedPosts ? req.user.savedPosts.map(id => id.toString()) : [];
 
     // Fetch the 40 most recent community posts directly in a single fast indexed query
     const feedPosts = await Post.find({
@@ -164,6 +165,7 @@ exports.getPostsFeed = async (req, res) => {
     const postsWithStatus = feedPosts.map(post => {
       const isFollowing = post.authorId ? followingIds.includes(post.authorId._id.toString()) : false;
       const isOwnPost = post.authorId ? post.authorId._id.toString() === currentUserId.toString() : false;
+      const isSaved = savedPostsIds.includes(post._id.toString());
       
       const postObj = post.toObject();
       const authorObj = postObj.authorId;
@@ -178,7 +180,8 @@ exports.getPostsFeed = async (req, res) => {
           isEmailVerified: authorObj.isEmailVerified
         } : null,
         isFollowing,
-        isOwnPost
+        isOwnPost,
+        isSaved
       };
     });
 
@@ -373,6 +376,84 @@ exports.commentPost = async (req, res) => {
     res.status(201).json(newComment);
   } catch (error) {
     res.status(500).json({ message: error.message });
+  }
+};
+
+// @desc    Toggle save post
+// @route   POST /api/posts/:id/save
+// @access  Private
+exports.toggleSavePost = async (req, res) => {
+  try {
+    const post = await Post.findById(req.params.id);
+    if (!post) {
+      return res.status(404).json({ message: 'Post not found' });
+    }
+
+    const userId = req.user._id;
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    if (!user.savedPosts) {
+      user.savedPosts = [];
+    }
+
+    const isSaved = user.savedPosts.includes(post._id);
+    if (isSaved) {
+      user.savedPosts = user.savedPosts.filter(id => id.toString() !== post._id.toString());
+    } else {
+      user.savedPosts.push(post._id);
+    }
+
+    await user.save();
+    res.json({ isSaved: !isSaved });
+  } catch (error) {
+    res.status(550).json({ message: error.message });
+  }
+};
+
+// @desc    Get saved posts for authenticated user
+// @route   GET /api/posts/saved
+// @access  Private
+exports.getSavedPosts = async (req, res) => {
+  try {
+    const userId = req.user._id;
+    const user = await User.findById(userId).populate({
+      path: 'savedPosts',
+      populate: {
+        path: 'authorId',
+        select: 'name profilePic googleAvatar isEmailVerified'
+      }
+    });
+
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    // Map populated saved posts
+    const savedPosts = (user.savedPosts || [])
+      .filter(post => post !== null)
+      .map(post => {
+        const postObj = post.toObject();
+        const authorObj = postObj.authorId;
+        
+        return {
+          ...postObj,
+          authorId: authorObj ? authorObj._id.toString() : null,
+          authorDetails: authorObj ? {
+            name: authorObj.name,
+            profilePic: authorObj.profilePic,
+            googleAvatar: authorObj.googleAvatar,
+            isEmailVerified: authorObj.isEmailVerified
+          } : null,
+          isSaved: true
+        };
+      });
+
+    res.json(savedPosts);
+  } catch (error) {
+    res.status(550).json({ message: error.message });
   }
 };
 

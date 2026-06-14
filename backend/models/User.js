@@ -227,6 +227,11 @@ const UserSchema = new mongoose.Schema({
     enum: ['public', 'private'],
     default: 'public',
   },
+  savedPosts: [{
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Post',
+    default: []
+  }],
 }, { timestamps: true });
 
 // Auto-generate referral code before saving if not set
