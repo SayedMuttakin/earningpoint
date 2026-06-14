@@ -1,0 +1,61 @@
+# ============================================================
+# robots.txt for zenivio.it.com
+# ============================================================
+# Allow all major search engine bots to crawl the entire site
+
+User-agent: *
+Allow: /
+
+# Allow Google-specific bots
+User-agent: Googlebot
+Allow: /
+
+User-agent: Googlebot-Image
+Allow: /
+
+User-agent: Googlebot-Mobile
+Allow: /
+
+# Allow Bing bot
+User-agent: Bingbot
+Allow: /
+
+# Allow Yahoo bot
+User-agent: Slurp
+Allow: /
+
+# Allow DuckDuckGo bot
+User-agent: DuckDuckBot
+Allow: /
+
+# Allow Facebook crawler (for OG/social sharing)
+User-agent: facebookexternalhit
+Allow: /
+
+# Allow Twitter card scraper
+User-agent: Twitterbot
+Allow: /
+
+# Allow WhatsApp crawler (for link previews)
+User-agent: WhatsApp
+Allow: /
+
+# Allow Telegram crawler
+User-agent: TelegramBot
+Allow: /
+
+# Block bad bots / scrapers
+User-agent: AhrefsBot
+Disallow: /
+
+User-agent: MJ12bot
+Disallow: /
+
+User-agent: DotBot
+Disallow: /
+
+User-agent: SemrushBot
+Disallow: /
+
+# Sitemap location
+Sitemap: https://zenivio.it.com/sitemap.xml

@@ -1,47 +1,69 @@
 {
-  "background_color": "#ffffff",
+  "name": "Zenivio",
+  "short_name": "Zenivio",
+  "description": "Zenivio — Earn money, refer friends, and engage in community. Read articles, watch ads, and complete tasks to earn real rewards!",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0f172a",
+  "theme_color": "#7C3AED",
+  "orientation": "portrait-primary",
+  "lang": "en",
+  "dir": "ltr",
+  "categories": ["finance", "social", "entertainment"],
+  "keywords": "Zenivio, Zenvio, earn money, referral, social community, earning app",
+  "scope": "/",
+  "id": "zenivio-app",
   "icons": [
     {
       "src": "../icons/icon-48.webp",
-      "type": "image/png",
+      "type": "image/webp",
       "sizes": "48x48",
       "purpose": "any maskable"
     },
     {
       "src": "../icons/icon-72.webp",
-      "type": "image/png",
+      "type": "image/webp",
       "sizes": "72x72",
       "purpose": "any maskable"
     },
     {
       "src": "../icons/icon-96.webp",
-      "type": "image/png",
+      "type": "image/webp",
       "sizes": "96x96",
       "purpose": "any maskable"
     },
     {
       "src": "../icons/icon-128.webp",
-      "type": "image/png",
+      "type": "image/webp",
       "sizes": "128x128",
       "purpose": "any maskable"
     },
     {
       "src": "../icons/icon-192.webp",
-      "type": "image/png",
+      "type": "image/webp",
       "sizes": "192x192",
       "purpose": "any maskable"
     },
     {
       "src": "../icons/icon-256.webp",
-      "type": "image/png",
+      "type": "image/webp",
       "sizes": "256x256",
       "purpose": "any maskable"
     },
     {
       "src": "../icons/icon-512.webp",
-      "type": "image/png",
+      "type": "image/webp",
       "sizes": "512x512",
       "purpose": "any maskable"
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "/logo.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "form_factor": "narrow",
+      "label": "Zenivio Home Screen"
     }
   ]
 }
