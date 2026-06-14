@@ -601,22 +601,6 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [showToast]);
 
-  const fetchMysteryBoxStatus = async () => {
-    try {
-      const token = localStorage.getItem('token');
-      if (!token) return;
-      const response = await fetch(`${API_BASE}/api/earning/mystery-status`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      if (response.ok) {
-        const data = await response.json();
-        setMysteryBoxStatus(data);
-      }
-    } catch (err) {
-      console.error('Failed to fetch mystery box status:', err);
-    }
-  };
-
   const fetchWeeklyMissions = async () => {
     try {
       const token = localStorage.getItem('token');
@@ -630,6 +614,47 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
       }
     } catch (err) {
       console.error('Failed to fetch weekly missions:', err);
+    }
+  };
+
+  // ── Single dashboard fetch replaces 7 individual status calls ────────────────────────
+  const fetchDashboard = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) return;
+      const response = await fetch(`${API_BASE}/api/earning/dashboard`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (!response.ok) return;
+      const data = await response.json();
+
+      // Populate all status states from single response
+      if (data.dailyCheckin) setCheckinStatus({ lastCheckin: data.dailyCheckin.lastCheckin, count: data.dailyCheckin.count });
+      if (data.mysteryBox) setMysteryBoxStatus({ lastMysteryBoxDate: data.mysteryBox.lastMysteryBoxDate, claimed: data.mysteryBox.claimed });
+      if (data.videoAd) setVideoStatus({ lastVideoDate: data.videoAd.lastAd, count: data.videoAd.count });
+      if (data.viewAds) setViewAdsStatus({ lastAdDate: data.viewAds.lastAd, count: data.viewAds.count });
+      if (data.spin) setWheelStatus({ lastSpinDate: data.spin.lastSpinDate, count: data.spin.count });
+      if (data.scratch) setScratchStatus({ lastScratchDate: data.scratch.lastScratchDate, count: data.scratch.count });
+      if (data.quiz) setQuizStatus({ lastQuizDate: data.quiz.lastQuizDate, count: data.quiz.count });
+    } catch (err) {
+      console.error('Failed to fetch dashboard:', err);
+    }
+  };
+
+  // Keep individual fetchers for post-action refresh (after claiming rewards)
+  const fetchMysteryBoxStatus = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) return;
+      const response = await fetch(`${API_BASE}/api/earning/mystery-status`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (response.ok) {
+        const data = await response.json();
+        setMysteryBoxStatus(data);
+      }
+    } catch (err) {
+      console.error('Failed to fetch mystery box status:', err);
     }
   };
 
@@ -653,7 +678,6 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
     try {
       const token = localStorage.getItem('token');
       if (!token) return;
-      // Fetch both in parallel for speed
       const [videoResp, viewAdsResp] = await Promise.all([
         fetch(`${API_BASE}/api/earning/video-status?type=video`, { headers: { Authorization: `Bearer ${token}` } }),
         fetch(`${API_BASE}/api/earning/video-status?type=view_ads`, { headers: { Authorization: `Bearer ${token}` } }),
@@ -691,34 +715,15 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
     AdMobService.showInterstitial();
   }, []);
 
-  const fetchScratchStatus = async () => {
-    try {
-      const token = localStorage.getItem('token');
-      if (!token) return;
-      const response = await fetch(`${API_BASE}/api/earning/scratch-status`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      if (response.ok) {
-        const data = await response.json();
-        setScratchStatus(data);
-      }
-    } catch (err) {
-      console.error('Failed to fetch scratch status:', err);
-    }
-  };
-
   React.useEffect(() => {
+    // 🚀 Single dashboard call replaces 7 individual status API calls
+    fetchDashboard();
     fetchBalance();
-    fetchCheckinStatus();
-    fetchMysteryBoxStatus();
-    fetchVideoStatus();
-    fetchWheelStatus();
-    fetchScratchStatus();
-    fetchQuizStatus();
     fetchArticles();
     fetchGlobalSettings();
     fetchWithdrawHistory();
     fetchGlobalWithdrawals();
+    fetchWeeklyMissions();
   }, []);
 
   React.useEffect(() => {

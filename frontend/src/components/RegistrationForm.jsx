@@ -1,12 +1,92 @@
 import React, { useState, useEffect } from 'react';
 import { API_BASE } from '../config';
-import { Lock, Mail, UserPlus, AtSign, Globe, ChevronDown, Check, Search, Users, Eye, EyeOff } from 'lucide-react';
 import { countries } from '../utils/countries';
 import { Capacitor } from '@capacitor/core';
 import { GoogleAuth } from '@codetrix-studio/capacitor-google-auth';
 
 const GOOGLE_CLIENT_ID = '410797628659-49d55sis32em5iktc44aj349v9bsqo02.apps.googleusercontent.com';
 
+// ── SVG Icons ──────────────────────────────────────────────────────────────────
+
+
+
+const UserIcon = () => (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5">
+    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+    <circle cx="12" cy="7" r="4"/>
+  </svg>
+);
+
+const MailIcon = () => (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5">
+    <rect x="2" y="4" width="20" height="16" rx="3"/>
+    <path d="M2 8l10 6 10-6"/>
+  </svg>
+);
+
+const PhoneIcon = () => (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5">
+    <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/>
+  </svg>
+);
+
+const LockIcon = () => (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5">
+    <rect x="3" y="11" width="18" height="11" rx="2"/>
+    <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+  </svg>
+);
+
+const AtSignIcon = () => (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5">
+    <circle cx="12" cy="12" r="4"/>
+    <path d="M16 8v5a3 3 0 0 0 6 0v-1a10 10 0 1 0-3.92 7.94"/>
+  </svg>
+);
+
+const EyeIcon = () => (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4">
+    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+    <circle cx="12" cy="12" r="3"/>
+  </svg>
+);
+
+const EyeOffIcon = () => (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4">
+    <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/>
+    <line x1="1" y1="1" x2="23" y2="23"/>
+  </svg>
+);
+
+const ChevronDownIcon = () => (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4">
+    <polyline points="6 9 12 15 18 9"/>
+  </svg>
+);
+
+const SearchIcon = () => (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4">
+    <circle cx="11" cy="11" r="8"/>
+    <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+  </svg>
+);
+
+const CheckIcon = () => (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="w-3.5 h-3.5">
+    <polyline points="20 6 9 17 4 12"/>
+  </svg>
+);
+
+const GoogleIcon = () => (
+  <svg viewBox="0 0 24 24" className="w-5 h-5">
+    <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
+    <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+    <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
+    <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
+  </svg>
+);
+
+// ── GoogleButton ───────────────────────────────────────────────────────────────
 const GoogleButton = ({ onSuccess }) => {
   const [loading, setLoading] = useState(false);
   const [googleError, setGoogleError] = useState('');
@@ -14,7 +94,7 @@ const GoogleButton = ({ onSuccess }) => {
   const handleGoogleLogin = async () => {
     setGoogleError('');
     const isMobileApp = Capacitor.getPlatform() !== 'web';
-    
+
     if (isMobileApp) {
       try {
         setLoading(true);
@@ -22,11 +102,11 @@ const GoogleButton = ({ onSuccess }) => {
           clientId: GOOGLE_CLIENT_ID,
           scopes: ['profile', 'email'],
           grantOfflineAccess: true,
-        }).catch(() => {}); 
-        
+        }).catch(() => {});
+
         const result = await GoogleAuth.signIn();
         const idToken = result?.authentication?.idToken || result?.idToken;
-        
+
         if (!idToken) {
           setGoogleError('Google Sign-In failed.');
           setLoading(false);
@@ -98,9 +178,9 @@ const GoogleButton = ({ onSuccess }) => {
   };
 
   return (
-    <div className="w-full flex flex-col items-center">
+    <>
       {googleError && (
-        <div className="mb-3 bg-red-50 text-red-500 p-2 rounded-xl text-xs text-center border border-red-100 font-semibold w-full">
+        <div className="mb-2 bg-red-50 text-red-500 p-2 rounded-xl text-xs text-center border border-red-100 font-semibold w-full">
           {googleError}
         </div>
       )}
@@ -108,29 +188,64 @@ const GoogleButton = ({ onSuccess }) => {
         type="button"
         onClick={handleGoogleLogin}
         disabled={loading}
-        className="w-[280px] flex items-center justify-center gap-3 bg-[#e44d3a] hover:bg-[#d4402e] active:scale-95 transition-all text-white py-3 px-4 rounded-full font-semibold text-sm shadow-sm disabled:opacity-70"
+        className="w-full flex items-center justify-center gap-3 py-3.5 rounded-2xl font-semibold text-sm transition-all active:scale-[0.97] disabled:opacity-70"
+        style={{
+          background: 'white',
+          border: '1.5px solid #E5E7EB',
+          color: '#374151',
+          boxShadow: '0 2px 8px rgba(0,0,0,0.06)',
+        }}
       >
         {loading ? (
-          <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+          <div className="w-5 h-5 border-2 border-gray-200 border-t-gray-600 rounded-full animate-spin" />
         ) : (
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="white">
-            <path d="M12.48 10.92v2.8h6.24c-.2 1.68-1.52 4.96-6.24 4.96-3.76 0-6.84-3.16-6.84-7.08s3.08-7.08 6.84-7.08c2.16 0 3.6 1.04 4.16 1.6l2.12-2.12C17.08 2.44 14.96 1.6 12.48 1.6 6.72 1.6 2 6.32 2 12.08s4.72 10.48 10.48 10.48c6.04 0 10.08-4.24 10.08-10.28 0-.84-.12-1.36-.2-1.84h-9.88z" />
-          </svg>
+          <GoogleIcon />
         )}
-        {loading ? 'Signing in...' : 'Sign Up with Google'}
+        {loading ? 'Signing in…' : 'Sign up with Google'}
       </button>
-    </div>
+    </>
   );
 };
 
+// ── Input Field ───────────────────────────────────────────────────────────────
+const InputField = ({ icon: Icon, type = 'text', placeholder, value, onChange, name, autoComplete, rightSlot, onFocus, onBlur, active }) => (
+  <div
+    className="flex items-center w-full rounded-2xl px-4 py-3.5 gap-3 transition-all duration-200"
+    style={{
+      background: active ? 'rgba(124,58,237,0.04)' : '#F9F8FF',
+      border: active ? '1.5px solid #7C3AED' : '1.5px solid #E8E3FF',
+      boxShadow: active ? '0 0 0 3px rgba(124,58,237,0.1)' : 'none',
+    }}
+  >
+    <span style={{ color: active ? '#7C3AED' : '#A78BFA' }}>
+      <Icon />
+    </span>
+    <input
+      name={name}
+      type={type}
+      autoComplete={autoComplete}
+      placeholder={placeholder}
+      value={value}
+      onChange={onChange}
+      onFocus={onFocus}
+      onBlur={onBlur}
+      className="flex-1 bg-transparent outline-none text-sm font-medium placeholder-gray-400"
+      style={{ color: '#1E1B4B' }}
+    />
+    {rightSlot}
+  </div>
+);
+
+// ── RegistrationForm ──────────────────────────────────────────────────────────
 const RegistrationForm = ({ onToggleForm, onRegisterSuccess }) => {
-  const [formData, setFormData] = useState({ 
+  const [formData, setFormData] = useState({
     username: '',
-    name: '', 
-    phoneOrEmail: '', 
+    name: '',
+    phoneOrEmail: '',
+    phone: '',
     password: '',
     confirmPassword: '',
-    country: 'BGD' 
+    country: 'BGD',
   });
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
@@ -139,61 +254,37 @@ const RegistrationForm = ({ onToggleForm, onRegisterSuccess }) => {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [activeField, setActiveField] = useState('');
-  
+  const [agreedTerms, setAgreedTerms] = useState(false);
+
   const [isCheckingUsername, setIsCheckingUsername] = useState(false);
   const [usernameStatus, setUsernameStatus] = useState(null);
 
-  // Debounced username availability check
   useEffect(() => {
     const checkUsername = async () => {
-      if (!formData.username) {
-        setUsernameStatus(null);
-        return;
-      }
-      // Validate format first
-      if (!/^[a-zA-Z0-9_]{3,20}$/.test(formData.username)) {
-        setUsernameStatus('invalid');
-        return;
-      }
+      if (!formData.username) { setUsernameStatus(null); return; }
+      if (!/^[a-zA-Z0-9_]{3,20}$/.test(formData.username)) { setUsernameStatus('invalid'); return; }
       setIsCheckingUsername(true);
       try {
         const response = await fetch(`${API_BASE}/api/auth/referrer/${formData.username}`);
-        if (response.ok) {
-          setUsernameStatus('taken'); 
-        } else {
-          setUsernameStatus('available');
-        }
-      } catch (err) {
-        setUsernameStatus(null);
-      } finally {
-        setIsCheckingUsername(false);
-      }
+        setUsernameStatus(response.ok ? 'taken' : 'available');
+      } catch { setUsernameStatus(null); }
+      finally { setIsCheckingUsername(false); }
     };
-
-    const timer = setTimeout(() => {
-      checkUsername();
-    }, 500);
-
+    const timer = setTimeout(checkUsername, 500);
     return () => clearTimeout(timer);
   }, [formData.username]);
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const refToken = params.get('ref');
-    if (refToken) {
-      localStorage.setItem('pending_referral_code', refToken);
-    }
+    if (refToken) localStorage.setItem('pending_referral_code', refToken);
   }, []);
 
-  const filteredCountries = countries.filter(c => 
+  const filteredCountries = countries.filter(c =>
     c.name.toLowerCase().includes(countrySearchQuery.toLowerCase())
   );
-
   const selectedCountryObj = countries.find(c => c.id === formData.country) || countries[0];
-
-  const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
-  };
+  const handleChange = (e) => setFormData({ ...formData, [e.target.name]: e.target.value });
 
   const hasMinLength = formData.password.length >= 8;
   const hasUppercase = /[A-Z]/.test(formData.password);
@@ -204,33 +295,16 @@ const RegistrationForm = ({ onToggleForm, onRegisterSuccess }) => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!formData.username || !formData.username.trim()) {
-      setError('Username is required.');
-      return;
-    }
-    if (!/^[a-zA-Z0-9_]{3,20}$/.test(formData.username.trim())) {
-      setError('Username must be 3-20 characters (letters, numbers, underscore only).');
-      return;
-    }
-    if (usernameStatus === 'taken') {
-      setError('Username is already taken. Please choose another one.');
-      return;
-    }
-    
-    // Strong password validation
-    if (!isPasswordValid) {
-      setError('Please fix the password requirements.');
-      return;
-    }
+    if (!formData.username?.trim()) { setError('Username is required.'); return; }
+    if (!/^[a-zA-Z0-9_]{3,20}$/.test(formData.username.trim())) { setError('Username must be 3-20 characters (letters, numbers, underscore only).'); return; }
+    if (usernameStatus === 'taken') { setError('Username is already taken.'); return; }
+    if (!/^\d{11}$/.test(formData.phoneOrEmail)) { setError('Phone number must be exactly 11 digits.'); return; }
+    if (!isPasswordValid) { setError('Please fix the password requirements.'); return; }
+    if (formData.password !== formData.confirmPassword) { setError('Passwords do not match.'); return; }
+    if (!agreedTerms) { setError('Please agree to the Terms & Conditions.'); return; }
 
-    if (formData.password !== formData.confirmPassword) {
-      setError('Passwords do not match.');
-      return;
-    }
-    
     setIsLoading(true);
     setError('');
-
     try {
       const response = await fetch(`${API_BASE}/api/auth/register`, {
         method: 'POST',
@@ -240,19 +314,17 @@ const RegistrationForm = ({ onToggleForm, onRegisterSuccess }) => {
           username: formData.username,
           phoneOrEmail: formData.phoneOrEmail,
           password: formData.password,
-          country: selectedCountryObj.name
-        })
+          country: 'Bangladesh',
+        }),
       });
-
       const data = await response.json();
-
       if (response.ok) {
         localStorage.setItem('token', data.token);
         if (onRegisterSuccess) onRegisterSuccess();
       } else {
         setError(data.message || 'Registration failed');
       }
-    } catch (err) {
+    } catch {
       setError('Network error. Please try again.');
     } finally {
       setIsLoading(false);
@@ -260,276 +332,225 @@ const RegistrationForm = ({ onToggleForm, onRegisterSuccess }) => {
   };
 
   return (
-    <div className="w-full max-w-sm mx-auto flex flex-col items-center relative z-10 pb-4">
-      <div className="absolute -bottom-16 -right-16 w-64 h-64 bg-slate-100 rounded-full blur-3xl -z-10 pointer-events-none opacity-60"></div>
+    <div
+      className="w-full min-h-screen flex flex-col overflow-y-auto"
+      style={{ background: 'linear-gradient(160deg, #F5F0FF 0%, #FFFFFF 60%, #EDE9FE 100%)' }}
+    >
+      {/* Decorative blobs */}
+      <div
+        className="fixed top-[-60px] left-[-60px] w-[200px] h-[200px] rounded-full pointer-events-none z-0"
+        style={{ background: 'radial-gradient(circle, rgba(167,139,250,0.25) 0%, transparent 70%)' }}
+      />
+      <div
+        className="fixed bottom-[-40px] right-[-40px] w-[180px] h-[180px] rounded-full pointer-events-none z-0"
+        style={{ background: 'radial-gradient(circle, rgba(139,92,246,0.2) 0%, transparent 70%)' }}
+      />
 
-      <div className="mb-6 w-full flex justify-center">
-        <img src="/login-illustration.png" alt="Registration Illustration" className="h-40 w-auto object-contain" />
+      {/* Back button */}
+      <div className="flex items-center px-5 pt-12 pb-2 z-10">
+        <button
+          type="button"
+          onClick={onToggleForm}
+          className="w-9 h-9 flex items-center justify-center rounded-full transition-all active:scale-90"
+          style={{ background: 'rgba(124,58,237,0.08)' }}
+        >
+          <svg viewBox="0 0 24 24" fill="none" stroke="#7C3AED" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5">
+            <polyline points="15 18 9 12 15 6"/>
+          </svg>
+        </button>
       </div>
 
-      <div className="text-center mb-6">
-        <h1 className="text-3xl font-bold text-[#087b7a] mb-1">Create Account</h1>
-        <p className="text-slate-500 text-sm">Join us today to get started.</p>
-      </div>
+      {/* Content */}
+      <div className="flex-1 flex flex-col items-center px-6 pb-10 z-10">
+        {/* Logo — logo.png from assets */}
+        <div className="mb-3 mt-1 flex items-center justify-center animate-pulse" style={{ width: 72, height: 72 }}>
+          <img
+            src="/logo.png"
+            alt="Zenivio"
+            fetchpriority="high"
+            decoding="sync"
+            style={{ width: '100%', height: '100%', objectFit: 'contain' }}
+          />
+        </div>
+        <h1 className="text-2xl font-bold mb-0.5" style={{ color: '#1E1B4B' }}>Zenivio</h1>
 
-      <form onSubmit={handleSubmit} action="#" autoComplete="on" className="w-full space-y-4">
-        <div>
-          <div className="relative">
-            <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-              <UserPlus className={`h-5 w-5 transition-colors ${activeField === 'name' ? 'text-[#087b7a]' : 'text-slate-400'}`} />
-            </div>
-            <input
-              id="name"
-              name="name"
-              type="text"
-              required
-              autoComplete="name"
-              onFocus={() => setActiveField('name')}
-              onBlur={() => setActiveField('')}
-              className={`pl-12 pr-4 block w-full border-2 rounded-full py-3 bg-white outline-none transition-all duration-300 text-sm font-medium text-slate-700 ${activeField === 'name' ? 'border-[#087b7a]' : 'border-slate-200'}`}
-              placeholder="Full Name"
-              value={formData.name}
-              onChange={handleChange}
-            />
-          </div>
+        <div className="text-center mb-6 mt-3">
+          <p className="text-lg font-bold" style={{ color: '#7C3AED' }}>Create Account</p>
+          <p className="text-sm mt-0.5" style={{ color: '#6B7280' }}>Join Zenivio and start your journey</p>
         </div>
 
-        <div>
-          <div className="relative">
-            <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-              <AtSign className={`h-5 w-5 transition-colors ${activeField === 'username' ? 'text-[#087b7a]' : 'text-slate-400'}`} />
-            </div>
-            <input
-              id="username"
+        <form onSubmit={handleSubmit} className="w-full space-y-3">
+          {/* Full Name */}
+          <InputField
+            icon={UserIcon}
+            name="name"
+            type="text"
+            autoComplete="name"
+            placeholder="Full Name"
+            value={formData.name}
+            onChange={handleChange}
+            onFocus={() => setActiveField('name')}
+            onBlur={() => setActiveField('')}
+            active={activeField === 'name'}
+          />
+
+          {/* Username */}
+          <div>
+            <InputField
+              icon={AtSignIcon}
               name="username"
               type="text"
-              required
               autoComplete="username"
-              onFocus={() => setActiveField('username')}
-              onBlur={() => setActiveField('')}
-              className={`pl-12 pr-4 block w-full border-2 rounded-full py-3 bg-white outline-none transition-all duration-300 text-sm font-medium text-slate-700 ${activeField === 'username' ? 'border-[#087b7a]' : 'border-slate-200'}`}
-              placeholder="Username (becomes your Referral Code)"
+              placeholder="Username"
               value={formData.username}
               onChange={handleChange}
-            />
-          </div>
-          {isCheckingUsername ? (
-            <p className="text-xs text-[#087b7a] font-bold ml-4 mt-1.5 animate-pulse">Checking availability...</p>
-          ) : formData.username && usernameStatus === 'invalid' ? (
-            <p className="text-xs text-red-500 font-bold ml-4 mt-1.5">3-20 characters, letters/numbers/underscore only</p>
-          ) : formData.username && usernameStatus === 'taken' ? (
-            <p className="text-xs text-red-500 font-bold ml-4 mt-1.5">Username is already taken ✗</p>
-          ) : formData.username && usernameStatus === 'available' ? (
-            <p className="text-xs text-[#087b7a] font-bold ml-4 mt-1.5">✓ Username available! This will be your referral code.</p>
-          ) : null}
-        </div>
-
-        <div>
-          <div className="relative">
-            <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-              <Mail className={`h-5 w-5 transition-colors ${activeField === 'email' ? 'text-[#087b7a]' : 'text-slate-400'}`} />
-            </div>
-            <input
-              id="phoneOrEmail"
-              name="phoneOrEmail"
-              type="text"
-              required
-              autoComplete="email"
-              onFocus={() => setActiveField('email')}
+              onFocus={() => setActiveField('username')}
               onBlur={() => setActiveField('')}
-              className={`pl-12 pr-4 block w-full border-2 rounded-full py-3 bg-white outline-none transition-all duration-300 text-sm font-medium text-slate-700 ${activeField === 'email' ? 'border-[#087b7a]' : 'border-slate-200'}`}
-              placeholder="Email or Phone Number"
-              value={formData.phoneOrEmail}
-              onChange={handleChange}
+              active={activeField === 'username'}
             />
+            {isCheckingUsername && (
+              <p className="text-xs font-semibold ml-2 mt-1 animate-pulse" style={{ color: '#7C3AED' }}>Checking availability…</p>
+            )}
+            {!isCheckingUsername && formData.username && usernameStatus === 'invalid' && (
+              <p className="text-xs font-semibold ml-2 mt-1 text-red-500">3-20 characters, letters/numbers/underscore only</p>
+            )}
+            {!isCheckingUsername && formData.username && usernameStatus === 'taken' && (
+              <p className="text-xs font-semibold ml-2 mt-1 text-red-500">Username already taken ✗</p>
+            )}
+            {!isCheckingUsername && formData.username && usernameStatus === 'available' && (
+              <p className="text-xs font-semibold ml-2 mt-1" style={{ color: '#059669' }}>✓ Username available!</p>
+            )}
           </div>
-        </div>
 
-        <div>
-          <div className="relative">
-            <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-              <Lock className={`h-5 w-5 transition-colors ${activeField === 'password' ? 'text-[#087b7a]' : 'text-slate-400'}`} />
-            </div>
-            <input
-              id="password"
+          {/* Phone Number */}
+          <InputField
+            icon={PhoneIcon}
+            name="phoneOrEmail"
+            type="tel"
+            autoComplete="tel"
+            placeholder="Phone Number (11 digits)"
+            value={formData.phoneOrEmail}
+            onChange={handleChange}
+            onFocus={() => setActiveField('phone')}
+            onBlur={() => setActiveField('')}
+            active={activeField === 'phone'}
+          />
+
+          {/* Password */}
+          <div>
+            <InputField
+              icon={LockIcon}
               name="password"
               type={showPassword ? 'text' : 'password'}
-              required
               autoComplete="new-password"
-              onFocus={() => setActiveField('password')}
-              onBlur={() => setActiveField('')}
-              className={`pl-12 pr-12 block w-full border-2 rounded-full py-3 bg-white outline-none transition-all duration-200 text-sm font-medium text-slate-700 ${activeField === 'password' ? 'border-[#087b7a]' : 'border-slate-200'}`}
-              placeholder="Password (••••••••)"
+              placeholder="Password"
               value={formData.password}
               onChange={handleChange}
+              onFocus={() => setActiveField('password')}
+              onBlur={() => setActiveField('')}
+              active={activeField === 'password'}
+              rightSlot={
+                <button type="button" onClick={() => setShowPassword(!showPassword)} className="text-gray-400 hover:text-gray-600 flex-shrink-0 focus:outline-none">
+                  {showPassword ? <EyeOffIcon /> : <EyeIcon />}
+                </button>
+              }
             />
-            <button
-              type="button"
-              onClick={() => setShowPassword(!showPassword)}
-              className="absolute inset-y-0 right-0 pr-4 flex items-center text-slate-400 hover:text-slate-600 focus:outline-none"
-            >
-              {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-            </button>
+            {formData.password && !isPasswordValid && (
+              <div className="ml-2 mt-1.5 space-y-0.5">
+                {!hasMinLength && <p className="text-[11px] text-red-500 font-semibold">• At least 8 characters</p>}
+                {!hasUppercase && <p className="text-[11px] text-red-500 font-semibold">• At least 1 uppercase letter</p>}
+                {!hasLowercase && <p className="text-[11px] text-red-500 font-semibold">• At least 1 lowercase letter</p>}
+                {!hasNumber && <p className="text-[11px] text-red-500 font-semibold">• At least 1 number</p>}
+                {!hasSpecial && <p className="text-[11px] text-red-500 font-semibold">• At least 1 special character (@$!%*?&#)</p>}
+              </div>
+            )}
           </div>
-          {formData.password && !isPasswordValid && (
-            <div className="pl-4 mt-1.5 space-y-0.5">
-              {!hasMinLength && <p className="text-[10px] text-red-500 font-bold">• At least 8 characters</p>}
-              {!hasUppercase && <p className="text-[10px] text-red-500 font-bold">• At least 1 uppercase letter</p>}
-              {!hasLowercase && <p className="text-[10px] text-red-500 font-bold">• At least 1 lowercase letter</p>}
-              {!hasNumber && <p className="text-[10px] text-red-500 font-bold">• At least 1 number</p>}
-              {!hasSpecial && <p className="text-[10px] text-red-500 font-bold">• At least 1 special character (@$!%*?&#)</p>}
-            </div>
-          )}
-        </div>
 
-        <div>
-          <div className="relative">
-            <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-              <Lock className={`h-5 w-5 transition-colors ${activeField === 'confirmPassword' ? 'text-[#087b7a]' : 'text-slate-400'}`} />
-            </div>
-            <input
-              id="confirmPassword"
+          {/* Confirm Password */}
+          <div>
+            <InputField
+              icon={LockIcon}
               name="confirmPassword"
               type={showConfirmPassword ? 'text' : 'password'}
-              required
               autoComplete="new-password"
-              onFocus={() => setActiveField('confirmPassword')}
-              onBlur={() => setActiveField('')}
-              className={`pl-12 pr-12 block w-full border-2 rounded-full py-3 bg-white outline-none transition-all duration-200 text-sm font-medium text-slate-700 ${activeField === 'confirmPassword' ? 'border-[#087b7a]' : 'border-slate-200'}`}
               placeholder="Confirm Password"
               value={formData.confirmPassword}
               onChange={handleChange}
+              onFocus={() => setActiveField('confirmPassword')}
+              onBlur={() => setActiveField('')}
+              active={activeField === 'confirmPassword'}
+              rightSlot={
+                <button type="button" onClick={() => setShowConfirmPassword(!showConfirmPassword)} className="text-gray-400 hover:text-gray-600 flex-shrink-0 focus:outline-none">
+                  {showConfirmPassword ? <EyeOffIcon /> : <EyeIcon />}
+                </button>
+              }
             />
-            <button
-              type="button"
-              onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-              className="absolute inset-y-0 right-0 pr-4 flex items-center text-slate-400 hover:text-slate-600 focus:outline-none"
-            >
-              {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-            </button>
+            {formData.confirmPassword && formData.password !== formData.confirmPassword && (
+              <p className="text-[11px] text-red-500 font-semibold ml-2 mt-1">• Passwords do not match</p>
+            )}
           </div>
-          {formData.confirmPassword && formData.password !== formData.confirmPassword && (
-            <p className="text-[10px] text-red-500 font-bold pl-4 mt-1.5">• Passwords do not match</p>
-          )}
-        </div>
 
-        <div className="relative">
+
+
+          {/* Terms checkbox */}
           <button
             type="button"
-            onClick={() => setIsCountryDropdownOpen(!isCountryDropdownOpen)}
-            className="w-full flex items-center justify-between pl-4 pr-5 py-3 bg-white border-2 border-slate-200 rounded-full hover:border-[#087b7a] transition-all text-left group"
+            onClick={() => setAgreedTerms(!agreedTerms)}
+            className="flex items-start gap-3 w-full text-left active:opacity-80"
           >
-            <div className="flex items-center gap-3">
-              <div className="w-8 h-8 rounded-full bg-white shadow-sm flex items-center justify-center overflow-hidden border border-slate-100 group-hover:scale-110 transition-transform">
-                <img 
-                  src={`https://flagcdn.com/w80/${selectedCountryObj.iso}.png`} 
-                  alt={selectedCountryObj.name}
-                  className="w-full h-full object-cover scale-125"
-                />
-              </div>
-              <div className="flex flex-col justify-center">
-                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-tight leading-none mb-0.5">Country</p>
-                <p className="text-slate-700 text-sm font-medium leading-none">{selectedCountryObj.name}</p>
-              </div>
+            <div
+              className="w-5 h-5 rounded-md flex-shrink-0 flex items-center justify-center mt-0.5 transition-all"
+              style={{
+                background: agreedTerms ? 'linear-gradient(135deg, #7C3AED, #A855F7)' : 'white',
+                border: agreedTerms ? 'none' : '1.5px solid #C4B5FD',
+              }}
+            >
+              {agreedTerms && <CheckIcon />}
             </div>
-            <ChevronDown className={`w-5 h-5 text-slate-400 transition-transform duration-300 ${isCountryDropdownOpen ? 'rotate-180' : ''}`} />
+            <p className="text-xs leading-relaxed" style={{ color: '#6B7280' }}>
+              I agree to the{' '}
+              <span className="font-bold" style={{ color: '#7C3AED' }}>Terms & Conditions</span>
+              {' '}and{' '}
+              <span className="font-bold" style={{ color: '#7C3AED' }}>Privacy Policy</span>
+            </p>
           </button>
 
-            {isCountryDropdownOpen && (
-              <div
-                className="absolute z-50 left-0 right-0 mt-2 bg-white rounded-2xl shadow-xl border border-slate-100 overflow-hidden"
-              >
-                <div className="p-2 border-b border-slate-50 bg-slate-50/50">
-                  <div className="relative">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-                    <input
-                      type="text"
-                      placeholder="Search country..."
-                      value={countrySearchQuery}
-                      onChange={(e) => setCountrySearchQuery(e.target.value)}
-                      className="w-full pl-9 pr-4 py-2 bg-white border border-slate-200 rounded-lg text-sm outline-none focus:border-[#087b7a] transition-all font-medium"
-                    />
-                  </div>
-                </div>
-                <div className="max-h-[200px] overflow-y-auto custom-scrollbar">
-                  {filteredCountries.map((country) => (
-                    <button
-                      key={country.id}
-                      type="button"
-                      onClick={() => {
-                        setFormData({ ...formData, country: country.id });
-                        setIsCountryDropdownOpen(false);
-                      }}
-                      className={`w-full flex items-center justify-between px-4 py-2.5 hover:bg-slate-50 transition-colors ${formData.country === country.id ? 'bg-[#087b7a]/10' : ''}`}
-                    >
-                      <div className="flex items-center gap-3">
-                        <div className="w-6 h-4 rounded-sm overflow-hidden flex-shrink-0">
-                          <img 
-                            src={`https://flagcdn.com/w40/${country.iso}.png`} 
-                            alt={country.name}
-                            className="w-full h-full object-cover"
-                          />
-                        </div>
-                        <span className={`text-sm font-medium ${formData.country === country.id ? 'text-[#087b7a]' : 'text-slate-700'}`}>
-                          {country.name}
-                        </span>
-                      </div>
-                      {formData.country === country.id && (
-                        <Check className="w-4 h-4 text-[#087b7a]" />
-                      )}
-                    </button>
-                  ))}
-                  {filteredCountries.length === 0 && (
-                    <div className="px-4 py-6 text-center">
-                      <p className="text-slate-400 text-sm font-medium">No countries found</p>
-                    </div>
-                  )}
-                </div>
-              </div>
-            )}
-        </div>
+          {error && (
+            <div className="bg-red-50 text-red-500 p-2.5 rounded-xl text-xs text-center border border-red-100 font-semibold">
+              {error}
+            </div>
+          )}
 
-
-        {error && (
-          <div className="bg-red-50 text-red-500 p-2 rounded-lg text-sm text-center border border-red-100 mt-2">
-            {error}
-          </div>
-        )}
-
-        <div className="flex justify-center pt-2">
+          {/* Submit */}
           <button
             type="submit"
             disabled={isLoading || usernameStatus === 'taken'}
-            className="w-[180px] flex items-center justify-center bg-[#087b7a] hover:bg-[#065f5e] text-white py-3 rounded-full font-bold tracking-wide shadow-md hover:-translate-y-0.5 active:translate-y-0 transition-all disabled:opacity-70"
+            className="w-full py-4 rounded-2xl font-bold text-white text-sm transition-all active:scale-[0.97] disabled:opacity-70"
+            style={{
+              background: 'linear-gradient(135deg, #7C3AED, #A855F7)',
+              boxShadow: '0 6px 20px rgba(124,58,237,0.35)',
+            }}
           >
-            {isLoading ? 'SIGNING UP...' : 'SIGN UP'}
+            {isLoading ? (
+              <span className="flex items-center justify-center gap-2">
+                <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                Creating Account…
+              </span>
+            ) : 'Create Account'}
           </button>
-        </div>
-      </form>
+        </form>
 
-      <div className="text-center my-6">
-        <span className="text-xs text-slate-400 font-medium">Or Connect Using</span>
-      </div>
-
-      <GoogleButton onSuccess={onRegisterSuccess} />
-
-      <div className="mt-8 text-center">
-        <p className="text-slate-500 text-xs font-medium">
+        {/* Toggle */}
+        <p className="text-sm mt-6 text-center" style={{ color: '#6B7280' }}>
           Already have an account?{' '}
           <button
             type="button"
             onClick={onToggleForm}
-            className="text-[#087b7a] font-bold hover:underline ml-1 uppercase"
+            className="font-bold hover:opacity-80 transition-opacity"
+            style={{ color: '#7C3AED' }}
           >
-            LOG IN NOW
+            Login
           </button>
-        </p>
-      </div>
-
-      <div className="mt-6 text-center">
-        <p className="text-[10px] text-slate-500 font-medium leading-relaxed">
-          By continuing, you agree to our <br/>
-          <a href="#" className="text-[#087b7a] font-bold hover:underline">Terms of Service</a> and <a href="#" className="text-[#087b7a] font-bold hover:underline">Privacy Policy</a>
         </p>
       </div>
     </div>

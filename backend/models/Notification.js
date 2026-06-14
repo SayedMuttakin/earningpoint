@@ -34,4 +34,10 @@ const notificationSchema = new mongoose.Schema({
   }
 });
 
+// ── Indexes for fast query performance ────────────────────────────────────────
+// Fetch latest notifications for a user
+notificationSchema.index({ userId: 1, createdAt: -1 });
+// Fast unread count query
+notificationSchema.index({ userId: 1, isRead: 1 });
+
 module.exports = mongoose.model('Notification', notificationSchema);

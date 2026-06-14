@@ -1,11 +1,16 @@
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
+const compression = require('compression');
 const path = require('path');
 const fs = require('fs');
 require('dotenv').config();
 
 const app = express();
+
+// ── Gzip Compression ─────────────────────────────────────────────────
+// Reduces response payload by 60-80% — speeds up all API responses significantly
+app.use(compression({ level: 6, threshold: 1024 }));
 
 // CORS - Allow all origins (safe since JWT is used, not cookies)
 app.use((req, res, next) => {
@@ -20,11 +25,14 @@ app.use((req, res, next) => {
   next();
 });
 
-// Request Logger
-app.use((req, res, next) => {
-  console.log(`${new Date().toISOString()} - ${req.method} ${req.url} - Origin: ${req.get('Origin') || 'none'}`);
-  next();
-});
+// Request Logger — disabled in production to reduce CPU/IO overhead
+// Only enable for debugging — comment this out in production
+if (process.env.NODE_ENV !== 'production') {
+  app.use((req, res, next) => {
+    console.log(`${new Date().toISOString()} - ${req.method} ${req.url}`);
+    next();
+  });
+}
 
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ limit: '50mb', extended: true }));
@@ -47,8 +55,15 @@ app.get('/api/image', (req, res) => {
 // Database Connection
 const startServer = async () => {
   try {
-    console.log("Connecting to:", process.env.MONGO_URI);
-    await mongoose.connect(process.env.MONGO_URI);
+    console.log("Connecting to MongoDB...");
+    await mongoose.connect(process.env.MONGO_URI, {
+      // Connection pool: allow up to 10 concurrent DB connections
+      maxPoolSize: 10,
+      // Don't wait more than 5s to find a server
+      serverSelectionTimeoutMS: 5000,
+      // Socket timeout — drop slow queries after 45s
+      socketTimeoutMS: 45000,
+    });
     console.log('✅ MongoDB Atlas Connected Successfully!');
     
     // Routes

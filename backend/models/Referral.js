@@ -28,4 +28,12 @@ const ReferralSchema = new mongoose.Schema({
   },
 }, { timestamps: true });
 
+// ── Indexes for fast query performance ────────────────────────────────────────
+// Fetch all referrals made by a user
+ReferralSchema.index({ referrerId: 1, createdAt: -1 });
+// Look up who referred this user (used on registration)
+ReferralSchema.index({ referredUserId: 1 });
+// Filter by referrerId + status (for campaign reward check)
+ReferralSchema.index({ referrerId: 1, status: 1 });
+
 module.exports = mongoose.model('Referral', ReferralSchema);

@@ -461,22 +461,20 @@ function App() {
 
   return (
     <Suspense fallback={<PageLoader />}>
-      <AuthLayout>
-        {showForgotPassword ? (
-          <ForgotPasswordPage onBack={() => setShowForgotPassword(false)} />
-        ) : isLogin ? (
-          <LoginForm
-            onToggleForm={() => setIsLogin(false)}
-            onLoginSuccess={() => setIsAuthenticated(true)}
-            onForgotPassword={() => setShowForgotPassword(true)}
-          />
-        ) : (
-          <RegistrationForm
-            onToggleForm={() => setIsLogin(true)}
-            onRegisterSuccess={() => setIsLogin(true)}
-          />
-        )}
-      </AuthLayout>
+      {showForgotPassword ? (
+        <ForgotPasswordPage onBack={() => setShowForgotPassword(false)} />
+      ) : isLogin ? (
+        <LoginForm
+          onToggleForm={() => setIsLogin(false)}
+          onLoginSuccess={() => setIsAuthenticated(true)}
+          onForgotPassword={() => setShowForgotPassword(true)}
+        />
+      ) : (
+        <RegistrationForm
+          onToggleForm={() => setIsLogin(true)}
+          onRegisterSuccess={() => setIsLogin(true)}
+        />
+      )}
     </Suspense>
   );
 }

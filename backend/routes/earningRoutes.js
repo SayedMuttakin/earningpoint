@@ -3,6 +3,9 @@ const router = express.Router();
 const earningController = require('../controllers/earningController');
 const { protect } = require('../middleware/authMiddleware');
 
+// Dashboard: returns ALL earning statuses in ONE call (reduces 6-8 calls → 1)
+router.get('/dashboard', protect, earningController.getDashboard);
+
 router.get('/daily-status', protect, earningController.getDailyStatus);
 router.post('/daily-checkin', protect, earningController.claimDailyCheckin);
 

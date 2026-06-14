@@ -7,6 +7,33 @@ const WeeklyMission = require('../models/WeeklyMission');
 const MissionCompletion = require('../models/MissionCompletion');
 const { createNotification } = require('./notificationController');
 
+// ── GlobalSettings in-memory cache (5 min TTL) ───────────────────────────────
+// GlobalSettings is fetched on every EarningPage open — cache it to avoid DB hit every time
+let settingsCache = null;
+let settingsCacheTime = 0;
+const SETTINGS_CACHE_TTL = 5 * 60 * 1000; // 5 minutes
+
+const getSettings = async () => {
+  const now = Date.now();
+  if (settingsCache && (now - settingsCacheTime) < SETTINGS_CACHE_TTL) {
+    return settingsCache;
+  }
+  let settings = await GlobalSetting.findOne({ configKey: 'main_config' }).lean();
+  if (!settings) {
+    settings = await GlobalSetting.create({ configKey: 'main_config' });
+    settings = settings.toObject();
+  }
+  settingsCache = settings;
+  settingsCacheTime = now;
+  return settings;
+};
+
+// Call this when admin updates settings to invalidate the cache
+exports.invalidateSettingsCache = () => {
+  settingsCache = null;
+  settingsCacheTime = 0;
+};
+
 const processPoints = (user, reward) => {
   user.points = (user.points || 0) + reward;
   user.lifetimePoints = (user.lifetimePoints || 0) + reward;
@@ -730,10 +757,7 @@ exports.convertCoins = async (req, res) => {
 
 exports.getGlobalSettings = async (req, res) => {
   try {
-    let settings = await GlobalSetting.findOne({ configKey: 'main_config' });
-    if (!settings) {
-      settings = await GlobalSetting.create({ configKey: 'main_config' });
-    }
+    const settings = await getSettings();
     // Return only public fields
     res.json({
       premiumIpPrice: settings.premiumIpPrice,
@@ -767,14 +791,16 @@ exports.getProducts = async (req, res) => {
 // ─── Articles ────────────────────────────────────────────────────────────────
 exports.getArticles = async (req, res) => {
   try {
-    const articles = await Article.find({ active: true }).sort({ createdAt: -1 });
+    // Fetch articles + user status in parallel (saves one round-trip)
+    const [articles, user] = await Promise.all([
+      Article.find({ active: true }).sort({ createdAt: -1 }).lean(),
+      User.findById(req.user._id).select('articleReadCount lastArticleReadDate').lean()
+    ]);
     
-    // Get user's daily count
-    const user = await User.findById(req.user._id);
     const now = new Date();
     let currentCount = user.articleReadCount || 0;
     if (user.lastArticleReadDate) {
-      if (user.lastArticleReadDate.toDateString() !== now.toDateString()) {
+      if (new Date(user.lastArticleReadDate).toDateString() !== now.toDateString()) {
         currentCount = 0;
       }
     }
@@ -784,6 +810,83 @@ exports.getArticles = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
+
+// ── Dashboard: All earning status in ONE request ───────────────────────────────
+// Previously the frontend made 6-8 separate API calls on page load.
+// This endpoint returns everything at once, reducing load time significantly.
+exports.getDashboard = async (req, res) => {
+  try {
+    const userId = req.user._id;
+    const now = new Date();
+
+    const user = await User.findById(userId).select(
+      'lastDailyCheckin dailyCheckinCount lastVideoAd videoAdCount lastViewAdsAd viewAdsCount ' +
+      'lastSpinDate spinCount lastScratchDate scratchCount lastQuizDate quizCount ' +
+      'lastGkQuizDate lastMysteryBoxDate articleReadCount lastArticleReadDate ' +
+      'balance points lifetimePoints'
+    ).lean();
+
+    const getCount = (countField, dateField, periodHours = 24) => {
+      let count = user[countField] || 0;
+      if (user[dateField]) {
+        const last = new Date(user[dateField]);
+        if (periodHours === 24) {
+          if (last.toDateString() !== now.toDateString()) count = 0;
+        } else {
+          if ((now - last) >= periodHours * 60 * 60 * 1000) count = 0;
+        }
+      }
+      return count;
+    };
+
+    res.json({
+      dailyCheckin: {
+        lastCheckin: user.lastDailyCheckin,
+        count: getCount('dailyCheckinCount', 'lastDailyCheckin', 2) // 2-hour window
+      },
+      videoAd: {
+        lastAd: user.lastVideoAd,
+        count: getCount('videoAdCount', 'lastVideoAd')
+      },
+      viewAds: {
+        lastAd: user.lastViewAdsAd,
+        count: getCount('viewAdsCount', 'lastViewAdsAd')
+      },
+      spin: {
+        lastSpinDate: user.lastSpinDate,
+        count: getCount('spinCount', 'lastSpinDate')
+      },
+      scratch: {
+        lastScratchDate: user.lastScratchDate,
+        count: getCount('scratchCount', 'lastScratchDate')
+      },
+      quiz: {
+        lastQuizDate: user.lastQuizDate,
+        count: getCount('quizCount', 'lastQuizDate')
+      },
+      gkQuiz: {
+        lastGkQuizDate: user.lastGkQuizDate,
+        claimed: user.lastGkQuizDate ? new Date(user.lastGkQuizDate).toDateString() === now.toDateString() : false
+      },
+      mysteryBox: {
+        lastMysteryBoxDate: user.lastMysteryBoxDate,
+        claimed: user.lastMysteryBoxDate ? new Date(user.lastMysteryBoxDate).toDateString() === now.toDateString() : false
+      },
+      article: {
+        count: getCount('articleReadCount', 'lastArticleReadDate')
+      },
+      wallet: {
+        balance: user.balance,
+        points: user.points,
+        lifetimePoints: user.lifetimePoints
+      }
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: error.message });
+  }
+};
+
 
 exports.claimArticleReward = async (req, res) => {
   try {

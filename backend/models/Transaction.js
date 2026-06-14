@@ -26,4 +26,12 @@ const TransactionSchema = new mongoose.Schema({
   },
 }, { timestamps: true });
 
+// ── Indexes for fast query performance ────────────────────────────────────────
+// Most common query: find by userId sorted by date (transaction history page)
+TransactionSchema.index({ userId: 1, createdAt: -1 });
+// Filter by userId + type (e.g. withdrawal queries)
+TransactionSchema.index({ userId: 1, type: 1 });
+// For leaderboard aggregate lookup on 'completed' transactions
+TransactionSchema.index({ userId: 1, status: 1, amount: 1 });
+
 module.exports = mongoose.model('Transaction', TransactionSchema);

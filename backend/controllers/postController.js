@@ -7,12 +7,15 @@ const { createNotification } = require('./notificationController');
 // @access  Public
 exports.getPosts = async (req, res) => {
   try {
-    const posts = await Post.find().populate('authorId', 'name profilePic googleAvatar isEmailVerified').sort({ createdAt: -1 });
+    const posts = await Post.find()
+      .populate('authorId', 'name profilePic googleAvatar isEmailVerified')
+      .sort({ createdAt: -1 })
+      .limit(30)  // Limit to 30 most recent posts
+      .lean();
     const mapped = posts.map(post => {
-      const postObj = post.toObject();
-      const authorObj = postObj.authorId;
+      const authorObj = post.authorId;
       return {
-        ...postObj,
+        ...post,
         authorId: authorObj ? authorObj._id.toString() : null,
         authorDetails: authorObj ? {
           name: authorObj.name,
@@ -258,12 +261,13 @@ exports.getVideoPosts = async (req, res) => {
   try {
     const posts = await Post.find({ video: { $ne: null } })
       .populate('authorId', 'name profilePic googleAvatar isEmailVerified')
-      .sort({ createdAt: -1 });
+      .sort({ createdAt: -1 })
+      .limit(20)  // Limit to 20 most recent reels
+      .lean();
     const mapped = posts.map(post => {
-      const postObj = post.toObject();
-      const authorObj = postObj.authorId;
+      const authorObj = post.authorId;
       return {
-        ...postObj,
+        ...post,
         authorId: authorObj ? authorObj._id.toString() : null,
         authorDetails: authorObj ? {
           _id: authorObj._id.toString(),

@@ -4,18 +4,20 @@ const bcrypt = require('bcryptjs');
 // GET /api/profile — Get current user profile
 exports.getProfile = async (req, res) => {
   try {
-    const user = await User.findById(req.user._id).select('-password');
+    const Post = require('../models/Post');
+
+    // Fetch user and post count in parallel — saves one round-trip
+    const [user, postsCount] = await Promise.all([
+      User.findById(req.user._id).select('-password').lean(),
+      Post.countDocuments({ authorId: req.user._id })
+    ]);
+
     if (!user) {
       return res.status(404).json({ message: 'User not found' });
     }
 
-    // Count posts by this user
-    const Post = require('../models/Post');
-    const postsCount = await Post.countDocuments({ authorId: req.user._id });
-
-    // Send profile data along with stats
     const profileData = {
-      ...user.toObject(),
+      ...user,
       postsCount,
       followersCount: user.followers ? user.followers.length : 0,
       followingCount: user.following ? user.following.length : 0
@@ -265,17 +267,22 @@ exports.getPublicProfile = async (req, res) => {
       targetUserId = currentUserId;
     }
 
-    const user = await User.findById(targetUserId)
-      .select('name email profilePic coverPic googleAvatar isEmailVerified followers following bio location website highlights')
-      .populate('highlights.posts');
+    const Post = require('../models/Post');
+
+    // Fetch user + posts in parallel
+    const [user, posts] = await Promise.all([
+      User.findById(targetUserId)
+        .select('name email profilePic coverPic googleAvatar isEmailVerified followers following bio location website highlights')
+        .lean(),
+      Post.find({ authorId: targetUserId })
+        .sort({ createdAt: -1 })
+        .limit(40)  // Paginate — load first 40 posts only
+        .lean()
+    ]);
+
     if (!user) {
       return res.status(404).json({ message: 'User not found' });
     }
-
-    const Post = require('../models/Post');
-    
-    // Get all posts by this user
-    const posts = await Post.find({ authorId: targetUserId }).sort({ createdAt: -1 });
 
     // Calculate total likes on their posts
     const totalLikes = posts.reduce((sum, p) => sum + (p.likes?.length || 0), 0);
@@ -285,7 +292,7 @@ exports.getPublicProfile = async (req, res) => {
     const communityPosts = posts.filter(p => !p.video);
 
     // Is the current user following this target user?
-    const isFollowing = user.followers ? user.followers.includes(currentUserId) : false;
+    const isFollowing = user.followers ? user.followers.some(id => id.toString() === currentUserId.toString()) : false;
 
     res.json({
       user: {

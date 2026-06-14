@@ -218,4 +218,14 @@ UserSchema.pre('save', function () {
   }
 });
 
+// ── Indexes for fast query performance ────────────────────────────────────────
+// Sort by newest user (admin panel, leaderboard)
+UserSchema.index({ createdAt: -1 });
+// Filter premium users (admin + referral)
+UserSchema.index({ isPremium: 1 });
+// Filter banned users (admin panel)
+UserSchema.index({ isBanned: 1 });
+// Leaderboard sort by lifetimePoints
+UserSchema.index({ lifetimePoints: -1 });
+
 module.exports = mongoose.model('User', UserSchema);

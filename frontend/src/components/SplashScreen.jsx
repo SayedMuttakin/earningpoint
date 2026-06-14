@@ -1,26 +1,40 @@
 import React, { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 
+// Preload the app icon for instant display
+const preloadImg = new Image();
+preloadImg.src = '/logo.png';
+
+// Floating particle
+const Particle = ({ cx, cy, r, delay, dur }) => (
+  <motion.circle
+    cx={cx} cy={cy} r={r}
+    fill="rgba(167,139,250,0.5)"
+    animate={{ y: [0, -14, 0], opacity: [0.4, 0.9, 0.4] }}
+    transition={{ duration: dur, repeat: Infinity, ease: 'easeInOut', delay }}
+  />
+);
+
 const SplashScreen = ({ onFinish }) => {
   const [progress, setProgress] = useState(0);
 
   useEffect(() => {
-    // Fast loading — don't keep users waiting on splash
-    const duration = 1200; // 1.2 seconds total
+    const duration = 1800;
     const intervalTime = 30;
     const steps = duration / intervalTime;
     let currentStep = 0;
 
     const timer = setInterval(() => {
       currentStep++;
-      const newProgress = Math.min((currentStep / steps) * 100, 100);
+      const raw = currentStep / steps;
+      // Ease-out curve for more natural feel
+      const eased = 1 - Math.pow(1 - raw, 2);
+      const newProgress = Math.min(eased * 100, 100);
       setProgress(newProgress);
 
       if (currentStep >= steps) {
         clearInterval(timer);
-        setTimeout(() => {
-          onFinish();
-        }, 150); // tiny delay after reaching 100%
+        setTimeout(() => onFinish(), 200);
       }
     }, intervalTime);
 
@@ -28,98 +42,110 @@ const SplashScreen = ({ onFinish }) => {
   }, [onFinish]);
 
   return (
-    <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-white overflow-hidden sm:rounded-[2.5rem] rounded-3xl shadow-2xl">
-      {/* Top Left Wave */}
-      <motion.div 
-        initial={{ opacity: 0, x: -50, y: -50 }}
-        animate={{ opacity: 1, x: 0, y: 0 }}
-        transition={{ duration: 0.8, ease: "easeOut" }}
-        className="absolute top-0 left-0 w-full h-auto pointer-events-none"
-      >
-        <svg viewBox="0 0 375 250" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-[80%] max-w-[300px]">
-          <path d="M0 0H375C375 0 350.5 40.5 288.5 61C226.5 81.5 186.5 42.5 125 56C63.5 69.5 0 162 0 162V0Z" fill="url(#paint0_linear)"/>
-          <path d="M0 0H285C285 0 248.5 20.5 185 36.5C121.5 52.5 91 16 41 42.5C-9 69 0 137 0 137V0Z" fill="url(#paint1_linear)" fillOpacity="0.6"/>
-          <defs>
-            <linearGradient id="paint0_linear" x1="0" y1="0" x2="375" y2="162" gradientUnits="userSpaceOnUse">
-              <stop stopColor="#6E72FC" stopOpacity="0.4"/>
-              <stop offset="1" stopColor="#AD1DEB" stopOpacity="0.1"/>
-            </linearGradient>
-            <linearGradient id="paint1_linear" x1="0" y1="0" x2="285" y2="137" gradientUnits="userSpaceOnUse">
-              <stop stopColor="#4184FF"/>
-              <stop offset="1" stopColor="#A067FF"/>
-            </linearGradient>
-          </defs>
-        </svg>
-      </motion.div>
-
-      {/* Floating Circles */}
-      <motion.div 
-        animate={{ y: [0, -10, 0] }} 
-        transition={{ repeat: Infinity, duration: 3, ease: "easeInOut" }}
-        className="absolute top-[15%] right-[25%] w-6 h-6 rounded-full bg-purple-200 opacity-40 blur-[1px]"
+    <div
+      className="fixed inset-0 z-50 flex flex-col items-center justify-center overflow-hidden"
+      style={{ background: 'linear-gradient(160deg, #F5F0FF 0%, #FFFFFF 55%, #EDE9FE 100%)' }}
+    >
+      {/* ── Decorative blobs ── */}
+      <div
+        className="absolute top-[-80px] left-[-80px] w-[280px] h-[280px] rounded-full pointer-events-none"
+        style={{ background: 'radial-gradient(circle, rgba(167,139,250,0.3) 0%, transparent 70%)' }}
       />
-      <motion.div 
-        animate={{ y: [0, 15, 0] }} 
-        transition={{ repeat: Infinity, duration: 4, ease: "easeInOut", delay: 1 }}
-        className="absolute bottom-[30%] left-[15%] w-10 h-10 rounded-full bg-blue-100 opacity-60 blur-[1px]"
+      <div
+        className="absolute bottom-[-60px] right-[-60px] w-[240px] h-[240px] rounded-full pointer-events-none"
+        style={{ background: 'radial-gradient(circle, rgba(139,92,246,0.25) 0%, transparent 70%)' }}
+      />
+      <div
+        className="absolute top-[45%] right-[-40px] w-[160px] h-[160px] rounded-full pointer-events-none"
+        style={{ background: 'radial-gradient(circle, rgba(196,181,253,0.2) 0%, transparent 70%)' }}
       />
 
-      {/* Bottom Right Wave */}
-      <motion.div 
-        initial={{ opacity: 0, x: 50, y: 50 }}
-        animate={{ opacity: 1, x: 0, y: 0 }}
-        transition={{ duration: 0.8, ease: "easeOut" }}
-        className="absolute bottom-0 right-0 w-full h-auto flex justify-end pointer-events-none"
-      >
-        <svg viewBox="0 0 375 250" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-[85%] max-w-[320px]">
-          <path d="M375 250H0C0 250 31.5 200.5 96.5 186.5C161.5 172.5 187 218.5 251.5 204C316 189.5 375 92 375 92V250Z" fill="url(#paint2_linear)" fillOpacity="0.5"/>
-          <path d="M375 250H112C112 250 148 221.5 207 207.5C266 193.5 289.5 235 344.5 210.5C399.5 186 375 125 375 125V250Z" fill="url(#paint3_linear)"/>
-          <defs>
-            <linearGradient id="paint2_linear" x1="375" y1="250" x2="0" y2="92" gradientUnits="userSpaceOnUse">
-              <stop stopColor="#AD1DEB" stopOpacity="0.3"/>
-              <stop offset="1" stopColor="#6E72FC" stopOpacity="0.1"/>
-            </linearGradient>
-            <linearGradient id="paint3_linear" x1="375" y1="250" x2="112" y2="125" gradientUnits="userSpaceOnUse">
-              <stop stopColor="#A067FF"/>
-              <stop offset="1" stopColor="#4184FF" stopOpacity="0.8"/>
-            </linearGradient>
-          </defs>
-        </svg>
-      </motion.div>
+      {/* ── Floating SVG particles ── */}
+      <svg className="absolute inset-0 w-full h-full pointer-events-none" xmlns="http://www.w3.org/2000/svg">
+        <Particle cx="15%" cy="20%" r={8} delay={0} dur={3.2} />
+        <Particle cx="80%" cy="15%" r={6} delay={0.8} dur={2.8} />
+        <Particle cx="88%" cy="55%" r={5} delay={1.4} dur={3.5} />
+        <Particle cx="10%" cy="65%" r={10} delay={0.4} dur={4} />
+        <Particle cx="50%" cy="88%" r={7} delay={1.0} dur={3} />
+        <Particle cx="25%" cy="80%" r={4} delay={1.8} dur={2.5} />
+        <Particle cx="70%" cy="78%" r={9} delay={0.2} dur={3.8} />
+      </svg>
 
-      {/* Main Content (Centered Logo) */}
-      <div className="relative z-10 flex flex-col items-center w-full max-w-sm px-6 pb-12">
+      {/* ── Center content ── */}
+      <div className="relative z-10 flex flex-col items-center">
+        {/* Outer glow ring around logo */}
         <motion.div
-          initial={{ opacity: 0, scale: 0.8 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 0.6, ease: "easeOut", delay: 0.2 }}
+          animate={{ scale: [1, 1.08, 1], opacity: [0.3, 0.55, 0.3] }}
+          transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
+          className="absolute rounded-full pointer-events-none"
+          style={{
+            width: 160,
+            height: 160,
+            background: 'radial-gradient(circle, rgba(167,139,250,0.3) 0%, transparent 70%)',
+          }}
+        />
+
+        {/* App icon — actual project icon, preloaded for zero-delay display */}
+        <motion.div
+          initial={{ opacity: 0, scale: 0.7, y: 20 }}
+          animate={{ opacity: 1, scale: 1, y: 0 }}
+          transition={{ duration: 0.7, ease: [0.34, 1.56, 0.64, 1] }}
+          className="mb-4"
+        >
+          <img
+            src="/logo.png"
+            alt="Zenivio"
+            width={96}
+            height={96}
+            fetchpriority="high"
+            decoding="sync"
+            style={{ width: 96, height: 96, objectFit: 'contain', borderRadius: 22, display: 'block' }}
+          />
+        </motion.div>
+
+        {/* App name */}
+        <motion.div
+          initial={{ opacity: 0, y: 12 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.35 }}
           className="flex flex-col items-center"
         >
-          {/* Logo */}
-          <img 
-            src="/zenivio-logo.png" 
-            alt="Zenivio Logo" 
-            className="w-56 h-auto object-contain drop-shadow-md"
-          />
+          <h1
+            className="text-3xl font-bold tracking-tight mb-1"
+            style={{ color: '#1E1B4B' }}
+          >
+            Zenivio
+          </h1>
+          <p className="text-sm font-medium" style={{ color: '#8B5CF6' }}>
+            Earn · Connect · Grow
+          </p>
         </motion.div>
       </div>
 
-      {/* Loader (Anchored to bottom) */}
-      <motion.div 
-        initial={{ opacity: 0, y: 20 }}
+      {/* ── Progress bar ── */}
+      <motion.div
+        initial={{ opacity: 0, y: 16 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5, delay: 0.6 }}
-        className="absolute bottom-[15%] w-full flex flex-col items-center z-10"
+        className="absolute bottom-[14%] w-full flex flex-col items-center z-10 px-12"
       >
-        <div className="w-56 h-1.5 bg-gray-200 rounded-full overflow-hidden mb-3">
-          <motion.div 
-            className="h-full bg-gradient-to-r from-blue-500 to-purple-600 rounded-full"
-            initial={{ width: "0%" }}
-            animate={{ width: `${progress}%` }}
-            transition={{ ease: "linear", duration: 0.1 }}
+        <div
+          className="w-full max-w-[220px] h-1.5 rounded-full overflow-hidden mb-3"
+          style={{ background: 'rgba(167,139,250,0.2)' }}
+        >
+          <motion.div
+            className="h-full rounded-full"
+            style={{
+              background: 'linear-gradient(90deg, #7C3AED, #A855F7)',
+              width: `${progress}%`,
+              boxShadow: '0 0 10px rgba(167,139,250,0.6)',
+            }}
+            transition={{ ease: 'linear', duration: 0.03 }}
           />
         </div>
-        <p className="text-gray-500 text-sm font-medium">Loading...</p>
+        <p className="text-xs font-semibold" style={{ color: '#A78BFA' }}>
+          Loading…
+        </p>
       </motion.div>
     </div>
   );
