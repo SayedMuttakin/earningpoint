@@ -123,7 +123,7 @@ const Navbar = ({
       color: 'bg-green-100 dark:bg-green-950/40 text-green-600 dark:text-green-405', 
       label: 'Help & Support', 
       sub: 'Get help, report issues and more', 
-      action: () => { setIsSidebarOpen(false); navigateToSettingsSubMenu ? navigateToSettingsSubMenu('support') : (setActiveTab && setActiveTab('Support')); }
+      action: () => { setIsSidebarOpen(false); setActiveTab && setActiveTab('Support'); }
     },
     { 
       id: 'actions', 
