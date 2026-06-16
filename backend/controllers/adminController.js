@@ -481,6 +481,46 @@ exports.getVerifications = async (req, res) => {
   }
 };
 
+exports.updateVerificationStatus = async (req, res) => {
+  try {
+    const { status, reviewNote } = req.body;
+    if (!['approved', 'rejected'].includes(status)) {
+      return res.status(400).json({ message: 'Invalid status' });
+    }
+
+    const verification = await Verification.findById(req.params.id);
+    if (!verification) {
+      return res.status(404).json({ message: 'Verification request not found' });
+    }
+
+    verification.status = status;
+    if (reviewNote !== undefined) verification.reviewNote = reviewNote;
+    await verification.save();
+
+    if (status === 'approved') {
+      await User.findByIdAndUpdate(verification.userId, { isEmailVerified: true });
+      createNotification(
+        verification.userId,
+        'Profile Verified! ✅',
+        'Your profile has been successfully verified. Check out your blue badge!',
+        'system'
+      );
+    } else if (status === 'rejected') {
+      await User.findByIdAndUpdate(verification.userId, { isEmailVerified: false });
+      createNotification(
+        verification.userId,
+        'Verification Rejected ❌',
+        `Your verification request was rejected. Reason: ${reviewNote || 'Documents were unclear'}`,
+        'system'
+      );
+    }
+
+    res.json({ message: `Verification status updated to ${status}`, verification });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
 // ─── Live Support (ChatSessions) ─────────────────────────────────────────────
 exports.getChatSessions = async (req, res) => {
   try {

@@ -14,6 +14,7 @@ import Articles from './pages/Articles';
 import Missions from './pages/Missions';
 import Products from './pages/Products';
 import Announcements from './pages/Announcements';
+import Verifications from './pages/Verifications';
 
 import { API_BASE as GlobalApiBase } from '../config';
 export const API_BASE = GlobalApiBase;
@@ -58,6 +59,7 @@ const AdminApp = () => {
       {activePage === 'missions' && <Missions {...pageProps} />}
       {activePage === 'products' && <Products {...pageProps} />}
       {activePage === 'announcements' && <Announcements {...pageProps} />}
+      {activePage === 'verifications' && <Verifications {...pageProps} />}
       {activePage === 'settings' && <Settings {...pageProps} onLogout={handleLogout} />}
     </AdminLayout>
   );

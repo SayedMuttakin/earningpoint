@@ -212,6 +212,8 @@ const PublicProfilePage = ({ userId, onBack, currentUser, isOwnProfile, setActiv
   const coverInputRef = useRef(null);
   const highlightCoverInputRef = useRef(null);
 
+  const isOwn = isOwnProfile || userId === 'me' || (profile && currentUser && (profile._id === currentUser._id || profile._id === currentUser.id));
+
   // Show a short-lived toast
   const showToastNotification = (msg) => {
     setToastMessage(msg);
@@ -291,8 +293,6 @@ const PublicProfilePage = ({ userId, onBack, currentUser, isOwnProfile, setActiv
       console.error('Failed to update profile details:', err);
     }
   };
-
-  const isOwn = isOwnProfile || userId === 'me' || (profile && currentUser && (profile._id === currentUser._id || profile._id === currentUser.id));
 
   const fetchPublicProfile = async () => {
     try {

@@ -11,8 +11,10 @@ import {
   Search, 
   ChevronDown, 
   HelpCircle, 
-  Crown 
+  Crown,
+  Loader2
 } from 'lucide-react';
+import { API_BASE } from '../config';
 
 // Custom Gold and Blue Twitter-style Verified Badge SVG Components
 const GoldVerifiedBadge = ({ className = "w-12 h-12" }) => (
@@ -43,10 +45,43 @@ const VerificationPage = ({ onBack }) => {
   const [refreshing, setRefreshing] = useState(false);
   const [showOfficialModal, setShowOfficialModal] = useState(false);
 
+  const [verificationStatus, setVerificationStatus] = useState('not_submitted');
+  const [reviewNote, setReviewNote] = useState('');
+  const [loadingStatus, setLoadingStatus] = useState(true);
+  const [submitting, setSubmitting] = useState(false);
+  const [files, setFiles] = useState({
+    front: null,
+    back: null,
+    selfie: null
+  });
+
   const handleRefresh = async () => {
     setRefreshing(true);
     setTimeout(() => setRefreshing(false), 500);
   };
+
+  useEffect(() => {
+    const fetchStatus = async () => {
+      try {
+        const token = localStorage.getItem('token');
+        const res = await fetch(`${API_BASE}/api/verification`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        if (res.ok) {
+          const data = await res.json();
+          setVerificationStatus(data.status || 'not_submitted');
+          if (data.verification?.reviewNote) {
+            setReviewNote(data.verification.reviewNote);
+          }
+        }
+      } catch (err) {
+        console.error('Failed to fetch verification status:', err);
+      } finally {
+        setLoadingStatus(false);
+      }
+    };
+    fetchStatus();
+  }, []);
 
   useEffect(() => {
     fetch('https://restcountries.com/v3.1/all?fields=name,cca2')
@@ -79,13 +114,67 @@ const VerificationPage = ({ onBack }) => {
   const backInputRef = useRef(null);
   const selfieInputRef = useRef(null);
 
-  const handleNext = () => setStep(prev => prev + 1);
+  const handleNext = () => {
+    if (step === 6) {
+      handleSubmit();
+    } else {
+      setStep(prev => prev + 1);
+    }
+  };
 
   const handleCapture = (type, e) => {
     const file = e.target.files[0];
     if (file) {
       const imageUrl = URL.createObjectURL(file);
       setImages(prev => ({ ...prev, [type]: imageUrl }));
+      setFiles(prev => ({ ...prev, [type]: file }));
+    }
+  };
+
+  const fileToBase64 = (file) => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = () => resolve(reader.result);
+      reader.onerror = error => reject(error);
+    });
+  };
+
+  const handleSubmit = async () => {
+    setSubmitting(true);
+    try {
+      const frontBase64 = files.front ? await fileToBase64(files.front) : '';
+      const backBase64 = files.back ? await fileToBase64(files.back) : '';
+      const selfieBase64 = files.selfie ? await fileToBase64(files.selfie) : '';
+
+      const token = localStorage.getItem('token');
+      const res = await fetch(`${API_BASE}/api/verification`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          country: country.name,
+          documentType: docType.toLowerCase(),
+          frontImage: frontBase64,
+          backImage: backBase64,
+          selfieImage: selfieBase64
+        })
+      });
+
+      if (res.ok) {
+        setVerificationStatus('pending');
+        setStep(7);
+      } else {
+        const data = await res.json();
+        alert(data.message || 'Failed to submit verification.');
+      }
+    } catch (err) {
+      console.error('Submit verification error:', err);
+      alert('An error occurred while submitting your verification request.');
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -324,6 +413,154 @@ const VerificationPage = ({ onBack }) => {
         return null;
     }
   };
+
+  if (loadingStatus) {
+    return (
+      <div className="min-h-screen bg-white dark:bg-slate-955 flex flex-col items-center justify-center gap-3">
+        <Loader2 className="w-8 h-8 text-[#7C3AED] animate-spin" />
+        <span className="text-slate-400 font-bold text-sm">Loading verification status...</span>
+      </div>
+    );
+  }
+
+  if (submitting) {
+    return (
+      <div className="min-h-screen bg-white dark:bg-slate-955 flex flex-col items-center justify-center gap-3">
+        <Loader2 className="w-8 h-8 text-[#7C3AED] animate-spin" />
+        <span className="text-slate-400 font-bold text-sm">Uploading verification documents...</span>
+      </div>
+    );
+  }
+
+  if (verificationStatus === 'pending') {
+    return (
+      <div className="w-full min-h-screen bg-white dark:bg-slate-955 flex flex-col relative pb-24 select-none">
+        {/* Header */}
+        <div className="sticky top-0 z-10 bg-white dark:bg-slate-955 border-b border-slate-100 dark:border-slate-900 shadow-3xs">
+          <div className="max-w-md mx-auto px-4 py-4 flex items-center justify-between relative">
+            <button 
+              onClick={onBack} 
+              className="p-2 hover:bg-slate-100 dark:hover:bg-slate-900 rounded-full text-slate-700 dark:text-slate-300 active:scale-90 transition-transform cursor-pointer"
+            >
+              <ChevronLeft className="w-6 h-6" />
+            </button>
+            <h1 className="text-base font-black text-slate-900 dark:text-white absolute left-1/2 -translate-x-1/2">Verification</h1>
+            <div className="w-10 h-10" />
+          </div>
+        </div>
+
+        <div className="max-w-md mx-auto w-full px-6 pt-16 flex-1 flex flex-col items-center justify-center text-center space-y-6">
+          <div className="w-24 h-24 bg-amber-100 dark:bg-amber-950/40 rounded-full flex items-center justify-center text-amber-500 shadow-sm mb-4">
+            <ShieldCheck className="w-12 h-12" />
+          </div>
+          <h2 className="text-2xl font-black text-slate-900 dark:text-white">Verification Under Review</h2>
+          <p className="text-slate-500 dark:text-slate-400 text-sm max-w-sm leading-relaxed font-bold">
+            Your verification request has been successfully submitted and is currently being reviewed by our administration team.
+          </p>
+          <p className="text-xs text-slate-400 dark:text-slate-500 max-w-xs leading-relaxed font-medium">
+            This process typically takes 24-48 hours. You will be notified once the review is complete.
+          </p>
+          <button 
+            onClick={onBack} 
+            className="w-full max-w-xs mt-8 bg-[#7C3AED] hover:bg-[#5B21B6] text-white font-bold py-3.5 rounded-xl transition-colors shadow-md active:scale-95 text-base"
+          >
+            Back to Profile
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  if (verificationStatus === 'approved') {
+    return (
+      <div className="w-full min-h-screen bg-white dark:bg-slate-955 flex flex-col relative pb-24 select-none">
+        {/* Header */}
+        <div className="sticky top-0 z-10 bg-white dark:bg-slate-955 border-b border-slate-100 dark:border-slate-900 shadow-3xs">
+          <div className="max-w-md mx-auto px-4 py-4 flex items-center justify-between relative">
+            <button 
+              onClick={onBack} 
+              className="p-2 hover:bg-slate-100 dark:hover:bg-slate-900 rounded-full text-slate-700 dark:text-slate-300 active:scale-90 transition-transform cursor-pointer"
+            >
+              <ChevronLeft className="w-6 h-6" />
+            </button>
+            <h1 className="text-base font-black text-slate-900 dark:text-white absolute left-1/2 -translate-x-1/2">Verification</h1>
+            <div className="w-10 h-10" />
+          </div>
+        </div>
+
+        <div className="max-w-md mx-auto w-full px-6 pt-16 flex-1 flex flex-col items-center justify-center text-center space-y-6">
+          <div className="w-24 h-24 bg-green-100 dark:bg-green-955/40 rounded-full flex items-center justify-center text-green-500 shadow-sm mb-4">
+            <CheckCircle className="w-12 h-12" />
+          </div>
+          <h2 className="text-2xl font-black text-slate-900 dark:text-white">Profile Verified!</h2>
+          <p className="text-slate-500 dark:text-slate-400 text-sm max-w-sm leading-relaxed font-bold">
+            Congratulations! Your account identity has been verified. The verified badge is now displayed next to your profile name.
+          </p>
+          <button 
+            onClick={onBack} 
+            className="w-full max-w-xs mt-8 bg-[#7C3AED] hover:bg-[#5B21B6] text-white font-bold py-3.5 rounded-xl transition-colors shadow-md active:scale-95 text-base"
+          >
+            Back to Profile
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  if (verificationStatus === 'rejected') {
+    return (
+      <div className="w-full min-h-screen bg-white dark:bg-slate-955 flex flex-col relative pb-24 select-none">
+        {/* Header */}
+        <div className="sticky top-0 z-10 bg-white dark:bg-slate-955 border-b border-slate-100 dark:border-slate-900 shadow-3xs">
+          <div className="max-w-md mx-auto px-4 py-4 flex items-center justify-between relative">
+            <button 
+              onClick={onBack} 
+              className="p-2 hover:bg-slate-100 dark:hover:bg-slate-900 rounded-full text-slate-700 dark:text-slate-300 active:scale-90 transition-transform cursor-pointer"
+            >
+              <ChevronLeft className="w-6 h-6" />
+            </button>
+            <h1 className="text-base font-black text-slate-900 dark:text-white absolute left-1/2 -translate-x-1/2">Verification</h1>
+            <div className="w-10 h-10" />
+          </div>
+        </div>
+
+        <div className="max-w-md mx-auto w-full px-6 pt-16 flex-1 flex flex-col items-center justify-center text-center space-y-6">
+          <div className="w-24 h-24 bg-red-100 dark:bg-red-955/40 rounded-full flex items-center justify-center text-red-500 shadow-sm mb-4">
+            <CheckCircle className="w-12 h-12 rotate-180" />
+          </div>
+          <h2 className="text-2xl font-black text-slate-900 dark:text-white">Verification Rejected</h2>
+          <p className="text-slate-500 dark:text-slate-400 text-sm max-w-sm leading-relaxed font-bold">
+            Unfortunately, your verification request was rejected.
+          </p>
+          {reviewNote && (
+            <div className="bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-900/50 rounded-2xl p-4 text-left w-full max-w-sm">
+              <span className="text-[10px] font-bold text-red-500 block uppercase tracking-wider mb-1">Reason from Admin</span>
+              <p className="text-xs text-red-600 dark:text-red-300 font-semibold">{reviewNote}</p>
+            </div>
+          )}
+          <div className="flex flex-col gap-3 w-full max-w-sm pt-4">
+            <button 
+              onClick={() => {
+                setVerificationStatus('not_submitted');
+                setStep(1);
+                setImages({ front: null, back: null, selfie: null });
+                setFiles({ front: null, back: null, selfie: null });
+              }}
+              className="w-full bg-[#7C3AED] hover:bg-[#5B21B6] text-white font-bold py-3.5 rounded-xl transition-colors shadow-md active:scale-95 text-base"
+            >
+              Re-Apply
+            </button>
+            <button 
+              onClick={onBack} 
+              className="w-full bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-350 font-bold py-3.5 rounded-xl transition-colors active:scale-95 text-base"
+            >
+              Back to Profile
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <PullToRefresh onRefresh={handleRefresh} refreshing={refreshing}>
