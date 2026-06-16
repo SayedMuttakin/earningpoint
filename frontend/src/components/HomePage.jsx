@@ -417,8 +417,8 @@ const CommunityPostCard = ({ post, onFollowToggle, onLikeToggle, onCommentClick,
               >
                 {post.authorDetails?.name || post.authorName || 'User'}
               </button>
-              {post.isVerified && (
-                <VerifiedBadge iconClassName="w-[14px] h-[14px] fill-blue-500 text-white inline-block flex-shrink-0" />
+              {((post.authorDetails && (post.authorDetails.verificationBadge === 'blue' || post.authorDetails.verificationBadge === 'golden' || (post.authorDetails.isEmailVerified && post.authorDetails.verificationBadge !== 'none'))) || (!post.authorDetails && post.isVerified)) && (
+                <VerifiedBadge type={post.authorDetails?.verificationBadge === 'golden' ? 'golden' : 'blue'} iconClassName="w-[14px] h-[14px] inline-block flex-shrink-0" />
               )}
               {parsedFeeling && (
                 <span className="text-xs font-normal text-slate-500 dark:text-slate-400">

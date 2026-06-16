@@ -1,6 +1,7 @@
 const { Server } = require('socket.io');
 const ChatSession = require('./models/ChatSession');
 const Message = require('./models/Message');
+const AdminNotification = require('./models/AdminNotification');
 
 let io;
 const activeUsers = new Set();
@@ -27,6 +28,14 @@ module.exports = {
             email,
             userId: userId || null, // Optional if logged in
             status: 'active'
+          });
+
+          // Notify admin
+          await AdminNotification.create({
+            title: 'New Support Request 💬',
+            message: `User ${name || 'Unknown'} (${email || 'No email'}) requested live support.`,
+            type: 'support',
+            referenceId: session._id.toString()
           });
 
           // Join the socket room for this specific session
@@ -84,6 +93,13 @@ module.exports = {
               email: email || 'user@zenivio.com',
               status: 'active',
               adminJoined: false
+            });
+            // Notify admin
+            await AdminNotification.create({
+              title: 'New Support Request 💬',
+              message: `User ${name || 'User'} requested live support.`,
+              type: 'support',
+              referenceId: session._id.toString()
             });
             // Broadcast to admin room
             io.to('admin_room').emit('new_support_request', session);
@@ -151,6 +167,15 @@ module.exports = {
             };
             session.messages.push(message);
             await session.save();
+
+            if (sender === 'user') {
+              await AdminNotification.create({
+                title: 'New Support Message 💬',
+                message: `User ${session.name} sent: "${content.substring(0, 50)}${content.length > 50 ? '...' : ''}"`,
+                type: 'support',
+                referenceId: session._id.toString()
+              });
+            }
 
             // Broadcast to everyone in the room
             io.to(sessionId).emit('receive_message', message);

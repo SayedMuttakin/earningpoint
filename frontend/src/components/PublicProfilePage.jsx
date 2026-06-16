@@ -700,8 +700,8 @@ const PublicProfilePage = ({ userId, onBack, currentUser, isOwnProfile, setActiv
         <div className="text-center mt-3.5 space-y-1 w-full max-w-md">
           <h2 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white flex items-center justify-center gap-1.5">
             {profile.name}
-            {profile.isEmailVerified && (
-              <VerifiedBadge iconClassName="w-5 h-5 fill-blue-500 text-white flex-shrink-0" />
+            {((profile.verificationBadge === 'blue' || profile.verificationBadge === 'golden') || (profile.isEmailVerified && profile.verificationBadge !== 'none')) && (
+              <VerifiedBadge type={profile.verificationBadge === 'golden' ? 'golden' : 'blue'} iconClassName="w-5 h-5 flex-shrink-0" />
             )}
           </h2>
           
@@ -1345,8 +1345,8 @@ const PublicProfilePage = ({ userId, onBack, currentUser, isOwnProfile, setActiv
               <div className="text-left">
                 <h4 className="font-extrabold text-xs flex items-center gap-1.5">
                   {profile.name}
-                  {profile.isEmailVerified && (
-                    <VerifiedBadge iconClassName="w-3.5 h-3.5 fill-blue-500 text-white" />
+                  {((profile.verificationBadge === 'blue' || profile.verificationBadge === 'golden') || (profile.isEmailVerified && profile.verificationBadge !== 'none')) && (
+                    <VerifiedBadge type={profile.verificationBadge === 'golden' ? 'golden' : 'blue'} iconClassName="w-3.5 h-3.5" />
                   )}
                 </h4>
                 <p className="text-[9px] text-white/60 font-semibold">{activeHighlight.title}</p>
@@ -1450,8 +1450,8 @@ const PublicProfilePage = ({ userId, onBack, currentUser, isOwnProfile, setActiv
                 <div>
                   <h4 className="font-extrabold text-xs text-slate-850 dark:text-white flex items-center gap-1">
                     {profile.name}
-                    {profile.isEmailVerified && (
-                      <VerifiedBadge iconClassName="w-3.5 h-3.5 fill-blue-500 text-white" />
+                    {((profile.verificationBadge === 'blue' || profile.verificationBadge === 'golden') || (profile.isEmailVerified && profile.verificationBadge !== 'none')) && (
+                      <VerifiedBadge type={profile.verificationBadge === 'golden' ? 'golden' : 'blue'} iconClassName="w-3.5 h-3.5" />
                     )}
                   </h4>
                   <p className="text-[9px] text-slate-400 font-bold uppercase mt-0.5">

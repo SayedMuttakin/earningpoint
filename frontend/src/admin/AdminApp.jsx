@@ -15,6 +15,7 @@ import Missions from './pages/Missions';
 import Products from './pages/Products';
 import Announcements from './pages/Announcements';
 import Verifications from './pages/Verifications';
+import Badges from './pages/Badges';
 
 import { API_BASE as GlobalApiBase } from '../config';
 export const API_BASE = GlobalApiBase;
@@ -46,7 +47,7 @@ const AdminApp = () => {
   const pageProps = { authHeaders, ADMIN_API };
 
   return (
-    <AdminLayout activePage={activePage} setActivePage={setActivePage} onLogout={handleLogout}>
+    <AdminLayout activePage={activePage} setActivePage={setActivePage} onLogout={handleLogout} ADMIN_API={ADMIN_API} authHeaders={authHeaders}>
       {activePage === 'dashboard' && <Dashboard {...pageProps} />}
       {activePage === 'users' && <Users {...pageProps} />}
       {activePage === 'transactions' && <Transactions {...pageProps} />}
@@ -60,6 +61,7 @@ const AdminApp = () => {
       {activePage === 'products' && <Products {...pageProps} />}
       {activePage === 'announcements' && <Announcements {...pageProps} />}
       {activePage === 'verifications' && <Verifications {...pageProps} />}
+      {activePage === 'badges' && <Badges {...pageProps} />}
       {activePage === 'settings' && <Settings {...pageProps} onLogout={handleLogout} />}
     </AdminLayout>
   );

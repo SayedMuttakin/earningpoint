@@ -1,4 +1,5 @@
 const Verification = require('../models/Verification');
+const AdminNotification = require('../models/AdminNotification');
 
 // GET /api/verification — Get user's verification status
 exports.getVerificationStatus = async (req, res) => {
@@ -34,6 +35,15 @@ exports.submitVerification = async (req, res) => {
       if (selfieImage) existing.selfieImage = selfieImage;
       existing.status = 'pending';
       await existing.save();
+
+      // Notify admin
+      await AdminNotification.create({
+        title: 'Verification Resubmitted 📝',
+        message: `User ${req.user.name || 'User'} has resubmitted their verification documents.`,
+        type: 'verification',
+        referenceId: existing._id.toString()
+      });
+
       return res.json({ message: 'Verification updated', verification: existing });
     }
 
@@ -44,6 +54,14 @@ exports.submitVerification = async (req, res) => {
       frontImage: frontImage || '',
       backImage: backImage || '',
       selfieImage: selfieImage || '',
+    });
+
+    // Notify admin
+    await AdminNotification.create({
+      title: 'New Verification Request 📝',
+      message: `User ${req.user.name || 'User'} has submitted verification documents.`,
+      type: 'verification',
+      referenceId: verification._id.toString()
     });
 
     res.status(201).json({ message: 'Verification submitted', verification });

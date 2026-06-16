@@ -8,7 +8,7 @@ const { createNotification } = require('./notificationController');
 exports.getPosts = async (req, res) => {
   try {
     const posts = await Post.find()
-      .populate('authorId', 'name profilePic googleAvatar isEmailVerified')
+      .populate('authorId', 'name profilePic googleAvatar isEmailVerified verificationBadge')
       .sort({ createdAt: -1 })
       .limit(30)  // Limit to 30 most recent posts
       .lean();
@@ -21,7 +21,8 @@ exports.getPosts = async (req, res) => {
           name: authorObj.name,
           profilePic: authorObj.profilePic,
           googleAvatar: authorObj.googleAvatar,
-          isEmailVerified: authorObj.isEmailVerified
+          isEmailVerified: authorObj.isEmailVerified,
+          verificationBadge: authorObj.verificationBadge || 'none'
         } : null
       };
     });
@@ -36,7 +37,7 @@ exports.getPosts = async (req, res) => {
 // @access  Public
 exports.getPostById = async (req, res) => {
   try {
-    const post = await Post.findById(req.params.id).populate('authorId', 'name profilePic googleAvatar isEmailVerified');
+    const post = await Post.findById(req.params.id).populate('authorId', 'name profilePic googleAvatar isEmailVerified verificationBadge');
     if (!post) {
       return res.status(404).json({ message: 'Post not found' });
     }
@@ -49,7 +50,8 @@ exports.getPostById = async (req, res) => {
         name: authorObj.name,
         profilePic: authorObj.profilePic,
         googleAvatar: authorObj.googleAvatar,
-        isEmailVerified: authorObj.isEmailVerified
+        isEmailVerified: authorObj.isEmailVerified,
+        verificationBadge: authorObj.verificationBadge || 'none'
       } : null
     });
   } catch (error) {
@@ -157,10 +159,10 @@ exports.getPostsFeed = async (req, res) => {
     const feedPosts = await Post.find({
       authorId: { $ne: null } // Exclude admin updates/announcements
     })
-      .populate('authorId', 'name profilePic googleAvatar isEmailVerified')
+      .populate('authorId', 'name profilePic googleAvatar isEmailVerified verificationBadge')
       .sort({ createdAt: -1 })
       .limit(40);
-
+ 
     // Map following and own post indicators in-memory
     const postsWithStatus = feedPosts.map(post => {
       const isFollowing = post.authorId ? followingIds.includes(post.authorId._id.toString()) : false;
@@ -177,7 +179,8 @@ exports.getPostsFeed = async (req, res) => {
           name: authorObj.name,
           profilePic: authorObj.profilePic,
           googleAvatar: authorObj.googleAvatar,
-          isEmailVerified: authorObj.isEmailVerified
+          isEmailVerified: authorObj.isEmailVerified,
+          verificationBadge: authorObj.verificationBadge || 'none'
         } : null,
         isFollowing,
         isOwnPost,
@@ -238,10 +241,10 @@ exports.createUserPost = async (req, res) => {
       bgGradient: bgGradient || null
     });
 
-    const populatedPost = await Post.findById(post._id).populate('authorId', 'name profilePic googleAvatar isEmailVerified');
+    const populatedPost = await Post.findById(post._id).populate('authorId', 'name profilePic googleAvatar isEmailVerified verificationBadge');
     const postObj = populatedPost.toObject();
     const authorObj = postObj.authorId;
-
+ 
     res.status(201).json({
       ...postObj,
       authorId: authorObj ? authorObj._id.toString() : null,
@@ -249,7 +252,8 @@ exports.createUserPost = async (req, res) => {
         name: authorObj.name,
         profilePic: authorObj.profilePic,
         googleAvatar: authorObj.googleAvatar,
-        isEmailVerified: authorObj.isEmailVerified
+        isEmailVerified: authorObj.isEmailVerified,
+        verificationBadge: authorObj.verificationBadge || 'none'
       } : null
     });
   } catch (error) {
@@ -264,7 +268,7 @@ exports.createUserPost = async (req, res) => {
 exports.getVideoPosts = async (req, res) => {
   try {
     const posts = await Post.find({ video: { $ne: null } })
-      .populate('authorId', 'name profilePic googleAvatar isEmailVerified')
+      .populate('authorId', 'name profilePic googleAvatar isEmailVerified verificationBadge')
       .sort({ createdAt: -1 })
       .limit(20)  // Limit to 20 most recent reels
       .lean();
@@ -278,7 +282,8 @@ exports.getVideoPosts = async (req, res) => {
           name: authorObj.name,
           profilePic: authorObj.profilePic,
           googleAvatar: authorObj.googleAvatar,
-          isEmailVerified: authorObj.isEmailVerified
+          isEmailVerified: authorObj.isEmailVerified,
+          verificationBadge: authorObj.verificationBadge || 'none'
         } : null
       };
     });
@@ -423,7 +428,7 @@ exports.getSavedPosts = async (req, res) => {
       path: 'savedPosts',
       populate: {
         path: 'authorId',
-        select: 'name profilePic googleAvatar isEmailVerified'
+        select: 'name profilePic googleAvatar isEmailVerified verificationBadge'
       }
     });
 
@@ -445,7 +450,8 @@ exports.getSavedPosts = async (req, res) => {
             name: authorObj.name,
             profilePic: authorObj.profilePic,
             googleAvatar: authorObj.googleAvatar,
-            isEmailVerified: authorObj.isEmailVerified
+            isEmailVerified: authorObj.isEmailVerified,
+            verificationBadge: authorObj.verificationBadge || 'none'
           } : null,
           isSaved: true
         };

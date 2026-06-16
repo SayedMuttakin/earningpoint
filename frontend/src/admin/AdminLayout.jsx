@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 
 const navItems = [
   { id: 'dashboard', label: 'Dashboard', icon: (
@@ -11,7 +11,7 @@ const navItems = [
     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" /></svg>
   )},
   { id: 'premium', label: 'Orders', icon: (
-    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z" /></svg>
+    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138z" /></svg>
   )},
   { id: 'ip-settings', label: 'IP Settings', icon: (
     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" /></svg>
@@ -40,13 +40,83 @@ const navItems = [
   { id: 'verifications', label: 'Verifications', icon: (
     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" /></svg>
   )},
+  { id: 'badges', label: 'Give Badges', icon: (
+    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138z" /></svg>
+  )},
   { id: 'settings', label: 'Settings', icon: (
     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
   )},
 ];
 
-const AdminLayout = ({ activePage, setActivePage, onLogout, children }) => {
+const AdminLayout = ({ activePage, setActivePage, onLogout, ADMIN_API, authHeaders, children }) => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [notifications, setNotifications] = useState([]);
+  const [unreadCount, setUnreadCount] = useState(0);
+  const [showNotifDropdown, setShowNotifDropdown] = useState(false);
+
+  const fetchNotifications = useCallback(async () => {
+    if (!ADMIN_API || !authHeaders) return;
+    try {
+      const res = await fetch(`${ADMIN_API}/notifications`, { headers: authHeaders });
+      if (res.ok) {
+        const data = await res.json();
+        setNotifications(data || []);
+        setUnreadCount(data ? data.filter(n => !n.isRead).length : 0);
+      }
+    } catch (e) {
+      console.error('Failed to fetch admin notifications:', e);
+    }
+  }, [ADMIN_API, authHeaders]);
+
+  useEffect(() => {
+    fetchNotifications();
+    const interval = setInterval(fetchNotifications, 15000); // 15s polling
+    return () => clearInterval(interval);
+  }, [fetchNotifications]);
+
+  const handleMarkAsRead = async (id, type) => {
+    try {
+      await fetch(`${ADMIN_API}/notifications/${id}/read`, {
+        method: 'PUT',
+        headers: authHeaders
+      });
+      fetchNotifications();
+      setShowNotifDropdown(false);
+      
+      // Page redirection
+      if (type === 'support') setActivePage('support');
+      else if (type === 'verification') setActivePage('verifications');
+      else if (type === 'withdrawal') setActivePage('transactions');
+      else if (type === 'premium') setActivePage('premium');
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
+  const handleMarkAllRead = async () => {
+    try {
+      await fetch(`${ADMIN_API}/notifications/read-all`, {
+        method: 'PUT',
+        headers: authHeaders
+      });
+      fetchNotifications();
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
+  const handleDeleteNotification = async (e, id) => {
+    e.stopPropagation();
+    try {
+      await fetch(`${ADMIN_API}/notifications/${id}`, {
+        method: 'DELETE',
+        headers: authHeaders
+      });
+      fetchNotifications();
+    } catch (e) {
+      console.error(e);
+    }
+  };
 
   const NavItem = ({ item }) => {
     const isActive = activePage === item.id;
@@ -130,12 +200,96 @@ const AdminLayout = ({ activePage, setActivePage, onLogout, children }) => {
           >
             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" /></svg>
           </button>
+          
           <div className="flex-1">
             <h1 className="text-white font-bold text-lg capitalize">{navItems.find(n => n.id === activePage)?.label || activePage}</h1>
           </div>
-          <div className="flex items-center gap-2">
+
+          {/* Notifications Dropdown */}
+          <div className="relative">
+            <button
+              onClick={() => setShowNotifDropdown(!showNotifDropdown)}
+              className="relative p-2 rounded-xl bg-slate-850 hover:bg-slate-800 text-slate-400 hover:text-white border border-slate-800 transition-all duration-200 active:scale-95 flex items-center justify-center"
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+              </svg>
+              {unreadCount > 0 && (
+                <span className="absolute -top-1 -right-1 w-5 h-5 bg-rose-600 border-2 border-[#0F172A] rounded-full flex items-center justify-center text-[10px] font-bold text-white animate-pulse">
+                  {unreadCount}
+                </span>
+              )}
+            </button>
+
+            {showNotifDropdown && (
+              <>
+                <div className="fixed inset-0 z-[998]" onClick={() => setShowNotifDropdown(false)} />
+                <div className="absolute right-0 mt-3 w-80 sm:w-96 bg-[#111827] border border-slate-800 rounded-2xl shadow-2xl z-[999] overflow-hidden flex flex-col max-h-[420px] animate-in fade-in slide-in-from-top-2 duration-200">
+                  <div className="flex items-center justify-between px-4 py-3 border-b border-slate-800 bg-slate-900/50">
+                    <span className="text-white font-black text-xs uppercase tracking-wider">Alerts</span>
+                    {unreadCount > 0 && (
+                      <button
+                        onClick={handleMarkAllRead}
+                        className="text-xs text-indigo-400 hover:text-indigo-300 font-bold transition-colors"
+                      >
+                        Mark all read
+                      </button>
+                    )}
+                  </div>
+
+                  <div className="overflow-y-auto flex-1 divide-y divide-slate-800/60 max-h-[320px]">
+                    {notifications.length === 0 ? (
+                      <div className="py-10 text-center text-slate-500 font-medium text-xs">No alerts found</div>
+                    ) : (
+                      notifications.map(n => (
+                        <div
+                          key={n._id}
+                          onClick={() => handleMarkAsRead(n._id, n.type)}
+                          className={`p-4 flex gap-3 cursor-pointer hover:bg-slate-800/30 transition-colors ${!n.isRead ? 'bg-indigo-950/20' : ''}`}
+                        >
+                          <div className="flex-shrink-0">
+                            <span className="w-8 h-8 rounded-xl bg-slate-850 border border-slate-800 flex items-center justify-center text-sm shadow-sm">
+                              {n.type === 'support' ? '💬' :
+                               n.type === 'verification' ? '📝' :
+                               n.type === 'withdrawal' ? '🏦' :
+                               n.type === 'premium' ? '🚀' : '📢'}
+                            </span>
+                          </div>
+                          <div className="min-w-0 flex-1">
+                            <div className="flex items-start justify-between gap-1.5">
+                              <span className={`text-xs block truncate ${!n.isRead ? 'text-white font-black' : 'text-slate-400 font-bold'}`}>
+                                {n.title}
+                              </span>
+                              <span className="text-[9px] text-slate-500 font-bold whitespace-nowrap">
+                                {new Date(n.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                              </span>
+                            </div>
+                            <p className="text-[11px] text-slate-400 font-semibold leading-relaxed mt-1 break-words">
+                              {n.message}
+                            </p>
+                          </div>
+                          <div className="flex items-center">
+                            <button
+                              onClick={(e) => handleDeleteNotification(e, n._id)}
+                              className="p-1 hover:bg-slate-800 rounded-lg text-slate-500 hover:text-rose-400 transition-colors"
+                            >
+                              <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                              </svg>
+                            </button>
+                          </div>
+                        </div>
+                      ))
+                    )}
+                  </div>
+                </div>
+              </>
+            )}
+          </div>
+
+          <div className="flex items-center gap-2 bg-[#111827] border border-slate-800 px-3 py-1.5 rounded-xl">
             <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-            <span className="text-emerald-400 text-xs font-semibold">Live</span>
+            <span className="text-emerald-400 text-xs font-bold uppercase tracking-wider">Live</span>
           </div>
         </header>
 

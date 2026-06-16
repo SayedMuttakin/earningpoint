@@ -4,6 +4,7 @@ const Transaction = require('../models/Transaction');
 const GlobalSetting = require('../models/GlobalSetting');
 const CartProduct = require('../models/CartProduct');
 const WeeklyMission = require('../models/WeeklyMission');
+const AdminNotification = require('../models/AdminNotification');
 const MissionCompletion = require('../models/MissionCompletion');
 const { createNotification } = require('./notificationController');
 
@@ -570,12 +571,20 @@ exports.submitWithdrawal = async (req, res) => {
     if (!phone || phone.length < 10) return res.status(400).json({ message: 'Invalid phone number' });
     if (!method) return res.status(400).json({ message: 'Payment method required' });
 
-    await Transaction.create({
+    const transaction = await Transaction.create({
       userId: user._id,
       type: 'withdrawal',
       amount: amt,
       description: `Withdrawal via ${method} to ${phone}`,
       status: 'pending',
+    });
+
+    // Notify admin
+    await AdminNotification.create({
+      title: 'New Withdrawal Request 🏦',
+      message: `User ${user.name || 'User'} requested a withdrawal of ${amt}৳ via ${method} to ${phone}.`,
+      type: 'withdrawal',
+      referenceId: transaction._id.toString()
     });
 
     // Notify user
@@ -698,6 +707,14 @@ exports.submitPremiumOrder = async (req, res) => {
       transactionId: finalTxId,
       amount: Number(amount),
       status: 'pending',
+    });
+
+    // Notify admin
+    await AdminNotification.create({
+      title: 'New Premium Order 🚀',
+      message: `User ${req.user.name || 'User'} ordered package "${packageName || packageId}" for ${amount}৳.`,
+      type: 'premium',
+      referenceId: order._id.toString()
     });
 
     // Notify user

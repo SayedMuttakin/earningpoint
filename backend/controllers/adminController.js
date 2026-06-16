@@ -10,6 +10,7 @@ const CartProduct = require('../models/CartProduct');
 const ChatSession = require('../models/ChatSession');
 const WeeklyMission = require('../models/WeeklyMission');
 const Notification = require('../models/Notification');
+const AdminNotification = require('../models/AdminNotification');
 const jwt = require('jsonwebtoken');
 const { createNotification } = require('./notificationController');
 const { activateReferralBonus } = require('./referralController');
@@ -119,6 +120,12 @@ exports.getUsers = async (req, res) => {
     }
     if (filter === 'banned') query.isBanned = true;
     if (filter === 'premium') query.isPremium = true;
+    if (filter === 'verified') {
+      query.$or = [
+        { isEmailVerified: true },
+        { verificationBadge: { $in: ['blue', 'golden'] } }
+      ];
+    }
 
     const total = await User.countDocuments(query);
     const users = await User.find(query)
@@ -153,17 +160,26 @@ exports.getUser = async (req, res) => {
 
 exports.updateUser = async (req, res) => {
   try {
-    const { balance, coins, isBanned, isPremium, premiumExpiry, name, note } = req.body;
+    const { balance, coins, points, isBanned, isPremium, premiumExpiry, name, note, verificationBadge } = req.body;
     const user = await User.findById(req.params.id);
     if (!user) return res.status(404).json({ message: 'User not found' });
 
     const oldBalance = user.balance;
     if (balance !== undefined) user.balance = Number(balance);
-    if (coins !== undefined) user.coins = Number(coins);
+    if (points !== undefined) user.points = Number(points);
+    if (coins !== undefined) user.points = Number(coins);
     if (isBanned !== undefined) user.isBanned = isBanned;
     if (isPremium !== undefined) user.isPremium = isPremium;
     if (premiumExpiry !== undefined) user.premiumExpiry = premiumExpiry;
     if (name !== undefined) user.name = name;
+    if (verificationBadge !== undefined) {
+      user.verificationBadge = verificationBadge;
+      if (verificationBadge === 'blue' || verificationBadge === 'golden') {
+        user.isEmailVerified = true;
+      } else if (verificationBadge === 'none') {
+        user.isEmailVerified = false;
+      }
+    }
 
     await user.save();
 
@@ -498,7 +514,7 @@ exports.updateVerificationStatus = async (req, res) => {
     await verification.save();
 
     if (status === 'approved') {
-      await User.findByIdAndUpdate(verification.userId, { isEmailVerified: true });
+      await User.findByIdAndUpdate(verification.userId, { isEmailVerified: true, verificationBadge: 'blue' });
       createNotification(
         verification.userId,
         'Profile Verified! ✅',
@@ -506,7 +522,7 @@ exports.updateVerificationStatus = async (req, res) => {
         'system'
       );
     } else if (status === 'rejected') {
-      await User.findByIdAndUpdate(verification.userId, { isEmailVerified: false });
+      await User.findByIdAndUpdate(verification.userId, { isEmailVerified: false, verificationBadge: 'none' });
       createNotification(
         verification.userId,
         'Verification Rejected ❌',
@@ -803,5 +819,54 @@ exports.sendAnnouncement = async (req, res) => {
   } catch (error) {
     console.error('Error sending announcement:', error);
     res.status(500).json({ message: 'Failed to send announcement' });
+  }
+};
+
+// ─── Admin Notifications ─────────────────────────────────────────────────────
+exports.getAdminNotifications = async (req, res) => {
+  try {
+    const notifications = await AdminNotification.find()
+      .sort({ createdAt: -1 })
+      .limit(50);
+    res.json(notifications);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+exports.markAdminNotificationRead = async (req, res) => {
+  try {
+    const notification = await AdminNotification.findByIdAndUpdate(
+      req.params.id,
+      { isRead: true },
+      { new: true }
+    );
+    if (!notification) {
+      return res.status(404).json({ message: 'Notification not found' });
+    }
+    res.json(notification);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+exports.markAllAdminNotificationsRead = async (req, res) => {
+  try {
+    await AdminNotification.updateMany({ isRead: false }, { isRead: true });
+    res.json({ message: 'All notifications marked as read' });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+exports.deleteAdminNotification = async (req, res) => {
+  try {
+    const notification = await AdminNotification.findByIdAndDelete(req.params.id);
+    if (!notification) {
+      return res.status(404).json({ message: 'Notification not found' });
+    }
+    res.json({ message: 'Notification deleted successfully' });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
   }
 };

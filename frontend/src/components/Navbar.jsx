@@ -186,8 +186,8 @@ const Navbar = ({
                     <span className="font-black text-[15px] text-slate-800 dark:text-white block truncate leading-tight">
                       {currentUser?.name || 'User'}
                     </span>
-                    {currentUser?.isEmailVerified && (
-                      <VerifiedBadge iconClassName="w-4 h-4 fill-blue-500 text-white flex-shrink-0" />
+                    {((currentUser?.verificationBadge === 'blue' || currentUser?.verificationBadge === 'golden') || (currentUser?.isEmailVerified && currentUser?.verificationBadge !== 'none')) && (
+                      <VerifiedBadge type={currentUser?.verificationBadge === 'golden' ? 'golden' : 'blue'} iconClassName="w-4 h-4 flex-shrink-0" />
                     )}
                   </div>
                   <span className="text-[9.5px] text-slate-405 dark:text-slate-500 font-bold block truncate mt-0.5">

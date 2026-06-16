@@ -66,6 +66,12 @@ router.delete('/weekly-missions/:id', adminProtect, adminController.deleteWeekly
 // Announcements Management
 router.post('/announcements', adminProtect, adminController.sendAnnouncement);
 
+// Notifications Management
+router.get('/notifications', adminProtect, adminController.getAdminNotifications);
+router.put('/notifications/:id/read', adminProtect, adminController.markAdminNotificationRead);
+router.put('/notifications/read-all', adminProtect, adminController.markAllAdminNotificationsRead);
+router.delete('/notifications/:id', adminProtect, adminController.deleteAdminNotification);
+
 
 const upload = require('../middleware/uploadMiddleware');
 

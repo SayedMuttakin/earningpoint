@@ -41,7 +41,14 @@ const Users = ({ ADMIN_API, authHeaders }) => {
       const res = await fetch(`${ADMIN_API}/users/${userId}`, { headers: authHeaders });
       const data = await res.json();
       setSelectedUser(data);
-      setEditData({ balance: data.user.balance, points: data.user.points, name: data.user.name || '' });
+      setEditData({
+        balance: data.user.balance,
+        points: data.user.points,
+        name: data.user.name || '',
+        isPremium: data.user.isPremium || false,
+        isBanned: data.user.isBanned || false,
+        verificationBadge: data.user.verificationBadge || 'none'
+      });
     } catch (e) { console.error(e); }
   };
 
@@ -143,7 +150,14 @@ const Users = ({ ADMIN_API, authHeaders }) => {
                         {(u.name || u.phoneOrEmail || '?')[0].toUpperCase()}
                       </div>
                       <div className="min-w-0">
-                        <div className="text-white font-semibold text-xs truncate max-w-[120px]">{u.name || 'No Name'}</div>
+                        <div className="text-white font-semibold text-xs flex items-center gap-1 truncate max-w-[120px]">
+                          {u.name || 'No Name'}
+                          {(u.verificationBadge === 'blue' || u.verificationBadge === 'golden' || u.isEmailVerified) && (
+                            <span className={`w-3.5 h-3.5 rounded-full flex items-center justify-center text-[7px] font-black ${u.verificationBadge === 'golden' ? 'bg-amber-500 text-white' : 'bg-blue-500 text-white'}`}>
+                              ✓
+                            </span>
+                          )}
+                        </div>
                         <div className="text-slate-500 text-[10px] truncate max-w-[120px]">{u.phoneOrEmail}</div>
                       </div>
                     </div>
@@ -239,6 +253,18 @@ const Users = ({ ADMIN_API, authHeaders }) => {
                   <label className="text-slate-400 text-xs font-bold uppercase tracking-wider block mb-1">Points</label>
                   <input type="number" value={editData.points} onChange={e => setEditData({...editData, points: e.target.value})}
                     className="w-full bg-slate-800 border border-slate-700 focus:border-indigo-500 rounded-xl px-4 py-2.5 text-white text-sm outline-none" />
+                </div>
+                <div>
+                  <label className="text-slate-400 text-xs font-bold uppercase tracking-wider block mb-1">Verification Badge</label>
+                  <select
+                    value={editData.verificationBadge}
+                    onChange={e => setEditData({...editData, verificationBadge: e.target.value})}
+                    className="w-full bg-slate-800 border border-slate-700 focus:border-indigo-500 rounded-xl px-4 py-2.5 text-white text-sm outline-none font-medium"
+                  >
+                    <option value="none">No Badge (None)</option>
+                    <option value="blue">Blue Verified Badge</option>
+                    <option value="golden">Golden Verified Badge</option>
+                  </select>
                 </div>
                 <div className="flex items-center justify-between bg-slate-800/50 rounded-xl px-4 py-3">
                   <span className="text-slate-300 text-sm font-semibold">Premium IP</span>

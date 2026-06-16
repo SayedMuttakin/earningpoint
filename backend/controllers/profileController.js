@@ -276,7 +276,7 @@ exports.getPublicProfile = async (req, res) => {
     // Fetch user + posts in parallel
     const [user, posts] = await Promise.all([
       User.findById(targetUserId)
-        .select('name email profilePic coverPic googleAvatar isEmailVerified followers following bio location website highlights dob gender dobPrivacy genderPrivacy')
+        .select('name email profilePic coverPic googleAvatar isEmailVerified verificationBadge followers following bio location website highlights dob gender dobPrivacy genderPrivacy')
         .lean(),
       Post.find({ authorId: targetUserId })
         .sort({ createdAt: -1 })
@@ -311,6 +311,7 @@ exports.getPublicProfile = async (req, res) => {
         coverPic: user.coverPic || '',
         googleAvatar: user.googleAvatar,
         isEmailVerified: user.isEmailVerified,
+        verificationBadge: user.verificationBadge || 'none',
         followersCount: user.followers ? user.followers.length : 0,
         followingCount: user.following ? user.following.length : 0,
         totalLikes,

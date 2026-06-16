@@ -182,6 +182,11 @@ const UserSchema = new mongoose.Schema({
     type: Boolean,
     default: false,
   },
+  verificationBadge: {
+    type: String,
+    enum: ['none', 'blue', 'golden'],
+    default: 'none',
+  },
   emailVerificationCode: {
     type: String,
     default: null,
