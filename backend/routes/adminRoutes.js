@@ -39,6 +39,7 @@ router.put('/premium-orders/:id', adminProtect, adminController.updatePremiumOrd
 
 // Verifications (email status only)
 router.get('/verifications', adminProtect, adminController.getVerifications);
+router.get('/verifications/:id', adminProtect, adminController.getVerificationById);
 router.put('/verifications/:id', adminProtect, adminController.updateVerificationStatus);
 
 // Posts Management

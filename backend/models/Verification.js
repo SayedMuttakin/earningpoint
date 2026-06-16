@@ -39,4 +39,7 @@ const VerificationSchema = new mongoose.Schema({
   },
 }, { timestamps: true });
 
+VerificationSchema.index({ status: 1, createdAt: -1 });
+VerificationSchema.index({ createdAt: -1 });
+
 module.exports = mongoose.model('Verification', VerificationSchema);

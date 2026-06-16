@@ -12,6 +12,27 @@ const Verifications = ({ ADMIN_API, authHeaders }) => {
   const [actionLoading, setActionLoading] = useState('');
   const [toast, setToast] = useState('');
   const [previewImage, setPreviewImage] = useState(null);
+  const [modalLoading, setModalLoading] = useState(false);
+
+  const handleOpenReview = async (v) => {
+    setSelectedVerification({ ...v, frontImage: '', backImage: '', selfieImage: '' });
+    setReviewNote(v.reviewNote || '');
+    setModalLoading(true);
+    try {
+      const res = await fetch(`${ADMIN_API}/verifications/${v._id}`, { headers: authHeaders });
+      if (res.ok) {
+        const data = await res.json();
+        setSelectedVerification(data);
+      } else {
+        showToast('❌ Failed to fetch document images');
+      }
+    } catch (e) {
+      console.error(e);
+      showToast('❌ Error loading images');
+    } finally {
+      setModalLoading(false);
+    }
+  };
 
   const showToast = (msg) => {
     setToast(msg);
@@ -145,7 +166,7 @@ const Verifications = ({ ADMIN_API, authHeaders }) => {
                   </td>
                   <td className="px-5 py-3 text-right">
                     <button 
-                      onClick={() => { setSelectedVerification(v); setReviewNote(v.reviewNote || ''); }}
+                      onClick={() => handleOpenReview(v)}
                       className="px-3 py-1.5 bg-indigo-600/20 hover:bg-indigo-600/40 text-indigo-400 font-bold text-[10px] rounded-lg transition-colors"
                     >
                       {v.status === 'pending' ? 'Review' : 'View Details'}
@@ -208,22 +229,27 @@ const Verifications = ({ ADMIN_API, authHeaders }) => {
                   <span className="text-[10px] text-slate-500 font-bold block uppercase tracking-wider">Country / Doc Type</span>
                   <span className="text-white text-sm font-semibold capitalize">{selectedVerification.country} / {selectedVerification.documentType}</span>
                 </div>
-              </div>
-
-              {/* Images Grid */}
+                            {/* Images Grid */}
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 {/* Front Image */}
                 <div className="space-y-2">
                   <span className="text-[10px] text-slate-500 font-bold block uppercase tracking-wider">Front of Document</span>
-                  {selectedVerification.frontImage ? (
+                  {modalLoading ? (
+                    <div className="border border-slate-800 rounded-xl aspect-[4/3] bg-slate-950 flex items-center justify-center">
+                      <svg className="animate-spin w-6 h-6 text-indigo-500" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                      </svg>
+                    </div>
+                  ) : selectedVerification.frontImage ? (
                     <div 
                       onClick={() => setPreviewImage(selectedVerification.frontImage)}
-                      className="border border-slate-800 rounded-xl overflow-hidden aspect-[4/3] bg-slate-950 flex items-center justify-center cursor-pointer hover:border-indigo-500 transition-colors"
+                      className="border border-slate-800 rounded-xl overflow-hidden aspect-[4/3] bg-slate-955 flex items-center justify-center cursor-pointer hover:border-indigo-500 transition-colors"
                     >
                       <img src={selectedVerification.frontImage} alt="Front ID" className="w-full h-full object-cover" />
                     </div>
                   ) : (
-                    <div className="border border-dashed border-slate-800 rounded-xl aspect-[4/3] flex items-center justify-center text-slate-600 text-xs">
+                    <div className="border border-dashed border-slate-800 rounded-xl aspect-[4/3] flex items-center justify-center text-slate-650 text-xs font-semibold">
                       No Image Provided
                     </div>
                   )}
@@ -232,7 +258,14 @@ const Verifications = ({ ADMIN_API, authHeaders }) => {
                 {/* Back Image */}
                 <div className="space-y-2">
                   <span className="text-[10px] text-slate-500 font-bold block uppercase tracking-wider">Back of Document</span>
-                  {selectedVerification.backImage ? (
+                  {modalLoading ? (
+                    <div className="border border-slate-800 rounded-xl aspect-[4/3] bg-slate-950 flex items-center justify-center">
+                      <svg className="animate-spin w-6 h-6 text-indigo-500" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                      </svg>
+                    </div>
+                  ) : selectedVerification.backImage ? (
                     <div 
                       onClick={() => setPreviewImage(selectedVerification.backImage)}
                       className="border border-slate-800 rounded-xl overflow-hidden aspect-[4/3] bg-slate-955 flex items-center justify-center cursor-pointer hover:border-indigo-500 transition-colors"
@@ -240,7 +273,7 @@ const Verifications = ({ ADMIN_API, authHeaders }) => {
                       <img src={selectedVerification.backImage} alt="Back ID" className="w-full h-full object-cover" />
                     </div>
                   ) : (
-                    <div className="border border-dashed border-slate-800 rounded-xl aspect-[4/3] flex items-center justify-center text-slate-600 text-xs">
+                    <div className="border border-dashed border-slate-800 rounded-xl aspect-[4/3] flex items-center justify-center text-slate-650 text-xs font-semibold">
                       No Image Provided
                     </div>
                   )}
@@ -249,7 +282,14 @@ const Verifications = ({ ADMIN_API, authHeaders }) => {
                 {/* Selfie Image */}
                 <div className="space-y-2">
                   <span className="text-[10px] text-slate-500 font-bold block uppercase tracking-wider">User Selfie</span>
-                  {selectedVerification.selfieImage ? (
+                  {modalLoading ? (
+                    <div className="border border-slate-800 rounded-xl aspect-[4/3] bg-slate-955 flex items-center justify-center">
+                      <svg className="animate-spin w-6 h-6 text-indigo-500" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                      </svg>
+                    </div>
+                  ) : selectedVerification.selfieImage ? (
                     <div 
                       onClick={() => setPreviewImage(selectedVerification.selfieImage)}
                       className="border border-slate-800 rounded-xl overflow-hidden aspect-[4/3] bg-slate-955 flex items-center justify-center cursor-pointer hover:border-indigo-500 transition-colors"
@@ -257,12 +297,12 @@ const Verifications = ({ ADMIN_API, authHeaders }) => {
                       <img src={selectedVerification.selfieImage} alt="Selfie" className="w-full h-full object-cover" />
                     </div>
                   ) : (
-                    <div className="border border-dashed border-slate-800 rounded-xl aspect-[4/3] flex items-center justify-center text-slate-600 text-xs">
+                    <div className="border border-dashed border-slate-800 rounded-xl aspect-[4/3] flex items-center justify-center text-slate-650 text-xs font-semibold">
                       No Image Provided
                     </div>
                   )}
                 </div>
-              </div>
+              </div>  </div>
 
               {/* Review Note */}
               <div className="space-y-2">

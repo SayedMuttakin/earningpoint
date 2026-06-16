@@ -486,12 +486,26 @@ exports.getVerifications = async (req, res) => {
 
     const total = await Verification.countDocuments(query);
     const verifications = await Verification.find(query)
+      .select('-frontImage -backImage -selfieImage')
       .populate('userId', 'name phoneOrEmail')
       .sort({ createdAt: -1 })
       .skip((Number(page) - 1) * Number(limit))
       .limit(Number(limit));
 
     res.json({ verifications, total });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+exports.getVerificationById = async (req, res) => {
+  try {
+    const verification = await Verification.findById(req.params.id)
+      .populate('userId', 'name phoneOrEmail');
+    if (!verification) {
+      return res.status(404).json({ message: 'Verification request not found' });
+    }
+    res.json(verification);
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
