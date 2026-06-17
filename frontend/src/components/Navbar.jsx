@@ -170,7 +170,7 @@ const Navbar = ({
             onClick={() => setIsSidebarOpen(false)}
           />
           {/* Drawer Panel */}
-          <div className="fixed top-0 left-0 h-full w-[85%] sm:w-[70%] md:w-[320px] bg-white dark:bg-slate-900 shadow-2xl z-[70] flex flex-col overflow-hidden animate-slide-in">
+          <div className="fixed top-0 left-0 h-fit max-h-[95vh] w-[85%] sm:w-[70%] md:w-[320px] bg-white dark:bg-slate-900 shadow-2xl z-[70] flex flex-col overflow-hidden rounded-br-[2.5rem] animate-slide-in">
             {/* Header / Profile Card */}
             <div className="px-4.5 py-5 border-b border-slate-100 dark:border-slate-800 bg-gradient-to-br from-indigo-500/5 via-purple-500/5 to-transparent dark:from-indigo-950/10 dark:via-purple-950/5">
               <div className="flex items-center gap-3">
