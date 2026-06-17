@@ -223,8 +223,19 @@ const Navbar = ({
                 </button>
               ))}
               
-              <div className="pt-8 pb-4 text-center text-[10px] text-slate-400 dark:text-slate-600 font-bold">
-                Zenivio v2.1.0 • Built with ❤️
+              <div className="pt-8 pb-4 text-center text-[10px] text-slate-400 dark:text-slate-600 font-bold space-y-1">
+                <div>Zenivio v2.1.0 • Built with ❤️</div>
+                <div className="mt-1">
+                  Build & Developed by{' '}
+                  <a
+                    href="https://muttakinrahman.com"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-indigo-600 dark:text-indigo-400 hover:underline transition-all"
+                  >
+                    Muttakin Rahman
+                  </a>
+                </div>
               </div>
             </div>
           </div>
