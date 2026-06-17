@@ -230,21 +230,34 @@ exports.searchUsers = async (req, res) => {
     const currentUserId = req.user._id;
     const followingIds = req.user.following || [];
 
+    const mongoose = require('mongoose');
+    const isObjectId = mongoose.Types.ObjectId.isValid(q.trim());
+
+    const orConditions = [
+      { name: { $regex: q, $options: 'i' } },
+      { phoneOrEmail: { $regex: q, $options: 'i' } },
+      { referralCode: { $regex: q, $options: 'i' } },
+      { username: { $regex: q, $options: 'i' } }
+    ];
+
+    if (isObjectId) {
+      orConditions.push({ _id: q.trim() });
+    }
+
     const users = await User.find({
       _id: { $ne: currentUserId },
-      $or: [
-        { name: { $regex: q, $options: 'i' } },
-        { phoneOrEmail: { $regex: q, $options: 'i' } }
-      ]
+      $or: orConditions
     })
-    .select('name phoneOrEmail profilePic isPremium')
+    .select('name username referralCode phoneOrEmail profilePic isPremium')
     .limit(20);
 
     const mappedUsers = users.map(u => {
       const isFollowing = followingIds.includes(u._id.toString());
+      const displayUsername = u.username || (u.referralCode ? u.referralCode.toLowerCase() : (u.phoneOrEmail ? (u.phoneOrEmail.includes('@') ? u.phoneOrEmail.split('@')[0] : u.phoneOrEmail) : 'user'));
       return {
         _id: u._id,
-        name: u.name || u.phoneOrEmail || 'User',
+        name: u.name || displayUsername || 'User',
+        username: displayUsername,
         phoneOrEmail: u.phoneOrEmail || '',
         profilePic: u.profilePic || '',
         isPremium: u.isPremium || false,
@@ -276,7 +289,7 @@ exports.getPublicProfile = async (req, res) => {
     // Fetch user + posts in parallel
     const [user, posts] = await Promise.all([
       User.findById(targetUserId)
-        .select('name email profilePic coverPic googleAvatar isEmailVerified verificationBadge followers following bio location website highlights dob gender dobPrivacy genderPrivacy')
+        .select('name username referralCode phoneOrEmail profilePic coverPic googleAvatar isEmailVerified verificationBadge followers following bio location website highlights dob gender dobPrivacy genderPrivacy')
         .lean(),
       Post.find({ authorId: targetUserId })
         .sort({ createdAt: -1 })
@@ -306,7 +319,7 @@ exports.getPublicProfile = async (req, res) => {
       user: {
         _id: user._id,
         name: user.name,
-        username: user.email ? user.email.split('@')[0] : 'user',
+        username: user.username || (user.referralCode ? user.referralCode.toLowerCase() : (user.phoneOrEmail ? (user.phoneOrEmail.includes('@') ? user.phoneOrEmail.split('@')[0] : user.phoneOrEmail) : 'user')),
         profilePic: user.profilePic,
         coverPic: user.coverPic || '',
         googleAvatar: user.googleAvatar,

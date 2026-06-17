@@ -165,6 +165,7 @@ exports.updateUser = async (req, res) => {
     if (!user) return res.status(404).json({ message: 'User not found' });
 
     const oldBalance = user.balance;
+    const oldBadge = user.verificationBadge;
     if (balance !== undefined) user.balance = Number(balance);
     if (points !== undefined) user.points = Number(points);
     if (coins !== undefined) user.points = Number(coins);
@@ -182,6 +183,22 @@ exports.updateUser = async (req, res) => {
     }
 
     await user.save();
+
+    if (verificationBadge !== undefined && verificationBadge !== oldBadge) {
+      let title = '';
+      let msg = '';
+      if (verificationBadge === 'blue') {
+        title = 'Verified Public Figure';
+        msg = 'This account authentically represents a recognized public figure and has been verified by Zenivio.';
+      } else if (verificationBadge === 'golden') {
+        title = 'Verified Individual';
+        msg = 'This account belongs to a real person whose identity has been verified by Zenivio.';
+      } else if (verificationBadge === 'none') {
+        title = 'Verification Status Updated';
+        msg = 'Your verification badge has been removed by the administrator.';
+      }
+      createNotification(user._id, title, msg, 'badge');
+    }
 
     if (balance !== undefined && Number(balance) !== oldBalance) {
       const diff = Number(balance) - oldBalance;
@@ -531,9 +548,9 @@ exports.updateVerificationStatus = async (req, res) => {
       await User.findByIdAndUpdate(verification.userId, { isEmailVerified: true, verificationBadge: 'blue' });
       createNotification(
         verification.userId,
-        'Profile Verified! ✅',
-        'Your profile has been successfully verified. Check out your blue badge!',
-        'system'
+        'Verified Public Figure',
+        'This account authentically represents a recognized public figure and has been verified by Zenivio.',
+        'badge'
       );
     } else if (status === 'rejected') {
       await User.findByIdAndUpdate(verification.userId, { isEmailVerified: false, verificationBadge: 'none' });

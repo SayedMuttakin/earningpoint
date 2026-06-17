@@ -133,6 +133,8 @@ const MessengerPage = ({ onBack, activeChatPartner, setActiveChatPartner, socket
     try { return JSON.parse(localStorage.getItem('cached_chat_users')) || []; } catch { return []; }
   });
   const [searchQuery, setSearchQuery] = useState('');
+  const [globalSearchResults, setGlobalSearchResults] = useState([]);
+  const [isSearchingGlobal, setIsSearchingGlobal] = useState(false);
   const [activePartner, setActivePartner] = useState(null);
   const [favorites, setFavorites] = useState(() => {
     const saved = localStorage.getItem('messenger_favorites');
@@ -509,6 +511,35 @@ const MessengerPage = ({ onBack, activeChatPartner, setActiveChatPartner, socket
       }
     }
   }, [chatUsers, favorites.length]);
+
+  // Global search effect
+  useEffect(() => {
+    const delayDebounceFn = setTimeout(async () => {
+      if (searchQuery.trim().length > 0) {
+        setIsSearchingGlobal(true);
+        try {
+          const token = localStorage.getItem('token');
+          const res = await fetch(`${API_BASE}/api/profile/search?q=${encodeURIComponent(searchQuery)}`, {
+            headers: { Authorization: `Bearer ${token}` }
+          });
+          if (res.ok) {
+            const data = await res.json();
+            // Filter out users who are already in local chatUsers list to avoid duplicates
+            const filtered = data.filter(u => !chatUsers.some(cu => cu._id.toString() === u._id.toString()));
+            setGlobalSearchResults(filtered);
+          }
+        } catch (err) {
+          console.error('Failed to search users globally:', err);
+        } finally {
+          setIsSearchingGlobal(false);
+        }
+      } else {
+        setGlobalSearchResults([]);
+      }
+    }, 400);
+
+    return () => clearTimeout(delayDebounceFn);
+  }, [searchQuery, chatUsers]);
 
   // ────────────────── WEBSOCKET SETUP ──────────────────
   // Setup Group Rooms
@@ -1424,14 +1455,6 @@ const MessengerPage = ({ onBack, activeChatPartner, setActiveChatPartner, socket
                 >
                   <Users className="w-5.5 h-5.5" />
                 </button>
-                {/* New Chat Icon */}
-                <button 
-                  onClick={() => setActiveTab && setActiveTab('contacts')}
-                  className="p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-900 text-slate-700 dark:text-slate-300 transition-colors"
-                  title="New Message"
-                >
-                  <SquarePen className="w-5.5 h-5.5" />
-                </button>
               </div>
             </div>
 
@@ -1581,66 +1604,118 @@ const MessengerPage = ({ onBack, activeChatPartner, setActiveChatPartner, socket
 
                 {/* Combined Conversation List */}
                 <div className="mt-4 space-y-1">
-                  {filteredUsersAndGroups.length === 0 ? (
+                  {filteredUsersAndGroups.length === 0 && globalSearchResults.length === 0 ? (
                     <div className="py-10 text-center text-slate-400">
                       <p className="font-bold text-sm">No conversations found</p>
-                      <p className="text-xs text-slate-500 mt-1">Start a chat by clicking the contacts button.</p>
+                      {isSearchingGlobal ? (
+                        <p className="text-xs text-slate-500 mt-1 animate-pulse">Searching users globally...</p>
+                      ) : (
+                        <p className="text-xs text-slate-500 mt-1">Start typing a name or username above to search globally.</p>
+                      )}
                     </div>
                   ) : (
-                    filteredUsersAndGroups.map((chat) => (
-                      <div
-                        key={chat._id}
-                        onClick={() => handleOpenChat(chat)}
-                        className="flex items-center justify-between p-3.5 hover:bg-slate-50 dark:hover:bg-slate-900/60 transition-all rounded-2xl cursor-pointer active:scale-[0.98] border border-transparent hover:border-slate-100 dark:hover:border-slate-850"
-                      >
-                        <div className="flex items-center gap-3.5 min-w-0 flex-1">
-                          {/* Avatar Indicator */}
-                          <div className="relative flex-shrink-0">
-                            {chat.isGroup ? (
-                              <div className="w-12 h-12 rounded-full bg-indigo-100 dark:bg-indigo-950/60 text-[#7C3AED] dark:text-indigo-400 flex items-center justify-center border border-indigo-200/40 dark:border-indigo-900/40 shadow-3xs">
-                                <Users className="w-5.5 h-5.5" />
-                              </div>
-                            ) : chat.profilePic ? (
-                              <img
-                                src={getProfilePicUrl(chat.profilePic)}
-                                alt={chat.name}
-                                className="w-12 h-12 rounded-full object-cover border border-slate-100 dark:border-slate-800"
-                              />
-                            ) : (
-                              <div className="w-12 h-12 rounded-full bg-gradient-to-tr from-indigo-500 to-brand-500 flex items-center justify-center text-white font-black text-lg">
-                                {chat.name.charAt(0).toUpperCase()}
-                              </div>
-                            )}
-                            {/* Online badge for direct chats only */}
-                            {!chat.isGroup && onlineUsers.includes(chat._id?.toString()) && (
-                              <span className="absolute bottom-0 right-0 w-3.5 h-3.5 bg-emerald-500 border-2 border-white dark:border-slate-900 rounded-full" />
-                            )}
+                    <>
+                      {filteredUsersAndGroups.map((chat) => (
+                        <div
+                          key={chat._id}
+                          onClick={() => handleOpenChat(chat)}
+                          className="flex items-center justify-between p-3.5 hover:bg-slate-50 dark:hover:bg-slate-900/60 transition-all rounded-2xl cursor-pointer active:scale-[0.98] border border-transparent hover:border-slate-100 dark:hover:border-slate-850"
+                        >
+                          <div className="flex items-center gap-3.5 min-w-0 flex-1">
+                            {/* Avatar Indicator */}
+                            <div className="relative flex-shrink-0">
+                              {chat.isGroup ? (
+                                <div className="w-12 h-12 rounded-full bg-indigo-100 dark:bg-indigo-950/60 text-[#7C3AED] dark:text-indigo-400 flex items-center justify-center border border-indigo-200/40 dark:border-indigo-900/40 shadow-3xs">
+                                  <Users className="w-5.5 h-5.5" />
+                                </div>
+                              ) : chat.profilePic ? (
+                                <img
+                                  src={getProfilePicUrl(chat.profilePic)}
+                                  alt={chat.name}
+                                  className="w-12 h-12 rounded-full object-cover border border-slate-100 dark:border-slate-800"
+                                />
+                              ) : (
+                                <div className="w-12 h-12 rounded-full bg-gradient-to-tr from-indigo-500 to-brand-500 flex items-center justify-center text-white font-black text-lg">
+                                  {chat.name.charAt(0).toUpperCase()}
+                                </div>
+                              )}
+                              {/* Online badge for direct chats only */}
+                              {!chat.isGroup && onlineUsers.includes(chat._id?.toString()) && (
+                                <span className="absolute bottom-0 right-0 w-3.5 h-3.5 bg-emerald-500 border-2 border-white dark:border-slate-900 rounded-full" />
+                              )}
+                            </div>
+                            
+                            {/* Chat Detail text */}
+                            <div className="min-w-0 flex-1">
+                              <h3 className="font-black text-slate-800 dark:text-slate-100 text-[15px] truncate leading-tight">
+                                {chat.name}
+                              </h3>
+                              <p className="text-xs text-slate-400 dark:text-slate-500 truncate mt-1 leading-none">
+                                {chat.lastMessage || 'No messages yet'}
+                              </p>
+                            </div>
                           </div>
-                          
-                          {/* Chat Detail text */}
-                          <div className="min-w-0 flex-1">
-                            <h3 className="font-black text-slate-800 dark:text-slate-100 text-[15px] truncate leading-tight">
-                              {chat.name}
-                            </h3>
-                            <p className="text-xs text-slate-400 dark:text-slate-500 truncate mt-1 leading-none">
-                              {chat.lastMessage || 'No messages yet'}
-                            </p>
-                          </div>
-                        </div>
 
-                        {/* Right details: relative time and unread badge */}
-                        <div className="flex flex-col items-end gap-1.5 flex-shrink-0 ml-2">
-                          <span className="text-[10px] text-slate-400 dark:text-slate-500 font-bold">
-                            {formatRelativeTime(chat.lastMessageTime)}
-                          </span>
-                          {chat.unreadCount > 0 && (
-                            <span className="w-5 h-5 bg-[#1d9bf0] text-white text-[10px] font-black rounded-full flex items-center justify-center shadow-3xs">
-                              {chat.unreadCount}
+                          {/* Right details: relative time and unread badge */}
+                          <div className="flex flex-col items-end gap-1.5 flex-shrink-0 ml-2">
+                            <span className="text-[10px] text-slate-400 dark:text-slate-500 font-bold">
+                              {formatRelativeTime(chat.lastMessageTime)}
                             </span>
-                          )}
+                            {chat.unreadCount > 0 && (
+                              <span className="w-5 h-5 bg-[#1d9bf0] text-white text-[10px] font-black rounded-full flex items-center justify-center shadow-3xs">
+                                {chat.unreadCount}
+                              </span>
+                            )}
+                          </div>
                         </div>
-                      </div>
-                    ))
+                      ))}
+
+                      {globalSearchResults.length > 0 && (
+                        <div className="mt-6">
+                          <h3 className="px-3.5 mb-2 text-xs font-bold text-slate-400 uppercase tracking-wider">
+                            Global Users (Search Results)
+                          </h3>
+                          {globalSearchResults.map((user) => (
+                            <div
+                              key={user._id}
+                              onClick={() => handleOpenChat({ ...user, isGroup: false })}
+                              className="flex items-center justify-between p-3.5 hover:bg-slate-50 dark:hover:bg-slate-900/60 transition-all rounded-2xl cursor-pointer active:scale-[0.98] border border-transparent hover:border-slate-100 dark:hover:border-slate-850"
+                            >
+                              <div className="flex items-center gap-3.5 min-w-0 flex-1">
+                                <div className="relative flex-shrink-0">
+                                  {user.profilePic ? (
+                                    <img
+                                      src={getProfilePicUrl(user.profilePic)}
+                                      alt={user.name}
+                                      className="w-12 h-12 rounded-full object-cover border border-slate-100 dark:border-slate-800"
+                                    />
+                                  ) : (
+                                    <div className="w-12 h-12 rounded-full bg-gradient-to-tr from-indigo-500 to-brand-500 flex items-center justify-center text-white font-black text-lg">
+                                      {user.name ? user.name.charAt(0).toUpperCase() : 'U'}
+                                    </div>
+                                  )}
+                                </div>
+                                <div className="min-w-0 flex-1">
+                                  <div className="flex items-center justify-between">
+                                    <h2 className="text-[14px] font-extrabold text-slate-900 dark:text-white truncate flex items-center gap-1">
+                                      {user.name}
+                                      {user.username && (
+                                        <span className="text-[11px] font-mono text-slate-400 font-normal">
+                                          @{user.username}
+                                        </span>
+                                      )}
+                                    </h2>
+                                  </div>
+                                  <p className="text-[12px] text-slate-500 dark:text-slate-400 truncate mt-0.5">
+                                    Click to start a conversation
+                                  </p>
+                                </div>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </>
                   )}
                 </div>
 

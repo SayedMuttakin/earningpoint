@@ -95,6 +95,7 @@ const NotificationPage = ({ onBack, setActiveTab, setSelectedNotificationPostId 
       case 'post': return <Bell className="w-4 h-4 sm:w-5 sm:h-5" />;
       case 'conversion': return <DollarSign className="w-4 h-4 sm:w-5 sm:h-5" />;
       case 'announcement': return <Megaphone className="w-4 h-4 sm:w-5 sm:h-5" />;
+      case 'badge': return <CheckCircle2 className="w-4 h-4 sm:w-5 sm:h-5 text-indigo-500" />;
       default: return <Bell className="w-4 h-4 sm:w-5 sm:h-5" />;
     }
   };
@@ -267,38 +268,97 @@ const NotificationPage = ({ onBack, setActiveTab, setSelectedNotificationPostId 
 
       {/* Notification Details Modal */}
       {selectedNotification && (
-        <div className="fixed inset-0 z-[10000] flex items-center justify-center p-4">
-          <div 
-            className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm animate-fade-in"
-            onClick={() => setSelectedNotification(null)}
-          />
-          <div className="relative w-full max-w-sm bg-white dark:bg-slate-800 rounded-3xl shadow-2xl p-6 sm:p-8 border border-slate-100 dark:border-slate-700 animate-fade-in">
-            <div className="absolute -top-10 -right-10 w-40 h-40 bg-indigo-600/5 rounded-full blur-3xl opacity-50 pointer-events-none" />
-            
-            <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl flex items-center justify-center mb-6 shadow-inner mx-auto bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600">
-              {getIcon(selectedNotification.type)}
-            </div>
-            
-            <h3 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white mb-2 text-center">
-              {selectedNotification.title}
-            </h3>
-            
-            <div className="flex items-center justify-center gap-1.5 mb-6 text-xs font-black text-slate-400 uppercase tracking-widest">
-              <Clock size={12} /> {formatTime(selectedNotification.createdAt)}
-            </div>
-            
-            <div className="bg-slate-50 dark:bg-slate-900/50 rounded-2xl p-4 sm:p-5 mb-6 text-sm sm:text-base text-slate-600 dark:text-slate-300 leading-relaxed text-center font-medium border border-slate-100 dark:border-slate-800">
-              {selectedNotification.message}
-            </div>
-            
-            <button
+        selectedNotification.type === 'badge' ? (
+          (() => {
+            const isBlue = selectedNotification.title.toLowerCase().includes('public figure') || selectedNotification.title.toLowerCase().includes('blue');
+            const badgeColor = isBlue ? '#1d9bf0' : '#EAB308';
+            const badgeTitle = isBlue ? 'Verified Public Figure' : 'Verified Individual';
+            const badgeDescription = isBlue 
+              ? 'This account authentically represents a recognized public figure and has been verified by Zenivio.'
+              : 'This account belongs to a real person whose identity has been verified by Zenivio.';
+
+            return (
+              <div className="fixed inset-0 z-[10000] flex items-center justify-center p-4">
+                <div 
+                  className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm animate-fade-in"
+                  onClick={() => setSelectedNotification(null)}
+                />
+                <div className="relative w-full max-w-sm bg-white dark:bg-slate-900 rounded-[2.5rem] shadow-2xl p-6 sm:p-8 border border-slate-100 dark:border-slate-800 animate-fade-in flex flex-col items-center overflow-hidden">
+                  <div 
+                    className="absolute inset-0 opacity-[0.03] pointer-events-none blur-2xl"
+                    style={{ backgroundColor: badgeColor }}
+                  />
+                  
+                  {/* Verified Badge SVG */}
+                  <div className="w-20 h-20 flex items-center justify-center mb-5 drop-shadow-md">
+                    <svg viewBox="0 0 24 24" className="w-full h-full" fill="currentColor">
+                      <g>
+                        <path d="M22.5 12.5c0-1.58-.875-2.95-2.148-3.6.154-.435.238-.905.238-1.4 0-2.21-1.71-3.998-3.918-3.998-.47 0-.92.084-1.336.25C14.818 2.415 13.51 1.5 12 1.5s-2.816.917-3.337 2.25c-.416-.165-.866-.25-1.336-.25-2.21 0-3.918 1.79-3.918 4 0 .495.084.965.238 1.4-1.273.65-2.148 2.02-2.148 3.6 0 1.46.827 2.766 2.057 3.435-.032.227-.057.452-.057.682 0 2.21 1.71 4 3.918 4 .47 0 .92-.086 1.336-.25.52 1.334 1.816 2.25 3.337 2.25s2.816-.916 3.337-2.25c.416.164.866.25 1.336.25 2.21 0 3.918-1.79 3.918-4 0-.23-.025-.455-.057-.682 1.23-.67 2.057-1.976 2.057-3.435z" fill={badgeColor}/>
+                        <path d="M14.496 9.613l-3.393 3.393-1.614-1.615c-.293-.293-.768-.293-1.06 0-.294.293-.294.768 0 1.06l2.144 2.146c.146.146.338.22.53.22s.384-.073.53-.22l3.923-3.924c.294-.293.294-.768 0-1.06-.293-.293-.768-.293-1.06 0z" fill="#fff"/>
+                      </g>
+                    </svg>
+                  </div>
+                  
+                  <h3 className="text-xl font-black text-slate-900 dark:text-white mb-1 text-center">
+                    {isBlue ? 'Blue Tick' : 'Yellow Tick'}
+                  </h3>
+                  
+                  <span 
+                    className="text-[11px] font-black uppercase tracking-wider mb-5 px-3 py-1 rounded-full text-white"
+                    style={{ backgroundColor: badgeColor }}
+                  >
+                    {badgeTitle}
+                  </span>
+                  
+                  <div className="bg-slate-50 dark:bg-slate-900/50 rounded-2xl p-5 mb-6 text-sm text-slate-600 dark:text-slate-350 leading-relaxed text-center font-bold border border-slate-100 dark:border-slate-800">
+                    {badgeDescription}
+                  </div>
+                  
+                  <button
+                    onClick={() => setSelectedNotification(null)}
+                    className="w-full py-3.5 text-white font-black rounded-xl transition-all shadow-lg active:scale-95 text-sm"
+                    style={{ backgroundColor: badgeColor }}
+                  >
+                    Awesome!
+                  </button>
+                </div>
+              </div>
+            );
+          })()
+        ) : (
+          <div className="fixed inset-0 z-[10000] flex items-center justify-center p-4">
+            <div 
+              className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm animate-fade-in"
               onClick={() => setSelectedNotification(null)}
-              className="w-full py-3.5 bg-indigo-600 hover:bg-indigo-700 text-white font-black rounded-xl transition-all shadow-lg shadow-indigo-600/20 active:scale-95 text-sm sm:text-base"
-            >
-              Close
-            </button>
+            />
+            <div className="relative w-full max-w-sm bg-white dark:bg-slate-800 rounded-3xl shadow-2xl p-6 sm:p-8 border border-slate-100 dark:border-slate-700 animate-fade-in">
+              <div className="absolute -top-10 -right-10 w-40 h-40 bg-indigo-600/5 rounded-full blur-3xl opacity-50 pointer-events-none" />
+              
+              <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl flex items-center justify-center mb-6 shadow-inner mx-auto bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600">
+                {getIcon(selectedNotification.type)}
+              </div>
+              
+              <h3 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white mb-2 text-center">
+                {selectedNotification.title}
+              </h3>
+              
+              <div className="flex items-center justify-center gap-1.5 mb-6 text-xs font-black text-slate-400 uppercase tracking-widest">
+                <Clock size={12} /> {formatTime(selectedNotification.createdAt)}
+              </div>
+              
+              <div className="bg-slate-50 dark:bg-slate-900/50 rounded-2xl p-4 sm:p-5 mb-6 text-sm sm:text-base text-slate-600 dark:text-slate-350 leading-relaxed text-center font-medium border border-slate-100 dark:border-slate-800">
+                {selectedNotification.message}
+              </div>
+              
+              <button
+                onClick={() => setSelectedNotification(null)}
+                className="w-full py-3.5 bg-indigo-600 hover:bg-indigo-700 text-white font-black rounded-xl transition-all shadow-lg shadow-indigo-600/20 active:scale-95 text-sm sm:text-base"
+              >
+                Close
+              </button>
+            </div>
           </div>
-        </div>
+        )
       )}
     </div>
   );

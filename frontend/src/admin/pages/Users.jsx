@@ -174,6 +174,15 @@ const Users = ({ ADMIN_API, authHeaders }) => {
                   </td>
                   <td className="px-5 py-3 text-right">
                     <div className="flex items-center justify-end gap-2">
+                      <button 
+                        onClick={() => window.open(`${window.location.origin}?profileId=${u._id}`, '_blank')}
+                        className="p-1.5 text-slate-400 hover:text-emerald-400 hover:bg-emerald-500/10 rounded-lg transition-colors"
+                        title="View Public Profile"
+                      >
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                        </svg>
+                      </button>
                       <button onClick={() => openUser(u._id)} className="p-1.5 text-slate-400 hover:text-indigo-400 hover:bg-indigo-500/10 rounded-lg transition-colors">
                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>
                       </button>
@@ -212,7 +221,18 @@ const Users = ({ ADMIN_API, authHeaders }) => {
           <div className="relative z-10 bg-[#111827] border border-slate-700 rounded-t-3xl sm:rounded-2xl w-full sm:max-w-lg max-h-[90vh] overflow-y-auto shadow-2xl">
             <div className="flex items-center justify-between px-6 py-4 border-b border-slate-800">
               <div>
-                <h3 className="text-white font-bold text-base">{selectedUser.user.name || 'User Detail'}</h3>
+                <h3 className="text-white font-bold text-base flex items-center gap-2">
+                  {selectedUser.user.name || 'User Detail'}
+                  <button 
+                    onClick={() => window.open(`${window.location.origin}?profileId=${selectedUser.user._id}`, '_blank')}
+                    className="p-1 text-slate-400 hover:text-indigo-400 hover:bg-slate-800 rounded transition-colors"
+                    title="View Public Profile"
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                    </svg>
+                  </button>
+                </h3>
                 <p className="text-slate-500 text-xs">{selectedUser.user.phoneOrEmail}</p>
               </div>
               <button onClick={() => setSelectedUser(null)} className="text-slate-400 hover:text-white transition-colors">

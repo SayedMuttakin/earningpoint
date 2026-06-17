@@ -71,6 +71,7 @@ exports.registerUser = async (req, res) => {
       password: hashedPassword,
       country: country || '',
       referralCode,
+      username: usernameClean,
     });
 
     if (user) {
@@ -189,11 +190,21 @@ exports.googleAuth = async (req, res) => {
 
     if (!user) {
       // Create new user via Google
+      const generatedUsername = email ? email.split('@')[0].trim() : 'user';
+      // Ensure username doesn't already exist
+      let finalUsername = generatedUsername;
+      let suffix = 1;
+      while (await User.findOne({ username: finalUsername })) {
+        finalUsername = generatedUsername + suffix;
+        suffix++;
+      }
+
       user = await User.create({
         googleId,
         name: name || '',
         phoneOrEmail: email || null,
         googleAvatar: picture || '',
+        username: finalUsername,
       });
     }
 
