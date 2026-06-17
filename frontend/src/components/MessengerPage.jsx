@@ -124,7 +124,17 @@ const formatRelativeTime = (timeStr) => {
   return `${diffDays}d`;
 };
 
-const MessengerPage = ({ onBack, activeChatPartner, setActiveChatPartner, socket, onlineUsers, incomingCallData, setIncomingCallData }) => {
+const MessengerPage = ({ 
+  onBack, 
+  activeChatPartner, 
+  setActiveChatPartner, 
+  socket, 
+  onlineUsers, 
+  incomingCallData, 
+  setIncomingCallData,
+  setActiveTab,
+  setActivePublicProfileUserId 
+}) => {
   // ────────────────── ALL STATE HOOKS ──────────────────
   const [currentUser, setCurrentUser] = useState(() => {
     try { return JSON.parse(localStorage.getItem('cached_current_user')) || null; } catch { return null; }
@@ -1726,9 +1736,18 @@ const MessengerPage = ({ onBack, activeChatPartner, setActiveChatPartner, socket
             <div className="flex-1 flex flex-col h-full overflow-hidden relative bg-slate-50/50 dark:bg-slate-900/35">
             {/* Chat Room Header */}
             <div className="bg-white dark:bg-slate-950 border-b border-slate-100 dark:border-slate-800 px-4 py-3 flex items-center justify-between shrink-0 shadow-sm z-20 sticky top-0">
-              <div className="flex items-center gap-2 sm:gap-3">
+              <div 
+                className={`flex items-center gap-2 sm:gap-3 ${!activePartner.isGroup ? 'cursor-pointer hover:opacity-80 transition-opacity' : ''}`}
+                onClick={() => {
+                  if (!activePartner.isGroup && setActiveTab && setActivePublicProfileUserId) {
+                    setActivePublicProfileUserId(activePartner._id);
+                    setActiveTab('PublicProfile');
+                  }
+                }}
+              >
                 <button 
-                  onClick={() => {
+                  onClick={(e) => {
+                    e.stopPropagation();
                     setActivePartner(null);
                     if (setActiveChatPartner) setActiveChatPartner(null);
                     fetchUsers(); 

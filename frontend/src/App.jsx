@@ -451,6 +451,8 @@ function App() {
               onlineUsers={onlineUsers}
               incomingCallData={incomingCallData}
               setIncomingCallData={setIncomingCallData}
+              setActiveTab={setActiveTab}
+              setActivePublicProfileUserId={setActivePublicProfileUserId}
             />
           </div>
           {activeTab === 'Updates' && (
