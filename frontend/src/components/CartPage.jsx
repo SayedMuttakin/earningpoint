@@ -22,6 +22,7 @@ const CartPage = ({ onBuyNow }) => {
       if (res.ok) {
         const data = await res.json();
         setProducts(data);
+        localStorage.setItem('cached_store_products', JSON.stringify(data));
       }
     } catch (err) {
       console.error('Failed to fetch products:', err);
@@ -37,6 +38,7 @@ const CartPage = ({ onBuyNow }) => {
       if (response.ok) {
         const data = await response.json();
         setGlobalSettings(data);
+        localStorage.setItem('cached_global_settings', JSON.stringify(data));
       }
     } catch (err) {
       console.error('Failed to fetch settings:', err);
@@ -44,6 +46,32 @@ const CartPage = ({ onBuyNow }) => {
   };
 
   useEffect(() => {
+    // Try to load cached data for instant renders
+    const cachedProducts = localStorage.getItem('cached_store_products');
+    const cachedSettings = localStorage.getItem('cached_global_settings');
+    let hasCache = false;
+
+    if (cachedProducts) {
+      try {
+        setProducts(JSON.parse(cachedProducts));
+        hasCache = true;
+      } catch (e) {
+        console.error('Failed to parse cached store products:', e);
+      }
+    }
+    if (cachedSettings) {
+      try {
+        setGlobalSettings(JSON.parse(cachedSettings));
+        hasCache = true;
+      } catch (e) {
+        console.error('Failed to parse cached settings:', e);
+      }
+    }
+
+    if (hasCache) {
+      setLoading(false);
+    }
+
     fetchProducts();
     fetchGlobalSettings();
   }, []);

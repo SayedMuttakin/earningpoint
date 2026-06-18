@@ -39,4 +39,6 @@ const cartProductSchema = new mongoose.Schema({
   timestamps: true
 });
 
+cartProductSchema.index({ isActive: 1, createdAt: -1 });
+
 module.exports = mongoose.model('CartProduct', cartProductSchema);

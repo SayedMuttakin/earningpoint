@@ -91,12 +91,12 @@ const UpdatesPage = ({ onBack, selectedPostId, setSelectedPostId }) => {
 
   const fetchPosts = async () => {
     try {
-      const response = await fetch(`${API_BASE}/api/posts`);
+      const response = await fetch(`${API_BASE}/api/posts?adminOnly=true`);
       if (response.ok) {
         const data = await response.json();
-        // Only show updates created by admin (authorId is null)
         const adminPosts = data.filter(post => !post.authorId);
         setPosts(adminPosts);
+        localStorage.setItem('cached_admin_updates', JSON.stringify(adminPosts));
       }
     } catch (err) {
       console.error('Failed to fetch updates:', err);
@@ -112,6 +112,7 @@ const UpdatesPage = ({ onBack, selectedPostId, setSelectedPostId }) => {
       if (response.ok) {
         const data = await response.json();
         setGlobalSettings(data);
+        localStorage.setItem('cached_global_settings', JSON.stringify(data));
       }
     } catch (err) {
       console.error('Failed to fetch settings:', err);
@@ -119,6 +120,32 @@ const UpdatesPage = ({ onBack, selectedPostId, setSelectedPostId }) => {
   };
 
   useEffect(() => {
+    // Try to load cached data for instant renders
+    const cachedUpdates = localStorage.getItem('cached_admin_updates');
+    const cachedSettings = localStorage.getItem('cached_global_settings');
+    let hasCache = false;
+
+    if (cachedUpdates) {
+      try {
+        setPosts(JSON.parse(cachedUpdates));
+        hasCache = true;
+      } catch (e) {
+        console.error('Failed to parse cached updates:', e);
+      }
+    }
+    if (cachedSettings) {
+      try {
+        setGlobalSettings(JSON.parse(cachedSettings));
+        hasCache = true;
+      } catch (e) {
+        console.error('Failed to parse cached settings:', e);
+      }
+    }
+
+    if (hasCache) {
+      setLoading(false);
+    }
+
     fetchPosts();
     fetchGlobalSettings();
   }, []);

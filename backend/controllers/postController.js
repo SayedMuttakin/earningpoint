@@ -7,7 +7,11 @@ const { createNotification } = require('./notificationController');
 // @access  Public
 exports.getPosts = async (req, res) => {
   try {
-    const posts = await Post.find()
+    const query = {};
+    if (req.query.adminOnly === 'true') {
+      query.authorId = null;
+    }
+    const posts = await Post.find(query)
       .populate('authorId', 'name profilePic googleAvatar isEmailVerified verificationBadge')
       .sort({ createdAt: -1 })
       .limit(30)  // Limit to 30 most recent posts

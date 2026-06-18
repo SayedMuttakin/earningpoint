@@ -854,7 +854,7 @@ const HomePage = ({ setActiveTab, setSelectedNewsId, setActiveChatPartner, setSe
         fetchWithTimeout(`${API_BASE}/api/profile`, {
           headers: { Authorization: `Bearer ${token}` }
         }, 5000).catch(err => { console.error('Profile fetch failed:', err); return null; }),
-        fetchWithTimeout(`${API_BASE}/api/posts`, {}, 5000).catch(err => { console.error('News fetch failed:', err); return null; }),
+        fetchWithTimeout(`${API_BASE}/api/posts?adminOnly=true`, {}, 5000).catch(err => { console.error('News fetch failed:', err); return null; }),
         fetchWithTimeout(`${API_BASE}/api/posts/feed`, {
           headers: { Authorization: `Bearer ${token}` }
         }, 5000).catch(err => { console.error('Feed fetch failed:', err); return null; })

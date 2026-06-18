@@ -305,6 +305,7 @@ const PublicProfilePage = ({ userId, onBack, currentUser, isOwnProfile, setActiv
         setProfile(data.user);
         setVideos(data.videos || []);
         setPosts(data.posts || []);
+        localStorage.setItem(`cached_profile_data_${userId}`, JSON.stringify(data));
       }
     } catch (err) {
       console.error('Failed to fetch public profile:', err);
@@ -315,8 +316,24 @@ const PublicProfilePage = ({ userId, onBack, currentUser, isOwnProfile, setActiv
 
   useEffect(() => {
     if (userId) {
+      // Try to load cached data for instant renders
+      const cached = localStorage.getItem(`cached_profile_data_${userId}`);
+      if (cached) {
+        try {
+          const parsed = JSON.parse(cached);
+          setProfile(parsed.user);
+          setVideos(parsed.videos || []);
+          setPosts(parsed.posts || []);
+          setLoading(false);
+        } catch (e) {
+          console.error('Failed to parse cached profile data:', e);
+        }
+      } else {
+        setLoading(true);
+      }
       fetchPublicProfile();
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [userId]);
 
   // Handle auto-advancing story highlights
