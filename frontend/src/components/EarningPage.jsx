@@ -6,6 +6,43 @@ import { Capacitor } from '@capacitor/core';
 import { API_BASE } from '../config';
 import MultiAdViewPage from './MultiAdViewPage';
 import BannerAd from './BannerAd';
+import {
+  DailyCheckinIcon,
+  MysteryBoxIcon,
+  WeeklyMissionsIcon,
+  ReferEarnIcon,
+  WalletIcon,
+  HistoryIcon,
+  TutorialIcon,
+  ArticlesIcon,
+  VideosIcon,
+  GamesIcon,
+  FortuneWheelIcon,
+  ViewAdsIcon,
+  ScratchCardIcon,
+  QuizzesIcon,
+  DailyQuizIcon,
+  MathQuizIcon,
+  BinaryQuizIcon,
+  WordQuizIcon,
+  GkQuizIcon,
+  YouTubeIcon,
+  TikTokIcon,
+  FacebookIcon,
+  RewardVideoIcon,
+  InterstitialAdIcon,
+  NativeAdClickIcon,
+  BonusAdIcon,
+  HourlyAdIcon,
+  MetaIcon,
+  SurpriseBonusIcon,
+  RikSurveyIcon,
+  WebRegIcon,
+  EmailSubmitIcon,
+  AppInstallIcon,
+  AffiliateMarketIcon,
+  TrialSignupIcon
+} from './EarningIcons';
 import { 
   Check, 
   ArrowLeft,
@@ -300,7 +337,7 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
     {
       id: 'feat-checkin',
       name: 'Daily Checkin',
-      icon: <CalendarCheck className="w-6 h-6" />,
+      icon: <DailyCheckinIcon className="w-6 h-6" />,
       coins: 5,
       color: 'from-emerald-400 to-teal-400',
       action: () => setShowCheckinView(true)
@@ -308,7 +345,7 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
     {
       id: 'feat-mystery',
       name: 'Mystery Box',
-      icon: <Gift className="w-6 h-6" />,
+      icon: <MysteryBoxIcon className="w-6 h-6" />,
       coins: '1-45',
       color: 'from-rose-400 to-pink-500',
       action: () => setShowMysteryBoxView(true)
@@ -316,7 +353,7 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
     {
       id: 'feat-weekly',
       name: 'Weekly Missions',
-      icon: <ClipboardList className="w-6 h-6" />,
+      icon: <WeeklyMissionsIcon className="w-6 h-6" />,
       coins: 'Extra',
       color: 'from-blue-400 to-indigo-500',
       action: () => { setShowWeeklyMissionsView(true); fetchWeeklyMissions(); }
@@ -324,7 +361,7 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
     {
       id: 'feat-refer',
       name: 'Refer & Earn',
-      icon: <Users className="w-6 h-6" />,
+      icon: <ReferEarnIcon className="w-6 h-6" />,
       coins: 50,
       color: 'from-amber-400 to-orange-500',
       action: () => { if (typeof onReferralsClick === 'function') onReferralsClick(); else if (typeof setActiveTab === 'function') setActiveTab('referrals'); }
@@ -333,9 +370,9 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
   ], [onReferralsClick, setActiveTab]);
 
   const rewardOptions = useMemo(() => [
-    { id: 'reward-wallet', name: 'Wallet', icon: <Wallet className="w-7 h-7" />, color: 'from-blue-500 to-indigo-600', action: () => setActiveEarningTab('wallet') },
-    { id: 'reward-history', name: 'History', icon: <History className="w-7 h-7" />, color: 'from-purple-500 to-pink-600', action: () => setActiveEarningTab('history') },
-    { id: 'reward-tutorial', name: 'Tutorial', icon: <BookOpen className="w-7 h-7" />, color: 'from-emerald-500 to-teal-600', action: () => setActiveEarningTab('tutorial') },
+    { id: 'reward-wallet', name: 'Wallet', icon: <WalletIcon className="w-7 h-7" />, color: 'from-blue-500 to-indigo-600', action: () => setActiveEarningTab('wallet') },
+    { id: 'reward-history', name: 'History', icon: <HistoryIcon className="w-7 h-7" />, color: 'from-purple-500 to-pink-600', action: () => setActiveEarningTab('history') },
+    { id: 'reward-tutorial', name: 'Tutorial', icon: <TutorialIcon className="w-7 h-7" />, color: 'from-emerald-500 to-teal-600', action: () => setActiveEarningTab('tutorial') },
   // eslint-disable-next-line react-hooks/exhaustive-deps
   ], []);
   const [gkSelected, setGkSelected] = React.useState(null);
@@ -3475,11 +3512,11 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
               </div>
               <div className="grid grid-cols-3 sm:grid-cols-5 gap-4 md:gap-6 justify-items-center">
                 {[
-                  { id: 'l1-article', name: 'Articles', icon: <Newspaper className="w-7 h-7" />, coins: 15, color: 'from-blue-400 to-indigo-500', action: () => setShowArticleListView(true), count: articleReadCount, maxCount: 5 },
-                  { id: 'l1-videos', name: 'Videos', icon: <Video className="w-7 h-7" />, coins: 25, color: 'from-purple-400 to-pink-500', action: () => openMultiAdView({ key: 'videos', name: 'Videos', adType: 'rewarded', coins: 25, logo: 'https://img.icons8.com/color/96/youtube-play.png', color: 'from-purple-400 to-pink-500' }), count: getMultiAdCount('videos'), maxCount: 5 },
-                  { id: 'l1-games', name: 'Games', icon: <Gamepad2 className="w-7 h-7" />, coins: 50, color: 'from-emerald-400 to-teal-500', action: () => setShowGamesView(true) },
-                  { id: 'l1-wheel', name: 'Fortune Wheel', icon: <Aperture className="w-7 h-7" />, coins: null, color: 'from-amber-400 to-orange-500', action: () => setShowWheelView(true) },
-                  { id: 'l1-ads', name: 'View Ads', icon: <MonitorPlay className="w-7 h-7" />, coins: 10, color: 'from-sky-400 to-cyan-500', action: () => openMultiAdView({ key: 'view_ads', name: 'View Ads', adType: 'interstitial', coins: 10, logo: 'https://img.icons8.com/color/96/monitor.png', color: 'from-sky-400 to-cyan-500' }), count: getMultiAdCount('view_ads'), maxCount: 5 },
+                  { id: 'l1-article', name: 'Articles', icon: <ArticlesIcon className="w-7 h-7" />, coins: 15, color: 'from-blue-400 to-indigo-500', action: () => setShowArticleListView(true), count: articleReadCount, maxCount: 5 },
+                  { id: 'l1-videos', name: 'Videos', icon: <VideosIcon className="w-7 h-7" />, coins: 25, color: 'from-purple-400 to-pink-500', action: () => openMultiAdView({ key: 'videos', name: 'Videos', adType: 'rewarded', coins: 25, logo: 'https://img.icons8.com/color/96/youtube-play.png', color: 'from-purple-400 to-pink-500' }), count: getMultiAdCount('videos'), maxCount: 5 },
+                  { id: 'l1-games', name: 'Games', icon: <GamesIcon className="w-7 h-7" />, coins: 50, color: 'from-emerald-400 to-teal-500', action: () => setShowGamesView(true) },
+                  { id: 'l1-wheel', name: 'Fortune Wheel', icon: <FortuneWheelIcon className="w-7 h-7" />, coins: null, color: 'from-amber-400 to-orange-500', action: () => setShowWheelView(true) },
+                  { id: 'l1-ads', name: 'View Ads', icon: <ViewAdsIcon className="w-7 h-7" />, coins: 10, color: 'from-sky-400 to-cyan-500', action: () => openMultiAdView({ key: 'view_ads', name: 'View Ads', adType: 'interstitial', coins: 10, logo: 'https://img.icons8.com/color/96/monitor.png', color: 'from-sky-400 to-cyan-500' }), count: getMultiAdCount('view_ads'), maxCount: 5 },
                 ].map(item => <OptionCard key={item.id} item={item} count={item.count} maxCount={item.maxCount} isLocked={!isPremium} onLockedClick={() => { setLockPopupLevel(1); setShowLockPopup(true); }} />)}
               </div>
             </div>
@@ -3544,13 +3581,13 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
               </div>
               <div className="grid grid-cols-4 sm:grid-cols-7 gap-3 md:gap-5 justify-items-center">
                 {[
-                  { id: 'l2-scratch', name: 'Scratch Card', icon: <Gift className="w-7 h-7" />, coins: null, color: 'from-rose-400 to-pink-500', action: () => setShowScratchView(true) },
-                  { id: 'l2-quiz', name: 'Quizzes', icon: <HelpCircle className="w-7 h-7" />, coins: 20, color: 'from-violet-400 to-purple-500', action: () => setShowQuizSelection(true) },
-                  { id: 'l2-daily-quiz', name: 'Daily Quiz', icon: <HelpCircle className="w-7 h-7" />, coins: 50, color: 'from-amber-500 to-orange-600', action: () => setShowQuizSelection(true) },
-                  { id: 'l2-math', name: 'Math Quiz', icon: <Calculator className="w-7 h-7" />, coins: 20, color: 'from-blue-500 to-indigo-600', action: () => launchQuiz('math') },
-                  { id: 'l2-binary', name: 'Binary Quiz', icon: <Binary className="w-7 h-7" />, coins: 30, color: 'from-purple-500 to-pink-600', action: () => launchQuiz('binary') },
-                  { id: 'l2-word', name: 'Word Quiz', icon: <Type className="w-7 h-7" />, coins: 25, color: 'from-emerald-500 to-teal-600', action: () => launchQuiz('word') },
-                  { id: 'l2-gk', name: 'Gen. Knowledge', icon: <HelpCircle className="w-7 h-7" />, coins: 40, color: 'from-amber-500 to-orange-600', action: () => launchQuiz('gk') },
+                  { id: 'l2-scratch', name: 'Scratch Card', icon: <ScratchCardIcon className="w-7 h-7" />, coins: null, color: 'from-rose-400 to-pink-500', action: () => setShowScratchView(true) },
+                  { id: 'l2-quiz', name: 'Quizzes', icon: <QuizzesIcon className="w-7 h-7" />, coins: 20, color: 'from-violet-400 to-purple-500', action: () => setShowQuizSelection(true) },
+                  { id: 'l2-daily-quiz', name: 'Daily Quiz', icon: <DailyQuizIcon className="w-7 h-7" />, coins: 50, color: 'from-amber-500 to-orange-600', action: () => setShowQuizSelection(true) },
+                  { id: 'l2-math', name: 'Math Quiz', icon: <MathQuizIcon className="w-7 h-7" />, coins: 20, color: 'from-blue-500 to-indigo-600', action: () => launchQuiz('math') },
+                  { id: 'l2-binary', name: 'Binary Quiz', icon: <BinaryQuizIcon className="w-7 h-7" />, coins: 30, color: 'from-purple-500 to-pink-600', action: () => launchQuiz('binary') },
+                  { id: 'l2-word', name: 'Word Quiz', icon: <WordQuizIcon className="w-7 h-7" />, coins: 25, color: 'from-emerald-500 to-teal-600', action: () => launchQuiz('word') },
+                  { id: 'l2-gk', name: 'Gen. Knowledge', icon: <GkQuizIcon className="w-7 h-7" />, coins: 40, color: 'from-amber-500 to-orange-600', action: () => launchQuiz('gk') },
                 ].map(item => <OptionCard key={item.id} item={item} isLocked={!isPremium || levelInfo.level < 2} onLockedClick={() => { setLockPopupLevel(!isPremium ? 1 : 2); setShowLockPopup(true); }} />)}
               </div>
             </div>
@@ -3575,9 +3612,9 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
               </div>
               <div className="grid grid-cols-3 gap-4 md:gap-6 justify-items-center">
                 {[
-                  { id: 'l3-youtube', name: 'YouTube', icon: <Youtube className="w-7 h-7" />, coins: 30, color: 'from-red-500 to-rose-600', action: () => openMultiAdView({ key: 'youtube', name: 'YouTube', adType: 'rewarded', coins: 30, logo: 'https://img.icons8.com/color/96/youtube-play.png', color: 'from-red-500 to-rose-600' }) },
-                  { id: 'l3-tiktok', name: 'TikTok', icon: <Music2 className="w-7 h-7" />, coins: 25, color: 'from-slate-800 to-slate-900', action: () => openMultiAdView({ key: 'tiktok', name: 'TikTok', adType: 'rewarded', coins: 25, logo: 'https://img.icons8.com/color/96/tiktok.png', color: 'from-slate-800 to-slate-900' }) },
-                  { id: 'l3-facebook', name: 'Facebook', icon: <Facebook className="w-7 h-7" />, coins: 20, color: 'from-blue-500 to-blue-700', action: () => openMultiAdView({ key: 'facebook', name: 'Facebook', adType: 'rewarded', coins: 20, logo: 'https://img.icons8.com/color/96/facebook-new.png', color: 'from-blue-500 to-blue-700' }) },
+                  { id: 'l3-youtube', name: 'YouTube', icon: <YouTubeIcon className="w-7 h-7" />, coins: 30, color: 'from-red-500 to-rose-600', action: () => openMultiAdView({ key: 'youtube', name: 'YouTube', adType: 'rewarded', coins: 30, logo: 'https://img.icons8.com/color/96/youtube-play.png', color: 'from-red-500 to-rose-600' }) },
+                  { id: 'l3-tiktok', name: 'TikTok', icon: <TikTokIcon className="w-7 h-7" />, coins: 25, color: 'from-slate-800 to-slate-900', action: () => openMultiAdView({ key: 'tiktok', name: 'TikTok', adType: 'rewarded', coins: 25, logo: 'https://img.icons8.com/color/96/tiktok.png', color: 'from-slate-800 to-slate-900' }) },
+                  { id: 'l3-facebook', name: 'Facebook', icon: <FacebookIcon className="w-7 h-7" />, coins: 20, color: 'from-blue-500 to-blue-700', action: () => openMultiAdView({ key: 'facebook', name: 'Facebook', adType: 'rewarded', coins: 20, logo: 'https://img.icons8.com/color/96/facebook-new.png', color: 'from-blue-500 to-blue-700' }) },
                 ].map(item => <OptionCard key={item.id} item={item} count={getMultiAdCount(item.id.replace('l3-',''))} maxCount={5} isLocked={!isPremium || levelInfo.level < 3} onLockedClick={() => { setLockPopupLevel(!isPremium ? 1 : 3); setShowLockPopup(true); }} />)}
               </div>
             </div>
@@ -3602,13 +3639,13 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
               </div>
               <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-7 gap-3 md:gap-4 justify-items-center">
                 {[
-                  { id: 'l4-reward-video', name: 'Reward Video', icon: <MonitorPlay className="w-7 h-7" />, coins: 25, color: 'from-red-500 to-rose-600', action: () => openMultiAdView({ key: 'reward_video', name: 'Reward Video', adType: 'rewarded', coins: 25, logo: 'https://img.icons8.com/color/96/youtube-play.png', color: 'from-red-500 to-rose-600' }) },
-                  { id: 'l4-interstitial', name: 'Interstitial Ad', icon: <Zap className="w-7 h-7" />, coins: 15, color: 'from-blue-500 to-indigo-600', action: () => openMultiAdView({ key: 'interstitial_ad', name: 'Interstitial Ad', adType: 'interstitial', coins: 15, logo: 'https://img.icons8.com/color/96/google-ads.png', color: 'from-blue-500 to-indigo-600' }) },
-                  { id: 'l4-native', name: 'Native Ad Click', icon: <Pointer className="w-7 h-7" />, coins: 10, color: 'from-indigo-500 to-blue-600', action: () => openMultiAdView({ key: 'native_ad', name: 'Native Ad Click', adType: 'native', coins: 10, logo: 'https://img.icons8.com/color/96/facebook-new.png', color: 'from-indigo-500 to-blue-600' }) },
-                  { id: 'l4-bonus', name: 'Bonus Ad', icon: <Gift className="w-7 h-7" />, coins: 30, color: 'from-amber-400 to-orange-500', action: () => openMultiAdView({ key: 'bonus_ad', name: 'Bonus Ad', adType: 'rewarded', coins: 30, logo: 'https://img.icons8.com/color/96/gift.png', color: 'from-amber-400 to-orange-500' }) },
-                  { id: 'l4-hourly', name: 'Hourly Ad', icon: <Clock className="w-7 h-7" />, coins: 20, color: 'from-teal-400 to-emerald-500', action: () => openMultiAdView({ key: 'hourly_ad', name: 'Hourly Ad', adType: 'interstitial', coins: 20, logo: 'https://img.icons8.com/color/96/hourglass.png', color: 'from-teal-400 to-emerald-500' }) },
-                  { id: 'l4-weekly-refer', name: 'Meta', icon: <Hash className="w-7 h-7" />, coins: 50, color: 'from-purple-400 to-pink-500', action: () => openMultiAdView({ key: 'weekly_refer', name: 'Meta', adType: 'rewarded', coins: 50, logo: 'https://img.icons8.com/color/96/conference-call.png', color: 'from-purple-400 to-pink-500' }) },
-                  { id: 'l4-surprise', name: 'Surprise Bonus', icon: <Star className="w-7 h-7" />, coins: 50, color: 'from-pink-400 to-rose-500', action: () => openMultiAdView({ key: 'surprise_bonus', name: 'Surprise Bonus', adType: 'rewarded', coins: 50, logo: 'https://img.icons8.com/color/96/confetti.png', color: 'from-pink-400 to-rose-500' }) },
+                  { id: 'l4-reward-video', name: 'Reward Video', icon: <RewardVideoIcon className="w-7 h-7" />, coins: 25, color: 'from-red-500 to-rose-600', action: () => openMultiAdView({ key: 'reward_video', name: 'Reward Video', adType: 'rewarded', coins: 25, logo: 'https://img.icons8.com/color/96/youtube-play.png', color: 'from-red-500 to-rose-600' }) },
+                  { id: 'l4-interstitial', name: 'Interstitial Ad', icon: <InterstitialAdIcon className="w-7 h-7" />, coins: 15, color: 'from-blue-500 to-indigo-600', action: () => openMultiAdView({ key: 'interstitial_ad', name: 'Interstitial Ad', adType: 'interstitial', coins: 15, logo: 'https://img.icons8.com/color/96/google-ads.png', color: 'from-blue-500 to-indigo-600' }) },
+                  { id: 'l4-native', name: 'Native Ad Click', icon: <NativeAdClickIcon className="w-7 h-7" />, coins: 10, color: 'from-indigo-500 to-blue-600', action: () => openMultiAdView({ key: 'native_ad', name: 'Native Ad Click', adType: 'native', coins: 10, logo: 'https://img.icons8.com/color/96/facebook-new.png', color: 'from-indigo-500 to-blue-600' }) },
+                  { id: 'l4-bonus', name: 'Bonus Ad', icon: <BonusAdIcon className="w-7 h-7" />, coins: 30, color: 'from-amber-400 to-orange-500', action: () => openMultiAdView({ key: 'bonus_ad', name: 'Bonus Ad', adType: 'rewarded', coins: 30, logo: 'https://img.icons8.com/color/96/gift.png', color: 'from-amber-400 to-orange-500' }) },
+                  { id: 'l4-hourly', name: 'Hourly Ad', icon: <HourlyAdIcon className="w-7 h-7" />, coins: 20, color: 'from-teal-400 to-emerald-500', action: () => openMultiAdView({ key: 'hourly_ad', name: 'Hourly Ad', adType: 'interstitial', coins: 20, logo: 'https://img.icons8.com/color/96/hourglass.png', color: 'from-teal-400 to-emerald-500' }) },
+                  { id: 'l4-weekly-refer', name: 'Meta', icon: <MetaIcon className="w-7 h-7" />, coins: 50, color: 'from-purple-400 to-pink-500', action: () => openMultiAdView({ key: 'weekly_refer', name: 'Meta', adType: 'rewarded', coins: 50, logo: 'https://img.icons8.com/color/96/conference-call.png', color: 'from-purple-400 to-pink-500' }) },
+                  { id: 'l4-surprise', name: 'Surprise Bonus', icon: <SurpriseBonusIcon className="w-7 h-7" />, coins: 50, color: 'from-pink-400 to-rose-500', action: () => openMultiAdView({ key: 'surprise_bonus', name: 'Surprise Bonus', adType: 'rewarded', coins: 50, logo: 'https://img.icons8.com/color/96/confetti.png', color: 'from-pink-400 to-rose-500' }) },
                 ].map(item => <OptionCard key={item.id} item={item} count={getMultiAdCount(item.id.replace('l4-','').replace(/-/g,'_'))} maxCount={5} isLocked={!isPremium || levelInfo.level < 4} onLockedClick={() => { setLockPopupLevel(!isPremium ? 1 : 4); setShowLockPopup(true); }} />)}
               </div>
             </div>
@@ -3633,12 +3670,12 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
               </div>
               <div className="grid grid-cols-3 sm:grid-cols-3 md:grid-cols-6 gap-3 md:gap-4 justify-items-center">
                 {[
-                  { id: 'l5-rik-survey', name: 'Rik Survey', icon: <ClipboardList />, coins: 1200, color: 'from-sky-400 to-blue-500', action: () => handleStatusClick('Rik Survey', 'unavailable') },
-                  { id: 'l5-web-reg', name: 'Website Reg.', icon: <Globe />, coins: 30, color: 'from-violet-400 to-purple-500', action: () => handleStatusClick('Website Registration', 'upcoming') },
-                  { id: 'l5-email', name: 'Email Submit', icon: <Mail />, coins: 20, color: 'from-orange-400 to-red-500', action: () => handleStatusClick('Email Submit', 'upcoming') },
-                  { id: 'l5-app', name: 'App Install', icon: <Download />, coins: 40, color: 'from-emerald-400 to-green-500', action: () => handleStatusClick('App Install', 'unavailable') },
-                  { id: 'l5-affiliate', name: 'Affiliate Market', icon: <ShoppingBag />, coins: 75, color: 'from-amber-400 to-yellow-500', action: () => handleStatusClick('Affiliate Market', 'upcoming') },
-                  { id: 'l5-trial', name: 'Trial Signup', icon: <Key />, coins: 60, color: 'from-rose-400 to-pink-500', action: () => handleStatusClick('Trial Signup', 'upcoming') },
+                  { id: 'l5-rik-survey', name: 'Rik Survey', icon: <RikSurveyIcon />, coins: 1200, color: 'from-sky-400 to-blue-500', action: () => handleStatusClick('Rik Survey', 'unavailable') },
+                  { id: 'l5-web-reg', name: 'Website Reg.', icon: <WebRegIcon />, coins: 30, color: 'from-violet-400 to-purple-500', action: () => handleStatusClick('Website Registration', 'upcoming') },
+                  { id: 'l5-email', name: 'Email Submit', icon: <EmailSubmitIcon />, coins: 20, color: 'from-orange-400 to-red-500', action: () => handleStatusClick('Email Submit', 'upcoming') },
+                  { id: 'l5-app', name: 'App Install', icon: <AppInstallIcon />, coins: 40, color: 'from-emerald-400 to-green-500', action: () => handleStatusClick('App Install', 'unavailable') },
+                  { id: 'l5-affiliate', name: 'Affiliate Market', icon: <AffiliateMarketIcon />, coins: 75, color: 'from-amber-400 to-yellow-500', action: () => handleStatusClick('Affiliate Market', 'upcoming') },
+                  { id: 'l5-trial', name: 'Trial Signup', icon: <TrialSignupIcon />, coins: 60, color: 'from-rose-400 to-pink-500', action: () => handleStatusClick('Trial Signup', 'upcoming') },
                 ].map(item => <OptionCard key={item.id} item={item} isLocked={!isPremium || levelInfo.level < 5} onLockedClick={() => { setLockPopupLevel(!isPremium ? 1 : 5); setShowLockPopup(true); }} />)}
               </div>
             </div>
