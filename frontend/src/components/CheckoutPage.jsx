@@ -174,7 +174,19 @@ const CheckoutPage = ({ product, onBack, onSuccess }) => {
           {/* Product Summary Card */}
           <div className="bg-white rounded-3xl p-6 border border-slate-200 shadow-sm flex items-center gap-6">
             <div className="w-24 h-24 rounded-xl overflow-hidden bg-slate-100 flex-shrink-0">
-              <img src={product.image} alt={product.title} className="w-full h-full object-cover" />
+              <img 
+                src={(() => {
+                  const img = product.image;
+                  if (!img) return "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300' viewBox='0 0 300 300'%3E%3Crect width='300' height='300' fill='%23f1f5f9'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' font-family='sans-serif' font-size='14' fill='%2394a3b8'%3ENo Image%3C/text%3E%3C/svg%3E";
+                  if (img.startsWith('http')) return img;
+                  // Extract just the filename from any path format
+                  const filename = img.split('/').pop();
+                  return `${API_BASE}/api/image?file=${encodeURIComponent(filename)}`;
+                })()} 
+                alt={product.title} 
+                className="w-full h-full object-cover"
+                onError={(e) => e.target.src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300' viewBox='0 0 300 300'%3E%3Crect width='300' height='300' fill='%23f1f5f9'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' font-family='sans-serif' font-size='14' fill='%2394a3b8'%3EError%3C/text%3E%3C/svg%3E"}
+              />
             </div>
             <div>
               <h3 className="text-lg font-bold text-slate-900 mb-1">{product.title}</h3>
@@ -261,7 +273,7 @@ const CheckoutPage = ({ product, onBack, onSuccess }) => {
                     <span className="block font-bold text-slate-900">bKash</span>
                   </div>
                   <div className="w-12 h-10 bg-white rounded-lg flex items-center justify-center border border-slate-100 overflow-hidden shadow-sm py-1 px-2">
-                     <img src="https://freelogopng.com/images/all_img/1656234745bkash-app-logo-png.png" alt="bKash Logo" className="w-full h-full object-contain" />
+                     <img src="/logos/bkash.png" alt="bKash Logo" className="w-full h-full object-contain" />
                   </div>
                 </label>
               </div>
@@ -277,7 +289,7 @@ const CheckoutPage = ({ product, onBack, onSuccess }) => {
                     <span className="block font-bold text-slate-900">Nagad</span>
                   </div>
                   <div className="w-12 h-10 bg-white rounded-lg flex items-center justify-center border border-slate-100 overflow-hidden shadow-sm p-1.5">
-                     <img src="https://download.logo.wine/logo/Nagad/Nagad-Logo.wine.png" alt="Nagad Logo" className="w-full h-full object-contain scale-150" />
+                     <img src="/logos/nagad.png" alt="Nagad Logo" className="w-full h-full object-contain scale-150" />
                   </div>
                 </label>
               </div>
@@ -293,7 +305,7 @@ const CheckoutPage = ({ product, onBack, onSuccess }) => {
                     <span className="block font-bold text-slate-900">Rocket</span>
                   </div>
                   <div className="w-12 h-10 bg-white rounded-lg flex items-center justify-center border border-slate-100 overflow-hidden shadow-sm p-1">
-                     <img src="https://freelogopng.com/images/all_img/1679747124rocket-logo-png.png" alt="Rocket Logo" className="w-full h-full object-contain scale-125" />
+                     <img src="/logos/rocket.png" alt="Rocket Logo" className="w-full h-full object-contain scale-125" />
                   </div>
                 </label>
               </div>

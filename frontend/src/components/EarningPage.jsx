@@ -267,9 +267,9 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
 
   // eslint-disable-next-line react-hooks/exhaustive-deps
   const withdrawMethods = useMemo(() => [
-    { id: 'bkash', name: 'bKash', logo: 'https://freelogopng.com/images/all_img/1656234745bkash-app-logo-png.png', available: true },
-    { id: 'nagad', name: 'Nagad', logo: 'https://download.logo.wine/logo/Nagad/Nagad-Logo.wine.png', available: true },
-    { id: 'rocket', name: 'Rocket', logo: 'https://seeklogo.com/images/D/dutch-bangla-rocket-logo-B4D10478AB-seeklogo.com.png', available: false },
+    { id: 'bkash', name: 'bKash', logo: '/logos/bkash.png', available: true },
+    { id: 'nagad', name: 'Nagad', logo: '/logos/nagad.png', available: true },
+    { id: 'rocket', name: 'Rocket', logo: '/logos/rocket.png', available: false },
     { id: 'upay', name: 'Upay', logo: 'https://freelogopng.com/images/all_img/1656235105upay-logo.png', available: false },
     { id: 'binance', name: 'Binance', logo: 'https://upload.wikimedia.org/wikipedia/commons/e/e8/Binance_Logo.svg', available: false },
     { id: 'bybit', name: 'Bybit', logo: 'https://seeklogo.com/images/B/bybit-logo-4C31FD6A08-seeklogo.com.png', available: false },
@@ -4293,9 +4293,9 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
                   
                   <div className="grid grid-cols-2 gap-3 mb-8">
                      {[
-                        { id: 'bkash', name: 'bKash', logo: 'https://freelogopng.com/images/all_img/1656234745bkash-app-logo-png.png', available: true, number: globalSettings.bkashNumber },
-                        { id: 'nagad', name: 'Nagad', logo: 'https://download.logo.wine/logo/Nagad/Nagad-Logo.wine.png', available: true, number: globalSettings.nagadNumber },
-                        { id: 'rocket', name: 'Rocket', logo: 'https://freelogopng.com/images/all_img/1656235199rocket-app-logo.png', available: true, number: globalSettings.rocketNumber },
+                        { id: 'bkash', name: 'bKash', logo: '/logos/bkash.png', available: true, number: globalSettings.bkashNumber },
+                        { id: 'nagad', name: 'Nagad', logo: '/logos/nagad.png', available: true, number: globalSettings.nagadNumber },
+                        { id: 'rocket', name: 'Rocket', logo: '/logos/rocket.png', available: true, number: globalSettings.rocketNumber },
                         { id: 'bank', name: 'Bank Transfer', logo: 'https://img.icons8.com/color/96/bank-building.png', available: false },
                         { id: 'card', name: 'Mobile Card', logo: 'https://img.icons8.com/color/96/bank-cards.png', available: false },
                         { id: 'visa', name: 'Visa', logo: 'https://img.icons8.com/color/96/visa.png', available: false },
