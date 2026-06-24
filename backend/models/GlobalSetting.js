@@ -91,12 +91,13 @@ const GlobalSettingSchema = new mongoose.Schema({
       { id: '1-year', price: 4200, duration: '1 Year', freeDays: '+2 Month free', offTag: '15% OFF', servers: ['USA', 'Germany', 'Canada', 'UK', 'Netherlands', 'Singapore', 'Japan'] }
     ]
   },
-  // AdMob Configuration
   admobConfig: {
     bannerAdUnitId: { type: String, default: '' },
     interstitialAdUnitId: { type: String, default: '' },
     rewardedAdUnitId: { type: String, default: '' },
-    appOpenAdUnitId: { type: String, default: '' }
+    appOpenAdUnitId: { type: String, default: '' },
+    showAds: { type: Boolean, default: true },
+    useTestAds: { type: Boolean, default: true }
   },
   // Referral Campaign Configuration
   referralCampaignTarget: {

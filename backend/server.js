@@ -111,6 +111,11 @@ const startServer = async () => {
       res.send('Zenivio API is running...');
     });
 
+    // Privacy Policy route for Google Play Store compliance
+    app.get('/privacy-policy', (req, res) => {
+      res.sendFile(path.join(__dirname, 'privacy.html'));
+    });
+
     // Debug Route
     app.get('/api/debug/uploads', (req, res) => {
       const fs = require('fs');

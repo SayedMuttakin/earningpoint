@@ -27,7 +27,9 @@ const Settings = ({ ADMIN_API, authHeaders, onLogout }) => {
       bannerAdUnitId: '',
       interstitialAdUnitId: '',
       rewardedAdUnitId: '',
-      appOpenAdUnitId: ''
+      appOpenAdUnitId: '',
+      showAds: true,
+      useTestAds: true
     }
   });
   const [settingsLoading, setSettingsLoading] = useState(false);
@@ -223,6 +225,53 @@ const Settings = ({ ADMIN_API, authHeaders, onLogout }) => {
         <p className="text-slate-500 text-xs mb-5">Enter your AdMob Ad Unit IDs to display real ads in the app. Leave empty to show test ads.</p>
 
         <form onSubmit={handleUpdateSettings} className="space-y-4">
+          {/* Toggles for showAds and useTestAds */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pb-4 border-b border-slate-800">
+            <div className="flex items-center justify-between p-4 bg-slate-900/50 rounded-xl border border-slate-800/80">
+              <div>
+                <h4 className="text-white text-sm font-bold">Enable Advertising</h4>
+                <p className="text-slate-500 text-xs mt-0.5">Turn ads ON or OFF throughout the application.</p>
+              </div>
+              <label className="relative inline-flex items-center cursor-pointer">
+                <input 
+                  type="checkbox" 
+                  checked={globalSettings.admobConfig?.showAds !== false} 
+                  onChange={(e) => setGlobalSettings({
+                    ...globalSettings, 
+                    admobConfig: {
+                      ...globalSettings.admobConfig, 
+                      showAds: e.target.checked
+                    }
+                  })}
+                  className="sr-only peer"
+                />
+                <div className="w-11 h-6 bg-slate-800 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-slate-400 after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600 peer-checked:after:bg-white"></div>
+              </label>
+            </div>
+            
+            <div className="flex items-center justify-between p-4 bg-slate-900/50 rounded-xl border border-slate-800/80">
+              <div>
+                <h4 className="text-white text-sm font-bold">Test Mode (Test Ads)</h4>
+                <p className="text-slate-500 text-xs mt-0.5">Show Google test ads instead of real ads.</p>
+              </div>
+              <label className="relative inline-flex items-center cursor-pointer">
+                <input 
+                  type="checkbox" 
+                  checked={globalSettings.admobConfig?.useTestAds !== false} 
+                  onChange={(e) => setGlobalSettings({
+                    ...globalSettings, 
+                    admobConfig: {
+                      ...globalSettings.admobConfig, 
+                      useTestAds: e.target.checked
+                    }
+                  })}
+                  className="sr-only peer"
+                />
+                <div className="w-11 h-6 bg-slate-800 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-slate-400 after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-amber-600 peer-checked:after:bg-white"></div>
+              </label>
+            </div>
+          </div>
+
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <label className="text-slate-400 text-xs font-bold uppercase tracking-wider block mb-2">Banner Ad Unit ID</label>

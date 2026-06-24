@@ -6,8 +6,4 @@
             <certificates src="system" />
         </trust-anchors>
     </base-config>
-    <!-- Allow specific domains that may need cleartext -->
-    <domain-config cleartextTrafficAllowed="true">
-        <domain includeSubdomains="true">zenivio.it.com</domain>
-    </domain-config>
 </network-security-config>

@@ -33,6 +33,10 @@ let dynamicConfig = null;
 const getAdId = (type) => {
   // Check if we have dynamic config from the database
   if (dynamicConfig) {
+    // Check if test ads are explicitly enabled from settings
+    if (dynamicConfig.useTestAds === true) {
+      return TEST_ADMOB_IDS[type] || TEST_ADMOB_IDS.banner;
+    }
     const keyMap = {
       banner: 'bannerAdUnitId',
       interstitial: 'interstitialAdUnitId',
@@ -73,6 +77,12 @@ export const AdMobService = {
   },
 
   async showInterstitial(onClose) {
+    if (dynamicConfig && dynamicConfig.showAds === false) {
+      console.log('[AdMob] Ads are disabled via admin panel. Bypassing Interstitial...');
+      if (onClose) onClose();
+      return;
+    }
+
     if (!Capacitor.isNativePlatform()) {
       if (onClose) onClose();
       return;
@@ -132,6 +142,13 @@ export const AdMobService = {
   // placement: 'rewarded', 'rewarded_daily', 'rewarded_videos', 'rewarded_view_ads'
   isShowingRewarded: false,
   async showRewarded(onReward, placement = 'rewarded', onError = null, onDismiss = null) {
+    if (dynamicConfig && dynamicConfig.showAds === false) {
+      console.log('[AdMob] Ads are disabled via admin panel. Bypassing Rewarded...');
+      if (onReward) onReward();
+      if (onDismiss) onDismiss();
+      return;
+    }
+
     if (this.isShowingRewarded) {
       console.warn('[AdMob] Reward video already showing or loading.');
       return;
@@ -223,6 +240,12 @@ export const AdMobService = {
   },
 
   async showAppOpenAd(onClose) {
+    if (dynamicConfig && dynamicConfig.showAds === false) {
+      console.log('[AdMob] Ads are disabled via admin panel. Bypassing App Open...');
+      if (onClose) onClose();
+      return;
+    }
+
     if (!Capacitor.isNativePlatform()) {
       if (onClose) onClose();
       return;

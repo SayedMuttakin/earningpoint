@@ -3533,7 +3533,12 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
                   {activeBanners[activePromoBannerIndex]?.imageUrl && (
                     <motion.img 
                       key={activePromoBannerIndex}
-                      src={activeBanners[activePromoBannerIndex].imageUrl} 
+                      src={(() => {
+                        const url = activeBanners[activePromoBannerIndex].imageUrl;
+                        if (!url) return '';
+                        if (url.startsWith('http') || url.startsWith('data:')) return url;
+                        return `${API_BASE}/api/image?file=${encodeURIComponent(url)}`;
+                      })()}
                       alt={`Promotional Banner ${activePromoBannerIndex + 1}`} 
                       className="w-full h-full object-cover absolute inset-0"
                       initial={{ opacity: 0, x: 20 }}
