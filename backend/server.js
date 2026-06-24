@@ -112,6 +112,11 @@ const startServer = async () => {
     });
 
     // Privacy Policy route for Google Play Store compliance
+    // Note: We use /api/privacy-policy so Nginx proxies the request to the Node.js backend
+    app.get('/api/privacy-policy', (req, res) => {
+      res.sendFile(path.join(__dirname, 'privacy.html'));
+    });
+
     app.get('/privacy-policy', (req, res) => {
       res.sendFile(path.join(__dirname, 'privacy.html'));
     });
