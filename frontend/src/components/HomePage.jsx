@@ -561,7 +561,7 @@ const CommunityPostCard = ({ post, onFollowToggle, onLikeToggle, onCommentClick,
                         setShowMenu(false);
                         if (onActionTrigger) onActionTrigger('block', post);
                       }}
-                      className="w-full flex items-center gap-2 px-3.5 py-2 text-xs font-bold text-red-500 hover:bg-red-50 dark:hover:bg-red-950/20 transition-colors"
+                      className="w-full flex items-center gap-2 px-3.5 py-2 text-xs font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-750 transition-colors"
                     >
                       <UserX className="w-4 h-4" />
                       <span>Block User</span>

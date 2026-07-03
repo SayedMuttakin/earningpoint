@@ -1941,7 +1941,7 @@ const MessengerPage = ({
                               setShowChatMenu(false);
                               setActiveModal('block_user');
                             }}
-                            className="w-full flex items-center gap-2 px-4 py-2.5 text-xs font-bold text-red-500 hover:bg-red-50 dark:hover:bg-red-950/20 transition-colors text-left"
+                            className="w-full flex items-center gap-2 px-4 py-2.5 text-xs font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-850 transition-colors text-left"
                           >
                             <span>Block User</span>
                           </button>
