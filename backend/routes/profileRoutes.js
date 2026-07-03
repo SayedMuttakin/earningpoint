@@ -10,6 +10,8 @@ const {
   followUser,
   searchUsers,
   getPublicProfile,
+  blockUser,
+  reportUser,
 } = require('../controllers/profileController');
 
 router.get('/', protect, getProfile);
@@ -19,6 +21,8 @@ router.put('/password', protect, changePassword);
 router.delete('/', protect, deleteAccount);
 router.put('/darkmode', protect, toggleDarkMode);
 router.post('/follow/:userId', protect, followUser);
+router.post('/block/:userId', protect, blockUser);
+router.post('/report/:userId', protect, reportUser);
 router.get('/:userId', protect, getPublicProfile);
 
 module.exports = router;

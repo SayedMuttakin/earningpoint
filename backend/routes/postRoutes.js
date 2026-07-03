@@ -46,4 +46,14 @@ router.post('/:id/comment', protect, postController.commentPost);
 // @access  Private
 router.post('/:id/save', protect, postController.toggleSavePost);
 
+// @route   DELETE /api/posts/:id
+// @desc    Delete a post by user
+// @access  Private
+router.delete('/:id', protect, postController.deleteUserPost);
+
+// @route   POST /api/posts/:id/report
+// @desc    Report a post (UGC)
+// @access  Private
+router.post('/:id/report', protect, postController.reportPost);
+
 module.exports = router;

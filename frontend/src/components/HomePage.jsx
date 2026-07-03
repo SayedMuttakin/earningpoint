@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Loader2, Plus, Image as ImageIcon, X, Globe, MoreVertical, Search, MessageCircle, Users, Smile, Heart, Send, Bookmark, Download } from 'lucide-react';
+import { Loader2, Plus, Image as ImageIcon, X, Globe, MoreVertical, Search, MessageCircle, Users, Smile, Heart, Send, Bookmark, Download, Trash2, AlertTriangle, UserX } from 'lucide-react';
 import { API_BASE } from '../config';
 import VerifiedBadge from './VerifiedBadge';
 import PullToRefresh from './PullToRefresh';
@@ -288,6 +288,62 @@ const CommunityPostCard = ({ post, onFollowToggle, onLikeToggle, onCommentClick,
   const [isSaved, setIsSaved] = useState(post.isSaved || false);
   const videoRef = useRef(null);
 
+  const handleDeletePost = async () => {
+    if (!window.confirm('Are you sure you want to delete this post?')) return;
+    try {
+      const token = localStorage.getItem('token');
+      const res = await fetch(`${API_BASE}/api/posts/${post._id}`, {
+        method: 'DELETE',
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      if (res.ok) {
+        if (showToast) showToast('Post deleted successfully! 🗑️');
+        setTimeout(() => { window.location.reload(); }, 1000);
+      }
+    } catch (err) {
+      console.error('Failed to delete post:', err);
+    }
+  };
+
+  const handleReportPost = async () => {
+    const reason = window.prompt('Please enter the reason for reporting this post:');
+    if (reason === null) return;
+    try {
+      const token = localStorage.getItem('token');
+      const res = await fetch(`${API_BASE}/api/posts/${post._id}/report`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify({ reason: reason || 'Inappropriate Content' })
+      });
+      if (res.ok) {
+        if (showToast) showToast('🚨 Post reported! It has been hidden from your feed.');
+        setTimeout(() => { window.location.reload(); }, 1200);
+      }
+    } catch (err) {
+      console.error('Failed to report post:', err);
+    }
+  };
+
+  const handleBlockAuthor = async () => {
+    if (!window.confirm(`Are you sure you want to block ${post.authorDetails?.name || post.authorName || 'this user'}? You won't see their posts or chats anymore.`)) return;
+    try {
+      const token = localStorage.getItem('token');
+      const res = await fetch(`${API_BASE}/api/profile/block/${post.authorId}`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      if (res.ok) {
+        if (showToast) showToast('🚫 User blocked successfully!');
+        setTimeout(() => { window.location.reload(); }, 1200);
+      }
+    } catch (err) {
+      console.error('Failed to block user:', err);
+    }
+  };
+
   const handleSaveToggle = async (e) => {
     if (e) e.stopPropagation();
     try {
@@ -504,6 +560,45 @@ const CommunityPostCard = ({ post, onFollowToggle, onLikeToggle, onCommentClick,
                   <Bookmark className={`w-4 h-4 ${isSaved ? 'fill-yellow-500 text-yellow-500' : ''}`} />
                   <span>{isSaved ? 'Unsave Post' : 'Save Post'}</span>
                 </button>
+
+                {post.authorId === currentUserId || post.isOwnPost ? (
+                  <button
+                    onClick={async (e) => {
+                      e.stopPropagation();
+                      setShowMenu(false);
+                      await handleDeletePost();
+                    }}
+                    className="w-full flex items-center gap-2 px-3.5 py-2 text-xs font-bold text-red-500 hover:bg-red-50 dark:hover:bg-red-950/20 transition-colors"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                    <span>Delete Post</span>
+                  </button>
+                ) : (
+                  <>
+                    <button
+                      onClick={async (e) => {
+                        e.stopPropagation();
+                        setShowMenu(false);
+                        await handleReportPost();
+                      }}
+                      className="w-full flex items-center gap-2 px-3.5 py-2 text-xs font-bold text-amber-600 dark:text-amber-500 hover:bg-slate-50 dark:hover:bg-slate-750 transition-colors"
+                    >
+                      <AlertTriangle className="w-4 h-4" />
+                      <span>Report Post</span>
+                    </button>
+                    <button
+                      onClick={async (e) => {
+                        e.stopPropagation();
+                        setShowMenu(false);
+                        await handleBlockAuthor();
+                      }}
+                      className="w-full flex items-center gap-2 px-3.5 py-2 text-xs font-bold text-red-500 hover:bg-red-50 dark:hover:bg-red-950/20 transition-colors"
+                    >
+                      <UserX className="w-4 h-4" />
+                      <span>Block User</span>
+                    </button>
+                  </>
+                )}
               </div>
             </>
           )}

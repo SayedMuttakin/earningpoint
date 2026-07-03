@@ -366,3 +366,94 @@ exports.getPublicProfile = async (req, res) => {
   }
 };
 
+// POST /api/profile/block/:userId — Block or Unblock a user
+exports.blockUser = async (req, res) => {
+  try {
+    const currentUserId = req.user._id;
+    const targetUserId = req.params.userId;
+
+    if (currentUserId.toString() === targetUserId.toString()) {
+      return res.status(400).json({ message: 'You cannot block yourself' });
+    }
+
+    const currentUser = await User.findById(currentUserId);
+    const targetUser = await User.findById(targetUserId);
+
+    if (!targetUser) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    if (!currentUser.blockedUsers) currentUser.blockedUsers = [];
+    const isBlocked = currentUser.blockedUsers.includes(targetUserId);
+
+    if (isBlocked) {
+      currentUser.blockedUsers = currentUser.blockedUsers.filter(id => id.toString() !== targetUserId.toString());
+      await currentUser.save();
+      return res.json({ isBlocked: false, message: 'User unblocked successfully' });
+    } else {
+      currentUser.blockedUsers.push(targetUserId);
+      
+      // Auto-unfollow on block
+      if (currentUser.following) {
+        currentUser.following = currentUser.following.filter(id => id.toString() !== targetUserId.toString());
+      }
+      if (currentUser.followers) {
+        currentUser.followers = currentUser.followers.filter(id => id.toString() !== targetUserId.toString());
+      }
+      if (targetUser.following) {
+        targetUser.following = targetUser.following.filter(id => id.toString() !== currentUserId.toString());
+      }
+      if (targetUser.followers) {
+        targetUser.followers = targetUser.followers.filter(id => id.toString() !== currentUserId.toString());
+      }
+      
+      await currentUser.save();
+      await targetUser.save();
+      return res.json({ isBlocked: true, message: 'User blocked successfully' });
+    }
+  } catch (error) {
+    console.error('Error blocking user:', error);
+    res.status(500).json({ message: 'Server Error' });
+  }
+};
+
+// POST /api/profile/report/:userId — Report a user
+exports.reportUser = async (req, res) => {
+  try {
+    const currentUserId = req.user._id;
+    const targetUserId = req.params.userId;
+    const { reason } = req.body;
+
+    if (currentUserId.toString() === targetUserId.toString()) {
+      return res.status(400).json({ message: 'You cannot report yourself' });
+    }
+
+    const targetUser = await User.findById(targetUserId);
+    if (!targetUser) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    const currentUser = await User.findById(currentUserId);
+    if (!currentUser.blockedUsers) currentUser.blockedUsers = [];
+    if (!currentUser.blockedUsers.includes(targetUserId)) {
+      currentUser.blockedUsers.push(targetUserId);
+      await currentUser.save();
+    }
+
+    // Log the report in the Admin Notifications list
+    const AdminNotification = require('../models/AdminNotification');
+    await AdminNotification.create({
+      title: 'User Reported 🚨',
+      message: `User ${currentUser.name || currentUser.phoneOrEmail} reported User ${targetUser.name || targetUser.phoneOrEmail}. Reason: ${reason || 'Inappropriate behavior/content'}`,
+      type: 'support',
+      referenceId: targetUserId.toString()
+    });
+
+    res.json({ message: 'User reported and blocked successfully.' });
+  } catch (error) {
+    console.error('Error reporting user:', error);
+    res.status(500).json({ message: 'Server Error' });
+  }
+};
+
+

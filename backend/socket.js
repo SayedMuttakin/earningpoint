@@ -2,6 +2,7 @@ const { Server } = require('socket.io');
 const ChatSession = require('./models/ChatSession');
 const Message = require('./models/Message');
 const AdminNotification = require('./models/AdminNotification');
+const User = require('./models/User');
 
 let io;
 const activeUsers = new Set();
@@ -231,6 +232,18 @@ module.exports = {
           const { senderId, receiverId, content, messageType } = data;
           if (!senderId || !receiverId || !content) return;
 
+          // Block Check
+          const sender = await User.findById(senderId);
+          const receiver = await User.findById(receiverId);
+          if (sender && receiver) {
+            const isBlockedByReceiver = receiver.blockedUsers && receiver.blockedUsers.includes(senderId);
+            const isBlockedBySender = sender.blockedUsers && sender.blockedUsers.includes(receiverId);
+            if (isBlockedByReceiver || isBlockedBySender) {
+              socket.emit('message_blocked', { message: 'Message blocked: You have blocked this user or been blocked by them.' });
+              return;
+            }
+          }
+
           const savedMessage = await Message.create({
             sender: senderId,
             receiver: receiverId,
@@ -317,9 +330,18 @@ module.exports = {
       });
 
       // calling sockets
-      socket.on('call_user', (data) => {
+      socket.on('call_user', async (data) => {
         const { callerId, callerName, receiverId, type } = data;
         if (receiverId) {
+          try {
+            const receiver = await User.findById(receiverId);
+            if (receiver && receiver.blockedUsers && receiver.blockedUsers.includes(callerId)) {
+              socket.emit('call_blocked', { message: 'Call blocked: You have blocked this user or been blocked by them.' });
+              return;
+            }
+          } catch (err) {
+            console.error('Call block check error:', err);
+          }
           io.to(receiverId.toString()).emit('incoming_call', { callerId, callerName, type });
         }
       });

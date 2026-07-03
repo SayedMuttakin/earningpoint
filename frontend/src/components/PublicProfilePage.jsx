@@ -170,6 +170,11 @@ const PublicProfilePage = ({ userId, onBack, currentUser, isOwnProfile, setActiv
   const [videos, setVideos] = useState([]);
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
+
+  // UGC Block & Report States
+  const [showActionsMenu, setShowActionsMenu] = useState(false);
+  const [showReportModal, setShowReportModal] = useState(false);
+  const [reportReason, setReportReason] = useState('spam');
   const [actionLoading, setActionLoading] = useState(false);
   const [imageCompressing, setImageCompressing] = useState(false);
   const [toastMessage, setToastMessage] = useState('');
@@ -589,6 +594,50 @@ const PublicProfilePage = ({ userId, onBack, currentUser, isOwnProfile, setActiv
     }
   };
 
+  const handleBlockUser = async () => {
+    if (!profile) return;
+    try {
+      const token = localStorage.getItem('token');
+      const res = await fetch(`${API_BASE}/api/profile/block/${profile._id}`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      if (res.ok) {
+        const data = await res.json();
+        showToastNotification(data.isBlocked ? '🚫 User Blocked successfully!' : '✅ User Unblocked!');
+        setShowActionsMenu(false);
+        if (data.isBlocked) {
+          setTimeout(() => { onBack(); }, 1200);
+        }
+      }
+    } catch (err) {
+      console.error('Failed to block user:', err);
+    }
+  };
+
+  const handleReportUser = async () => {
+    if (!profile) return;
+    try {
+      const token = localStorage.getItem('token');
+      const res = await fetch(`${API_BASE}/api/profile/report/${profile._id}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify({ reason: reportReason })
+      });
+      if (res.ok) {
+        showToastNotification('🚨 User Reported & Blocked!');
+        setShowReportModal(false);
+        setShowActionsMenu(false);
+        setTimeout(() => { onBack(); }, 1200);
+      }
+    } catch (err) {
+      console.error('Failed to report user:', err);
+    }
+  };
+
   const handleFollowToggle = async () => {
     if (actionLoading || !profile) return;
     setActionLoading(true);
@@ -846,9 +895,34 @@ const PublicProfilePage = ({ userId, onBack, currentUser, isOwnProfile, setActiv
               Message
             </button>
 
-            <button className="p-2.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-700 transition-all active:scale-95 border border-slate-200/40 dark:border-slate-850">
-              <ChevronDown className="w-4 h-4" />
-            </button>
+            <div className="relative">
+              <button 
+                onClick={() => setShowActionsMenu(!showActionsMenu)}
+                className="p-2.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-700 transition-all active:scale-95 border border-slate-200/40 dark:border-slate-800"
+              >
+                <ChevronDown className="w-4 h-4" />
+              </button>
+              
+              {showActionsMenu && (
+                <>
+                  <div className="fixed inset-0 z-30" onClick={() => setShowActionsMenu(false)} />
+                  <div className="absolute right-0 mt-2 w-40 bg-white dark:bg-slate-900 rounded-2xl shadow-xl border border-slate-100 dark:border-slate-800 py-1.5 z-40 animate-fade-in text-left">
+                    <button
+                      onClick={handleBlockUser}
+                      className="w-full flex items-center gap-2 px-4 py-2 text-xs font-bold text-red-500 hover:bg-red-50 dark:hover:bg-red-950/20 transition-colors text-left"
+                    >
+                      <span>Block User</span>
+                    </button>
+                    <button
+                      onClick={() => { setShowReportModal(true); setShowActionsMenu(false); }}
+                      className="w-full flex items-center gap-2 px-4 py-2 text-xs font-bold text-amber-600 dark:text-amber-500 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors text-left"
+                    >
+                      <span>Report User</span>
+                    </button>
+                  </div>
+                </>
+              )}
+            </div>
           </div>
         )}
       </div>
@@ -1757,6 +1831,66 @@ const PublicProfilePage = ({ userId, onBack, currentUser, isOwnProfile, setActiv
           }}
         >
           {toastMessage}
+        </div>
+      )}
+
+      {/* Report User Dialog Modal */}
+      {showReportModal && (
+        <div className="fixed inset-0 z-[160] flex items-center justify-center p-4">
+          <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs" onClick={() => setShowReportModal(false)} />
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 max-w-sm w-full relative z-10 shadow-2xl animate-scale-pulse-glow text-left">
+            <h3 className="text-lg font-black text-slate-900 dark:text-white mb-2">Report User</h3>
+            <p className="text-slate-500 dark:text-slate-400 text-[11px] font-bold mb-4 leading-relaxed">
+              Please select the reason you are reporting this user. Reporting will also block them immediately for your safety.
+            </p>
+            
+            <div className="space-y-2 mb-6">
+              {[
+                { value: 'spam', label: 'Spam, scams or fraud' },
+                { value: 'harassment', label: 'Harassment or hate speech' },
+                { value: 'violence', label: 'Violence or threats' },
+                { value: 'sexual', label: 'Sexually explicit content' },
+                { value: 'other', label: 'Other terms violations' }
+              ].map(opt => (
+                <label 
+                  key={opt.value} 
+                  className={`flex items-center gap-3 p-3 rounded-2xl border cursor-pointer font-bold text-xs sm:text-sm transition-all ${
+                    reportReason === opt.value 
+                      ? 'border-indigo-500 bg-indigo-500/5 text-indigo-650 dark:text-indigo-400' 
+                      : 'border-slate-100 dark:border-slate-800 text-slate-650 dark:text-slate-350 hover:bg-slate-50 dark:hover:bg-slate-800/40'
+                  }`}
+                >
+                  <input 
+                    type="radio" 
+                    name="reportReason" 
+                    value={opt.value} 
+                    checked={reportReason === opt.value} 
+                    onChange={(e) => setReportReason(e.target.value)}
+                    className="sr-only" 
+                  />
+                  <div className={`w-4 h-4 rounded-full border flex items-center justify-center flex-shrink-0 ${reportReason === opt.value ? 'border-indigo-500' : 'border-slate-300 dark:border-slate-600'}`}>
+                    {reportReason === opt.value && <div className="w-2 h-2 rounded-full bg-indigo-500" />}
+                  </div>
+                  <span>{opt.label}</span>
+                </label>
+              ))}
+            </div>
+
+            <div className="flex gap-3">
+              <button 
+                onClick={() => setShowReportModal(false)}
+                className="flex-1 py-2.5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 text-xs font-black rounded-xl cursor-pointer transition-colors"
+              >
+                Cancel
+              </button>
+              <button 
+                onClick={handleReportUser}
+                className="flex-1 py-2.5 bg-red-650 hover:bg-red-700 text-white text-xs font-black rounded-xl cursor-pointer transition-colors shadow-md shadow-red-500/10"
+              >
+                Submit Report
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>

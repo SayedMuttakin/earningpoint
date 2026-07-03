@@ -18,8 +18,14 @@ exports.getUsers = async (req, res) => {
       ...receivedUserIds.map(id => id.toString())
     ])];
 
+    // Filter out blocked users (users we blocked OR users who blocked us)
+    const blockedUserIds = currentUser.blockedUsers || [];
+    const usersWhoBlockedMe = await User.find({ blockedUsers: currentUserId }, '_id');
+    const blockedMeIds = usersWhoBlockedMe.map(u => u._id.toString());
+    const excludeIds = [...new Set([...blockedUserIds.map(id => id.toString()), ...blockedMeIds])];
+
     const users = await User.find({ 
-      _id: { $in: relatedUserIds, $ne: currentUserId } 
+      _id: { $in: relatedUserIds, $ne: currentUserId, $nin: excludeIds } 
     }).select('name phoneOrEmail profilePic isPremium');
 
     const directChats = await Promise.all(users.map(async (u) => {

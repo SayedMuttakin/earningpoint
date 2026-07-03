@@ -242,6 +242,11 @@ const UserSchema = new mongoose.Schema({
     ref: 'Post',
     default: []
   }],
+  blockedUsers: [{
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+    default: []
+  }],
 }, { timestamps: true });
 
 // Auto-generate referral code before saving if not set

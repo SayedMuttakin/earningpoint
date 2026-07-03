@@ -159,9 +159,12 @@ exports.getPostsFeed = async (req, res) => {
     const followingIds = req.user.following || [];
     const savedPostsIds = req.user.savedPosts ? req.user.savedPosts.map(id => id.toString()) : [];
 
+    const blockedUserIds = req.user.blockedUsers || [];
+
     // Fetch the 40 most recent community posts directly in a single fast indexed query
     const feedPosts = await Post.find({
-      authorId: { $ne: null } // Exclude admin updates/announcements
+      authorId: { $ne: null, $nin: blockedUserIds }, // Exclude admin updates and blocked users
+      'reports.user': { $ne: currentUserId } // Exclude posts reported by the current user
     })
       .populate('authorId', 'name profilePic googleAvatar isEmailVerified verificationBadge')
       .sort({ createdAt: -1 })
@@ -271,7 +274,33 @@ exports.createUserPost = async (req, res) => {
 // @access  Public
 exports.getVideoPosts = async (req, res) => {
   try {
-    const posts = await Post.find({ video: { $ne: null } })
+    let blockedUserIds = [];
+    let currentUserId = null;
+
+    if (req.headers.authorization && req.headers.authorization.startsWith('Bearer')) {
+      try {
+        const jwt = require('jsonwebtoken');
+        const token = req.headers.authorization.split(' ')[1];
+        const decoded = jwt.verify(token, process.env.JWT_SECRET);
+        const user = await User.findById(decoded.id);
+        if (user) {
+          blockedUserIds = user.blockedUsers || [];
+          currentUserId = user._id;
+        }
+      } catch (err) {
+        // Ignore token validation issues for compatibility
+      }
+    }
+
+    const query = { video: { $ne: null } };
+    if (blockedUserIds.length > 0) {
+      query.authorId = { $nin: blockedUserIds };
+    }
+    if (currentUserId) {
+      query['reports.user'] = { $ne: currentUserId };
+    }
+
+    const posts = await Post.find(query)
       .populate('authorId', 'name profilePic googleAvatar isEmailVerified verificationBadge')
       .sort({ createdAt: -1 })
       .limit(20)  // Limit to 20 most recent reels
@@ -463,7 +492,67 @@ exports.getSavedPosts = async (req, res) => {
 
     res.json(savedPosts);
   } catch (error) {
-    res.status(550).json({ message: error.message });
+    res.status(500).json({ message: error.message });
+  }
+};
+
+// DELETE /api/posts/:id — Delete a post (User-facing)
+exports.deleteUserPost = async (req, res) => {
+  try {
+    const post = await Post.findById(req.params.id);
+    if (!post) {
+      return res.status(404).json({ message: 'Post not found' });
+    }
+
+    // Check if current user is the author
+    if (post.authorId && post.authorId.toString() !== req.user._id.toString()) {
+      return res.status(403).json({ message: 'You are not authorized to delete this post' });
+    }
+
+    await post.deleteOne();
+    res.json({ message: 'Post deleted successfully.' });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+// POST /api/posts/:id/report — Report a post (UGC Content Moderation)
+exports.reportPost = async (req, res) => {
+  try {
+    const post = await Post.findById(req.params.id);
+    if (!post) {
+      return res.status(404).json({ message: 'Post not found' });
+    }
+
+    const { reason } = req.body;
+    const userId = req.user._id;
+
+    // Check if already reported
+    const alreadyReported = post.reports && post.reports.some(r => r.user.toString() === userId.toString());
+    if (alreadyReported) {
+      return res.status(400).json({ message: 'You have already reported this post.' });
+    }
+
+    if (!post.reports) post.reports = [];
+    post.reports.push({
+      user: userId,
+      reason: reason || 'Inappropriate Content'
+    });
+
+    await post.save();
+
+    // Log the report in the Admin Notifications list
+    const AdminNotification = require('../models/AdminNotification');
+    await AdminNotification.create({
+      title: 'Post Reported ⚠️',
+      message: `Post by ${post.authorName} was reported by user ID ${userId}. Reason: ${reason || 'Inappropriate content'}`,
+      type: 'support',
+      referenceId: post._id.toString()
+    });
+
+    res.json({ message: 'Post reported successfully.' });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
   }
 };
 
