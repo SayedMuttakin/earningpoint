@@ -78,8 +78,13 @@ const privacySections = [
     number: 6,
     title: 'Wallet & Rewards',
     icon: Coins,
-    description: 'If you use the Wallet, Refer & Earn, Daily Rewards, Coins, or Cashback features, your activity may be stored to maintain account balance, prevent fraud, and process rewards. Rewards may change or expire according to promotional campaigns.',
-    bullets: []
+    description: 'If you use the Wallet, Refer & Earn, Daily Rewards, Coins, or Cashback features, your activity is processed securely to maintain account balance, prevent fraud, and manage rewards. Our wallet operates under the following criteria:',
+    bullets: [
+      'Wallet Terms: Use of the Wallet features and reward redemption is subject to user account validation and anti-manipulation rules.',
+      'Transaction History: All wallet points, rewards, and transfers are logged in an immutable transaction history to protect account security.',
+      'Payment Security: All payments, withdrawals, and top-ups are processed using secure, industry-standard encrypted gateways.',
+      'Refund Policy: Earned rewards, coins, and purchases are subject to specific withdrawal and refund guidelines outlined in our Terms.'
+    ]
   },
   {
     id: 'security',
@@ -123,6 +128,18 @@ const privacySections = [
     icon: Baby,
     description: 'Zenivio is not intended for children under 18 years of age (or the minimum age required in your jurisdiction).',
     bullets: []
+  },
+  {
+    id: 'permissions',
+    number: 11,
+    title: 'Device Permissions',
+    icon: Shield,
+    description: 'To provide full social networking and messaging features, Zenivio requests only necessary device permissions. We do not access unnecessary permissions:',
+    bullets: [
+      'Camera: Required to capture profile photos, create posts or stories, and send real-time photos in chat.',
+      'Notification: Required to send instant push notifications for chat messages, comments, likes, and profile updates.',
+      'Storage: Required to select and upload images or videos from your gallery for profile pictures, stories, or posts.'
+    ]
   }
 ];
 
