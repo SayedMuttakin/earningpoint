@@ -275,7 +275,7 @@ const TermsPrivacyPage = ({ onBack, initialTab = 'terms', standalone = false, da
   };
 
   return (
-    <div className="w-full min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-800 dark:text-slate-100 font-sans antialiased transition-colors duration-300 pb-20">
+    <div className="absolute inset-0 z-50 bg-slate-50 dark:bg-slate-950 text-slate-800 dark:text-slate-100 font-sans antialiased transition-colors duration-300 overflow-y-auto pb-20">
       {/* Dynamic Print CSS Injection */}
       <style>{`
         @media print {
@@ -317,17 +317,22 @@ const TermsPrivacyPage = ({ onBack, initialTab = 'terms', standalone = false, da
               <ChevronLeft className="w-5 h-5" />
             </button>
             
-            {standalone ? (
-              <span className="text-xl font-black bg-gradient-to-r from-indigo-500 to-violet-650 bg-clip-text text-transparent select-none cursor-pointer" onClick={() => window.location.href = '/'}>
-                Zenivio
-              </span>
-            ) : (
-              <h1 className="text-lg font-bold text-slate-900 dark:text-slate-100 tracking-tight">Legal Center</h1>
-            )}
+            <span 
+              className="text-2xl sm:text-3xl font-black bg-gradient-to-r from-brand-500 to-brand-700 bg-clip-text text-transparent cursor-pointer transform hover:scale-105 transition-all duration-300 select-none"
+              onClick={() => {
+                if (standalone) {
+                  window.location.href = '/';
+                } else {
+                  onBack();
+                }
+              }}
+            >
+              Zenivio
+            </span>
           </div>
 
           {/* Center Tabs */}
-          <div className="hidden md:flex items-center bg-slate-100 dark:bg-slate-850 p-1.5 rounded-2xl relative">
+          <div className="hidden md:flex items-center bg-slate-100 dark:bg-slate-800 p-1.5 rounded-2xl relative">
             <button 
               onClick={() => { setActiveTab('terms'); setSearchQuery(''); }}
               className={`px-6 py-2 rounded-xl text-sm font-bold transition-all duration-300 cursor-pointer ${activeTab === 'terms' ? 'bg-white dark:bg-slate-800 text-indigo-650 dark:text-violet-400 shadow-sm scale-100' : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'}`}
@@ -344,14 +349,6 @@ const TermsPrivacyPage = ({ onBack, initialTab = 'terms', standalone = false, da
 
           {/* Right actions */}
           <div className="flex items-center gap-2">
-            <button 
-              onClick={handlePrint}
-              className="w-10 h-10 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 transition-all flex items-center justify-center text-slate-600 dark:text-slate-300 cursor-pointer active:scale-95"
-              title="Print Document"
-            >
-              <Printer className="w-5 h-5" />
-            </button>
-            
             {standalone && onToggleDarkMode && (
               <button 
                 onClick={onToggleDarkMode}
@@ -441,7 +438,7 @@ const TermsPrivacyPage = ({ onBack, initialTab = 'terms', standalone = false, da
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder={activeTab === 'privacy' ? "Search privacy policy clauses..." : "Search terms & conditions..."}
-                className="block w-full pl-11 pr-4 py-3 bg-white dark:bg-slate-900/60 border border-slate-200 dark:border-slate-850 rounded-2xl text-slate-900 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 shadow-sm transition-all duration-300"
+                className="block w-full pl-11 pr-4 py-3 bg-white dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 rounded-2xl text-slate-900 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 shadow-sm transition-all duration-300"
               />
               {searchQuery && (
                 <button 
@@ -484,7 +481,7 @@ const TermsPrivacyPage = ({ onBack, initialTab = 'terms', standalone = false, da
             </nav>
             
             <div className="mt-8 pt-6 border-t border-slate-200/60 dark:border-slate-800/80 pl-1">
-              <div className="bg-gradient-to-br from-indigo-50 to-violet-50 dark:from-slate-900/40 dark:to-slate-850/40 p-4 rounded-2xl border border-indigo-100/50 dark:border-slate-800/60">
+              <div className="bg-gradient-to-br from-indigo-50 to-violet-50 dark:from-slate-900/40 dark:to-slate-800/40 p-4 rounded-2xl border border-indigo-100/50 dark:border-slate-800/60">
                 <div className="flex items-center gap-2 mb-2 text-indigo-700 dark:text-indigo-400">
                   <HelpCircle className="w-4 h-4" />
                   <span className="text-xs font-black uppercase tracking-wider">Need Help?</span>
@@ -518,7 +515,7 @@ const TermsPrivacyPage = ({ onBack, initialTab = 'terms', standalone = false, da
             
             {/* Quick Summary / At a Glance Panel */}
             {!searchQuery && (
-              <div className="bg-white dark:bg-slate-900 border border-slate-200/70 dark:border-slate-850/70 rounded-3xl p-6 shadow-sm flex flex-col md:flex-row gap-5 items-start relative overflow-hidden group">
+              <div className="bg-white dark:bg-slate-900 border border-slate-200/70 dark:border-slate-800/70 rounded-3xl p-6 shadow-sm flex flex-col md:flex-row gap-5 items-start relative overflow-hidden group">
                 <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-br from-indigo-500/10 to-transparent rounded-bl-full pointer-events-none" />
                 <div className="w-12 h-12 rounded-2xl bg-indigo-50 dark:bg-indigo-950/40 text-indigo-600 dark:text-indigo-400 flex items-center justify-center flex-shrink-0 shadow-inner">
                   <Info className="w-6 h-6" />
@@ -544,15 +541,15 @@ const TermsPrivacyPage = ({ onBack, initialTab = 'terms', standalone = false, da
                 <article
                   key={sec.id}
                   id={`sec-${sec.id}`}
-                  className={`bg-white dark:bg-slate-900 border ${sec.prohibited ? 'border-rose-100 dark:border-rose-950/40' : 'border-slate-200/70 dark:border-slate-850/65'} rounded-3xl p-6 sm:p-8 shadow-sm hover:shadow-md transition-all duration-300 relative group scroll-mt-20 print-section-card`}
+                  className={`bg-white dark:bg-slate-900 border ${sec.prohibited ? 'border-rose-100 dark:border-rose-950/40' : 'border-slate-200/70 dark:border-slate-800/65'} rounded-3xl p-6 sm:p-8 shadow-sm hover:shadow-md transition-all duration-300 relative group scroll-mt-20 print-section-card`}
                 >
                   {/* Floating index decoration */}
-                  <span className="absolute top-6 right-6 text-3xl font-black text-slate-100 dark:text-slate-850 select-none group-hover:scale-110 transition-transform duration-300">
+                  <span className="absolute top-6 right-6 text-3xl font-black text-slate-100 dark:text-slate-800 select-none group-hover:scale-110 transition-transform duration-300">
                     {String(sec.number).padStart(2, '0')}
                   </span>
 
                   <div className="flex flex-col sm:flex-row gap-5 items-start relative z-10">
-                    <div className={`w-12 h-12 rounded-2xl flex items-center justify-center flex-shrink-0 shadow-inner ${sec.prohibited ? 'bg-rose-50 dark:bg-rose-950/30 text-rose-500 dark:text-rose-400' : 'bg-slate-50 dark:bg-slate-850/60 text-slate-600 dark:text-slate-300 group-hover:bg-indigo-50 dark:group-hover:bg-indigo-950/40 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors'}`}>
+                    <div className={`w-12 h-12 rounded-2xl flex items-center justify-center flex-shrink-0 shadow-inner ${sec.prohibited ? 'bg-rose-50 dark:bg-rose-950/30 text-rose-500 dark:text-rose-400' : 'bg-slate-50 dark:bg-slate-800/60 text-slate-650 dark:text-slate-350 group-hover:bg-indigo-50 dark:group-hover:bg-indigo-950/40 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors'}`}>
                       <sec.icon className="w-5.5 h-5.5" />
                     </div>
 
@@ -574,7 +571,7 @@ const TermsPrivacyPage = ({ onBack, initialTab = 'terms', standalone = false, da
                               className={`flex items-start gap-2.5 p-3 rounded-2xl text-xs sm:text-sm font-semibold transition-colors ${
                                 sec.prohibited 
                                   ? 'bg-rose-50/40 dark:bg-rose-950/10 text-rose-800 dark:text-rose-300 border border-rose-100/30' 
-                                  : 'bg-slate-50/50 dark:bg-slate-850/30 text-slate-750 dark:text-slate-300 border border-slate-100/10'
+                                  : 'bg-slate-50/50 dark:bg-slate-800/30 text-slate-750 dark:text-slate-300 border border-slate-100/10'
                               }`}
                             >
                               {sec.prohibited ? (
@@ -595,7 +592,7 @@ const TermsPrivacyPage = ({ onBack, initialTab = 'terms', standalone = false, da
               ))}
 
               {filteredSections.length === 0 && (
-                <div className="bg-white dark:bg-slate-900 border border-slate-200/50 dark:border-slate-850/50 rounded-3xl p-12 text-center">
+                <div className="bg-white dark:bg-slate-900 border border-slate-200/50 dark:border-slate-800/50 rounded-3xl p-12 text-center">
                   <div className="w-16 h-16 rounded-full bg-slate-50 dark:bg-slate-800 flex items-center justify-center mx-auto mb-4">
                     <Search className="w-8 h-8 text-slate-400" />
                   </div>
@@ -605,7 +602,7 @@ const TermsPrivacyPage = ({ onBack, initialTab = 'terms', standalone = false, da
                   </p>
                   <button
                     onClick={() => setSearchQuery('')}
-                    className="mt-5 px-5 py-2.5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-850 dark:text-slate-200 text-xs font-black rounded-xl cursor-pointer"
+                    className="mt-5 px-5 py-2.5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-900 dark:text-slate-200 text-xs font-black rounded-xl cursor-pointer"
                   >
                     Reset Search
                   </button>
@@ -636,7 +633,7 @@ const TermsPrivacyPage = ({ onBack, initialTab = 'terms', standalone = false, da
                         }, 100);
                       }
                     }}
-                    className="flex-1 md:flex-none text-center px-5 py-3 bg-white hover:bg-slate-50 text-slate-850 text-xs font-black rounded-xl shadow-sm transition-all active:scale-95"
+                    className="flex-1 md:flex-none text-center px-5 py-3 bg-white hover:bg-slate-50 text-slate-900 dark:text-slate-900 text-xs font-black rounded-xl shadow-sm transition-all active:scale-95"
                   >
                     Contact Support
                   </a>
