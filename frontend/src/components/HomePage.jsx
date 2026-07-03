@@ -305,76 +305,13 @@ const CommentsDrawer = ({ post, onClose, onCommentSubmit, currentUserId, onUserC
   );
 };
 
-const CommunityPostCard = ({ post, onFollowToggle, onLikeToggle, onCommentClick, currentUserId, setSelectedReelId, setActiveTab, onUserClick, onImageClick, showToast, onPostDelete, onBlockAuthor }) => {
+const CommunityPostCard = ({ post, onFollowToggle, onLikeToggle, onCommentClick, currentUserId, setSelectedReelId, setActiveTab, onUserClick, onImageClick, showToast, onActionTrigger }) => {
   const [actionLoading, setActionLoading] = useState(false);
   const [isLiking, setIsLiking] = useState(false);
   const [isPlaying, setIsPlaying] = useState(false);
   const [showMenu, setShowMenu] = useState(false);
   const [isSaved, setIsSaved] = useState(post.isSaved || false);
   const videoRef = useRef(null);
-
-  // UGC Action Modals
-  const [activeActionModal, setActiveActionModal] = useState(null); // 'delete', 'report', 'block'
-  const [reportReason, setReportReason] = useState('spam');
-
-  const handleDeleteConfirm = async () => {
-    try {
-      const token = localStorage.getItem('token');
-      const res = await fetch(`${API_BASE}/api/posts/${post._id}`, {
-        method: 'DELETE',
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      if (res.ok) {
-        if (showToast) showToast('Post deleted successfully! 🗑️');
-        setActiveActionModal(null);
-        if (onPostDelete) onPostDelete(post._id);
-      }
-    } catch (err) {
-      console.error('Failed to delete post:', err);
-    }
-  };
-
-  const handleReportSubmit = async () => {
-    try {
-      const token = localStorage.getItem('token');
-      const res = await fetch(`${API_BASE}/api/posts/${post._id}/report`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`
-        },
-        body: JSON.stringify({ reason: reportReason })
-      });
-      if (res.ok) {
-        if (showToast) showToast('🚨 Post reported! Hidden from feed.');
-        setActiveActionModal(null);
-        if (onPostDelete) onPostDelete(post._id);
-      } else {
-        const errData = await res.json();
-        if (showToast) showToast(errData.message || 'Error reporting post');
-        setActiveActionModal(null);
-      }
-    } catch (err) {
-      console.error('Failed to report post:', err);
-    }
-  };
-
-  const handleBlockConfirm = async () => {
-    try {
-      const token = localStorage.getItem('token');
-      const res = await fetch(`${API_BASE}/api/profile/block/${post.authorId}`, {
-        method: 'POST',
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      if (res.ok) {
-        if (showToast) showToast('🚫 User blocked successfully!');
-        setActiveActionModal(null);
-        if (onBlockAuthor) onBlockAuthor(post.authorId);
-      }
-    } catch (err) {
-      console.error('Failed to block user:', err);
-    }
-  };
 
   const handleSaveToggle = async (e) => {
     if (e) e.stopPropagation();
@@ -826,116 +763,6 @@ const CommunityPostCard = ({ post, onFollowToggle, onLikeToggle, onCommentClick,
             {formatRelativeTime(post.createdAt)}
           </span>
         </div>
-
-        {/* React Modals for Post UGC actions (replaces window.confirm/prompt) */}
-        {activeActionModal && (
-          <div className="fixed inset-0 z-[150] flex items-center justify-center p-4" onClick={(e) => e.stopPropagation()}>
-            <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs" onClick={() => setActiveActionModal(null)} />
-            <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 max-w-sm w-full relative z-10 shadow-2xl animate-scale-pulse-glow text-left">
-              
-              {activeActionModal === 'delete' && (
-                <>
-                  <h3 className="text-base font-black text-slate-900 dark:text-white mb-2">Delete Post</h3>
-                  <p className="text-slate-500 dark:text-slate-400 text-[11px] font-bold mb-5 leading-relaxed">
-                    Are you sure you want to permanently delete this post? This action cannot be undone.
-                  </p>
-                  <div className="flex gap-3">
-                    <button 
-                      onClick={() => setActiveActionModal(null)}
-                      className="flex-1 py-2.5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 text-xs font-black rounded-xl cursor-pointer transition-colors"
-                    >
-                      Cancel
-                    </button>
-                    <button 
-                      onClick={handleDeleteConfirm}
-                      className="flex-1 py-2.5 bg-red-655 hover:bg-red-700 text-white text-xs font-black rounded-xl cursor-pointer transition-colors shadow-md shadow-red-500/10"
-                    >
-                      Delete
-                    </button>
-                  </div>
-                </>
-              )}
-
-              {activeActionModal === 'block' && (
-                <>
-                  <h3 className="text-base font-black text-slate-900 dark:text-white mb-2">Block User</h3>
-                  <p className="text-slate-500 dark:text-slate-400 text-[11px] font-bold mb-5 leading-relaxed">
-                    Are you sure you want to block {post.authorDetails?.name || post.authorName || 'this user'}? You won't see their posts or chats anymore.
-                  </p>
-                  <div className="flex gap-3">
-                    <button 
-                      onClick={() => setActiveActionModal(null)}
-                      className="flex-1 py-2.5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 text-xs font-black rounded-xl cursor-pointer transition-colors"
-                    >
-                      Cancel
-                    </button>
-                    <button 
-                      onClick={handleBlockConfirm}
-                      className="flex-1 py-2.5 bg-red-655 hover:bg-red-700 text-white text-xs font-black rounded-xl cursor-pointer transition-colors shadow-md shadow-red-500/10"
-                    >
-                      Block User
-                    </button>
-                  </div>
-                </>
-              )}
-
-              {activeActionModal === 'report' && (
-                <>
-                  <h3 className="text-base font-black text-slate-900 dark:text-white mb-2">Report Post</h3>
-                  <p className="text-slate-500 dark:text-slate-400 text-[11px] font-bold mb-4 leading-relaxed">
-                    Please select a reason for reporting this post. It will be hidden from your feed and reviewed by moderators.
-                  </p>
-                  <div className="space-y-2 mb-6">
-                    {[
-                      { value: 'spam', label: 'Spam or scams' },
-                      { value: 'harassment', label: 'Harassment or hate speech' },
-                      { value: 'violence', label: 'Violence or threats' },
-                      { value: 'sexual', label: 'Sexually explicit content' },
-                      { value: 'other', label: 'Other violation' }
-                    ].map(opt => (
-                      <label 
-                        key={opt.value} 
-                        className={`flex items-center gap-3 p-3 rounded-2xl border cursor-pointer font-bold text-xs sm:text-sm transition-all ${
-                          reportReason === opt.value 
-                            ? 'border-indigo-500 bg-indigo-500/5 text-indigo-650 dark:text-indigo-400' 
-                            : 'border-slate-100 dark:border-slate-800 text-slate-650 dark:text-slate-350 hover:bg-slate-50 dark:hover:bg-slate-800/40'
-                        }`}
-                      >
-                        <input 
-                          type="radio" 
-                          name="postReportReason" 
-                          value={opt.value} 
-                          checked={reportReason === opt.value} 
-                          onChange={(e) => setReportReason(e.target.value)}
-                          className="sr-only" 
-                        />
-                        <div className={`w-4 h-4 rounded-full border flex items-center justify-center flex-shrink-0 ${reportReason === opt.value ? 'border-indigo-500' : 'border-slate-300 dark:border-slate-600'}`}>
-                          {reportReason === opt.value && <div className="w-2 h-2 rounded-full bg-indigo-500" />}
-                        </div>
-                        <span>{opt.label}</span>
-                      </label>
-                    ))}
-                  </div>
-                  <div className="flex gap-3">
-                    <button 
-                      onClick={() => setActiveActionModal(null)}
-                      className="flex-1 py-2.5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 text-xs font-black rounded-xl cursor-pointer transition-colors"
-                    >
-                      Cancel
-                    </button>
-                    <button 
-                      onClick={handleReportSubmit}
-                      className="flex-1 py-2.5 bg-red-655 hover:bg-red-700 text-white text-xs font-black rounded-xl cursor-pointer transition-colors shadow-md shadow-red-500/10"
-                    >
-                      Submit Report
-                    </button>
-                  </div>
-                </>
-              )}
-
-            </div>
-          </div>
-        )}
       </div>
     </article>
   );
@@ -1006,6 +833,90 @@ const HomePage = ({ setActiveTab, setSelectedNewsId, setActiveChatPartner, setSe
   const [showToast, setShowToast] = useState(false);
   const toastTimerRef = useRef(null);
   const [previewImageUrl, setPreviewImageUrl] = useState(null);
+
+  const [activeActionModal, setActiveActionModal] = useState(null); // null or { type: 'delete' | 'report' | 'block', post }
+  const [reportReason, setReportReason] = useState('spam');
+
+  // Prevent background scroll when modal is open
+  useEffect(() => {
+    if (activeActionModal) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, [activeActionModal]);
+
+  const handleActionTrigger = (type, post) => {
+    setActiveActionModal({ type, post });
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (!activeActionModal?.post) return;
+    const { post } = activeActionModal;
+    try {
+      const token = localStorage.getItem('token');
+      const res = await fetch(`${API_BASE}/api/posts/${post._id}`, {
+        method: 'DELETE',
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      if (res.ok) {
+        showToastNotification('Post deleted successfully! 🗑️');
+        handlePostDelete(post._id);
+        setActiveActionModal(null);
+      }
+    } catch (err) {
+      console.error('Failed to delete post:', err);
+    }
+  };
+
+  const handleReportSubmit = async () => {
+    if (!activeActionModal?.post) return;
+    const { post } = activeActionModal;
+    try {
+      const token = localStorage.getItem('token');
+      const res = await fetch(`${API_BASE}/api/posts/${post._id}/report`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify({ reason: reportReason })
+      });
+      if (res.ok) {
+        showToastNotification('🚨 Post reported! Hidden from feed.');
+        handlePostDelete(post._id);
+        setActiveActionModal(null);
+      } else {
+        const errData = await res.json();
+        showToastNotification(errData.message || 'Error reporting post');
+        setActiveActionModal(null);
+      }
+    } catch (err) {
+      console.error('Failed to report post:', err);
+    }
+  };
+
+  const handleBlockConfirm = async () => {
+    if (!activeActionModal?.post) return;
+    const { post } = activeActionModal;
+    try {
+      const token = localStorage.getItem('token');
+      const res = await fetch(`${API_BASE}/api/profile/block/${post.authorId}`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      if (res.ok) {
+        showToastNotification('🚫 User blocked successfully!');
+        handleBlockAuthor(post.authorId);
+        setActiveActionModal(null);
+      }
+    } catch (err) {
+      console.error('Failed to block user:', err);
+    }
+  };
 
   const showToastNotification = (msg) => {
     setToastMessage(msg);
@@ -1438,8 +1349,7 @@ const HomePage = ({ setActiveTab, setSelectedNewsId, setActiveChatPartner, setSe
                     onUserClick={onUserClick}
                     onImageClick={setPreviewImageUrl}
                     showToast={showToastNotification}
-                    onPostDelete={handlePostDelete}
-                    onBlockAuthor={handleBlockAuthor}
+                    onActionTrigger={handleActionTrigger}
                   />
                 ))}
               </div>
@@ -1479,6 +1389,116 @@ const HomePage = ({ setActiveTab, setSelectedNewsId, setActiveChatPartner, setSe
             imageUrl={previewImageUrl} 
             onClose={() => setPreviewImageUrl(null)} 
           />
+        )}
+
+        {/* React Modals for Post UGC actions (replaces window.confirm/prompt) */}
+        {activeActionModal && (
+          <div className="fixed inset-0 z-[160] flex items-center justify-center p-4" onClick={(e) => e.stopPropagation()}>
+            <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs" onClick={() => setActiveActionModal(null)} />
+            <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 max-w-sm w-full relative z-10 shadow-2xl animate-scale-pulse-glow text-left">
+              
+              {activeActionModal.type === 'delete' && (
+                <>
+                  <h3 className="text-base font-black text-slate-900 dark:text-white mb-2">Delete Post</h3>
+                  <p className="text-slate-500 dark:text-slate-400 text-[11px] font-bold mb-5 leading-relaxed">
+                    Are you sure you want to permanently delete this post? This action cannot be undone.
+                  </p>
+                  <div className="flex gap-3">
+                    <button 
+                      onClick={() => setActiveActionModal(null)}
+                      className="flex-1 py-2.5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 text-xs font-black rounded-xl cursor-pointer transition-colors"
+                    >
+                      Cancel
+                    </button>
+                    <button 
+                      onClick={handleDeleteConfirm}
+                      className="flex-1 py-2.5 bg-red-655 hover:bg-red-700 text-white text-xs font-black rounded-xl cursor-pointer transition-colors shadow-md shadow-red-500/10"
+                    >
+                      Delete
+                    </button>
+                  </div>
+                </>
+              )}
+
+              {activeActionModal.type === 'block' && (
+                <>
+                  <h3 className="text-base font-black text-slate-900 dark:text-white mb-2">Block User</h3>
+                  <p className="text-slate-500 dark:text-slate-400 text-[11px] font-bold mb-5 leading-relaxed">
+                    Are you sure you want to block {activeActionModal.post?.authorDetails?.name || activeActionModal.post?.authorName || 'this user'}? You won't see their posts or chats anymore.
+                  </p>
+                  <div className="flex gap-3">
+                    <button 
+                      onClick={() => setActiveActionModal(null)}
+                      className="flex-1 py-2.5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 text-xs font-black rounded-xl cursor-pointer transition-colors"
+                    >
+                      Cancel
+                    </button>
+                    <button 
+                      onClick={handleBlockConfirm}
+                      className="flex-1 py-2.5 bg-red-655 hover:bg-red-700 text-white text-xs font-black rounded-xl cursor-pointer transition-colors shadow-md shadow-red-500/10"
+                    >
+                      Block User
+                    </button>
+                  </div>
+                </>
+              )}
+
+              {activeActionModal.type === 'report' && (
+                <>
+                  <h3 className="text-base font-black text-slate-900 dark:text-white mb-2">Report Post</h3>
+                  <p className="text-slate-500 dark:text-slate-400 text-[11px] font-bold mb-4 leading-relaxed">
+                    Please select a reason for reporting this post. It will be hidden from your feed and reviewed by moderators.
+                  </p>
+                  <div className="space-y-2 mb-6">
+                    {[
+                      { value: 'spam', label: 'Spam or scams' },
+                      { value: 'harassment', label: 'Harassment or hate speech' },
+                      { value: 'violence', label: 'Violence or threats' },
+                      { value: 'sexual', label: 'Sexually explicit content' },
+                      { value: 'other', label: 'Other violation' }
+                    ].map(opt => (
+                      <label 
+                        key={opt.value} 
+                        className={`flex items-center gap-3 p-3 rounded-2xl border cursor-pointer font-bold text-xs sm:text-sm transition-all ${
+                          reportReason === opt.value 
+                            ? 'border-indigo-500 bg-indigo-500/5 text-indigo-655 dark:text-indigo-400' 
+                            : 'border-slate-100 dark:border-slate-800 text-slate-655 dark:text-slate-350 hover:bg-slate-50 dark:hover:bg-slate-800/40'
+                        }`}
+                      >
+                        <input 
+                          type="radio" 
+                          name="postReportReason" 
+                          value={opt.value} 
+                          checked={reportReason === opt.value} 
+                          onChange={(e) => setReportReason(e.target.value)}
+                          className="sr-only" 
+                        />
+                        <div className={`w-4 h-4 rounded-full border flex items-center justify-center flex-shrink-0 ${reportReason === opt.value ? 'border-indigo-500' : 'border-slate-300 dark:border-slate-600'}`}>
+                          {reportReason === opt.value && <div className="w-2 h-2 rounded-full bg-indigo-500" />}
+                        </div>
+                        <span>{opt.label}</span>
+                      </label>
+                    ))}
+                  </div>
+                  <div className="flex gap-3">
+                    <button 
+                      onClick={() => setActiveActionModal(null)}
+                      className="flex-1 py-2.5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 text-xs font-black rounded-xl cursor-pointer transition-colors"
+                    >
+                      Cancel
+                    </button>
+                    <button 
+                      onClick={handleReportSubmit}
+                      className="flex-1 py-2.5 bg-red-655 hover:bg-red-700 text-white text-xs font-black rounded-xl cursor-pointer transition-colors shadow-md shadow-red-500/10"
+                    >
+                      Submit Report
+                    </button>
+                  </div>
+                </>
+              )}
+
+            </div>
+          </div>
         )}
 
         {/* Toast Notification */}
