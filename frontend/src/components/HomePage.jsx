@@ -535,7 +535,7 @@ const CommunityPostCard = ({ post, onFollowToggle, onLikeToggle, onCommentClick,
                     onClick={(e) => {
                       e.stopPropagation();
                       setShowMenu(false);
-                      setActiveActionModal('delete');
+                      if (onActionTrigger) onActionTrigger('delete', post);
                     }}
                     className="w-full flex items-center gap-2 px-3.5 py-2 text-xs font-bold text-red-500 hover:bg-red-50 dark:hover:bg-red-950/20 transition-colors"
                   >
@@ -548,7 +548,7 @@ const CommunityPostCard = ({ post, onFollowToggle, onLikeToggle, onCommentClick,
                       onClick={(e) => {
                         e.stopPropagation();
                         setShowMenu(false);
-                        setActiveActionModal('report');
+                        if (onActionTrigger) onActionTrigger('report', post);
                       }}
                       className="w-full flex items-center gap-2 px-3.5 py-2 text-xs font-bold text-amber-600 dark:text-amber-500 hover:bg-slate-50 dark:hover:bg-slate-750 transition-colors"
                     >
@@ -559,7 +559,7 @@ const CommunityPostCard = ({ post, onFollowToggle, onLikeToggle, onCommentClick,
                       onClick={(e) => {
                         e.stopPropagation();
                         setShowMenu(false);
-                        setActiveActionModal('block');
+                        if (onActionTrigger) onActionTrigger('block', post);
                       }}
                       className="w-full flex items-center gap-2 px-3.5 py-2 text-xs font-bold text-red-500 hover:bg-red-50 dark:hover:bg-red-950/20 transition-colors"
                     >
