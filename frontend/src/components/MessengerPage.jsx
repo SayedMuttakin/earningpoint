@@ -3014,7 +3014,7 @@ const MessengerPage = ({
                   </button>
                   <button 
                     onClick={handleBlockUserConfirm}
-                    className="flex-1 py-2.5 bg-red-655 hover:bg-red-700 text-white text-xs font-black rounded-xl cursor-pointer transition-colors shadow-md shadow-red-500/10"
+                    className="flex-1 py-2.5 bg-red-655 hover:bg-red-700 text-black text-xs font-black rounded-xl cursor-pointer transition-colors shadow-md shadow-red-500/10"
                   >
                     Block User
                   </button>
@@ -3094,7 +3094,7 @@ const MessengerPage = ({
                   </button>
                   <button 
                     onClick={activeModal === 'report_user' ? handleReportUserSubmit : handleReportMessageSubmit}
-                    className="flex-1 py-2.5 bg-red-655 hover:bg-red-700 text-white text-xs font-black rounded-xl cursor-pointer transition-colors shadow-md shadow-red-500/10"
+                    className="flex-1 py-2.5 bg-red-655 hover:bg-red-700 text-black text-xs font-black rounded-xl cursor-pointer transition-colors shadow-md shadow-red-500/10"
                   >
                     Submit Report
                   </button>
