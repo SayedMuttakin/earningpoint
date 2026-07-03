@@ -237,16 +237,41 @@ const CommentsDrawer = ({ post, onClose, onCommentSubmit, currentUserId, onUserC
                     <span>{comment.userName ? comment.userName.charAt(0).toUpperCase() : 'U'}</span>
                   )}
                 </button>
-                <div className="flex-1 bg-slate-50 dark:bg-slate-850 rounded-2xl px-4 py-2.5">
+                <div className="flex-1 bg-slate-50 dark:bg-slate-850 rounded-2xl px-4 py-2.5 relative">
                   <button
                     onClick={() => comment.user && onUserClick && onUserClick(comment.user)}
                     className="block font-black text-xs text-slate-750 dark:text-slate-350 hover:underline text-left"
                   >
                     {comment.userName || 'User'}
                   </button>
-                  <p className="text-xs text-slate-650 dark:text-slate-300 mt-1 leading-relaxed">
+                  <p className="text-xs text-slate-650 dark:text-slate-300 mt-1 leading-relaxed pr-6">
                     {comment.text}
                   </p>
+                  
+                  {(comment.user === currentUserId || post.authorId === currentUserId) && (
+                    <button
+                      onClick={async (e) => {
+                        e.stopPropagation();
+                        if (!window.confirm('Delete comment?')) return;
+                        try {
+                          const token = localStorage.getItem('token');
+                          const res = await fetch(`${API_BASE}/api/posts/${post._id}/comment/${comment._id}`, {
+                            method: 'DELETE',
+                            headers: { Authorization: `Bearer ${token}` }
+                          });
+                          if (res.ok) {
+                            window.location.reload();
+                          }
+                        } catch (err) {
+                          console.error('Failed to delete comment:', err);
+                        }
+                      }}
+                      className="absolute right-3 top-3 text-slate-400 hover:text-red-500 transition-colors p-1 rounded-full cursor-pointer hover:bg-slate-100/50 dark:hover:bg-slate-800/50"
+                      title="Delete Comment"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
+                  )}
                 </div>
               </div>
             ))

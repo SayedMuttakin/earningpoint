@@ -3,7 +3,8 @@ import {
   ChevronLeft, Printer, Search, Shield, Lock, Scale, MessageSquare, 
   Coins, Ban, ShoppingBag, Newspaper, UserX, Copyright, RefreshCw, 
   Database, Cpu, Users, Share2, UserCheck, Baby, Moon, Sun, 
-  Info, ExternalLink, ArrowRight, HelpCircle, Check, FileText
+  Info, ExternalLink, ArrowRight, HelpCircle, Check, FileText,
+  Truck, RotateCcw, DollarSign, Phone
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -232,6 +233,38 @@ const termsSections = [
     title: 'Changes to These Terms',
     icon: RefreshCw,
     description: 'We may update these Terms from time to time. Continued use of the app after changes means you accept the updated Terms.',
+    bullets: []
+  },
+  {
+    id: 'return-policy',
+    number: 12,
+    title: 'Return Policy',
+    icon: RotateCcw,
+    description: 'We strive to ensure your complete satisfaction with any products purchased via the Zenivio Marketplace. If you receive a product that is damaged, defective, or incorrect, you may request a return within 7 calendar days of delivery. The item must be unused, in its original packaging, and include all tags and accessories.',
+    bullets: []
+  },
+  {
+    id: 'refund-policy',
+    number: 13,
+    title: 'Refund Policy',
+    icon: DollarSign,
+    description: 'Upon receiving and inspecting your returned item, we will notify you of the approval or rejection of your refund. Approved refunds are processed to your original payment method (Mobile Wallet / Bank Transfer) or credited back as Coins to your Zenivio Wallet within 5 to 7 business days.',
+    bullets: []
+  },
+  {
+    id: 'shipping-delivery',
+    number: 14,
+    title: 'Shipping & Delivery',
+    icon: Truck,
+    description: 'We process physical marketplace orders within 24 to 48 business hours. Deliveries typically take 2 to 4 business days within metropolitan areas and 5 to 7 business days for regional areas. Delivery charges (if applicable) are displayed at checkout and are non-refundable.',
+    bullets: []
+  },
+  {
+    id: 'contact-details',
+    number: 15,
+    title: 'Contact Support',
+    icon: Phone,
+    description: 'For any queries, disputes, refund requests, or feedback, you can contact the Zenivio support desk at support@zenivio.com or call us directly at +8801900000000. We are available Sunday to Thursday, 10 AM to 6 PM.',
     bullets: []
   }
 ];

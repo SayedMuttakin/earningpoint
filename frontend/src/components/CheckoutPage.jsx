@@ -323,6 +323,10 @@ const CheckoutPage = ({ product, onBack, onSuccess }) => {
               </label>
             </div>
 
+            <div className="mb-4 bg-slate-50 dark:bg-slate-800/40 border border-slate-150 dark:border-slate-800 rounded-2xl p-3.5 text-[11px] text-slate-500 dark:text-slate-400 font-bold leading-relaxed text-left">
+              By confirming, you agree to Zenivio's Return & Refund Policy, Shipping Policy, and consent to provide accurate delivery information. Contact us at +8801900000000 or support@zenivio.com for order inquiries.
+            </div>
+
             <button 
               type="submit" 
               form="checkout-form"

@@ -606,6 +606,7 @@ const PublicProfilePage = ({ userId, onBack, currentUser, isOwnProfile, setActiv
         const data = await res.json();
         showToastNotification(data.isBlocked ? '🚫 User Blocked successfully!' : '✅ User Unblocked!');
         setShowActionsMenu(false);
+        setProfile(prev => ({ ...prev, isBlocked: data.isBlocked }));
         if (data.isBlocked) {
           setTimeout(() => { onBack(); }, 1200);
         }
@@ -911,7 +912,7 @@ const PublicProfilePage = ({ userId, onBack, currentUser, isOwnProfile, setActiv
                       onClick={handleBlockUser}
                       className="w-full flex items-center gap-2 px-4 py-2 text-xs font-bold text-red-500 hover:bg-red-50 dark:hover:bg-red-950/20 transition-colors text-left"
                     >
-                      <span>Block User</span>
+                      <span>{profile.isBlocked ? 'Unblock User' : 'Block User'}</span>
                     </button>
                     <button
                       onClick={() => { setShowReportModal(true); setShowActionsMenu(false); }}

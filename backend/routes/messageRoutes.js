@@ -12,7 +12,9 @@ const {
   uploadFile,
   addStory,
   deleteStory,
-  getStories
+  getStories,
+  deleteChatHistory,
+  reportMessage
 } = require('../controllers/messageController');
 
 router.get('/users', protect, getUsers);
@@ -22,6 +24,12 @@ router.get('/history/group/:groupId', protect, getGroupHistory);
 router.put('/note', protect, updateNote);
 router.get('/notes', protect, getNotes);
 router.post('/upload', protect, upload.single('file'), uploadFile);
+
+// Delete chat history with a user
+router.delete('/chat/:otherUserId', protect, deleteChatHistory);
+
+// Report a specific message
+router.post('/report/:messageId', protect, reportMessage);
 
 // Story routes
 router.get('/stories', protect, getStories);

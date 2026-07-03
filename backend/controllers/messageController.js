@@ -347,3 +347,47 @@ exports.getStories = async (req, res) => {
     res.status(500).json({ message: 'Internal server error' });
   }
 };
+
+// DELETE /api/messages/chat/:otherUserId — Delete chat history with a user (User-facing)
+exports.deleteChatHistory = async (req, res) => {
+  try {
+    const currentUserId = req.user._id;
+    const otherUserId = req.params.otherUserId;
+
+    const result = await Message.deleteMany({
+      $or: [
+        { sender: currentUserId, receiver: otherUserId },
+        { sender: otherUserId, receiver: currentUserId }
+      ],
+      group: { $exists: false }
+    });
+
+    res.json({ message: 'Chat history deleted successfully.', count: result.deletedCount });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+// POST /api/messages/report/:messageId — Report a specific chat message
+exports.reportMessage = async (req, res) => {
+  try {
+    const message = await Message.findById(req.params.messageId);
+    if (!message) {
+      return res.status(404).json({ message: 'Message not found' });
+    }
+
+    const { reason } = req.body;
+
+    const AdminNotification = require('../models/AdminNotification');
+    await AdminNotification.create({
+      title: 'Message Reported 💬',
+      message: `Message reported by user ID ${req.user._id}. Reason: ${reason || 'Inappropriate Content'}. Message content: "${message.content.substring(0, 100)}"`,
+      type: 'support',
+      referenceId: message._id.toString()
+    });
+
+    res.json({ message: 'Message reported successfully.' });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};

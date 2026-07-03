@@ -556,3 +556,36 @@ exports.reportPost = async (req, res) => {
   }
 };
 
+// DELETE /api/posts/:postId/comment/:commentId — Delete a comment (User-facing)
+exports.deleteComment = async (req, res) => {
+  try {
+    const { postId, commentId } = req.params;
+    const post = await Post.findById(postId);
+    if (!post) {
+      return res.status(404).json({ message: 'Post not found' });
+    }
+
+    const commentIndex = post.comments.findIndex(c => c._id.toString() === commentId.toString());
+    if (commentIndex === -1) {
+      return res.status(404).json({ message: 'Comment not found' });
+    }
+
+    const comment = post.comments[commentIndex];
+
+    // Check authorization: must be comment owner or post owner
+    const isCommentAuthor = comment.user && comment.user.toString() === req.user._id.toString();
+    const isPostAuthor = post.authorId && post.authorId.toString() === req.user._id.toString();
+
+    if (!isCommentAuthor && !isPostAuthor) {
+      return res.status(403).json({ message: 'You are not authorized to delete this comment' });
+    }
+
+    post.comments.splice(commentIndex, 1);
+    await post.save();
+
+    res.json({ message: 'Comment deleted successfully.' });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+

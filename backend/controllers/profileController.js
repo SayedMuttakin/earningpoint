@@ -333,6 +333,7 @@ exports.getPublicProfile = async (req, res) => {
         website: user.website || '',
         highlights: user.highlights || [],
         isFollowing,
+        isBlocked: req.user.blockedUsers ? req.user.blockedUsers.includes(user._id) : false,
         dob: showDob ? (user.dob || '') : '',
         gender: showGender ? (user.gender || '') : '',
         dobPrivacy: user.dobPrivacy || 'public',

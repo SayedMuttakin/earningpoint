@@ -171,7 +171,7 @@ const MessengerPage = ({
   const [groupNameInput, setGroupNameInput] = useState('');
   const [selectedGroupMembers, setSelectedGroupMembers] = useState([]);
   const [groupSearchQuery, setGroupSearchQuery] = useState('');
-
+  const [showChatMenu, setShowChatMenu] = useState(false);
   // Rich Media State Hooks
   const [isUploadingImage, setIsUploadingImage] = useState(false);
   const [isRecording, setIsRecording] = useState(false);
@@ -1794,6 +1794,107 @@ const MessengerPage = ({
                   )}
                 </div>
               </div>
+
+              {/* Options Menu on Header Right */}
+              <div className="relative">
+                <button
+                  onClick={() => setShowChatMenu(!showChatMenu)}
+                  className="p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-900 text-slate-650 dark:text-slate-350 active:scale-95 transition-transform cursor-pointer"
+                >
+                  <MoreVertical className="w-5 h-5" />
+                </button>
+                
+                {showChatMenu && (
+                  <>
+                    <div className="fixed inset-0 z-30" onClick={() => setShowChatMenu(false)} />
+                    <div className="absolute right-0 mt-1.5 w-48 bg-white dark:bg-slate-900 rounded-2xl shadow-xl border border-slate-100 dark:border-slate-800 py-1.5 z-40 animate-fade-in text-left">
+                      <button
+                        onClick={async () => {
+                          setShowChatMenu(false);
+                          if (!window.confirm('Delete all chat history with this user? This cannot be undone.')) return;
+                          try {
+                            const token = localStorage.getItem('token');
+                            const res = await fetch(`${API_BASE}/api/messages/chat/${activePartner._id}`, {
+                              method: 'DELETE',
+                              headers: { Authorization: `Bearer ${token}` }
+                            });
+                            if (res.ok) {
+                              alert('🗑️ Conversation deleted.');
+                              setActivePartner(null);
+                              if (setActiveChatPartner) setActiveChatPartner(null);
+                              fetchUsers();
+                            }
+                          } catch (err) {
+                            console.error('Failed to delete chat:', err);
+                          }
+                        }}
+                        className="w-full flex items-center gap-2 px-4 py-2.5 text-xs font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-850 transition-colors text-left"
+                      >
+                        <span>Delete Conversation</span>
+                      </button>
+                      
+                      {!activePartner.isGroup && (
+                        <>
+                          <button
+                            onClick={async () => {
+                              setShowChatMenu(false);
+                              if (!window.confirm(`Block ${activePartner.name}? You will no longer receive messages or calls from them.`)) return;
+                              try {
+                                const token = localStorage.getItem('token');
+                                const res = await fetch(`${API_BASE}/api/profile/block/${activePartner._id}`, {
+                                  method: 'POST',
+                                  headers: { Authorization: `Bearer ${token}` }
+                                });
+                                if (res.ok) {
+                                  alert('🚫 User blocked successfully!');
+                                  setActivePartner(null);
+                                  if (setActiveChatPartner) setActiveChatPartner(null);
+                                  fetchUsers();
+                                }
+                              } catch (err) {
+                                console.error('Failed to block user:', err);
+                              }
+                            }}
+                            className="w-full flex items-center gap-2 px-4 py-2.5 text-xs font-bold text-red-500 hover:bg-red-50 dark:hover:bg-red-950/20 transition-colors text-left"
+                          >
+                            <span>Block User</span>
+                          </button>
+                          
+                          <button
+                            onClick={async () => {
+                              setShowChatMenu(false);
+                              const reason = window.prompt('Report this user? Reason:');
+                              if (reason === null) return;
+                              try {
+                                const token = localStorage.getItem('token');
+                                const res = await fetch(`${API_BASE}/api/profile/report/${activePartner._id}`, {
+                                  method: 'POST',
+                                  headers: {
+                                    'Content-Type': 'application/json',
+                                    Authorization: `Bearer ${token}`
+                                  },
+                                  body: JSON.stringify({ reason: reason || 'Inappropriate Behavior' })
+                                });
+                                if (res.ok) {
+                                  alert('🚨 User reported & blocked.');
+                                  setActivePartner(null);
+                                  if (setActiveChatPartner) setActiveChatPartner(null);
+                                  fetchUsers();
+                                }
+                              } catch (err) {
+                                console.error('Failed to report user:', err);
+                              }
+                            }}
+                            className="w-full flex items-center gap-2 px-4 py-2.5 text-xs font-bold text-amber-600 dark:text-amber-500 hover:bg-slate-50 dark:hover:bg-slate-850 transition-colors text-left"
+                          >
+                            <span>Report User</span>
+                          </button>
+                        </>
+                      )}
+                    </div>
+                  </>
+                )}
+              </div>
             </div>
 
             {/* Conversation Messages Scroll Body */}
@@ -1901,9 +2002,42 @@ const MessengerPage = ({
 
                           {/* Timestamp show on click */}
                           {expandedMessageId === msg._id && (
-                            <span className={`text-[9px] font-bold block mt-1 px-1 transition-all animate-fade-in ${isUser ? 'text-slate-400 text-right' : 'text-slate-400'}`}>
-                              {new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                            </span>
+                            <div className={`flex items-center gap-2 mt-1 px-1 transition-all animate-fade-in ${isUser ? 'justify-end' : 'justify-start'}`}>
+                              <span className="text-[9px] font-bold text-slate-400">
+                                {new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                              </span>
+                              {!isUser && (
+                                <>
+                                  <span className="text-[9px] text-slate-300 dark:text-slate-700 font-bold">•</span>
+                                  <button
+                                    onClick={async (e) => {
+                                      e.stopPropagation();
+                                      const reason = window.prompt('Report this message? Reason:');
+                                      if (reason === null) return;
+                                      try {
+                                        const token = localStorage.getItem('token');
+                                        const res = await fetch(`${API_BASE}/api/messages/report/${msg._id}`, {
+                                          method: 'POST',
+                                          headers: {
+                                            'Content-Type': 'application/json',
+                                            Authorization: `Bearer ${token}`
+                                          },
+                                          body: JSON.stringify({ reason: reason || 'Inappropriate Content' })
+                                        });
+                                        if (res.ok) {
+                                          alert('🚨 Message reported to moderation.');
+                                        }
+                                      } catch (err) {
+                                        console.error('Failed to report message:', err);
+                                      }
+                                    }}
+                                    className="text-[9px] font-bold text-amber-600 dark:text-amber-500 hover:underline cursor-pointer"
+                                  >
+                                    Report Message
+                                  </button>
+                                </>
+                              )}
+                            </div>
                           )}
 
                           {/* Status Indicator for user's own last message */}
