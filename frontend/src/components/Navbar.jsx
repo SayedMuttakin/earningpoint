@@ -286,17 +286,7 @@ const Navbar = ({
                   title="Messenger Chat"
                 >
                   <div className="relative">
-                    <svg viewBox="0 0 24 24" className="w-7 h-7 transform active:scale-90 transition-transform duration-300" fill="none" xmlns="http://www.w3.org/2000/svg">
-                      <path d="M12 2C6.48 2 2 6.14 2 11.25c0 2.9 1.44 5.49 3.7 7.14v3.86a.75.75 0 001.17.62l4.03-2.58c.36.07.73.11 1.1.11 5.52 0 10-4.14 10-9.25S17.52 2 12 2zm1.25 12.25l-2.5-2.68-4.88 2.68 5.38-5.71 2.5 2.68 4.88-2.68-5.38 5.71z" fill="url(#messenger-gradient)"/>
-                      <defs>
-                        <linearGradient id="messenger-gradient" x1="2" y1="2" x2="22" y2="22" gradientUnits="userSpaceOnUse">
-                          <stop offset="0%" stopColor="#09f" />
-                          <stop offset="30%" stopColor="#a0f" />
-                          <stop offset="70%" stopColor="#f35" />
-                          <stop offset="100%" stopColor="#f85" />
-                        </linearGradient>
-                      </defs>
-                    </svg>
+                    <MessageCircle className="w-6.5 h-6.5 text-slate-700 dark:text-slate-200 transform active:scale-90 transition-transform duration-300" strokeWidth={2} />
                     <span className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 bg-emerald-500 rounded-full border-2 border-white dark:border-slate-900 animate-pulse" />
                   </div>
                 </button>

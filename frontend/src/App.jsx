@@ -330,6 +330,31 @@ function App() {
     );
   }
 
+  const path = window.location.pathname.toLowerCase();
+  const isPrivacyPath = path === '/privacy-policy' || path === '/privacy';
+  const isTermsPath = path === '/terms-and-conditions' || path === '/terms-conditions' || path === '/terms';
+
+  if (isPrivacyPath || isTermsPath) {
+    return (
+      <Suspense fallback={<PageLoader />}>
+        <TermsPrivacyPage 
+          onBack={() => {
+            if (isAuthenticated) {
+              setActiveTab('Home');
+              window.history.pushState({}, '', '/');
+            } else {
+              window.location.href = '/';
+            }
+          }} 
+          initialTab={isPrivacyPath ? 'privacy' : 'terms'} 
+          standalone={true}
+          darkMode={darkMode}
+          onToggleDarkMode={handleToggleDarkMode}
+        />
+      </Suspense>
+    );
+  }
+
   if (isAuthenticated) {
     return (
       <div className="min-h-screen bg-slate-100/50 dark:bg-slate-950 transition-colors duration-300">
@@ -415,7 +440,13 @@ function App() {
           {activeTab === 'Referrals' && <ReferralsPage onBack={() => showBackAd(() => handleBackNavigation())} />}
           {activeTab === 'Leaderboard' && <LeaderboardPage onBack={() => showBackAd(() => handleBackNavigation())} />}
           {activeTab === 'TransactionHistory' && <TransactionHistoryPage onBack={() => showBackAd(() => handleBackNavigation())} />}
-          {activeTab === 'TermsPrivacy' && <TermsPrivacyPage onBack={() => showBackAd(() => handleBackNavigation())} />}
+          {activeTab === 'TermsPrivacy' && (
+            <TermsPrivacyPage 
+              onBack={() => showBackAd(() => handleBackNavigation())} 
+              darkMode={darkMode}
+              onToggleDarkMode={handleToggleDarkMode}
+            />
+          )}
           {activeTab === 'DeleteAccount' && <DeleteAccountPage onBack={() => showBackAd(() => handleBackNavigation())} onLogout={handleLogout} />}
           {activeTab === 'Earning' && <EarningPage onReferralsClick={() => setActiveTab('Referrals')} setActiveTab={setActiveTab} />}
           
