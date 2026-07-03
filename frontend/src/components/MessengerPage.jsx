@@ -178,6 +178,18 @@ const MessengerPage = ({
   const [reportReason, setReportReason] = useState('spam');
   const [targetMessageId, setTargetMessageId] = useState(null);
   const [targetStoryId, setTargetStoryId] = useState(null);
+
+  // Prevent background scroll when modal is open
+  useEffect(() => {
+    if (activeModal) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, [activeModal]);
   // Rich Media State Hooks
   const [isUploadingImage, setIsUploadingImage] = useState(false);
   const [isRecording, setIsRecording] = useState(false);
@@ -613,7 +625,11 @@ const MessengerPage = ({
       if (!saved) {
         const defaultIds = activeDirectUsers.slice(0, 4).map(u => u._id);
         setFavorites(defaultIds);
-        localStorage.setItem('messenger_favorites', JSON.stringify(defaultIds));
+        try {
+          localStorage.setItem('messenger_favorites', JSON.stringify(defaultIds));
+        } catch (e) {
+          console.warn('LocalStorage save failed:', e);
+        }
       }
     }
   }, [chatUsers, favorites.length]);
@@ -1146,7 +1162,11 @@ const MessengerPage = ({
       } else {
         updated = [...prev, userId];
       }
-      localStorage.setItem('messenger_favorites', JSON.stringify(updated));
+      try {
+        localStorage.setItem('messenger_favorites', JSON.stringify(updated));
+      } catch (e) {
+        console.warn('LocalStorage save failed:', e);
+      }
       return updated;
     });
   };
@@ -2952,9 +2972,9 @@ const MessengerPage = ({
 
       {/* React Modals for Messenger actions (replaces window.confirm/prompt) */}
       {activeModal && (
-        <div className="fixed inset-0 z-[150] flex items-center justify-center p-4" onClick={(e) => e.stopPropagation()}>
+        <div className="fixed inset-0 z-[160] flex items-center justify-center p-4" onClick={(e) => e.stopPropagation()}>
           <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs" onClick={() => setActiveModal(null)} />
-          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 max-w-sm w-full relative z-10 shadow-2xl animate-scale-pulse-glow text-left">
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 max-w-sm w-full max-h-[90vh] overflow-y-auto relative z-10 shadow-2xl animate-scale-pulse-glow text-left">
             
             {activeModal === 'delete_chat' && (
               <>

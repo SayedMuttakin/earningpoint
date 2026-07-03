@@ -1093,7 +1093,7 @@ const HomePage = ({ setActiveTab, setSelectedNewsId, setActiveChatPartner, setSe
   const handlePostDelete = (postId) => {
     setFeedPosts(prev => {
       const updated = prev.filter(p => p._id !== postId);
-      localStorage.setItem('cached_feed_posts', JSON.stringify(updated));
+      safeLocalStorageSet('cached_feed_posts', JSON.stringify(updated));
       return updated;
     });
   };
@@ -1101,7 +1101,7 @@ const HomePage = ({ setActiveTab, setSelectedNewsId, setActiveChatPartner, setSe
   const handleBlockAuthor = (authorId) => {
     setFeedPosts(prev => {
       const updated = prev.filter(p => p.authorId !== authorId);
-      localStorage.setItem('cached_feed_posts', JSON.stringify(updated));
+      safeLocalStorageSet('cached_feed_posts', JSON.stringify(updated));
       return updated;
     });
   };
@@ -1395,7 +1395,7 @@ const HomePage = ({ setActiveTab, setSelectedNewsId, setActiveChatPartner, setSe
         {activeActionModal && (
           <div className="fixed inset-0 z-[160] flex items-center justify-center p-4" onClick={(e) => e.stopPropagation()}>
             <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs" onClick={() => setActiveActionModal(null)} />
-            <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 max-w-sm w-full relative z-10 shadow-2xl animate-scale-pulse-glow text-left">
+            <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 max-w-sm w-full max-h-[90vh] overflow-y-auto relative z-10 shadow-2xl animate-scale-pulse-glow text-left">
               
               {activeActionModal.type === 'delete' && (
                 <>
