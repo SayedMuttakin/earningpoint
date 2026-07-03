@@ -3,7 +3,7 @@ import {
   ChevronLeft, Printer, Search, Shield, Lock, Scale, MessageSquare, 
   Coins, Ban, ShoppingBag, Newspaper, UserX, Copyright, RefreshCw, 
   Database, Cpu, Users, Share2, UserCheck, Baby, Moon, Sun, 
-  Info, ExternalLink, ArrowRight, HelpCircle, Check
+  Info, ExternalLink, ArrowRight, HelpCircle, Check, FileText
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
