@@ -457,4 +457,18 @@ exports.reportUser = async (req, res) => {
   }
 };
 
+// GET /api/profile/blocked — Fetch populated list of blocked users
+exports.getBlockedUsers = async (req, res) => {
+  try {
+    const user = await User.findById(req.user._id).populate('blockedUsers', 'name phoneOrEmail profilePic');
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+    res.json(user.blockedUsers || []);
+  } catch (error) {
+    console.error('Error fetching blocked users:', error);
+    res.status(500).json({ message: 'Server Error' });
+  }
+};
+
 

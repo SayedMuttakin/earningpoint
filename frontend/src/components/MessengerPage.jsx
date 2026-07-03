@@ -172,6 +172,12 @@ const MessengerPage = ({
   const [selectedGroupMembers, setSelectedGroupMembers] = useState([]);
   const [groupSearchQuery, setGroupSearchQuery] = useState('');
   const [showChatMenu, setShowChatMenu] = useState(false);
+  
+  // Custom dialog modals
+  const [activeModal, setActiveModal] = useState(null); // 'delete_chat', 'block_user', 'report_user', 'report_message', 'delete_story'
+  const [reportReason, setReportReason] = useState('spam');
+  const [targetMessageId, setTargetMessageId] = useState(null);
+  const [targetStoryId, setTargetStoryId] = useState(null);
   // Rich Media State Hooks
   const [isUploadingImage, setIsUploadingImage] = useState(false);
   const [isRecording, setIsRecording] = useState(false);
@@ -446,6 +452,96 @@ const MessengerPage = ({
       console.error('Failed to save story:', err);
     } finally {
       setIsSavingStory(false);
+    }
+  };
+
+  const handleDeleteChatConfirm = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const res = await fetch(`${API_BASE}/api/messages/chat/${activePartner._id}`, {
+        method: 'DELETE',
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      if (res.ok) {
+        setActiveModal(null);
+        setActivePartner(null);
+        if (setActiveChatPartner) setActiveChatPartner(null);
+        fetchUsers();
+      }
+    } catch (err) {
+      console.error('Failed to delete chat:', err);
+    }
+  };
+
+  const handleBlockUserConfirm = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const res = await fetch(`${API_BASE}/api/profile/block/${activePartner._id}`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      if (res.ok) {
+        setActiveModal(null);
+        setActivePartner(null);
+        if (setActiveChatPartner) setActiveChatPartner(null);
+        fetchUsers();
+      }
+    } catch (err) {
+      console.error('Failed to block user:', err);
+    }
+  };
+
+  const handleReportUserSubmit = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const res = await fetch(`${API_BASE}/api/profile/report/${activePartner._id}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify({ reason: reportReason })
+      });
+      if (res.ok) {
+        setActiveModal(null);
+        setActivePartner(null);
+        if (setActiveChatPartner) setActiveChatPartner(null);
+        fetchUsers();
+      }
+    } catch (err) {
+      console.error('Failed to report user:', err);
+    }
+  };
+
+  const handleReportMessageSubmit = async () => {
+    if (!targetMessageId) return;
+    try {
+      const token = localStorage.getItem('token');
+      const res = await fetch(`${API_BASE}/api/messages/report/${targetMessageId}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify({ reason: reportReason })
+      });
+      if (res.ok) {
+        setActiveModal(null);
+        setTargetMessageId(null);
+      }
+    } catch (err) {
+      console.error('Failed to report message:', err);
+    }
+  };
+
+  const handleDeleteStoryConfirm = async () => {
+    if (!targetStoryId) return;
+    try {
+      await handleDeleteStory(targetStoryId);
+      setActiveModal(null);
+      setTargetStoryId(null);
+    } catch (err) {
+      console.error('Failed to delete story:', err);
     }
   };
 
@@ -1809,24 +1905,9 @@ const MessengerPage = ({
                     <div className="fixed inset-0 z-30" onClick={() => setShowChatMenu(false)} />
                     <div className="absolute right-0 mt-1.5 w-48 bg-white dark:bg-slate-900 rounded-2xl shadow-xl border border-slate-100 dark:border-slate-800 py-1.5 z-40 animate-fade-in text-left">
                       <button
-                        onClick={async () => {
+                        onClick={() => {
                           setShowChatMenu(false);
-                          if (!window.confirm('Delete all chat history with this user? This cannot be undone.')) return;
-                          try {
-                            const token = localStorage.getItem('token');
-                            const res = await fetch(`${API_BASE}/api/messages/chat/${activePartner._id}`, {
-                              method: 'DELETE',
-                              headers: { Authorization: `Bearer ${token}` }
-                            });
-                            if (res.ok) {
-                              alert('🗑️ Conversation deleted.');
-                              setActivePartner(null);
-                              if (setActiveChatPartner) setActiveChatPartner(null);
-                              fetchUsers();
-                            }
-                          } catch (err) {
-                            console.error('Failed to delete chat:', err);
-                          }
+                          setActiveModal('delete_chat');
                         }}
                         className="w-full flex items-center gap-2 px-4 py-2.5 text-xs font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-850 transition-colors text-left"
                       >
@@ -1836,24 +1917,9 @@ const MessengerPage = ({
                       {!activePartner.isGroup && (
                         <>
                           <button
-                            onClick={async () => {
+                            onClick={() => {
                               setShowChatMenu(false);
-                              if (!window.confirm(`Block ${activePartner.name}? You will no longer receive messages or calls from them.`)) return;
-                              try {
-                                const token = localStorage.getItem('token');
-                                const res = await fetch(`${API_BASE}/api/profile/block/${activePartner._id}`, {
-                                  method: 'POST',
-                                  headers: { Authorization: `Bearer ${token}` }
-                                });
-                                if (res.ok) {
-                                  alert('🚫 User blocked successfully!');
-                                  setActivePartner(null);
-                                  if (setActiveChatPartner) setActiveChatPartner(null);
-                                  fetchUsers();
-                                }
-                              } catch (err) {
-                                console.error('Failed to block user:', err);
-                              }
+                              setActiveModal('block_user');
                             }}
                             className="w-full flex items-center gap-2 px-4 py-2.5 text-xs font-bold text-red-500 hover:bg-red-50 dark:hover:bg-red-950/20 transition-colors text-left"
                           >
@@ -1861,29 +1927,9 @@ const MessengerPage = ({
                           </button>
                           
                           <button
-                            onClick={async () => {
+                            onClick={() => {
                               setShowChatMenu(false);
-                              const reason = window.prompt('Report this user? Reason:');
-                              if (reason === null) return;
-                              try {
-                                const token = localStorage.getItem('token');
-                                const res = await fetch(`${API_BASE}/api/profile/report/${activePartner._id}`, {
-                                  method: 'POST',
-                                  headers: {
-                                    'Content-Type': 'application/json',
-                                    Authorization: `Bearer ${token}`
-                                  },
-                                  body: JSON.stringify({ reason: reason || 'Inappropriate Behavior' })
-                                });
-                                if (res.ok) {
-                                  alert('🚨 User reported & blocked.');
-                                  setActivePartner(null);
-                                  if (setActiveChatPartner) setActiveChatPartner(null);
-                                  fetchUsers();
-                                }
-                              } catch (err) {
-                                console.error('Failed to report user:', err);
-                              }
+                              setActiveModal('report_user');
                             }}
                             className="w-full flex items-center gap-2 px-4 py-2.5 text-xs font-bold text-amber-600 dark:text-amber-500 hover:bg-slate-50 dark:hover:bg-slate-850 transition-colors text-left"
                           >
@@ -2010,26 +2056,10 @@ const MessengerPage = ({
                                 <>
                                   <span className="text-[9px] text-slate-300 dark:text-slate-700 font-bold">•</span>
                                   <button
-                                    onClick={async (e) => {
+                                    onClick={(e) => {
                                       e.stopPropagation();
-                                      const reason = window.prompt('Report this message? Reason:');
-                                      if (reason === null) return;
-                                      try {
-                                        const token = localStorage.getItem('token');
-                                        const res = await fetch(`${API_BASE}/api/messages/report/${msg._id}`, {
-                                          method: 'POST',
-                                          headers: {
-                                            'Content-Type': 'application/json',
-                                            Authorization: `Bearer ${token}`
-                                          },
-                                          body: JSON.stringify({ reason: reason || 'Inappropriate Content' })
-                                        });
-                                        if (res.ok) {
-                                          alert('🚨 Message reported to moderation.');
-                                        }
-                                      } catch (err) {
-                                        console.error('Failed to report message:', err);
-                                      }
+                                      setTargetMessageId(msg._id);
+                                      setActiveModal('report_message');
                                     }}
                                     className="text-[9px] font-bold text-amber-600 dark:text-amber-500 hover:underline cursor-pointer"
                                   >
@@ -2686,7 +2716,11 @@ const MessengerPage = ({
                 <div className="flex items-center gap-2">
                   {isOwnStory && (
                     <button
-                      onClick={e => { e.stopPropagation(); if (window.confirm('Delete this story?')) handleDeleteStory(story._id); }}
+                      onClick={e => {
+                        e.stopPropagation();
+                        setTargetStoryId(story._id);
+                        setActiveModal('delete_story');
+                      }}
                       className="px-3 py-1.5 rounded-full bg-rose-500/80 text-white text-xs font-black flex items-center gap-1 active:scale-90"
                     >
                       🗑️ Delete
@@ -2916,6 +2950,141 @@ const MessengerPage = ({
           </div>
         )}
 
+      {/* React Modals for Messenger actions (replaces window.confirm/prompt) */}
+      {activeModal && (
+        <div className="fixed inset-0 z-[150] flex items-center justify-center p-4" onClick={(e) => e.stopPropagation()}>
+          <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs" onClick={() => setActiveModal(null)} />
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 max-w-sm w-full relative z-10 shadow-2xl animate-scale-pulse-glow text-left">
+            
+            {activeModal === 'delete_chat' && (
+              <>
+                <h3 className="text-base font-black text-slate-900 dark:text-white mb-2">Delete Conversation</h3>
+                <p className="text-slate-500 dark:text-slate-400 text-[11px] font-bold mb-5 leading-relaxed">
+                  Are you sure you want to delete all chat history with this user? This cannot be undone.
+                </p>
+                <div className="flex gap-3">
+                  <button 
+                    onClick={() => setActiveModal(null)}
+                    className="flex-1 py-2.5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 text-xs font-black rounded-xl cursor-pointer transition-colors"
+                  >
+                    Cancel
+                  </button>
+                  <button 
+                    onClick={handleDeleteChatConfirm}
+                    className="flex-1 py-2.5 bg-red-655 hover:bg-red-700 text-white text-xs font-black rounded-xl cursor-pointer transition-colors shadow-md shadow-red-500/10"
+                  >
+                    Delete
+                  </button>
+                </div>
+              </>
+            )}
+
+            {activeModal === 'block_user' && (
+              <>
+                <h3 className="text-base font-black text-slate-900 dark:text-white mb-2">Block User</h3>
+                <p className="text-slate-500 dark:text-slate-400 text-[11px] font-bold mb-5 leading-relaxed">
+                  Are you sure you want to block {activePartner?.name}? You will no longer receive messages or calls from them.
+                </p>
+                <div className="flex gap-3">
+                  <button 
+                    onClick={() => setActiveModal(null)}
+                    className="flex-1 py-2.5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 text-xs font-black rounded-xl cursor-pointer transition-colors"
+                  >
+                    Cancel
+                  </button>
+                  <button 
+                    onClick={handleBlockUserConfirm}
+                    className="flex-1 py-2.5 bg-red-655 hover:bg-red-700 text-white text-xs font-black rounded-xl cursor-pointer transition-colors shadow-md shadow-red-500/10"
+                  >
+                    Block User
+                  </button>
+                </div>
+              </>
+            )}
+
+            {activeModal === 'delete_story' && (
+              <>
+                <h3 className="text-base font-black text-slate-900 dark:text-white mb-2">Delete Story</h3>
+                <p className="text-slate-500 dark:text-slate-400 text-[11px] font-bold mb-5 leading-relaxed">
+                  Are you sure you want to permanently delete this story?
+                </p>
+                <div className="flex gap-3">
+                  <button 
+                    onClick={() => { setActiveModal(null); setTargetStoryId(null); }}
+                    className="flex-1 py-2.5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 text-xs font-black rounded-xl cursor-pointer transition-colors"
+                  >
+                    Cancel
+                  </button>
+                  <button 
+                    onClick={handleDeleteStoryConfirm}
+                    className="flex-1 py-2.5 bg-red-655 hover:bg-red-700 text-white text-xs font-black rounded-xl cursor-pointer transition-colors shadow-md shadow-red-500/10"
+                  >
+                    Delete
+                  </button>
+                </div>
+              </>
+            )}
+
+            {(activeModal === 'report_user' || activeModal === 'report_message') && (
+              <>
+                <h3 className="text-base font-black text-slate-900 dark:text-white mb-2">
+                  {activeModal === 'report_user' ? 'Report User' : 'Report Message'}
+                </h3>
+                <p className="text-slate-500 dark:text-slate-400 text-[11px] font-bold mb-4 leading-relaxed">
+                  Please select a reason for reporting this.
+                  {activeModal === 'report_user' && ' Reporting will also block them immediately for your safety.'}
+                </p>
+                <div className="space-y-2 mb-6">
+                  {[
+                    { value: 'spam', label: 'Spam, scams or fraud' },
+                    { value: 'harassment', label: 'Harassment or hate speech' },
+                    { value: 'violence', label: 'Violence or threats' },
+                    { value: 'sexual', label: 'Sexually explicit content' },
+                    { value: 'other', label: 'Other violation' }
+                  ].map(opt => (
+                    <label 
+                      key={opt.value} 
+                      className={`flex items-center gap-3 p-3 rounded-2xl border cursor-pointer font-bold text-xs sm:text-sm transition-all ${
+                        reportReason === opt.value 
+                          ? 'border-indigo-500 bg-indigo-500/5 text-indigo-655 dark:text-indigo-400' 
+                          : 'border-slate-100 dark:border-slate-800 text-slate-655 dark:text-slate-350 hover:bg-slate-50 dark:hover:bg-slate-800/40'
+                      }`}
+                    >
+                      <input 
+                        type="radio" 
+                        name="msgReportReason" 
+                        value={opt.value} 
+                        checked={reportReason === opt.value} 
+                        onChange={(e) => setReportReason(e.target.value)}
+                        className="sr-only" 
+                      />
+                      <div className={`w-4 h-4 rounded-full border flex items-center justify-center flex-shrink-0 ${reportReason === opt.value ? 'border-indigo-500' : 'border-slate-300 dark:border-slate-600'}`}>
+                        {reportReason === opt.value && <div className="w-2 h-2 rounded-full bg-indigo-500" />}
+                      </div>
+                      <span>{opt.label}</span>
+                    </label>
+                  ))}
+                </div>
+                <div className="flex gap-3">
+                  <button 
+                    onClick={() => { setActiveModal(null); setTargetMessageId(null); }}
+                    className="flex-1 py-2.5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 text-xs font-black rounded-xl cursor-pointer transition-colors"
+                  >
+                    Cancel
+                  </button>
+                  <button 
+                    onClick={activeModal === 'report_user' ? handleReportUserSubmit : handleReportMessageSubmit}
+                    className="flex-1 py-2.5 bg-red-655 hover:bg-red-700 text-white text-xs font-black rounded-xl cursor-pointer transition-colors shadow-md shadow-red-500/10"
+                  >
+                    Submit Report
+                  </button>
+                </div>
+              </>
+            )}
+
+          </div>
+        </div>
+      )}
       </div>
     </div>
   );

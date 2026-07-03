@@ -12,6 +12,7 @@ const {
   getPublicProfile,
   blockUser,
   reportUser,
+  getBlockedUsers,
 } = require('../controllers/profileController');
 
 router.get('/', protect, getProfile);
@@ -23,6 +24,7 @@ router.put('/darkmode', protect, toggleDarkMode);
 router.post('/follow/:userId', protect, followUser);
 router.post('/block/:userId', protect, blockUser);
 router.post('/report/:userId', protect, reportUser);
+router.get('/blocked', protect, getBlockedUsers);
 router.get('/:userId', protect, getPublicProfile);
 
 module.exports = router;

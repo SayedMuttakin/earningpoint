@@ -89,14 +89,32 @@ const SettingsPage = ({
   const [showBlockedModal, setShowBlockedModal] = useState(false);
   const [blockedUsers, setBlockedUsers] = useState(() => {
     const saved = localStorage.getItem('blocked_users');
-    return saved ? JSON.parse(saved) : [
-      { _id: '1', name: 'Zayed Khan', phoneOrEmail: 'zayed@gmail.com', profilePic: '' },
-      { _id: '2', name: 'Tanvir Hossain', phoneOrEmail: 'tanvir@outlook.com', profilePic: '' }
-    ];
+    return saved ? JSON.parse(saved) : [];
   });
   const [blockSearchQuery, setBlockSearchQuery] = useState('');
   const [blockSearchResults, setBlockSearchResults] = useState([]);
   const [searchingUsers, setSearchingUsers] = useState(false);
+
+  useEffect(() => {
+    if (showBlockedModal) {
+      const fetchBlockedUsers = async () => {
+        try {
+          const token = localStorage.getItem('token');
+          const res = await fetch(`${API_BASE}/api/profile/blocked`, {
+            headers: { Authorization: `Bearer ${token}` }
+          });
+          if (res.ok) {
+            const data = await res.json();
+            setBlockedUsers(data);
+            localStorage.setItem('blocked_users', JSON.stringify(data));
+          }
+        } catch (err) {
+          console.error('Failed to fetch blocked users:', err);
+        }
+      };
+      fetchBlockedUsers();
+    }
+  }, [showBlockedModal]);
 
   // Chat Settings
   const [showChatSettingsModal, setShowChatSettingsModal] = useState(false);
@@ -158,21 +176,43 @@ const SettingsPage = ({
     }
   };
 
-  const handleBlockUser = (u) => {
+  const handleBlockUser = async (u) => {
     if (blockedUsers.some(b => b._id === u._id)) return;
-    const newList = [...blockedUsers, { _id: u._id, name: u.name, phoneOrEmail: u.phoneOrEmail, profilePic: u.profilePic }];
-    setBlockedUsers(newList);
-    localStorage.setItem('blocked_users', JSON.stringify(newList));
-    showToast(`${u.name} has been blocked.`);
+    try {
+      const token = localStorage.getItem('token');
+      const res = await fetch(`${API_BASE}/api/profile/block/${u._id}`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      if (res.ok) {
+        const newList = [...blockedUsers, { _id: u._id, name: u.name, phoneOrEmail: u.phoneOrEmail, profilePic: u.profilePic }];
+        setBlockedUsers(newList);
+        localStorage.setItem('blocked_users', JSON.stringify(newList));
+        showToast(`${u.name} has been blocked.`);
+      }
+    } catch (err) {
+      console.error('Failed to block user in settings:', err);
+    }
   };
 
-  const handleUnblockUser = (id) => {
-    const user = blockedUsers.find(b => b._id === id);
-    const newList = blockedUsers.filter(b => b._id !== id);
-    setBlockedUsers(newList);
-    localStorage.setItem('blocked_users', JSON.stringify(newList));
-    if (user) {
-      showToast(`${user.name} has been unblocked.`);
+  const handleUnblockUser = async (id) => {
+    try {
+      const token = localStorage.getItem('token');
+      const res = await fetch(`${API_BASE}/api/profile/block/${id}`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      if (res.ok) {
+        const user = blockedUsers.find(b => b._id === id);
+        const newList = blockedUsers.filter(b => b._id !== id);
+        setBlockedUsers(newList);
+        localStorage.setItem('blocked_users', JSON.stringify(newList));
+        if (user) {
+          showToast(`${user.name} has been unblocked.`);
+        }
+      }
+    } catch (err) {
+      console.error('Failed to unblock user in settings:', err);
     }
   };
 
