@@ -41,19 +41,35 @@ const MOCK_LOCATIONS = [
   'New York, USA', 'London, UK', 'Paris, France', 'Tokyo, Japan'
 ];
 
-const CreatePostPage = ({ currentUser, onBack, setActiveTab }) => {
-  const [content, setContent] = useState('');
-  const [privacy, setPrivacy] = useState('public'); // public, friends, private
-  const [selectedGradient, setSelectedGradient] = useState('none');
+const CreatePostPage = ({ currentUser, onBack, setActiveTab, postToEdit = null }) => {
+  const [content, setContent] = useState(postToEdit ? postToEdit.content : '');
+  const [privacy, setPrivacy] = useState(postToEdit ? postToEdit.privacy : 'public'); // public, friends, private
+  const [selectedGradient, setSelectedGradient] = useState(postToEdit && postToEdit.bgGradient ? postToEdit.bgGradient : 'none');
   const [selectedImage, setSelectedImage] = useState(null);
-  const [imagePreview, setImagePreview] = useState(null);
-  const [selectedFileType, setSelectedFileType] = useState('image'); // image, video
+  const [imagePreview, setImagePreview] = useState(() => {
+    if (postToEdit) {
+      if (postToEdit.video) {
+        return postToEdit.video.startsWith('http') || postToEdit.video.startsWith('/api') || postToEdit.video.startsWith('data:') 
+          ? postToEdit.video 
+          : `${API_BASE}/api/image?file=${encodeURIComponent(postToEdit.video)}`;
+      }
+      if (postToEdit.image) {
+        return postToEdit.image.startsWith('http') || postToEdit.image.startsWith('/api') || postToEdit.image.startsWith('data:') 
+          ? postToEdit.image 
+          : `${API_BASE}/api/image?file=${encodeURIComponent(postToEdit.image)}`;
+      }
+    }
+    return null;
+  });
+  const [selectedFileType, setSelectedFileType] = useState(postToEdit && postToEdit.video ? 'video' : 'image'); // image, video
   const [postingLoading, setPostingLoading] = useState(false);
+  const [clearImage, setClearImage] = useState(false);
+  const [clearVideo, setClearVideo] = useState(false);
 
   // Enhancement States
-  const [feeling, setFeeling] = useState(null);
-  const [location, setLocation] = useState(null);
-  const [taggedFriends, setTaggedFriends] = useState([]);
+  const [feeling, setFeeling] = useState(postToEdit && postToEdit.feeling ? postToEdit.feeling : null);
+  const [location, setLocation] = useState(postToEdit ? postToEdit.location : null);
+  const [taggedFriends, setTaggedFriends] = useState(postToEdit && postToEdit.taggedFriends ? postToEdit.taggedFriends : []);
 
   // Modals Visibility
   const [activeModal, setActiveModal] = useState(null); // 'privacy', 'friends', 'feeling', 'location'
@@ -122,7 +138,7 @@ const CreatePostPage = ({ currentUser, onBack, setActiveTab }) => {
 
   const handlePostSubmit = async (e) => {
     if (e) e.preventDefault();
-    if (!content.trim() && !selectedImage) return;
+    if (!content.trim() && !selectedImage && !imagePreview) return;
 
     setPostingLoading(true);
     const token = localStorage.getItem('token');
@@ -146,10 +162,17 @@ const CreatePostPage = ({ currentUser, onBack, setActiveTab }) => {
     if (selectedImage) {
       formData.append('image', selectedImage);
     }
+    if (postToEdit) {
+      if (clearImage) formData.append('clearImage', 'true');
+      if (clearVideo) formData.append('clearVideo', 'true');
+    }
 
     try {
-      const res = await fetch(`${API_BASE}/api/posts`, {
-        method: 'POST',
+      const url = postToEdit ? `${API_BASE}/api/posts/${postToEdit._id}` : `${API_BASE}/api/posts`;
+      const method = postToEdit ? 'PUT' : 'POST';
+      
+      const res = await fetch(url, {
+        method,
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -165,6 +188,8 @@ const CreatePostPage = ({ currentUser, onBack, setActiveTab }) => {
         setFeeling(null);
         setLocation(null);
         setTaggedFriends([]);
+        setClearImage(false);
+        setClearVideo(false);
         
         // Refresh feed posts cache
         localStorage.removeItem('cached_feed_posts');
@@ -172,10 +197,10 @@ const CreatePostPage = ({ currentUser, onBack, setActiveTab }) => {
         setActiveTab('Home');
       } else {
         const errorData = await res.json();
-        alert(errorData.message || 'Failed to create post');
+        alert(errorData.message || `Failed to ${postToEdit ? 'save' : 'create'} post`);
       }
     } catch (err) {
-      console.error('Create post error:', err);
+      console.error('Post submit error:', err);
       alert('An error occurred. Please try again.');
     } finally {
       setPostingLoading(false);
@@ -226,7 +251,7 @@ const CreatePostPage = ({ currentUser, onBack, setActiveTab }) => {
           >
             <ArrowLeft className="w-6 h-6" />
           </button>
-          <h1 className="text-lg font-black text-slate-800 dark:text-white">Create Post</h1>
+          <h1 className="text-lg font-black text-slate-800 dark:text-white">{postToEdit ? 'Edit Post' : 'Create Post'}</h1>
         </div>
         
         <button
@@ -235,9 +260,9 @@ const CreatePostPage = ({ currentUser, onBack, setActiveTab }) => {
           className="px-5 py-2 bg-brand-600 hover:bg-brand-700 disabled:bg-slate-200 dark:disabled:bg-slate-800 disabled:text-slate-400 dark:disabled:text-slate-600 text-white font-black text-sm rounded-full shadow-md active:scale-95 transition-all flex items-center gap-2"
         >
           {postingLoading ? (
-            <><Loader2 className="w-4.5 h-4.5 animate-spin" /> Posting...</>
+            <><Loader2 className="w-4.5 h-4.5 animate-spin" /> {postToEdit ? 'Saving...' : 'Posting...'}</>
           ) : (
-            'Post'
+            postToEdit ? 'Save' : 'Post'
           )}
         </button>
       </header>
@@ -329,6 +354,10 @@ const CreatePostPage = ({ currentUser, onBack, setActiveTab }) => {
                 onClick={() => {
                   setSelectedImage(null);
                   setImagePreview(null);
+                  if (postToEdit) {
+                    if (postToEdit.image) setClearImage(true);
+                    if (postToEdit.video) setClearVideo(true);
+                  }
                 }}
                 className="absolute top-3 right-3 p-1.5 bg-black/70 hover:bg-black/90 text-white rounded-full transition-all shadow-md active:scale-90"
               >

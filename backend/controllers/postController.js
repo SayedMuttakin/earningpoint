@@ -516,6 +516,91 @@ exports.deleteUserPost = async (req, res) => {
   }
 };
 
+// @desc    Update a post by user
+// @route   PUT /api/posts/:id
+// @access  Private
+exports.updateUserPost = async (req, res) => {
+  try {
+    const post = await Post.findById(req.params.id);
+    if (!post) {
+      return res.status(404).json({ message: 'Post not found' });
+    }
+
+    // Check if current user is the author
+    if (post.authorId && post.authorId.toString() !== req.user._id.toString()) {
+      return res.status(403).json({ message: 'You are not authorized to edit this post' });
+    }
+
+    const { content, title, privacy, feeling, location, taggedFriends, bgGradient } = req.body;
+
+    let imageUrl = post.image;
+    let videoUrl = post.video;
+
+    if (req.file) {
+      const fileUrl = `/api/image?file=${req.file.filename}`;
+      if (req.file.mimetype.startsWith('video/')) {
+        videoUrl = fileUrl;
+        imageUrl = null; // Clear image if new video uploaded
+      } else {
+        imageUrl = fileUrl;
+        videoUrl = null; // Clear video if new image uploaded
+      }
+    }
+
+    // Also support clearing media
+    if (req.body.clearImage === 'true') {
+      imageUrl = null;
+    }
+    if (req.body.clearVideo === 'true') {
+      videoUrl = null;
+    }
+
+    if (!content) {
+      return res.status(400).json({ message: 'Content is required' });
+    }
+
+    let parsedFriends = post.taggedFriends;
+    if (taggedFriends) {
+      try {
+        parsedFriends = typeof taggedFriends === 'string' ? JSON.parse(taggedFriends) : taggedFriends;
+      } catch (e) {
+        parsedFriends = typeof taggedFriends === 'string' ? taggedFriends.split(',').map(f => f.trim()) : taggedFriends;
+      }
+    }
+
+    post.content = content;
+    post.title = title || null;
+    post.image = imageUrl;
+    post.video = videoUrl;
+    post.privacy = privacy || 'public';
+    post.feeling = feeling || null;
+    post.location = location || null;
+    post.taggedFriends = parsedFriends;
+    post.bgGradient = bgGradient || null;
+
+    await post.save();
+
+    const populatedPost = await Post.findById(post._id).populate('authorId', 'name profilePic googleAvatar isEmailVerified verificationBadge');
+    const postObj = populatedPost.toObject();
+    const authorObj = postObj.authorId;
+
+    res.json({
+      ...postObj,
+      authorId: authorObj ? authorObj._id.toString() : null,
+      authorDetails: authorObj ? {
+        name: authorObj.name,
+        profilePic: authorObj.profilePic,
+        googleAvatar: authorObj.googleAvatar,
+        isEmailVerified: authorObj.isEmailVerified,
+        verificationBadge: authorObj.verificationBadge || 'none'
+      } : null
+    });
+  } catch (error) {
+    console.error('Error updating user post:', error);
+    res.status(500).json({ message: error.message });
+  }
+};
+
 // POST /api/posts/:id/report — Report a post (UGC Content Moderation)
 exports.reportPost = async (req, res) => {
   try {

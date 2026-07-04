@@ -51,6 +51,11 @@ router.post('/:id/save', protect, postController.toggleSavePost);
 // @access  Private
 router.delete('/:id', protect, postController.deleteUserPost);
 
+// @route   PUT /api/posts/:id
+// @desc    Update a post by user
+// @access  Private
+router.put('/:id', protect, upload.single('image'), postController.updateUserPost);
+
 // @route   POST /api/posts/:id/report
 // @desc    Report a post (UGC)
 // @access  Private

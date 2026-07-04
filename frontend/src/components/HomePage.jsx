@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Loader2, Plus, Image as ImageIcon, X, Globe, MoreVertical, Search, MessageCircle, Users, Smile, Heart, Send, Bookmark, Download, Trash2, AlertTriangle, UserX } from 'lucide-react';
+import { Loader2, Plus, Image as ImageIcon, X, Globe, MoreVertical, Search, MessageCircle, Users, Smile, Heart, Send, Bookmark, Download, Trash2, AlertTriangle, UserX, Edit } from 'lucide-react';
 import { API_BASE } from '../config';
 import VerifiedBadge from './VerifiedBadge';
 import PullToRefresh from './PullToRefresh';
@@ -531,17 +531,30 @@ const CommunityPostCard = ({ post, onFollowToggle, onLikeToggle, onCommentClick,
                 </button>
 
                 {post.authorId === currentUserId || post.isOwnPost ? (
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setShowMenu(false);
-                      if (onActionTrigger) onActionTrigger('delete', post);
-                    }}
-                    className="w-full flex items-center gap-2 px-3.5 py-2 text-xs font-bold text-red-500 hover:bg-red-50 dark:hover:bg-red-950/20 transition-colors"
-                  >
-                    <Trash2 className="w-4 h-4" />
-                    <span>Delete Post</span>
-                  </button>
+                  <>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setShowMenu(false);
+                        if (onActionTrigger) onActionTrigger('edit', post);
+                      }}
+                      className="w-full flex items-center gap-2 px-3.5 py-2 text-xs font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-750 transition-colors"
+                    >
+                      <Edit className="w-4 h-4" />
+                      <span>Edit Post</span>
+                    </button>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setShowMenu(false);
+                        if (onActionTrigger) onActionTrigger('delete', post);
+                      }}
+                      className="w-full flex items-center gap-2 px-3.5 py-2 text-xs font-bold text-red-500 hover:bg-red-50 dark:hover:bg-red-950/20 transition-colors"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                      <span>Delete Post</span>
+                    </button>
+                  </>
                 ) : (
                   <>
                     <button
@@ -784,7 +797,7 @@ const fetchWithTimeout = async (url, options = {}, timeout = 5000) => {
   }
 };
 
-const HomePage = ({ setActiveTab, setSelectedNewsId, setActiveChatPartner, setSelectedReelId, highlightedPostId, setHighlightedPostId, onUserClick }) => {
+const HomePage = ({ setActiveTab, setSelectedNewsId, setActiveChatPartner, setSelectedReelId, highlightedPostId, setHighlightedPostId, setPostToEdit, onUserClick }) => {
   const [activeCommentPost, setActiveCommentPost] = useState(null);
   const [newsPosts, setNewsPosts] = useState(() => {
     try {
@@ -850,6 +863,13 @@ const HomePage = ({ setActiveTab, setSelectedNewsId, setActiveChatPartner, setSe
   }, [activeActionModal]);
 
   const handleActionTrigger = (type, post) => {
+    if (type === 'edit') {
+      if (setPostToEdit) {
+        setPostToEdit(post);
+      }
+      setActiveTab('CreatePost');
+      return;
+    }
     setActiveActionModal({ type, post });
   };
 

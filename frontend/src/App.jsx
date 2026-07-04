@@ -71,17 +71,24 @@ function App() {
       return [...prev, tab];
     });
     _setActiveTab(tab);
+    if (tab !== 'CreatePost') {
+      setPostToEdit(null);
+    }
   };
 
   const handleBackNavigation = () => {
     setNavigationHistory(prev => {
       if (prev.length <= 1) {
         _setActiveTab('Home');
+        setPostToEdit(null);
         return ['Home'];
       }
       const newHistory = prev.slice(0, -1);
       const targetTab = newHistory[newHistory.length - 1];
       _setActiveTab(targetTab || 'Home');
+      if (targetTab !== 'CreatePost') {
+        setPostToEdit(null);
+      }
       return newHistory;
     });
   };
@@ -141,6 +148,7 @@ function App() {
   const [activePublicProfileUserId, setActivePublicProfileUserId] = useState(profileIdFromUrl || null);
   const [currentUser, setCurrentUser] = useState(null);
   const [initialSettingsSubMenu, setInitialSettingsSubMenu] = useState(null);
+  const [postToEdit, setPostToEdit] = useState(null);
 
   useEffect(() => {
     // Clean up URL query parameters so they don't persist on page reload/navigation
@@ -379,6 +387,7 @@ function App() {
               setSelectedReelId={setSelectedReelId}
               highlightedPostId={selectedNotificationPostId}
               setHighlightedPostId={setSelectedNotificationPostId}
+              setPostToEdit={setPostToEdit}
               onUserClick={(uid) => {
                 setActivePublicProfileUserId(uid);
                 setActiveTab('PublicProfile');
@@ -389,7 +398,7 @@ function App() {
             <VideoReelsPage selectedReelId={selectedReelId} onBack={() => handleBackNavigation()} />
           )}
           {activeTab === 'CreatePost' && (
-            <CreatePostPage currentUser={currentUser} onBack={() => handleBackNavigation()} setActiveTab={setActiveTab} />
+            <CreatePostPage currentUser={currentUser} onBack={() => handleBackNavigation()} setActiveTab={setActiveTab} postToEdit={postToEdit} />
           )}
           {activeTab === 'Cart' && <CartPage onBuyNow={handleBuyNow} />}
           {activeTab === 'Checkout' && <CheckoutPage product={selectedProduct} onBack={() => handleBackNavigation()} onSuccess={(method) => { setSelectedPaymentMethod(method); setActiveTab('PaymentSuccess'); }} />}
