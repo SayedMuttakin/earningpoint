@@ -27,6 +27,7 @@ import {
 } from 'lucide-react';
 import { API_BASE } from '../config';
 import VerifiedBadge from './VerifiedBadge';
+import ShareModal from './ShareModal';
 
 const formatCount = (num) => {
   if (!num) return '0';
@@ -167,6 +168,8 @@ const ImagePreviewModal = ({ imageUrl, onClose }) => {
 
 const PublicProfilePage = ({ userId, onBack, currentUser, isOwnProfile, setActiveTab, setSelectedReelId, setActiveChatPartner, startEditing }) => {
   const [profile, setProfile] = useState(null);
+  const [shareModalOpen, setShareModalOpen] = useState(false);
+  const [shareData, setShareData] = useState({ url: '', title: '', text: '' });
   const [videos, setVideos] = useState([]);
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -851,18 +854,12 @@ const PublicProfilePage = ({ userId, onBack, currentUser, isOwnProfile, setActiv
             <button 
               onClick={() => {
                 const shareUrl = `${window.location.origin}${window.location.pathname}?profileId=${profile._id}`;
-                if (navigator.share) {
-                  navigator.share({
-                    title: `${profile.name}'s Profile on Zenivio`,
-                    url: shareUrl
-                  }).catch(console.error);
-                } else {
-                  navigator.clipboard.writeText(shareUrl).then(() => {
-                    showToastNotification('✅ Profile link copied!');
-                  }).catch(() => {
-                    showToastNotification('✅ Profile link copied!');
-                  });
-                }
+                setShareData({
+                  url: shareUrl,
+                  title: `${profile.name}'s Profile on Zenivio`,
+                  text: `Check out ${profile.name}'s profile on Zenivio`
+                });
+                setShareModalOpen(true);
               }}
               className="px-4 py-2.5 rounded-full font-black text-sm bg-slate-100 dark:bg-slate-800 text-slate-750 dark:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-700 transition-all active:scale-95 border border-slate-200/40 dark:border-slate-850"
             >
@@ -1894,6 +1891,15 @@ const PublicProfilePage = ({ userId, onBack, currentUser, isOwnProfile, setActiv
           </div>
         </div>
       )}
+
+      <ShareModal 
+        isOpen={shareModalOpen} 
+        onClose={() => setShareModalOpen(false)} 
+        shareUrl={shareData.url} 
+        title={shareData.title} 
+        text={shareData.text} 
+        showToast={showToastNotification} 
+      />
     </div>
   );
 };

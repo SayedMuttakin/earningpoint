@@ -82,7 +82,7 @@ const Posts = ({ authHeaders, ADMIN_API }) => {
     setError(null);
     setSuccess(null);
 
-    if (!newPost.content.trim()) return setError('Content is required');
+    if (!newPost.content.trim() && !newPost.image) return setError('Content or Image is required');
 
     try {
       const res = await fetch(`${ADMIN_API}/posts`, {

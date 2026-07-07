@@ -5,6 +5,7 @@ import VerifiedBadge from './VerifiedBadge';
 import PullToRefresh from './PullToRefresh';
 import BannerAd from './BannerAd';
 import NewsSlider from './NewsSlider';
+import ShareModal from './ShareModal';
 
 const GRADIENTS_MAP = {
   aurora: 'bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 text-white',
@@ -305,7 +306,7 @@ const CommentsDrawer = ({ post, onClose, onCommentSubmit, currentUserId, onUserC
   );
 };
 
-const CommunityPostCard = ({ post, onFollowToggle, onLikeToggle, onCommentClick, currentUserId, setSelectedReelId, setActiveTab, onUserClick, onImageClick, showToast, onActionTrigger }) => {
+const CommunityPostCard = ({ post, onFollowToggle, onLikeToggle, onCommentClick, currentUserId, setSelectedReelId, setActiveTab, onUserClick, onImageClick, showToast, onActionTrigger, onShareClick }) => {
   const [actionLoading, setActionLoading] = useState(false);
   const [isLiking, setIsLiking] = useState(false);
   const [isPlaying, setIsPlaying] = useState(false);
@@ -679,19 +680,8 @@ const CommunityPostCard = ({ post, onFollowToggle, onLikeToggle, onCommentClick,
             onClick={(e) => {
               e.stopPropagation();
               const shareUrl = `${window.location.origin}?post=${post._id}`;
-              if (navigator.share) {
-                navigator.share({
-                  title: post.title || 'Zenivio Post',
-                  text: post.content,
-                  url: shareUrl
-                }).catch(console.error);
-              } else {
-                navigator.clipboard.writeText(shareUrl);
-                if (showToast) {
-                  showToast('Link copied to clipboard! 🔗');
-                } else {
-                  alert('Link copied to clipboard!');
-                }
+              if (onShareClick) {
+                onShareClick(shareUrl, post.title || 'Zenivio Post', post.content || 'Check out this post');
               }
             }}
             className="flex items-center gap-1.5 group active:scale-90 transition-transform"
@@ -799,6 +789,8 @@ const fetchWithTimeout = async (url, options = {}, timeout = 5000) => {
 
 const HomePage = ({ setActiveTab, setSelectedNewsId, setActiveChatPartner, setSelectedReelId, highlightedPostId, setHighlightedPostId, setPostToEdit, onUserClick }) => {
   const [activeCommentPost, setActiveCommentPost] = useState(null);
+  const [shareModalOpen, setShareModalOpen] = useState(false);
+  const [shareData, setShareData] = useState({ url: '', title: '', text: '' });
   const [newsPosts, setNewsPosts] = useState(() => {
     try {
       const cached = localStorage.getItem('cached_news_posts');
@@ -1370,6 +1362,10 @@ const HomePage = ({ setActiveTab, setSelectedNewsId, setActiveChatPartner, setSe
                     onImageClick={setPreviewImageUrl}
                     showToast={showToastNotification}
                     onActionTrigger={handleActionTrigger}
+                    onShareClick={(url, title, text) => {
+                      setShareData({ url, title, text });
+                      setShareModalOpen(true);
+                    }}
                   />
                 ))}
               </div>
@@ -1520,6 +1516,15 @@ const HomePage = ({ setActiveTab, setSelectedNewsId, setActiveChatPartner, setSe
             </div>
           </div>
         )}
+
+        <ShareModal 
+          isOpen={shareModalOpen} 
+          onClose={() => setShareModalOpen(false)} 
+          shareUrl={shareData.url} 
+          title={shareData.title} 
+          text={shareData.text} 
+          showToast={showToastNotification} 
+        />
 
         {/* Toast Notification */}
         {showToast && (

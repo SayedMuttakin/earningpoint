@@ -391,3 +391,51 @@ exports.reportMessage = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
+
+// POST /api/messages/send — Send a direct message
+exports.sendMessage = async (req, res) => {
+  try {
+    const senderId = req.user._id;
+    const { receiverId, content, messageType } = req.body;
+
+    if (!receiverId || !content) {
+      return res.status(400).json({ message: 'Receiver and content are required' });
+    }
+
+    // Block Check
+    const sender = await User.findById(senderId);
+    const receiver = await User.findById(receiverId);
+    if (!receiver) {
+      return res.status(404).json({ message: 'Receiver not found' });
+    }
+
+    const isBlockedByReceiver = receiver.blockedUsers && receiver.blockedUsers.includes(senderId.toString());
+    const isBlockedBySender = sender.blockedUsers && sender.blockedUsers.includes(receiverId.toString());
+    if (isBlockedByReceiver || isBlockedBySender) {
+      return res.status(403).json({ message: 'Message blocked: You have blocked this user or been blocked by them.' });
+    }
+
+    const savedMessage = await Message.create({
+      sender: senderId,
+      receiver: receiverId,
+      content: content,
+      messageType: messageType || 'text'
+    });
+
+    // Broadcast via socket
+    try {
+      const io = require('../socket').getIO();
+      if (io) {
+        io.to(receiverId.toString()).emit('receive_direct_message', savedMessage);
+        io.to(senderId.toString()).emit('receive_direct_message', savedMessage);
+      }
+    } catch (socketErr) {
+      console.error('Failed to broadcast via socket:', socketErr);
+    }
+
+    res.status(201).json(savedMessage);
+  } catch (error) {
+    console.error('Error sending message:', error);
+    res.status(555).json({ message: 'Internal server error' });
+  }
+};

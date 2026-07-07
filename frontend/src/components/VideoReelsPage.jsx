@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Heart, MessageCircle, Share2, Volume2, VolumeX, Play, Pause, Send, Loader2, X, Globe, User, Bookmark, Search, ArrowLeft, Plus, Forward } from 'lucide-react';
 import { API_BASE } from '../config';
 import VerifiedBadge from './VerifiedBadge';
+import ShareModal from './ShareModal';
 
 // Helper to format relative time
 const formatRelativeTime = (dateString) => {
@@ -47,7 +48,7 @@ const getCreatorAvatar = (video) => {
 };
 
 // Inner Reel Video Card Component
-const ReelCard = ({ video, isActive, isMuted, toggleMute, currentUserId, onLikeToggle, onCommentClick, onBack, currentUser, onFollowToggle }) => {
+const ReelCard = ({ video, isActive, isMuted, toggleMute, currentUserId, onLikeToggle, onCommentClick, onBack, currentUser, onFollowToggle, onShareClick }) => {
   const videoRef = useRef(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [showPlayOverlay, setShowPlayOverlay] = useState(false);
@@ -255,9 +256,9 @@ const ReelCard = ({ video, isActive, isMuted, toggleMute, currentUserId, onLikeT
         <button
           onClick={() => {
             const shareUrl = `${window.location.origin}/?reelId=${video._id}`;
-            navigator.clipboard.writeText(shareUrl).then(() => {
-              alert('Reel link copied to clipboard!');
-            });
+            if (onShareClick) {
+              onShareClick(shareUrl, 'Zenivio Reel', video.content || 'Check out this amazing reel on Zenivio!');
+            }
           }}
           className="flex flex-col items-center gap-0.5 text-white filter drop-shadow-md active:scale-90 transition-transform"
         >
@@ -410,6 +411,8 @@ const VideoReelsPage = ({ selectedReelId, onBack }) => {
   const [isMuted, setIsMuted] = useState(true);
   const [currentUser, setCurrentUser] = useState(null);
   const [activeCommentVideo, setActiveCommentVideo] = useState(null);
+  const [shareModalOpen, setShareModalOpen] = useState(false);
+  const [shareData, setShareData] = useState({ url: '', title: '', text: '' });
 
   // Follow/unfollow creator toggle
   const handleFollowToggle = async (userId) => {
@@ -613,6 +616,10 @@ const VideoReelsPage = ({ selectedReelId, onBack }) => {
             onBack={onBack}
             currentUser={currentUser}
             onFollowToggle={handleFollowToggle}
+            onShareClick={(url, title, text) => {
+              setShareData({ url, title, text });
+              setShareModalOpen(true);
+            }}
           />
         ))}
       </div>
@@ -626,6 +633,15 @@ const VideoReelsPage = ({ selectedReelId, onBack }) => {
           currentUserId={currentUser?._id}
         />
       )}
+
+      <ShareModal 
+        isOpen={shareModalOpen} 
+        onClose={() => setShareModalOpen(false)} 
+        shareUrl={shareData.url} 
+        title={shareData.title} 
+        text={shareData.text} 
+        showToast={(msg) => alert(msg)} // video reels page does not have native toast container, fallback to alert or custom message
+      />
     </div>
   );
 };

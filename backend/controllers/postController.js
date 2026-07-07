@@ -70,8 +70,8 @@ exports.createPost = async (req, res) => {
   try {
     const { content, title, image, video, authorName, isVerified } = req.body;
     
-    if (!content) {
-      return res.status(400).json({ message: 'Content is required' });
+    if (!content && !image && !video) {
+      return res.status(400).json({ message: 'Content or media is required' });
     }
 
     const post = await Post.create({
@@ -220,8 +220,8 @@ exports.createUserPost = async (req, res) => {
       }
     }
 
-    if (!content) {
-      return res.status(400).json({ message: 'Content is required' });
+    if (!content && !imageUrl && !videoUrl) {
+      return res.status(400).json({ message: 'Content or media is required' });
     }
 
     let parsedFriends = [];
@@ -555,8 +555,8 @@ exports.updateUserPost = async (req, res) => {
       videoUrl = null;
     }
 
-    if (!content) {
-      return res.status(400).json({ message: 'Content is required' });
+    if (!content && !imageUrl && !videoUrl) {
+      return res.status(400).json({ message: 'Content or media is required' });
     }
 
     let parsedFriends = post.taggedFriends;
