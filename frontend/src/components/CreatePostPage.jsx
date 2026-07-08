@@ -83,7 +83,7 @@ const CreatePostPage = ({ currentUser, onBack, setActiveTab, postToEdit = null }
 
   const getAvatarUrl = (u) => {
     if (!u) return `https://ui-avatars.com/api/?name=User&background=7C3AED&color=fff&bold=true`;
-    const pic = u.profilePic || u.googleAvatar;
+    const pic = u.profilePic || u.googleAvatar || u.facebookAvatar;
     if (!pic) return `https://ui-avatars.com/api/?name=${encodeURIComponent(u.name || 'User')}&background=7C3AED&color=fff&bold=true`;
     return pic.startsWith('http') || pic.startsWith('/api') || pic.startsWith('data:') 
       ? pic 

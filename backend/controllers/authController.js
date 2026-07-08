@@ -222,3 +222,74 @@ exports.googleAuth = async (req, res) => {
     res.status(401).json({ message: 'Invalid Google credential' });
   }
 };
+
+// Facebook OAuth
+exports.facebookAuth = async (req, res) => {
+  const { accessToken } = req.body;
+
+  if (!accessToken) {
+    return res.status(400).json({ message: 'Missing Facebook token' });
+  }
+
+  try {
+    // Verify Facebook access token via Graph API
+    const fbResponse = await fetch(`https://graph.facebook.com/me?fields=id,name,email,picture.type(large)&access_token=${accessToken}`);
+    const fbData = await fbResponse.json();
+
+    if (fbData.error) {
+      console.error('Facebook Graph API Error:', fbData.error);
+      return res.status(400).json({ message: 'Invalid Facebook token' });
+    }
+
+    const { id: facebookId, name, email, picture } = fbData;
+    const fbPictureUrl = picture?.data?.url || '';
+
+    // Try to find existing user by facebookId or by email
+    let user = await User.findOne({ facebookId });
+
+    if (!user && email) {
+      user = await User.findOne({ phoneOrEmail: email });
+      if (user) {
+        // Link existing account to Facebook
+        user.facebookId = facebookId;
+        user.facebookAvatar = fbPictureUrl;
+        if (!user.name || user.name.trim() === '') {
+          user.name = name || '';
+        }
+        await user.save();
+      }
+    }
+
+    if (!user) {
+      // Create new user via Facebook
+      const generatedUsername = email ? email.split('@')[0].trim() : `fb_${facebookId}`;
+      let finalUsername = generatedUsername;
+      let suffix = 1;
+      while (await User.findOne({ username: finalUsername })) {
+        finalUsername = generatedUsername + suffix;
+        suffix++;
+      }
+
+      user = await User.create({
+        facebookId,
+        name: name || '',
+        phoneOrEmail: email || null,
+        facebookAvatar: fbPictureUrl,
+        username: finalUsername,
+      });
+    }
+
+    res.json({
+      _id: user._id,
+      phoneOrEmail: user.phoneOrEmail,
+      name: user.name || '',
+      darkMode: user.darkMode || false,
+      referralCode: user.referralCode || '',
+      facebookAvatar: user.facebookAvatar || '',
+      token: generateToken(user._id),
+    });
+  } catch (error) {
+    console.error('Facebook Auth Error:', error);
+    res.status(500).json({ message: 'Server Error' });
+  }
+};

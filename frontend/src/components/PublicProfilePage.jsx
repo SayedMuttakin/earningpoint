@@ -672,7 +672,7 @@ const PublicProfilePage = ({ userId, onBack, currentUser, isOwnProfile, setActiv
       setActiveChatPartner({
         _id: profile._id,
         name: profile.name,
-        profilePic: profile.profilePic || profile.googleAvatar || ''
+        profilePic: profile.profilePic || profile.googleAvatar || profile.facebookAvatar || ''
       });
     }
     if (setActiveTab) {

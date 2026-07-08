@@ -4,6 +4,7 @@ import { Capacitor } from '@capacitor/core';
 import { GoogleAuth } from '@codetrix-studio/capacitor-google-auth';
 
 const GOOGLE_CLIENT_ID = '410797628659-49d55sis32em5iktc44aj349v9bsqo02.apps.googleusercontent.com';
+const FACEBOOK_APP_ID = 'YOUR_FACEBOOK_APP_ID';
 
 // ── SVG Icons ──────────────────────────────────────────────────────────────────
 
@@ -179,6 +180,137 @@ const GoogleButton = ({ onSuccess }) => {
   );
 };
 
+// ── FacebookButton ─────────────────────────────────────────────────────────────
+const FacebookButton = ({ onSuccess }) => {
+  const [loading, setLoading] = useState(false);
+  const [fbError, setFbError] = useState('');
+
+  const handleFacebookLogin = async () => {
+    setFbError('');
+    const isMobileApp = Capacitor.getPlatform() !== 'web';
+
+    if (isMobileApp) {
+      try {
+        setLoading(true);
+        const { FacebookLogin } = await import('@capacitor-community/facebook-login');
+        
+        await FacebookLogin.initialize({ appId: FACEBOOK_APP_ID });
+        const result = await FacebookLogin.login({ permissions: ['public_profile', 'email'] });
+
+        if (result.accessToken) {
+          const res = await fetch(`${API_BASE}/api/auth/facebook`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ accessToken: result.accessToken.token }),
+          });
+          const data = await res.json();
+          if (res.ok) {
+            localStorage.setItem('tokenNormal', data.token);
+            localStorage.setItem('token', data.token);
+            if (data.darkMode) localStorage.setItem('darkMode', 'true');
+            if (onSuccess) onSuccess();
+          } else {
+            setFbError(data.message || 'Facebook Sign-In failed.');
+          }
+        } else {
+          setFbError('Facebook Sign-In failed.');
+        }
+      } catch (e) {
+        if (e?.message?.includes('cancel') || e?.code === '12501') {
+          // User cancelled
+        } else {
+          setFbError('Facebook Sign-In failed.');
+        }
+      } finally {
+        setLoading(false);
+      }
+    } else {
+      // Web Facebook SDK flow
+      setLoading(true);
+      try {
+        if (!window.FB) {
+          await new Promise((resolve, reject) => {
+            window.fbAsyncInit = function() {
+              window.FB.init({
+                appId: FACEBOOK_APP_ID,
+                cookie: true,
+                xfbml: true,
+                version: 'v19.0'
+              });
+              resolve();
+            };
+            const script = document.createElement('script');
+            script.src = 'https://connect.facebook.net/en_US/sdk.js';
+            script.async = true;
+            script.defer = true;
+            script.onerror = () => reject(new Error('Facebook SDK failed to load.'));
+            document.head.appendChild(script);
+          });
+        } else {
+          window.FB.init({
+            appId: FACEBOOK_APP_ID,
+            cookie: true,
+            xfbml: true,
+            version: 'v19.0'
+          });
+        }
+
+        window.FB.login(async (response) => {
+          if (response.authResponse) {
+            try {
+              const res = await fetch(`${API_BASE}/api/auth/facebook`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ accessToken: response.authResponse.accessToken }),
+              });
+              const data = await res.json();
+              if (res.ok) {
+                localStorage.setItem('tokenNormal', data.token);
+                localStorage.setItem('token', data.token);
+                if (data.darkMode) localStorage.setItem('darkMode', 'true');
+                if (onSuccess) onSuccess();
+              } else {
+                setFbError(data.message || 'Facebook Sign-In failed.');
+              }
+            } catch (e) {
+              setFbError('Network error. Please try again.');
+            }
+          } else {
+            setFbError('User cancelled login or did not fully authorize.');
+          }
+          setLoading(false);
+        }, { scope: 'public_profile,email' });
+      } catch (e) {
+        setFbError('Facebook Sign-In is not available.');
+        setLoading(false);
+      }
+    }
+  };
+
+  return (
+    <>
+      {fbError && (
+        <div className="fixed bottom-4 left-4 right-4 z-50 bg-red-50 text-red-500 p-3 rounded-2xl text-xs text-center border border-red-100 font-semibold shadow-lg">
+          {fbError}
+        </div>
+      )}
+      <button
+        type="button"
+        onClick={handleFacebookLogin}
+        disabled={loading}
+        className="w-14 h-14 flex items-center justify-center rounded-2xl transition-all active:scale-95 disabled:opacity-70"
+        style={{ background: 'white', border: '1.5px solid #E5E7EB', boxShadow: '0 2px 8px rgba(0,0,0,0.06)' }}
+      >
+        {loading ? (
+          <div className="w-5 h-5 border-2 border-gray-200 border-t-gray-600 rounded-full animate-spin" />
+        ) : (
+          <FacebookIcon />
+        )}
+      </button>
+    </>
+  );
+};
+
 // ── Input Field Component ─────────────────────────────────────────────────────
 const InputField = ({ icon: Icon, type = 'text', placeholder, value, onChange, name, autoComplete, rightSlot, onFocus, onBlur, active }) => (
   <div
@@ -289,7 +421,7 @@ const LoginForm = ({ onToggleForm, onLoginSuccess, onForgotPassword }) => {
         </h1>
 
         <div className="text-center mb-7 mt-3">
-          <p className="text-lg font-bold" style={{ color: '#1E1B4B' }}>Welcome Back! 👋</p>
+          <p className="text-lg font-bold" style={{ color: '#1E1B4B' }}>Welcome Back!</p>
           <p className="text-sm mt-0.5" style={{ color: '#6B7280' }}>Login to continue your journey</p>
         </div>
 
@@ -385,13 +517,7 @@ const LoginForm = ({ onToggleForm, onLoginSuccess, onForgotPassword }) => {
           </button>
 
           {/* Facebook */}
-          <button
-            type="button"
-            className="w-14 h-14 flex items-center justify-center rounded-2xl transition-all active:scale-95"
-            style={{ background: 'white', border: '1.5px solid #E5E7EB', boxShadow: '0 2px 8px rgba(0,0,0,0.06)' }}
-          >
-            <FacebookIcon />
-          </button>
+          <FacebookButton onSuccess={onLoginSuccess} />
         </div>
 
         {/* Toggle */}

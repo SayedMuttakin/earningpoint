@@ -45,7 +45,7 @@ const Navbar = ({
 
   const getAvatarUrl = (u) => {
     if (!u) return `https://ui-avatars.com/api/?name=User&background=7C3AED&color=fff&bold=true`;
-    const pic = u.profilePic || u.googleAvatar;
+    const pic = u.profilePic || u.googleAvatar || u.facebookAvatar;
     if (!pic) return `https://ui-avatars.com/api/?name=${encodeURIComponent(u.name || 'User')}&background=7C3AED&color=fff&bold=true`;
     return pic.startsWith('http') || pic.startsWith('/api') || pic.startsWith('data:') 
       ? pic 
@@ -225,17 +225,6 @@ const Navbar = ({
               
               <div className="pt-8 pb-4 text-center text-[10px] text-slate-400 dark:text-slate-600 font-bold space-y-1">
                 <div>Zenivio v2.1.0 • Built with ❤️</div>
-                <div className="mt-1">
-                  Build & Developed by{' '}
-                  <a
-                    href="https://muttakinrahman.com"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-indigo-600 dark:text-indigo-400 hover:underline transition-all"
-                  >
-                    Muttakin Rahman
-                  </a>
-                </div>
               </div>
             </div>
           </div>

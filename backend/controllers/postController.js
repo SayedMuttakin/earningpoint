@@ -12,7 +12,7 @@ exports.getPosts = async (req, res) => {
       query.authorId = null;
     }
     const posts = await Post.find(query)
-      .populate('authorId', 'name profilePic googleAvatar isEmailVerified verificationBadge')
+      .populate('authorId', 'name profilePic googleAvatar facebookAvatar isEmailVerified verificationBadge')
       .sort({ createdAt: -1 })
       .limit(30)  // Limit to 30 most recent posts
       .lean();
@@ -25,6 +25,7 @@ exports.getPosts = async (req, res) => {
           name: authorObj.name,
           profilePic: authorObj.profilePic,
           googleAvatar: authorObj.googleAvatar,
+          facebookAvatar: authorObj.facebookAvatar,
           isEmailVerified: authorObj.isEmailVerified,
           verificationBadge: authorObj.verificationBadge || 'none'
         } : null
@@ -41,7 +42,7 @@ exports.getPosts = async (req, res) => {
 // @access  Public
 exports.getPostById = async (req, res) => {
   try {
-    const post = await Post.findById(req.params.id).populate('authorId', 'name profilePic googleAvatar isEmailVerified verificationBadge');
+    const post = await Post.findById(req.params.id).populate('authorId', 'name profilePic googleAvatar facebookAvatar isEmailVerified verificationBadge');
     if (!post) {
       return res.status(404).json({ message: 'Post not found' });
     }
@@ -54,6 +55,7 @@ exports.getPostById = async (req, res) => {
         name: authorObj.name,
         profilePic: authorObj.profilePic,
         googleAvatar: authorObj.googleAvatar,
+        facebookAvatar: authorObj.facebookAvatar,
         isEmailVerified: authorObj.isEmailVerified,
         verificationBadge: authorObj.verificationBadge || 'none'
       } : null
@@ -166,7 +168,7 @@ exports.getPostsFeed = async (req, res) => {
       authorId: { $ne: null, $nin: blockedUserIds }, // Exclude admin updates and blocked users
       'reports.user': { $ne: currentUserId } // Exclude posts reported by the current user
     })
-      .populate('authorId', 'name profilePic googleAvatar isEmailVerified verificationBadge')
+      .populate('authorId', 'name profilePic googleAvatar facebookAvatar isEmailVerified verificationBadge')
       .sort({ createdAt: -1 })
       .limit(40);
  
@@ -186,6 +188,7 @@ exports.getPostsFeed = async (req, res) => {
           name: authorObj.name,
           profilePic: authorObj.profilePic,
           googleAvatar: authorObj.googleAvatar,
+          facebookAvatar: authorObj.facebookAvatar,
           isEmailVerified: authorObj.isEmailVerified,
           verificationBadge: authorObj.verificationBadge || 'none'
         } : null,
@@ -248,7 +251,7 @@ exports.createUserPost = async (req, res) => {
       bgGradient: bgGradient || null
     });
 
-    const populatedPost = await Post.findById(post._id).populate('authorId', 'name profilePic googleAvatar isEmailVerified verificationBadge');
+    const populatedPost = await Post.findById(post._id).populate('authorId', 'name profilePic googleAvatar facebookAvatar isEmailVerified verificationBadge');
     const postObj = populatedPost.toObject();
     const authorObj = postObj.authorId;
  
@@ -259,6 +262,7 @@ exports.createUserPost = async (req, res) => {
         name: authorObj.name,
         profilePic: authorObj.profilePic,
         googleAvatar: authorObj.googleAvatar,
+        facebookAvatar: authorObj.facebookAvatar,
         isEmailVerified: authorObj.isEmailVerified,
         verificationBadge: authorObj.verificationBadge || 'none'
       } : null
@@ -301,7 +305,7 @@ exports.getVideoPosts = async (req, res) => {
     }
 
     const posts = await Post.find(query)
-      .populate('authorId', 'name profilePic googleAvatar isEmailVerified verificationBadge')
+      .populate('authorId', 'name profilePic googleAvatar facebookAvatar isEmailVerified verificationBadge')
       .sort({ createdAt: -1 })
       .limit(20)  // Limit to 20 most recent reels
       .lean();
@@ -315,6 +319,7 @@ exports.getVideoPosts = async (req, res) => {
           name: authorObj.name,
           profilePic: authorObj.profilePic,
           googleAvatar: authorObj.googleAvatar,
+          facebookAvatar: authorObj.facebookAvatar,
           isEmailVerified: authorObj.isEmailVerified,
           verificationBadge: authorObj.verificationBadge || 'none'
         } : null
@@ -388,7 +393,7 @@ exports.commentPost = async (req, res) => {
     const newComment = {
       user: req.user._id,
       userName: req.user.name || 'User',
-      userAvatar: req.user.profilePic || req.user.googleAvatar || '',
+      userAvatar: req.user.profilePic || req.user.googleAvatar || req.user.facebookAvatar || '',
       text,
       createdAt: new Date()
     };
@@ -461,7 +466,7 @@ exports.getSavedPosts = async (req, res) => {
       path: 'savedPosts',
       populate: {
         path: 'authorId',
-        select: 'name profilePic googleAvatar isEmailVerified verificationBadge'
+        select: 'name profilePic googleAvatar facebookAvatar isEmailVerified verificationBadge'
       }
     });
 
@@ -483,6 +488,7 @@ exports.getSavedPosts = async (req, res) => {
             name: authorObj.name,
             profilePic: authorObj.profilePic,
             googleAvatar: authorObj.googleAvatar,
+            facebookAvatar: authorObj.facebookAvatar,
             isEmailVerified: authorObj.isEmailVerified,
             verificationBadge: authorObj.verificationBadge || 'none'
           } : null,
@@ -580,7 +586,7 @@ exports.updateUserPost = async (req, res) => {
 
     await post.save();
 
-    const populatedPost = await Post.findById(post._id).populate('authorId', 'name profilePic googleAvatar isEmailVerified verificationBadge');
+    const populatedPost = await Post.findById(post._id).populate('authorId', 'name profilePic googleAvatar facebookAvatar isEmailVerified verificationBadge');
     const postObj = populatedPost.toObject();
     const authorObj = postObj.authorId;
 
@@ -591,6 +597,7 @@ exports.updateUserPost = async (req, res) => {
         name: authorObj.name,
         profilePic: authorObj.profilePic,
         googleAvatar: authorObj.googleAvatar,
+        facebookAvatar: authorObj.facebookAvatar,
         isEmailVerified: authorObj.isEmailVerified,
         verificationBadge: authorObj.verificationBadge || 'none'
       } : null
