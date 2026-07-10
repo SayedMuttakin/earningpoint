@@ -5,7 +5,7 @@
     <string name="package_name">app.earningpoint</string>
     <string name="custom_url_scheme">app.earningpoint</string>
     <!-- Web/Server OAuth 2.0 Client ID (used by backend to verify tokens) -->
-    <string name="server_client_id">410797628659-49d55sis32em5iktc44aj349v9bsqo02.apps.googleusercontent.com</string>
+    <string name="server_client_id">456619750771-n3vdqc5stcbm1avbr3biglg0p2gof4uk.apps.googleusercontent.com</string>
     <!-- Facebook Login Integration Settings (replace placeholder with real values from Meta dashboard) -->
     <string name="facebook_app_id">YOUR_FACEBOOK_APP_ID</string>
     <string name="fb_login_protocol_scheme">fbYOUR_FACEBOOK_APP_ID</string>

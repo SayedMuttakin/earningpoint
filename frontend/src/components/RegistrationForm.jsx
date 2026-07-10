@@ -4,7 +4,7 @@ import { countries } from '../utils/countries';
 import { Capacitor } from '@capacitor/core';
 import { GoogleAuth } from '@codetrix-studio/capacitor-google-auth';
 
-const GOOGLE_CLIENT_ID = '410797628659-49d55sis32em5iktc44aj349v9bsqo02.apps.googleusercontent.com';
+const GOOGLE_CLIENT_ID = '456619750771-n3vdqc5stcbm1avbr3biglg0p2gof4uk.apps.googleusercontent.com';
 
 // ── SVG Icons ──────────────────────────────────────────────────────────────────
 
