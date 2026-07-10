@@ -504,20 +504,8 @@ const LoginForm = ({ onToggleForm, onLoginSuccess, onForgotPassword }) => {
         </div>
 
         {/* Social buttons */}
-        <div className="flex items-center gap-4">
+        <div className="flex items-center justify-center w-full">
           <GoogleButton onSuccess={onLoginSuccess} />
-
-          {/* Apple */}
-          <button
-            type="button"
-            className="w-14 h-14 flex items-center justify-center rounded-2xl transition-all active:scale-95"
-            style={{ background: 'white', border: '1.5px solid #E5E7EB', boxShadow: '0 2px 8px rgba(0,0,0,0.06)' }}
-          >
-            <AppleIcon />
-          </button>
-
-          {/* Facebook */}
-          <FacebookButton onSuccess={onLoginSuccess} />
         </div>
 
         {/* Toggle */}
