@@ -14,7 +14,7 @@
       "scopes": ["profile", "email"],
       "serverClientId": "456619750771-n3vdqc5stcbm1avbr3biglg0p2gof4uk.apps.googleusercontent.com",
       "forceCodeForRefreshToken": true,
-      "androidClientId": "410797628659-2mckqrqhbarqse925e2a30cb28gq0ii6.apps.googleusercontent.com"
+      "androidClientId": "456619750771-0lv0n34vq43mh6m663oe597npmpceg87.apps.googleusercontent.com"
     },
     "FacebookLogin": {
       "appId": "YOUR_FACEBOOK_APP_ID",
