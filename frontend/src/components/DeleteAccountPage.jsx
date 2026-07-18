@@ -23,7 +23,7 @@ const DeleteAccountPage = ({ onBack, onLogout }) => {
 
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(`${API_BASE}/api/auth/delete-account`, {
+      const response = await fetch(`${API_BASE}/api/profile`, {
         method: 'DELETE',
         headers: {
           'Content-Type': 'application/json',

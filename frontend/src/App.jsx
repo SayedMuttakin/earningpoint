@@ -23,6 +23,7 @@ const ReferralsPage = lazy(() => import('./components/ReferralsPage'));
 const LeaderboardPage = lazy(() => import('./components/LeaderboardPage'));
 const TermsPrivacyPage = lazy(() => import('./components/TermsPrivacyPage'));
 const DeleteAccountPage = lazy(() => import('./components/DeleteAccountPage'));
+const PublicDeleteAccountPage = lazy(() => import('./components/PublicDeleteAccountPage'));
 const EarningPage = lazy(() => import('./components/EarningPage'));
 const NotificationPage = lazy(() => import('./components/NotificationPage'));
 const PaymentSuccess = lazy(() => import('./components/PaymentSuccess'));
@@ -341,6 +342,7 @@ function App() {
   const path = window.location.pathname.toLowerCase();
   const isPrivacyPath = path === '/privacy-policy' || path === '/privacy';
   const isTermsPath = path === '/terms-and-conditions' || path === '/terms-conditions' || path === '/terms';
+  const isDeletePath = path === '/delete-account' || path === '/delete';
 
   if (isPrivacyPath || isTermsPath) {
     return (
@@ -356,6 +358,25 @@ function App() {
           }} 
           initialTab={isPrivacyPath ? 'privacy' : 'terms'} 
           standalone={true}
+          darkMode={darkMode}
+          onToggleDarkMode={handleToggleDarkMode}
+        />
+      </Suspense>
+    );
+  }
+
+  if (isDeletePath) {
+    return (
+      <Suspense fallback={<PageLoader />}>
+        <PublicDeleteAccountPage 
+          onBack={() => {
+            if (isAuthenticated) {
+              setActiveTab('Home');
+              window.history.pushState({}, '', '/');
+            } else {
+              window.location.href = '/';
+            }
+          }} 
           darkMode={darkMode}
           onToggleDarkMode={handleToggleDarkMode}
         />
