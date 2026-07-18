@@ -655,6 +655,14 @@ exports.updateGlobalSettings = async (req, res) => {
     if (referralCampaignReward !== undefined) settings.referralCampaignReward = Number(referralCampaignReward);
 
     await settings.save();
+    try {
+      const earningController = require('./earningController');
+      if (earningController && typeof earningController.invalidateSettingsCache === 'function') {
+        earningController.invalidateSettingsCache();
+      }
+    } catch (cacheErr) {
+      console.error('Failed to invalidate settings cache:', cacheErr);
+    }
     res.json({ message: 'Settings updated successfully', settings });
   } catch (error) {
     res.status(500).json({ message: error.message });

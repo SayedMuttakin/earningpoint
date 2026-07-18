@@ -1471,7 +1471,7 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
     const adminPkg = (globalSettings.premiumIpPackages || []).find(p => p.id === selectedPackage);
     const localPkg = ipPackages.find(p => p.id === selectedPackage);
     const pkg = adminPkg || localPkg;
-    const amount = pkg?.price || 0;
+    const amount = (pkg?.price || 0) + 25; // 25 Tk VAT added!
     if (!amount) {
       showToast('Invalid package selected. Please go back and choose again.', 'error');
       return;
@@ -4180,11 +4180,13 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
                    
                    <div className="w-full space-y-3">
                       {((globalSettings.premiumIpPackages && globalSettings.premiumIpPackages.length > 0) ? globalSettings.premiumIpPackages : [
-                         {id: '1', duration: '1 Month', price: 700, freeBonus: '+7 Days free', promoTag: ''},
-                         {id: '2', duration: '3 Month', price: 1300, freeBonus: '+15 Days free', promoTag: 'POPULAR'},
-                         {id: '3', duration: '6 Month', price: 2200, freeBonus: '+1 Month free', promoTag: 'BEST VALUE'},
-                         {id: '4', duration: '1 Year', price: 4200, freeBonus: '+2 Month free', promoTag: 'PRO'}
-                      ]).map(pkg => {
+                         {id: '1', duration: '1 Month', price: 700, freeBonus: '+7 Days free', promoTag: '', isActive: true},
+                         {id: '2', duration: '3 Month', price: 1300, freeBonus: '+15 Days free', promoTag: 'POPULAR', isActive: true},
+                         {id: '3', duration: '6 Month', price: 2200, freeBonus: '+1 Month free', promoTag: 'BEST VALUE', isActive: true},
+                         {id: '4', duration: '1 Year', price: 4200, freeBonus: '+2 Month free', promoTag: 'PRO', isActive: true}
+                      ])
+                      .filter(pkg => pkg.isActive !== false)
+                      .map(pkg => {
                          const displayBonus = pkg.freeBonus || (pkg.duration.includes('1 Month') ? '+7 Days free' : pkg.duration.includes('3 Month') ? '+15 Days free' : pkg.duration.includes('6 Month') ? '+1 Month free' : pkg.duration.includes('1 Year') ? '+2 Month free' : '');
                          
                          return (
@@ -4196,7 +4198,8 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
                             }`}
                          >
                             <div className="flex items-center gap-1.5 md:gap-2 z-10 w-full overflow-hidden">
-                               <span className={`font-black text-[15px] sm:text-lg whitespace-nowrap ${selectedPackage === pkg.id ? 'text-[#FACC15]' : 'text-white'}`}>৳{pkg.price}/-</span>
+                               <span className={`font-black text-[15px] sm:text-lg whitespace-nowrap ${selectedPackage === pkg.id ? 'text-[#FACC15]' : 'text-white'}`}>৳{Number(pkg.price) + 25}/-</span>
+                               <span className="text-[9px] text-slate-400 font-normal whitespace-nowrap">(Incl. ৳25 VAT)</span>
                                <span className="text-white/20 h-4 w-px bg-white/20"></span>
                                <span className={`font-bold text-[11px] sm:text-sm tracking-wide whitespace-nowrap ${selectedPackage === pkg.id ? 'text-white' : 'text-slate-300'}`}>{pkg.duration}</span>
                                <span className="text-white/20 h-4 w-px bg-white/20"></span>

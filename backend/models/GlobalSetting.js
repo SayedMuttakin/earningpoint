@@ -82,13 +82,14 @@ const GlobalSettingSchema = new mongoose.Schema({
       duration: String, // e.g. "30 Days"
       freeDays: String, // e.g. "+7 Days free"
       offTag: String,
-      servers: [String] // e.g. ['USA', 'Germany', 'Canada', 'UK', 'Netherlands']
+      servers: [String], // e.g. ['USA', 'Germany', 'Canada', 'UK', 'Netherlands']
+      isActive: { type: Boolean, default: true }
     }],
     default: [
-      { id: '1-month', price: 600, duration: '1 Month', freeDays: '+7 Days free', offTag: '', servers: ['USA', 'Germany', 'Canada'] },
-      { id: '3-month', price: 1300, duration: '3 Month', freeDays: '+15 Days free', offTag: '', servers: ['USA', 'Germany', 'Canada', 'UK'] },
-      { id: '6-month', price: 2200, duration: '6 Month', freeDays: '+1 Month free', offTag: '', servers: ['USA', 'Germany', 'Canada', 'UK', 'Netherlands'] },
-      { id: '1-year', price: 4200, duration: '1 Year', freeDays: '+2 Month free', offTag: '15% OFF', servers: ['USA', 'Germany', 'Canada', 'UK', 'Netherlands', 'Singapore', 'Japan'] }
+      { id: '1-month', price: 600, duration: '1 Month', freeDays: '+7 Days free', offTag: '', servers: ['USA', 'Germany', 'Canada'], isActive: true },
+      { id: '3-month', price: 1300, duration: '3 Month', freeDays: '+15 Days free', offTag: '', servers: ['USA', 'Germany', 'Canada', 'UK'], isActive: true },
+      { id: '6-month', price: 2200, duration: '6 Month', freeDays: '+1 Month free', offTag: '', servers: ['USA', 'Germany', 'Canada', 'UK', 'Netherlands'], isActive: true },
+      { id: '1-year', price: 4200, duration: '1 Year', freeDays: '+2 Month free', offTag: '15% OFF', servers: ['USA', 'Germany', 'Canada', 'UK', 'Netherlands', 'Singapore', 'Japan'], isActive: true }
     ]
   },
   admobConfig: {

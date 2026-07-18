@@ -56,7 +56,8 @@ const PremiumIpSettings = ({ ADMIN_API, authHeaders }) => {
       price: 0,
       duration: '',
       freeDays: '',
-      offTag: ''
+      offTag: '',
+      isActive: true
     };
     setGlobalSettings({
       ...globalSettings,
@@ -155,7 +156,7 @@ const PremiumIpSettings = ({ ADMIN_API, authHeaders }) => {
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
                 </button>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 pr-8">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 pr-8">
                   <div>
                     <label className="text-slate-500 text-[9px] font-bold uppercase tracking-widest mb-1 block">Price (৳)</label>
                     <input 
@@ -194,6 +195,21 @@ const PremiumIpSettings = ({ ADMIN_API, authHeaders }) => {
                       onChange={(e) => updatePackage(pkg.id, 'offTag', e.target.value)}
                       className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-white text-sm outline-none focus:border-indigo-500"
                     />
+                  </div>
+                  <div>
+                    <label className="text-slate-500 text-[9px] font-bold uppercase tracking-widest mb-1 block">Status</label>
+                    <div className="flex items-center h-[38px]">
+                      <label className="relative inline-flex items-center cursor-pointer">
+                        <input 
+                          type="checkbox" 
+                          checked={pkg.isActive !== false} 
+                          onChange={(e) => updatePackage(pkg.id, 'isActive', e.target.checked)}
+                          className="sr-only peer"
+                        />
+                        <div className="w-9 h-5 bg-slate-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-indigo-600"></div>
+                        <span className="ml-2 text-xs font-bold text-slate-300">{pkg.isActive !== false ? 'Active' : 'Inactive'}</span>
+                      </label>
+                    </div>
                   </div>
                 </div>
               </div>
