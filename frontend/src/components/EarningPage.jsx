@@ -4293,30 +4293,98 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
 
              {/* Payment Selection (Step 3 or 4) */}
               {((!isPremium && ipStep === 3) || (isPremium && ipStep === 4)) ? (
-                <div className="flex flex-col animate-fade-in pt-4">
-                   <h2 className="text-xl font-black text-[#FACC15] mb-2 text-center drop-shadow-[0_0_10px_rgba(250,204,21,0.2)]">Auto Payment Checkout</h2>
-                   <p className="text-slate-300 font-bold mb-6 text-center bg-[#FACC15]/10 py-2 rounded-xl border border-[#FACC15]/20 max-w-[220px] mx-auto shadow-[0_0_15px_rgba(250,204,21,0.05)]">
-                      Total: <span className="text-[#FACC15] text-lg">৳{(globalSettings.premiumIpPackages?.find(p => p.id === selectedPackage)?.price || (selectedPackage === '1' ? 700 : 0)) + 25}</span>
-                   </p>
-                   <div className="bg-[#151A23] rounded-2xl p-6 border border-[#FACC15]/30 shadow-xl relative overflow-hidden text-center">
-                      <div className="absolute top-0 right-0 w-32 h-32 bg-[#FACC15]/10 rounded-full blur-[40px]"></div>
-                      <div className="w-14 h-14 bg-amber-500/10 rounded-2xl border border-amber-500/30 flex items-center justify-center mx-auto mb-4 shadow-[0_0_20px_rgba(245,158,11,0.2)]">
-                         <Zap className="w-8 h-8 text-amber-400" />
-                      </div>
-                      <h3 className="text-white font-black text-lg mb-2">ZiniPay Instant Auto Gateway</h3>
-                      <p className="text-slate-300 text-xs leading-relaxed max-w-xs mx-auto mb-4">
-                         Pay via bKash, Nagad, Rocket or Bank Card. Verification is 100% automated. Your VPN activates instantly!
-                      </p>
-                      <div className="flex items-center justify-center gap-3 py-2 px-4 bg-black/40 rounded-xl border border-white/5 max-w-xs mx-auto mb-3">
-                         <img src="/logos/bkash.png" alt="bKash" className="h-6 object-contain" />
-                         <img src="/logos/nagad.png" alt="Nagad" className="h-6 object-contain" />
-                         <img src="/logos/rocket.png" alt="Rocket" className="h-6 object-contain" />
-                         <span className="text-[10px] text-amber-400 font-bold uppercase ml-1">+ Cards</span>
-                      </div>
-                      <span className="inline-block px-3 py-1 bg-amber-500/10 text-amber-300 border border-amber-500/20 rounded-full text-[10px] font-black uppercase tracking-wider">
-                         100% Automated - Instant Activation
-                      </span>
+                <div className="flex flex-col gap-4 pt-2">
+
+                   {/* Header */}
+                   <div className="text-center">
+                      <h2 className="text-lg font-black text-white mb-1 tracking-tight">Secure Checkout</h2>
+                      <p className="text-slate-400 text-xs">Powered by ZiniPay Payment Gateway</p>
                    </div>
+
+                   {/* Amount Card */}
+                   <div className="flex items-center justify-between bg-gradient-to-r from-[#FACC15]/15 to-[#EAB308]/5 border border-[#FACC15]/30 rounded-2xl px-4 py-3">
+                      <div>
+                         <p className="text-slate-400 text-[11px] font-semibold uppercase tracking-wider">Total Amount</p>
+                         <p className="text-[#FACC15] text-2xl font-black tracking-tight">৳{(globalSettings.premiumIpPackages?.find(p => p.id === selectedPackage)?.price || (selectedPackage === '1' ? 700 : 0)) + 25}</p>
+                      </div>
+                      <div className="text-right">
+                         <p className="text-slate-400 text-[11px] font-semibold uppercase tracking-wider">Includes</p>
+                         <p className="text-emerald-400 text-xs font-bold">৳25 VAT</p>
+                      </div>
+                   </div>
+
+                   {/* Gateway Card */}
+                   <div className="relative bg-gradient-to-br from-[#0F1520] to-[#151A23] rounded-2xl border border-[#FACC15]/20 overflow-hidden">
+                      {/* Glow */}
+                      <div className="absolute -top-10 -right-10 w-40 h-40 bg-amber-500/10 rounded-full blur-3xl pointer-events-none"></div>
+                      <div className="absolute -bottom-10 -left-10 w-32 h-32 bg-yellow-500/5 rounded-full blur-3xl pointer-events-none"></div>
+
+                      <div className="relative z-10 p-5">
+                         {/* Gateway Badge */}
+                         <div className="flex items-center justify-between mb-4">
+                            <div className="flex items-center gap-2">
+                               <div className="w-9 h-9 bg-gradient-to-br from-amber-500 to-yellow-600 rounded-xl flex items-center justify-center shadow-lg shadow-amber-500/30">
+                                  <Zap className="w-5 h-5 text-slate-900" />
+                               </div>
+                               <div>
+                                  <p className="text-white font-black text-sm leading-tight">ZiniPay Gateway</p>
+                                  <p className="text-amber-400 text-[10px] font-bold">Auto Verified</p>
+                               </div>
+                            </div>
+                            <div className="flex items-center gap-1 bg-emerald-500/10 border border-emerald-500/20 rounded-full px-2.5 py-1">
+                               <div className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></div>
+                               <span className="text-emerald-400 text-[10px] font-black uppercase tracking-wide">Live</span>
+                            </div>
+                         </div>
+
+                         {/* Description */}
+                         <p className="text-slate-300 text-xs leading-relaxed mb-4">
+                            Complete your payment on our secure gateway using any of the methods below. Your VPN subscription activates <span className="text-[#FACC15] font-bold">instantly</span> after payment.
+                         </p>
+
+                         {/* Payment Methods */}
+                         <div className="grid grid-cols-4 gap-2 mb-4">
+                            {[
+                               { src: '/logos/bkash.png', label: 'bKash' },
+                               { src: '/logos/nagad.png', label: 'Nagad' },
+                               { src: '/logos/rocket.png', label: 'Rocket' },
+                               { src: null, label: 'Cards' },
+                            ].map((m) => (
+                               <div key={m.label} className="flex flex-col items-center gap-1.5 bg-white/5 rounded-xl py-2.5 px-1 border border-white/8">
+                                  {m.src ? (
+                                     <img src={m.src} alt={m.label} className="h-7 w-auto object-contain" />
+                                  ) : (
+                                     <div className="h-7 w-10 flex items-center justify-center">
+                                        <svg viewBox="0 0 24 24" className="w-6 h-6 text-amber-400" fill="currentColor"><path d="M20 4H4c-1.11 0-2 .89-2 2v12c0 1.11.89 2 2 2h16c1.11 0 2-.89 2-2V6c0-1.11-.89-2-2-2zm0 14H4v-6h16v6zm0-10H4V6h16v2z"/></svg>
+                                     </div>
+                                  )}
+                                  <span className="text-[9px] text-slate-400 font-bold">{m.label}</span>
+                               </div>
+                            ))}
+                         </div>
+
+                         {/* Features */}
+                         <div className="grid grid-cols-3 gap-2">
+                            {[
+                               { icon: '🔒', text: 'Secure' },
+                               { icon: '⚡', text: 'Instant' },
+                               { icon: '🤖', text: 'Auto' },
+                            ].map((f) => (
+                               <div key={f.text} className="flex flex-col items-center gap-1 bg-black/20 rounded-xl py-2 border border-white/5">
+                                  <span className="text-base leading-none">{f.icon}</span>
+                                  <span className="text-[9px] text-slate-300 font-bold uppercase tracking-wider">{f.text}</span>
+                               </div>
+                            ))}
+                         </div>
+                      </div>
+                   </div>
+
+                   {/* Trust Line */}
+                   <p className="text-center text-slate-500 text-[10px] flex items-center justify-center gap-1">
+                      <svg viewBox="0 0 24 24" className="w-3 h-3 fill-slate-500 inline"><path d="M12 2L4 5v6c0 5.55 3.84 10.74 8 12 4.16-1.26 8-6.45 8-12V5l-8-3z"/></svg>
+                      256-bit SSL Encrypted &bull; 100% Secure
+                   </p>
+
                 </div>
               ) : null}
 
