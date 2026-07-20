@@ -632,7 +632,10 @@ exports.updateGlobalSettings = async (req, res) => {
       promoBanners,
       admobConfig,
       referralCampaignTarget,
-      referralCampaignReward
+      referralCampaignReward,
+      zinipayApiKey,
+      zinipayBaseUrl,
+      zinipayEnabled
     } = req.body;
     
     let settings = await GlobalSetting.findOne({ configKey: 'main_config' });
@@ -653,6 +656,9 @@ exports.updateGlobalSettings = async (req, res) => {
     if (admobConfig !== undefined) settings.admobConfig = admobConfig;
     if (referralCampaignTarget !== undefined) settings.referralCampaignTarget = Number(referralCampaignTarget);
     if (referralCampaignReward !== undefined) settings.referralCampaignReward = Number(referralCampaignReward);
+    if (zinipayApiKey !== undefined) settings.zinipayApiKey = zinipayApiKey;
+    if (zinipayBaseUrl !== undefined) settings.zinipayBaseUrl = zinipayBaseUrl;
+    if (zinipayEnabled !== undefined) settings.zinipayEnabled = Boolean(zinipayEnabled);
 
     await settings.save();
     try {

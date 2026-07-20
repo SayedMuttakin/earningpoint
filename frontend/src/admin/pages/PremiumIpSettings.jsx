@@ -92,11 +92,70 @@ const PremiumIpSettings = ({ ADMIN_API, authHeaders }) => {
       )}
 
       <form onSubmit={handleSave} className="space-y-6">
+        {/* ZiniPay Auto Payment Gateway Settings */}
+        <div className="bg-[#111827] border border-slate-800 rounded-2xl p-6 relative overflow-hidden">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-white font-bold text-base flex items-center gap-2">
+              <span className="p-2 bg-gradient-to-tr from-amber-500 to-yellow-400 rounded-xl text-slate-950 font-black text-xs">ZiniPay</span>
+              ZiniPay Auto Payment Gateway
+            </h3>
+            <div className="flex items-center gap-3">
+              <span className={`px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider ${
+                (globalSettings.zinipayApiKey || '').includes('sandbox') 
+                  ? 'bg-amber-500/10 text-amber-400 border border-amber-500/20' 
+                  : 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
+              }`}>
+                {(globalSettings.zinipayApiKey || '').includes('sandbox') ? '⚡ Sandbox Mode' : '🚀 Live Mode'}
+              </span>
+              <label className="relative inline-flex items-center cursor-pointer">
+                <input 
+                  type="checkbox" 
+                  checked={globalSettings.zinipayEnabled !== false} 
+                  onChange={(e) => setGlobalSettings({...globalSettings, zinipayEnabled: e.target.checked})}
+                  className="sr-only peer"
+                />
+                <div className="w-11 h-6 bg-slate-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-amber-500"></div>
+              </label>
+            </div>
+          </div>
+
+          <p className="text-slate-400 text-xs mb-6 leading-relaxed">
+            Auto payment integration for bKash, Nagad, Rocket. Enter your Sandbox or Live ZiniPay API Key below. When you purchase a live account, simply replace the key here to switch to live processing instantly.
+          </p>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label className="text-slate-400 text-[10px] font-bold uppercase tracking-widest mb-2 block ml-1">
+                ZiniPay Brand / API Key
+              </label>
+              <input 
+                type="text" 
+                value={globalSettings.zinipayApiKey || ''} 
+                placeholder="sandbox_test_8f4c9a2e7b31 or live_key_xxx"
+                onChange={(e) => setGlobalSettings({...globalSettings, zinipayApiKey: e.target.value})}
+                className="w-full bg-slate-800 border border-slate-700 rounded-xl px-4 py-3 text-amber-300 font-mono text-xs outline-none focus:border-amber-500"
+              />
+            </div>
+            <div>
+              <label className="text-slate-400 text-[10px] font-bold uppercase tracking-widest mb-2 block ml-1">
+                ZiniPay Base URL
+              </label>
+              <input 
+                type="text" 
+                value={globalSettings.zinipayBaseUrl || 'https://api.zinipay.com'} 
+                placeholder="https://api.zinipay.com"
+                onChange={(e) => setGlobalSettings({...globalSettings, zinipayBaseUrl: e.target.value})}
+                className="w-full bg-slate-800 border border-slate-700 rounded-xl px-4 py-3 text-slate-200 font-mono text-xs outline-none focus:border-amber-500"
+              />
+            </div>
+          </div>
+        </div>
+
         {/* Payment Numbers */}
         <div className="bg-[#111827] border border-slate-800 rounded-2xl p-6">
           <h3 className="text-white font-bold text-base mb-6 flex items-center gap-2">
             <svg className="w-5 h-5 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-            Payment Phone Numbers
+            Manual Payment Numbers (Fallback)
           </h3>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div>

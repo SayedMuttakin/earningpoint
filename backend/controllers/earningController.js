@@ -789,7 +789,8 @@ exports.getGlobalSettings = async (req, res) => {
       fortuneWheelConfig: settings.fortuneWheelConfig,
       admobConfig: settings.admobConfig,
       referralCampaignTarget: settings.referralCampaignTarget,
-      referralCampaignReward: settings.referralCampaignReward
+      referralCampaignReward: settings.referralCampaignReward,
+      zinipayEnabled: settings.zinipayEnabled !== false
     });
   } catch (error) {
     res.status(500).json({ message: error.message });

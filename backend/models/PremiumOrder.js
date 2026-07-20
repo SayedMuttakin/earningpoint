@@ -19,14 +19,15 @@ const PremiumOrderSchema = new mongoose.Schema({
   postalCode: { type: String, default: '' },
   paymentMethod: {
     type: String,
-    enum: ['bkash', 'nagad', 'rocket', 'earning', 'cod'],
+    enum: ['zinipay', 'bkash', 'nagad', 'rocket', 'earning', 'cod'],
     required: true,
   },
   transactionId: { type: String, default: '' },
+  zinipayInvoiceId: { type: String, default: '' },
   amount: { type: Number, required: true },
   status: {
     type: String,
-    enum: ['pending', 'approved', 'rejected'],
+    enum: ['pending', 'approved', 'rejected', 'completed'],
     default: 'pending',
   },
   adminNote: { type: String, default: '' },

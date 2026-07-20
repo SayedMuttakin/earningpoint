@@ -110,6 +110,19 @@ const GlobalSettingSchema = new mongoose.Schema({
     type: Number,
     required: true,
     default: 300
+  },
+  // ZiniPay Payment Gateway Configuration
+  zinipayApiKey: {
+    type: String,
+    default: 'sandbox_test_8f4c9a2e7b31'
+  },
+  zinipayBaseUrl: {
+    type: String,
+    default: 'https://api.zinipay.com'
+  },
+  zinipayEnabled: {
+    type: Boolean,
+    default: true
   }
 }, { timestamps: true });
 

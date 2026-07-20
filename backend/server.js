@@ -106,6 +106,9 @@ const startServer = async () => {
     const messageRoutes = require('./routes/messageRoutes');
     app.use('/api/messages', messageRoutes);
 
+    const zinipayRoutes = require('./routes/zinipayRoutes');
+    app.use('/api/payment/zinipay', zinipayRoutes);
+
     // Basic Route
     app.get('/', (req, res) => {
       res.send('Zenivio API is running...');

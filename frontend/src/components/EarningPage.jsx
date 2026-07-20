@@ -761,6 +761,17 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
     fetchWithdrawHistory();
     fetchGlobalWithdrawals();
     fetchWeeklyMissions();
+
+    // Check if returned from ZiniPay gateway redirect
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('payment_status') === 'completed') {
+      showToast('Payment Verified! Your VPN subscription is now active. ✨', 'success');
+      fetchBalance();
+      window.history.replaceState({}, document.title, window.location.pathname);
+    } else if (urlParams.get('payment_status') === 'error') {
+      showToast('Payment was cancelled or could not be verified.', 'error');
+      window.history.replaceState({}, document.title, window.location.pathname);
+    }
   }, []);
 
   React.useEffect(() => {
@@ -1481,6 +1492,30 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
     setIpSubmitting(true);
     try {
       const token = localStorage.getItem('token');
+      
+      // ⚡ ZiniPay Auto Gateway Flow
+      if (paymentMethod === 'zinipay') {
+        const response = await fetch(`${API_BASE}/api/payment/zinipay/create`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+          body: JSON.stringify({
+            packageId: selectedPackage,
+            packageName,
+            country: selectedCountry,
+            amount
+          })
+        });
+        const data = await response.json();
+        if (response.ok && data.payment_url) {
+          showToast('Redirecting to ZiniPay Gateway...', 'success');
+          window.location.href = data.payment_url;
+          return;
+        } else {
+          showToast(data.message || 'ZiniPay gateway error. Please try another method.', 'error');
+        }
+        return;
+      }
+
       const response = await fetch(`${API_BASE}/api/earning/premium-order`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
@@ -4301,12 +4336,12 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
                   
                   <div className="grid grid-cols-2 gap-3 mb-8">
                      {[
-                        { id: 'bkash', name: 'bKash', logo: '/logos/bkash.png', available: true, number: globalSettings.bkashNumber },
-                        { id: 'nagad', name: 'Nagad', logo: '/logos/nagad.png', available: true, number: globalSettings.nagadNumber },
-                        { id: 'rocket', name: 'Rocket', logo: '/logos/rocket.png', available: true, number: globalSettings.rocketNumber },
+                        { id: 'zinipay', name: 'ZiniPay Auto Gateway', logo: 'https://img.icons8.com/color/96/bank-cards.png', available: globalSettings.zinipayEnabled !== false, badge: 'AUTO INSTANT' },
+                        { id: 'bkash', name: 'bKash (Manual)', logo: '/logos/bkash.png', available: true, number: globalSettings.bkashNumber },
+                        { id: 'nagad', name: 'Nagad (Manual)', logo: '/logos/nagad.png', available: true, number: globalSettings.nagadNumber },
+                        { id: 'rocket', name: 'Rocket (Manual)', logo: '/logos/rocket.png', available: true, number: globalSettings.rocketNumber },
                         { id: 'bank', name: 'Bank Transfer', logo: 'https://img.icons8.com/color/96/bank-building.png', available: false },
                         { id: 'card', name: 'Mobile Card', logo: 'https://img.icons8.com/color/96/bank-cards.png', available: false },
-                        { id: 'visa', name: 'Visa', logo: 'https://img.icons8.com/color/96/visa.png', available: false },
                      ].map((method) => (
                         <button
                            key={method.id}
@@ -4318,14 +4353,35 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
                               : 'border-white/10 bg-[#151A23]'
                            } ${!method.available ? 'opacity-40 grayscale cursor-not-allowed' : ''}`}
                         >
+                           {method.badge && (
+                              <span className="absolute -top-2 right-2 px-2 py-0.5 bg-gradient-to-r from-amber-500 to-yellow-400 text-slate-950 font-black text-[9px] uppercase tracking-wider rounded-full shadow-lg">
+                                 {method.badge}
+                              </span>
+                           )}
                            <img src={method.logo} alt={method.name} className={`w-10 h-10 object-contain transition-transform ${paymentMethod === method.id ? 'scale-110 drop-shadow-[0_0_8px_rgba(250,204,21,0.4)]' : 'drop-shadow'}`} />
-                           <span className={`text-xs font-bold ${paymentMethod === method.id ? 'text-[#FACC15]' : 'text-white'}`}>{method.name}</span>
-                           {!method.available && <span className="absolute inset-0 m-auto h-fit w-fit px-1.5 py-0.5 bg-slate-900/90 rounded text-[9px] font-black text-rose-400 uppercase tracking-widest text-center shadow-lg">Unavailable</span>}
+                           <span className={`text-xs font-bold text-center ${paymentMethod === method.id ? 'text-[#FACC15]' : 'text-white'}`}>{method.name}</span>
+                           {!method.available && <span className="absolute inset-0 m-auto h-fit w-fit px-1.5 py-0.5 bg-slate-900/90 rounded text-[9px] font-black text-rose-400 uppercase tracking-widest text-center shadow-lg">Disabled</span>}
                         </button>
                      ))}
                   </div>
 
-                  {paymentMethod && (
+                  {paymentMethod === 'zinipay' && (
+                     <div className="bg-[#151A23] rounded-2xl p-5 border border-[#FACC15]/30 animate-slide-up shadow-xl relative overflow-hidden text-center">
+                        <div className="absolute top-0 right-0 w-32 h-32 bg-[#FACC15]/10 rounded-full blur-[40px]"></div>
+                        <div className="w-12 h-12 bg-amber-500/10 rounded-2xl border border-amber-500/30 flex items-center justify-center mx-auto mb-3 shadow-[0_0_15px_rgba(245,158,11,0.2)]">
+                           <Zap className="w-6 h-6 text-amber-400" />
+                        </div>
+                        <h3 className="text-white font-bold text-base mb-1">Instant Auto Payment Verification</h3>
+                        <p className="text-slate-300 text-xs leading-relaxed max-w-xs mx-auto mb-3">
+                           Pay using bKash, Nagad, Rocket or Cards on ZiniPay secure gateway. Payment is verified automatically and your VPN subscription activates instantly!
+                        </p>
+                        <span className="inline-block px-3 py-1 bg-amber-500/10 text-amber-300 border border-amber-500/20 rounded-full text-[10px] font-black uppercase tracking-wider">
+                           ⚡ No TxID entry required
+                        </span>
+                     </div>
+                  )}
+
+                  {['bkash', 'nagad', 'rocket'].includes(paymentMethod) && (
                      <div className="bg-[#151A23] rounded-2xl p-5 border border-white/10 animate-slide-up shadow-xl relative overflow-hidden">
                         <div className="absolute top-0 right-0 w-32 h-32 bg-[#FACC15]/5 rounded-full blur-[40px]"></div>
                         
