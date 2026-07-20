@@ -543,7 +543,7 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
   const [ipStep, setIpStep] = React.useState(1);
   const [selectedCountry, setSelectedCountry] = React.useState('');
   const [isCountryDropdownOpen, setIsCountryDropdownOpen] = React.useState(false);
-  const [paymentMethod, setPaymentMethod] = React.useState('');
+  const [paymentMethod, setPaymentMethod] = React.useState('zinipay');
   const [transactionId, setTransactionId] = React.useState('');
   const [ipSubmitting, setIpSubmitting] = React.useState(false);
   const [showUpgradeOptions, setShowUpgradeOptions] = React.useState(false);
@@ -1469,13 +1469,8 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
   };
 
   const handlePremiumSubmit = async () => {
-    const isMobileBanking = ['bkash', 'nagad', 'rocket'].includes(paymentMethod);
-    if (!selectedPackage || !selectedCountry || !paymentMethod) {
-      showToast('Please fill all required fields!', 'error');
-      return;
-    }
-    if (isMobileBanking && !transactionId) {
-      showToast('Please enter the Transaction ID!', 'error');
+    if (!selectedPackage || !selectedCountry) {
+      showToast('Please select package and country!', 'error');
       return;
     }
     // Look up from admin settings packages first, then fallback to local
@@ -1493,53 +1488,24 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
     try {
       const token = localStorage.getItem('token');
       
-      // ⚡ ZiniPay Auto Gateway Flow
-      if (paymentMethod === 'zinipay') {
-        const response = await fetch(`${API_BASE}/api/payment/zinipay/create`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-          body: JSON.stringify({
-            packageId: selectedPackage,
-            packageName,
-            country: selectedCountry,
-            amount
-          })
-        });
-        const data = await response.json();
-        if (response.ok && data.payment_url) {
-          showToast('Redirecting to ZiniPay Gateway...', 'success');
-          window.location.href = data.payment_url;
-          return;
-        } else {
-          showToast(data.message || 'ZiniPay gateway error. Please try another method.', 'error');
-        }
-        return;
-      }
-
-      const response = await fetch(`${API_BASE}/api/earning/premium-order`, {
+      // Permanent ZiniPay Auto Gateway Flow
+      const response = await fetch(`${API_BASE}/api/payment/zinipay/create`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
         body: JSON.stringify({
           packageId: selectedPackage,
           packageName,
           country: selectedCountry,
-          paymentMethod,
-          transactionId: isMobileBanking ? transactionId : '',
           amount
         })
       });
       const data = await response.json();
-      if (response.ok) {
-        // Show animated success screen
-        setVpnOrderDetails({ packageName, amount, country: selectedCountry, paymentMethod });
-        setVpnOrderSuccess(true);
-        setIpStep(1);
-        setSelectedPackage(null);
-        setSelectedCountry('');
-        setPaymentMethod('');
-        setTransactionId('');
+      if (response.ok && data.payment_url) {
+        showToast('Redirecting to ZiniPay Gateway...', 'success');
+        window.location.href = data.payment_url;
+        return;
       } else {
-        showToast(data.message || 'Submission failed. Please check your details.', 'error');
+        showToast(data.message || 'ZiniPay gateway error. Please try again.', 'error');
       }
     } catch (err) {
       showToast('Network error. Please try again.', 'error');
@@ -1547,7 +1513,6 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
       setIpSubmitting(false);
     }
   };
-
   const handleConvertCoins = async () => {
     if (coins < 1000) {
       alert('You need at least 1000 coins to convert to balance.');
@@ -4327,97 +4292,33 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
              ) : null}
 
              {/* Payment Selection (Step 3 or 4) */}
-             {((!isPremium && ipStep === 3) || (isPremium && ipStep === 4)) ? (
-               <div className="flex flex-col animate-fade-in pt-4">
-                  <h2 className="text-xl font-black text-[#FACC15] mb-2 text-center drop-shadow-[0_0_10px_rgba(250,204,21,0.2)]">Payment Methods</h2>
-                  <p className="text-slate-300 font-bold mb-8 text-center bg-[#FACC15]/10 py-2 rounded-xl border border-[#FACC15]/20 max-w-[200px] mx-auto shadow-[0_0_15px_rgba(250,204,21,0.05)]">
-                     Amount: <span className="text-[#FACC15] text-lg">৳{globalSettings.premiumIpPackages?.find(p => p.id === selectedPackage)?.price || (selectedPackage === '1' ? 700 : 0)}</span>
-                  </p>
-                  
-                  <div className="grid grid-cols-2 gap-3 mb-8">
-                     {[
-                        { id: 'zinipay', name: 'ZiniPay Auto Gateway', logo: 'https://img.icons8.com/color/96/bank-cards.png', available: globalSettings.zinipayEnabled !== false, badge: 'AUTO INSTANT' },
-                        { id: 'bkash', name: 'bKash (Manual)', logo: '/logos/bkash.png', available: true, number: globalSettings.bkashNumber },
-                        { id: 'nagad', name: 'Nagad (Manual)', logo: '/logos/nagad.png', available: true, number: globalSettings.nagadNumber },
-                        { id: 'rocket', name: 'Rocket (Manual)', logo: '/logos/rocket.png', available: true, number: globalSettings.rocketNumber },
-                        { id: 'bank', name: 'Bank Transfer', logo: 'https://img.icons8.com/color/96/bank-building.png', available: false },
-                        { id: 'card', name: 'Mobile Card', logo: 'https://img.icons8.com/color/96/bank-cards.png', available: false },
-                     ].map((method) => (
-                        <button
-                           key={method.id}
-                           disabled={!method.available}
-                           onClick={() => setPaymentMethod(method.id)}
-                           className={`relative p-4 rounded-2xl border flex flex-col items-center justify-center gap-3 transition-all ${
-                              paymentMethod === method.id 
-                              ? 'border-[#FACC15] bg-[#FACC15]/10 shadow-[0_0_15px_rgba(250,204,21,0.15)]' 
-                              : 'border-white/10 bg-[#151A23]'
-                           } ${!method.available ? 'opacity-40 grayscale cursor-not-allowed' : ''}`}
-                        >
-                           {method.badge && (
-                              <span className="absolute -top-2 right-2 px-2 py-0.5 bg-gradient-to-r from-amber-500 to-yellow-400 text-slate-950 font-black text-[9px] uppercase tracking-wider rounded-full shadow-lg">
-                                 {method.badge}
-                              </span>
-                           )}
-                           <img src={method.logo} alt={method.name} className={`w-10 h-10 object-contain transition-transform ${paymentMethod === method.id ? 'scale-110 drop-shadow-[0_0_8px_rgba(250,204,21,0.4)]' : 'drop-shadow'}`} />
-                           <span className={`text-xs font-bold text-center ${paymentMethod === method.id ? 'text-[#FACC15]' : 'text-white'}`}>{method.name}</span>
-                           {!method.available && <span className="absolute inset-0 m-auto h-fit w-fit px-1.5 py-0.5 bg-slate-900/90 rounded text-[9px] font-black text-rose-400 uppercase tracking-widest text-center shadow-lg">Disabled</span>}
-                        </button>
-                     ))}
-                  </div>
-
-                  {paymentMethod === 'zinipay' && (
-                     <div className="bg-[#151A23] rounded-2xl p-5 border border-[#FACC15]/30 animate-slide-up shadow-xl relative overflow-hidden text-center">
-                        <div className="absolute top-0 right-0 w-32 h-32 bg-[#FACC15]/10 rounded-full blur-[40px]"></div>
-                        <div className="w-12 h-12 bg-amber-500/10 rounded-2xl border border-amber-500/30 flex items-center justify-center mx-auto mb-3 shadow-[0_0_15px_rgba(245,158,11,0.2)]">
-                           <Zap className="w-6 h-6 text-amber-400" />
-                        </div>
-                        <h3 className="text-white font-bold text-base mb-1">Instant Auto Payment Verification</h3>
-                        <p className="text-slate-300 text-xs leading-relaxed max-w-xs mx-auto mb-3">
-                           Pay using bKash, Nagad, Rocket or Cards on ZiniPay secure gateway. Payment is verified automatically and your VPN subscription activates instantly!
-                        </p>
-                        <span className="inline-block px-3 py-1 bg-amber-500/10 text-amber-300 border border-amber-500/20 rounded-full text-[10px] font-black uppercase tracking-wider">
-                           ⚡ No TxID entry required
-                        </span>
-                     </div>
-                  )}
-
-                  {['bkash', 'nagad', 'rocket'].includes(paymentMethod) && (
-                     <div className="bg-[#151A23] rounded-2xl p-5 border border-white/10 animate-slide-up shadow-xl relative overflow-hidden">
-                        <div className="absolute top-0 right-0 w-32 h-32 bg-[#FACC15]/5 rounded-full blur-[40px]"></div>
-                        
-                        <p className="text-slate-300 text-sm mb-3 font-bold text-center relative z-10">1. Send exact amount to this number:</p>
-                        <div className="flex items-center justify-between bg-black/30 rounded-xl p-3 border border-white/5 mb-6 group transition-colors relative z-10">
-                           <span className="font-mono text-[#FACC15] font-black tracking-widest text-lg ml-2 drop-shadow-[0_0_5px_rgba(250,204,21,0.3)]">
-                              {paymentMethod === 'bkash' && globalSettings.bkashNumber}
-                              {paymentMethod === 'nagad' && globalSettings.nagadNumber}
-                              {paymentMethod === 'rocket' && globalSettings.rocketNumber}
-                           </span>
-                           <button onClick={(e) => {
-                              navigator.clipboard.writeText(
-                                 paymentMethod === 'bkash' ? globalSettings.bkashNumber : 
-                                 paymentMethod === 'nagad' ? globalSettings.nagadNumber : globalSettings.rocketNumber
-                              );
-                              const btn = e.target;
-                              const oldText = btn.innerText;
-                              btn.innerText = 'Copied!';
-                              setTimeout(() => btn.innerText = oldText, 2000);
-                           }} className="text-xs bg-[#FACC15]/10 text-[#FACC15] px-4 py-2 rounded-lg font-black uppercase tracking-wider hover:bg-[#FACC15]/20 border border-[#FACC15]/20 transition-colors">Copy</button>
-                        </div>
-                        
-                        <p className="text-slate-300 text-sm mb-3 font-bold text-center mt-2 relative z-10">2. Enter your Transaction ID:</p>
-                        <div className="space-y-2 relative z-10">
-                           <input
-                              type="text"
-                              value={transactionId}
-                              onChange={(e) => setTransactionId(e.target.value)}
-                              placeholder="e.g. TRXR123456789"
-                              className="w-full bg-black/30 border border-white/10 focus:border-[#FACC15]/50 focus:bg-[#FACC15]/5 focus:shadow-[0_0_15px_rgba(250,204,21,0.1)] rounded-xl px-4 py-4 text-[#FACC15] font-mono text-sm outline-none transition-all text-center font-bold tracking-wider uppercase placeholder:text-slate-600 placeholder:normal-case"
-                           />
-                        </div>
-                     </div>
-                  )}
-               </div>
-             ) : null}
+              {((!isPremium && ipStep === 3) || (isPremium && ipStep === 4)) ? (
+                <div className="flex flex-col animate-fade-in pt-4">
+                   <h2 className="text-xl font-black text-[#FACC15] mb-2 text-center drop-shadow-[0_0_10px_rgba(250,204,21,0.2)]">Auto Payment Checkout</h2>
+                   <p className="text-slate-300 font-bold mb-6 text-center bg-[#FACC15]/10 py-2 rounded-xl border border-[#FACC15]/20 max-w-[220px] mx-auto shadow-[0_0_15px_rgba(250,204,21,0.05)]">
+                      Total: <span className="text-[#FACC15] text-lg">৳{(globalSettings.premiumIpPackages?.find(p => p.id === selectedPackage)?.price || (selectedPackage === '1' ? 700 : 0)) + 25}</span>
+                   </p>
+                   <div className="bg-[#151A23] rounded-2xl p-6 border border-[#FACC15]/30 shadow-xl relative overflow-hidden text-center">
+                      <div className="absolute top-0 right-0 w-32 h-32 bg-[#FACC15]/10 rounded-full blur-[40px]"></div>
+                      <div className="w-14 h-14 bg-amber-500/10 rounded-2xl border border-amber-500/30 flex items-center justify-center mx-auto mb-4 shadow-[0_0_20px_rgba(245,158,11,0.2)]">
+                         <Zap className="w-8 h-8 text-amber-400" />
+                      </div>
+                      <h3 className="text-white font-black text-lg mb-2">ZiniPay Instant Auto Gateway</h3>
+                      <p className="text-slate-300 text-xs leading-relaxed max-w-xs mx-auto mb-4">
+                         Pay via bKash, Nagad, Rocket or Bank Card. Verification is 100% automated. Your VPN activates instantly!
+                      </p>
+                      <div className="flex items-center justify-center gap-3 py-2 px-4 bg-black/40 rounded-xl border border-white/5 max-w-xs mx-auto mb-3">
+                         <img src="/logos/bkash.png" alt="bKash" className="h-6 object-contain" />
+                         <img src="/logos/nagad.png" alt="Nagad" className="h-6 object-contain" />
+                         <img src="/logos/rocket.png" alt="Rocket" className="h-6 object-contain" />
+                         <span className="text-[10px] text-amber-400 font-bold uppercase ml-1">+ Cards</span>
+                      </div>
+                      <span className="inline-block px-3 py-1 bg-amber-500/10 text-amber-300 border border-amber-500/20 rounded-full text-[10px] font-black uppercase tracking-wider">
+                         100% Automated - Instant Activation
+                      </span>
+                   </div>
+                </div>
+              ) : null}
 
              </div>
 
@@ -4435,7 +4336,7 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
                    )}
                    {((!isPremium && ipStep === 3) || (isPremium && ipStep === 4)) && (
                       <button
-                         disabled={!paymentMethod || (['bkash', 'nagad', 'rocket'].includes(paymentMethod) && !transactionId) || ipSubmitting}
+                          disabled={ipSubmitting}
                          onClick={handlePremiumSubmit}
                          className="w-full flex items-center justify-center py-4 rounded-xl bg-gradient-to-r from-[#FACC15] to-[#EAB308] text-slate-900 font-black shadow-[0_5px_20px_rgba(250,204,21,0.3)] active:scale-95 transition-transform disabled:opacity-50 disabled:shadow-none tracking-wider text-sm gap-2"
                       >
@@ -4444,10 +4345,10 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
                                 <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                                 <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                               </svg>
-                              SUBMITTING...
+                              CONNECTING GATEWAY...
                             </span> : (
                            <>
-                             CONFIRM ORDER <Check strokeWidth={3} className="w-5 h-5" />
+                             PAY VIA ZINIPAY AUTO GATEWAY
                            </>
                          )}
                       </button>
