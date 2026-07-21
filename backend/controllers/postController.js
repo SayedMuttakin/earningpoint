@@ -70,20 +70,28 @@ exports.getPostById = async (req, res) => {
 // @access  Private/Admin
 exports.createPost = async (req, res) => {
   try {
-    const { content, title, image, video, authorName, isVerified } = req.body;
+    const { content, title, image, video, authorName, isVerified, category, customTime, createdAt } = req.body;
     
     if (!content && !image && !video) {
       return res.status(400).json({ message: 'Content or media is required' });
     }
 
-    const post = await Post.create({
+    const postData = {
       content,
       title: title || null,
       image: image || null,
       video: video || null,
       authorName: authorName || 'Zenivio',
-      isVerified: isVerified !== undefined ? isVerified : true
-    });
+      isVerified: isVerified !== undefined ? isVerified : true,
+      category: category || 'General',
+      customTime: customTime || null
+    };
+
+    if (createdAt) {
+      postData.createdAt = new Date(createdAt);
+    }
+
+    const post = await Post.create(postData);
 
     // Notify all users about the new post
     try {
@@ -94,7 +102,7 @@ exports.createPost = async (req, res) => {
           'New Post Updated! 📢', 
           `${authorName || 'Zenivio'} has shared a new update. Check it out now!`, 
           'post',
-          newPost._id
+          post._id
         )
       );
       await Promise.all(notificationPromises);
@@ -113,19 +121,22 @@ exports.createPost = async (req, res) => {
 // @access  Private/Admin
 exports.updatePost = async (req, res) => {
   try {
-    const { content, title, image, video, authorName, isVerified } = req.body;
+    const { content, title, image, video, authorName, isVerified, category, customTime, createdAt } = req.body;
     const post = await Post.findById(req.params.id);
 
     if (!post) {
       return res.status(404).json({ message: 'Post not found' });
     }
 
-    post.content = content || post.content;
-    post.title = title !== undefined ? title : post.title;
-    post.image = image !== undefined ? image : post.image;
-    post.video = video !== undefined ? video : post.video;
-    post.authorName = authorName || post.authorName;
-    post.isVerified = isVerified !== undefined ? isVerified : post.isVerified;
+    if (content !== undefined) post.content = content;
+    if (title !== undefined) post.title = title;
+    if (image !== undefined) post.image = image;
+    if (video !== undefined) post.video = video;
+    if (authorName !== undefined) post.authorName = authorName;
+    if (isVerified !== undefined) post.isVerified = isVerified;
+    if (category !== undefined) post.category = category;
+    if (customTime !== undefined) post.customTime = customTime;
+    if (createdAt !== undefined && createdAt) post.createdAt = new Date(createdAt);
 
     const updatedPost = await post.save();
     res.json(updatedPost);

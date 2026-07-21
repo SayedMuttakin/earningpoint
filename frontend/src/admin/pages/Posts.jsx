@@ -1,12 +1,36 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, Trash2, Image as ImageIcon, X, Send, AlertCircle, CheckCircle } from 'lucide-react';
+import { Plus, Trash2, Image as ImageIcon, X, Send, AlertCircle, CheckCircle, Edit3, Clock, Tag } from 'lucide-react';
 import VerifiedBadge from '../../components/VerifiedBadge';
+
+const CATEGORY_OPTIONS = [
+  'General',
+  'World',
+  'Technology',
+  'Sports',
+  'Business',
+  'Platform',
+  'Announcement',
+  'News',
+  'Update'
+];
 
 const Posts = ({ authHeaders, ADMIN_API }) => {
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [isAdding, setIsAdding] = useState(false);
-  const [newPost, setNewPost] = useState({ content: '', title: '', image: null, authorName: 'Zenivio', isVerified: true });
+  const [editingPostId, setEditingPostId] = useState(null);
+
+  const initialFormState = {
+    content: '',
+    title: '',
+    image: null,
+    authorName: 'Zenivio',
+    isVerified: true,
+    category: 'General',
+    customTime: ''
+  };
+
+  const [postForm, setPostForm] = useState(initialFormState);
   const [imagePreview, setImagePreview] = useState(null);
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(null);
@@ -31,10 +55,47 @@ const Posts = ({ authHeaders, ADMIN_API }) => {
     }
   };
 
+  const resetForm = () => {
+    setPostForm(initialFormState);
+    setImagePreview(null);
+    setEditingPostId(null);
+    setError(null);
+    setSuccess(null);
+  };
+
+  const handleToggleAddEdit = () => {
+    if (isAdding) {
+      setIsAdding(false);
+      resetForm();
+    } else {
+      resetForm();
+      setIsAdding(true);
+    }
+  };
+
+  const handleEditClick = (post) => {
+    setEditingPostId(post._id);
+    setPostForm({
+      content: post.content || '',
+      title: post.title || '',
+      image: post.image || null,
+      authorName: post.authorName || 'Zenivio',
+      isVerified: post.isVerified !== undefined ? post.isVerified : true,
+      category: post.category || 'General',
+      customTime: post.customTime || ''
+    });
+    setImagePreview(post.image || null);
+    setIsAdding(true);
+    setError(null);
+    setSuccess(null);
+
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
   const handleImageChange = (e) => {
     const file = e.target.files[0];
     if (file) {
-      if (file.size > 15 * 1024 * 1024) { // Increased to 15MB since we compress
+      if (file.size > 15 * 1024 * 1024) {
         setError('Image too large. Max 15MB.');
         return;
       }
@@ -66,10 +127,9 @@ const Posts = ({ authHeaders, ADMIN_API }) => {
           const ctx = canvas.getContext('2d');
           ctx.drawImage(img, 0, 0, width, height);
           
-          // Compress to JPEG with 70% quality
           const dataUrl = canvas.toDataURL('image/jpeg', 0.7);
           setImagePreview(dataUrl);
-          setNewPost({ ...newPost, image: dataUrl });
+          setPostForm((prev) => ({ ...prev, image: dataUrl }));
         };
         img.src = reader.result;
       };
@@ -77,29 +137,35 @@ const Posts = ({ authHeaders, ADMIN_API }) => {
     }
   };
 
-  const handleCreatePost = async (e) => {
+  const handleSubmitPost = async (e) => {
     e.preventDefault();
     setError(null);
     setSuccess(null);
 
-    if (!newPost.content.trim() && !newPost.image) return setError('Content or Image is required');
+    if (!postForm.content.trim() && !postForm.image) {
+      return setError('Content or Image is required');
+    }
 
     try {
-      const res = await fetch(`${ADMIN_API}/posts`, {
-        method: 'POST',
+      const url = editingPostId ? `${ADMIN_API}/posts/${editingPostId}` : `${ADMIN_API}/posts`;
+      const method = editingPostId ? 'PUT' : 'POST';
+
+      const res = await fetch(url, {
+        method,
         headers: { ...authHeaders, 'Content-Type': 'application/json' },
-        body: JSON.stringify(newPost),
+        body: JSON.stringify(postForm),
       });
 
       if (res.ok) {
-        setSuccess('Post published successfully!');
-        setNewPost({ content: '', title: '', image: null, authorName: 'Zenivio', isVerified: true });
-        setImagePreview(null);
-        setIsAdding(false);
-        fetchPosts();
+        setSuccess(editingPostId ? 'News post updated successfully!' : 'Post published successfully!');
+        setTimeout(() => {
+          setIsAdding(false);
+          resetForm();
+          fetchPosts();
+        }, 800);
       } else {
         const data = await res.json();
-        setError(data.message || 'Failed to create post');
+        setError(data.message || (editingPostId ? 'Failed to update post' : 'Failed to create post'));
       }
     } catch (err) {
       setError('Error connecting to server');
@@ -124,10 +190,10 @@ const Posts = ({ authHeaders, ADMIN_API }) => {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6 pb-6 border-b border-slate-800">
         <div>
           <h2 className="text-2xl sm:text-3xl font-black text-white tracking-tight">Home Page Posts</h2>
-          <p className="text-slate-400 text-sm mt-2 font-medium">Manage updates and announcements for the user feed.</p>
+          <p className="text-slate-400 text-sm mt-2 font-medium">Manage news, updates and announcements for the user feed.</p>
         </div>
         <button
-          onClick={() => setIsAdding(!isAdding)}
+          onClick={handleToggleAddEdit}
           className={`flex items-center justify-center gap-2 px-6 py-3 rounded-2xl font-black shadow-xl transition-all w-full sm:w-auto active:scale-95 ${
             isAdding 
               ? 'bg-slate-800 text-slate-300 hover:bg-slate-700' 
@@ -145,15 +211,27 @@ const Posts = ({ authHeaders, ADMIN_API }) => {
         >
           <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-600/5 rounded-full blur-3xl" />
           
-          <form onSubmit={handleCreatePost} className="space-y-6 relative z-10">
+          <div className="flex items-center justify-between mb-6 pb-4 border-b border-slate-800">
+            <h3 className="text-xl font-black text-white flex items-center gap-2">
+              {editingPostId ? <Edit3 className="w-5 h-5 text-indigo-400" /> : <Plus className="w-5 h-5 text-indigo-400" />}
+              {editingPostId ? 'Edit News Post' : 'Create New Post'}
+            </h3>
+            {editingPostId && (
+              <span className="text-xs font-bold text-indigo-400 bg-indigo-500/10 px-3 py-1 rounded-full border border-indigo-500/20">
+                Editing ID: {editingPostId.slice(-6)}
+              </span>
+            )}
+          </div>
+
+          <form onSubmit={handleSubmitPost} className="space-y-6 relative z-10">
             <div>
               <label className="block text-slate-400 text-xs font-black uppercase tracking-widest mb-3 ml-1">Post Heading (Title)</label>
               <input
                 type="text"
                 className="w-full bg-slate-950 border border-slate-800 rounded-2xl px-5 py-3 text-white focus:ring-2 focus:ring-indigo-500/50 outline-none transition-all placeholder:text-slate-600"
                 placeholder="Enter post heading..."
-                value={newPost.title}
-                onChange={(e) => setNewPost({ ...newPost, title: e.target.value })}
+                value={postForm.title}
+                onChange={(e) => setPostForm({ ...postForm, title: e.target.value })}
               />
             </div>
 
@@ -162,9 +240,57 @@ const Posts = ({ authHeaders, ADMIN_API }) => {
               <textarea
                 className="w-full bg-slate-950 border border-slate-800 rounded-3xl px-5 py-4 text-white focus:outline-none focus:ring-2 focus:ring-indigo-500/50 min-h-[150px] transition-all text-base leading-relaxed placeholder:text-slate-600"
                 placeholder="What's happening? (supports emojis 🚀)"
-                value={newPost.content}
-                onChange={(e) => setNewPost({ ...newPost, content: e.target.value })}
+                value={postForm.content}
+                onChange={(e) => setPostForm({ ...postForm, content: e.target.value })}
               />
+            </div>
+
+            {/* Category & Custom Time Settings */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+              <div>
+                <label className="block text-slate-400 text-xs font-black uppercase tracking-widest mb-3 ml-1 flex items-center gap-1.5">
+                  <Tag className="w-3.5 h-3.5 text-indigo-400" /> Post Category
+                </label>
+                <div className="space-y-2">
+                  <select
+                    className="w-full bg-slate-950 border border-slate-800 rounded-2xl px-5 py-3 text-white focus:ring-2 focus:ring-indigo-500/50 outline-none transition-all cursor-pointer"
+                    value={CATEGORY_OPTIONS.includes(postForm.category) ? postForm.category : 'Custom'}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      if (val !== 'Custom') {
+                        setPostForm({ ...postForm, category: val });
+                      }
+                    }}
+                  >
+                    {CATEGORY_OPTIONS.map((cat) => (
+                      <option key={cat} value={cat} className="bg-slate-900 text-white">{cat}</option>
+                    ))}
+                    <option value="Custom" className="bg-slate-900 text-indigo-400">+ Custom Category...</option>
+                  </select>
+                  {!CATEGORY_OPTIONS.includes(postForm.category) && (
+                    <input
+                      type="text"
+                      className="w-full bg-slate-950 border border-slate-800 rounded-2xl px-5 py-3 text-white focus:ring-2 focus:ring-indigo-500/50 outline-none transition-all placeholder:text-slate-600"
+                      placeholder="Type custom category name..."
+                      value={postForm.category}
+                      onChange={(e) => setPostForm({ ...postForm, category: e.target.value })}
+                    />
+                  )}
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-slate-400 text-xs font-black uppercase tracking-widest mb-3 ml-1 flex items-center gap-1.5">
+                  <Clock className="w-3.5 h-3.5 text-indigo-400" /> Time Display / Custom Time
+                </label>
+                <input
+                  type="text"
+                  className="w-full bg-slate-950 border border-slate-800 rounded-2xl px-5 py-3 text-white focus:ring-2 focus:ring-indigo-500/50 outline-none transition-all placeholder:text-slate-600"
+                  placeholder="e.g. 5m ago, 10:30 AM, or leave empty for auto"
+                  value={postForm.customTime}
+                  onChange={(e) => setPostForm({ ...postForm, customTime: e.target.value })}
+                />
+              </div>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
@@ -173,19 +299,19 @@ const Posts = ({ authHeaders, ADMIN_API }) => {
                 <input
                   type="text"
                   className="w-full bg-slate-950 border border-slate-800 rounded-2xl px-5 py-3 text-white focus:ring-2 focus:ring-indigo-500/50 outline-none transition-all"
-                  value={newPost.authorName}
-                  onChange={(e) => setNewPost({ ...newPost, authorName: e.target.value })}
+                  value={postForm.authorName}
+                  onChange={(e) => setPostForm({ ...postForm, authorName: e.target.value })}
                 />
               </div>
               <div className="flex items-center sm:pt-6">
                 <div 
-                  onClick={() => setNewPost({...newPost, isVerified: !newPost.isVerified})}
+                  onClick={() => setPostForm({ ...postForm, isVerified: !postForm.isVerified })}
                   className="flex items-center gap-4 cursor-pointer group bg-slate-950/50 border border-slate-800 px-4 py-3 rounded-2xl hover:bg-slate-950 transition-all w-full"
                 >
-                  <div className={`w-12 h-6 rounded-full p-1 transition-all flex items-center ${newPost.isVerified ? 'bg-indigo-600 shadow-[0_0_10px_rgba(79,70,229,0.3)]' : 'bg-slate-700'}`}>
-                    <div className={`w-4 h-4 bg-white rounded-full transition-all duration-300 shadow-sm ${newPost.isVerified ? 'translate-x-6' : 'translate-x-0'}`} />
+                  <div className={`w-12 h-6 rounded-full p-1 transition-all flex items-center ${postForm.isVerified ? 'bg-indigo-600 shadow-[0_0_10px_rgba(79,70,229,0.3)]' : 'bg-slate-700'}`}>
+                    <div className={`w-4 h-4 bg-white rounded-full transition-all duration-300 shadow-sm ${postForm.isVerified ? 'translate-x-6' : 'translate-x-0'}`} />
                   </div>
-                  <span className="text-white text-sm font-black uppercase tracking-wider">Verified</span>
+                  <span className="text-white text-sm font-black uppercase tracking-wider">Verified Badge</span>
                 </div>
               </div>
             </div>
@@ -201,21 +327,21 @@ const Posts = ({ authHeaders, ADMIN_API }) => {
                 {imagePreview && (
                   <button
                     type="button"
-                    onClick={() => { setImagePreview(null); setNewPost({ ...newPost, image: null }); }}
+                    onClick={() => { setImagePreview(null); setPostForm({ ...postForm, image: null }); }}
                     className="px-4 py-2 text-rose-500 hover:bg-rose-500/10 rounded-xl text-xs font-black uppercase tracking-widest transition-all"
                   >
-                    Remove
+                    Remove Image
                   </button>
                 )}
               </div>
-                {imagePreview && (
-                  <div 
-                    className="mt-6 relative rounded-[2rem] overflow-hidden border-2 border-slate-800 group shadow-2xl max-h-[300px] animate-fade-in"
-                  >
+              {imagePreview && (
+                <div 
+                  className="mt-6 relative rounded-[2rem] overflow-hidden border-2 border-slate-800 group shadow-2xl max-h-[300px] animate-fade-in"
+                >
                   <img src={imagePreview} alt="Preview" className="w-full h-full object-cover" />
                   <div className="absolute inset-0 bg-gradient-to-t from-slate-950/60 to-transparent pointer-events-none" />
-                  </div>
-                )}
+                </div>
+              )}
             </div>
 
             {error && (
@@ -239,7 +365,7 @@ const Posts = ({ authHeaders, ADMIN_API }) => {
               className="w-full py-4 bg-indigo-600 text-white rounded-[1.5rem] font-black uppercase tracking-[0.2em] shadow-[0_10px_30px_-10px_rgba(79,70,229,0.5)] hover:bg-indigo-500 transition-all flex items-center justify-center gap-3 active:scale-[0.98]"
             >
               <Send className="w-5 h-5" />
-              Publish Update
+              {editingPostId ? 'Save Changes (Update Post)' : 'Publish Update'}
             </button>
           </form>
         </div>
@@ -253,10 +379,10 @@ const Posts = ({ authHeaders, ADMIN_API }) => {
           ))
         ) : (
           posts.map(post => (
-              <div
-                key={post._id}
-                className="bg-slate-900 border border-slate-800 rounded-[2.5rem] overflow-hidden group hover:border-indigo-500/50 hover:shadow-2xl hover:shadow-indigo-600/10 transition-all duration-500 flex flex-col h-full animate-fade-in"
-              >
+            <div
+              key={post._id}
+              className="bg-slate-900 border border-slate-800 rounded-[2.5rem] overflow-hidden group hover:border-indigo-500/50 hover:shadow-2xl hover:shadow-indigo-600/10 transition-all duration-500 flex flex-col h-full animate-fade-in"
+            >
               {post.image && (
                 <div className="h-48 overflow-hidden relative">
                   <img src={post.image} alt="Post" className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
@@ -277,10 +403,16 @@ const Posts = ({ authHeaders, ADMIN_API }) => {
                         )}
                       </div>
                       <span className="text-slate-500 text-[10px] font-black uppercase tracking-widest block mt-0.5">
-                        {new Date(post.createdAt).toLocaleDateString([], { month: 'short', day: 'numeric', year: 'numeric' })}
+                        {post.customTime || new Date(post.createdAt).toLocaleDateString([], { month: 'short', day: 'numeric', year: 'numeric' })}
                       </span>
                     </div>
                   </div>
+
+                  {post.category && (
+                    <span className="text-[10px] font-black uppercase px-2.5 py-1 rounded-lg bg-indigo-500/10 text-indigo-400 border border-indigo-500/20">
+                      {post.category}
+                    </span>
+                  )}
                 </div>
                 
                 {post.title && (
@@ -295,13 +427,24 @@ const Posts = ({ authHeaders, ADMIN_API }) => {
 
                 <div className="flex items-center justify-between pt-5 border-t border-slate-800/50">
                   <span className="text-[10px] font-black text-slate-600 uppercase tracking-[0.2em]">Post ID: {post._id?.slice(-6)}</span>
-                  <button
-                    onClick={() => handleDeletePost(post._id)}
-                    className="p-3 text-slate-500 hover:text-rose-500 hover:bg-rose-500/10 rounded-2xl transition-all active:scale-95 translate-x-1"
-                    title="Delete post"
-                  >
-                    <Trash2 className="w-5 h-5" />
-                  </button>
+                  
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => handleEditClick(post)}
+                      className="p-2.5 text-indigo-400 hover:text-white hover:bg-indigo-600/20 rounded-2xl transition-all active:scale-95 flex items-center gap-1.5 text-xs font-bold"
+                      title="Edit post"
+                    >
+                      <Edit3 className="w-4 h-4" />
+                      <span>Edit</span>
+                    </button>
+                    <button
+                      onClick={() => handleDeletePost(post._id)}
+                      className="p-2.5 text-slate-500 hover:text-rose-500 hover:bg-rose-500/10 rounded-2xl transition-all active:scale-95"
+                      title="Delete post"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>
@@ -310,9 +453,9 @@ const Posts = ({ authHeaders, ADMIN_API }) => {
       </div>
 
       {!loading && posts.length === 0 && (
-          <div 
-            className="py-32 text-center bg-slate-900/30 border-2 border-dashed border-slate-800 rounded-[3rem] animate-fade-in"
-          >
+        <div 
+          className="py-32 text-center bg-slate-900/30 border-2 border-dashed border-slate-800 rounded-[3rem] animate-fade-in"
+        >
           <div className="w-20 h-20 bg-slate-800 rounded-3xl flex items-center justify-center mx-auto mb-6 text-slate-600">
             <ImageIcon className="w-10 h-10" />
           </div>

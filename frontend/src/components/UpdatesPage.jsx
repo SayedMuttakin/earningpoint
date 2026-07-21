@@ -40,7 +40,12 @@ const UpdateCard = ({ post, onClick }) => {
           {post.isVerified !== false && (
             <VerifiedBadge iconClassName="w-[14px] h-[14px] fill-blue-500 text-white" />
           )}
-          <span className="text-slate-400 dark:text-slate-500 text-xs font-semibold">· {formatDate(post.createdAt)}</span>
+          <span className="text-slate-400 dark:text-slate-500 text-xs font-semibold">· {post.customTime || formatDate(post.createdAt)}</span>
+          {post.category && (
+            <span className="ml-auto text-[10px] font-black px-2 py-0.5 rounded bg-indigo-500/10 text-[#7C3AED] dark:text-indigo-400">
+              {post.category}
+            </span>
+          )}
         </div>
       </div>
 
@@ -273,7 +278,7 @@ const UpdatesPage = ({ onBack, selectedPostId, setSelectedPostId }) => {
             {/* Content Container */}
             <div className="bg-white dark:bg-slate-900 border border-slate-150/40 dark:border-slate-800 rounded-3xl p-5 sm:p-6 space-y-5 shadow-2xs">
               <span className="inline-block px-2.5 py-1 bg-indigo-50 dark:bg-indigo-950/40 border border-indigo-100/50 dark:border-indigo-900/30 text-[#7C3AED] dark:text-indigo-400 rounded-lg text-[10px] font-black tracking-wide">
-                Zenivio News
+                {detailPost.category || 'Zenivio News'}
               </span>
 
               <h1 className="text-xl sm:text-2xl font-black text-slate-850 dark:text-white leading-tight">
@@ -287,10 +292,12 @@ const UpdatesPage = ({ onBack, selectedPostId, setSelectedPostId }) => {
                 </div>
                 <div>
                   <div className="flex items-center gap-1.5">
-                    <span className="font-black text-slate-850 dark:text-slate-200 text-xs sm:text-sm">Zenivio Official</span>
-                    <VerifiedBadge iconClassName="w-[14px] h-[14px] fill-blue-500 text-white" />
+                    <span className="font-black text-slate-850 dark:text-slate-200 text-xs sm:text-sm">{detailPost.authorName || 'Zenivio Official'}</span>
+                    {detailPost.isVerified !== false && (
+                      <VerifiedBadge iconClassName="w-[14px] h-[14px] fill-blue-500 text-white" />
+                    )}
                   </div>
-                  <span className="text-slate-400 dark:text-slate-500 text-[10px] font-bold">{formatDateLong(detailPost.createdAt)}</span>
+                  <span className="text-slate-400 dark:text-slate-500 text-[10px] font-bold">{detailPost.customTime || formatDateLong(detailPost.createdAt)}</span>
                 </div>
               </div>
 

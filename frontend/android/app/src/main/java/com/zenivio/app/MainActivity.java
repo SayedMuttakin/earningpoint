@@ -1,4 +1,4 @@
-package app.earningpoint;
+package com.zenivio.app;
 
 import android.os.Bundle;
 import com.getcapacitor.BridgeActivity;

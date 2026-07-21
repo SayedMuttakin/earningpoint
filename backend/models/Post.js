@@ -30,6 +30,14 @@ const PostSchema = new mongoose.Schema({
     type: Boolean,
     default: true,
   },
+  category: {
+    type: String,
+    default: 'General',
+  },
+  customTime: {
+    type: String,
+    default: null,
+  },
   privacy: {
     type: String,
     enum: ['public', 'friends', 'private'],

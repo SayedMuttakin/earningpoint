@@ -7,9 +7,9 @@
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:410797628659:android:earningpoint",
+        "mobilesdk_app_id": "1:410797628659:android:com.zenivio.app",
         "android_client_info": {
-          "package_name": "app.earningpoint"
+          "package_name": "com.zenivio.app"
         }
       },
       "oauth_client": [
@@ -17,7 +17,7 @@
           "client_id": "410797628659-2mckqrqhbarqse925e2a30cb28gq0ii6.apps.googleusercontent.com",
           "client_type": 1,
           "android_info": {
-            "package_name": "app.earningpoint"
+            "package_name": "com.zenivio.app"
           }
         },
         {

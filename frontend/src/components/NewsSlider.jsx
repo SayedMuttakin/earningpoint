@@ -22,14 +22,19 @@ const NewsSlider = ({ posts, onSeeAll, onCardClick }) => {
 
       <div className="flex gap-4 overflow-x-auto pb-2 scrollbar-none snap-x w-full">
         {posts.map((post, idx) => {
-          const category = categories[idx % categories.length];
+          const category = post.category || categories[idx % categories.length];
           const badgeColors = {
             World: 'bg-purple-100 text-purple-600 dark:bg-purple-900/30 dark:text-purple-400',
             Technology: 'bg-emerald-100 text-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-400',
             Sports: 'bg-orange-100 text-orange-600 dark:bg-orange-900/30 dark:text-orange-400',
             Business: 'bg-blue-100 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400',
             Platform: 'bg-indigo-100 text-indigo-600 dark:bg-indigo-900/30 dark:text-indigo-400',
+            Announcement: 'bg-amber-100 text-amber-600 dark:bg-amber-900/30 dark:text-amber-400',
+            News: 'bg-rose-100 text-rose-600 dark:bg-rose-900/30 dark:text-rose-400',
+            Update: 'bg-sky-100 text-sky-600 dark:bg-sky-900/30 dark:text-sky-400',
+            General: 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300',
           };
+          const badgeStyle = badgeColors[category] || 'bg-indigo-100 text-indigo-600 dark:bg-indigo-900/30 dark:text-indigo-400';
           
           return (
             <div 
@@ -54,7 +59,7 @@ const NewsSlider = ({ posts, onSeeAll, onCardClick }) => {
                 </div>
 
                 {/* Category Badge */}
-                <span className={`inline-block px-2 py-0.5 rounded-md text-[10px] font-black tracking-wide ${badgeColors[category]}`}>
+                <span className={`inline-block px-2 py-0.5 rounded-md text-[10px] font-black tracking-wide ${badgeStyle}`}>
                   {category}
                 </span>
 
@@ -65,7 +70,7 @@ const NewsSlider = ({ posts, onSeeAll, onCardClick }) => {
               </div>
 
               <span className="text-[10px] font-bold text-slate-400 mt-1 block">
-                {formatDate(post.createdAt)}
+                {post.customTime || formatDate(post.createdAt)}
               </span>
             </div>
           );
