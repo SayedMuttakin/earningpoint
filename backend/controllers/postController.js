@@ -188,9 +188,10 @@ exports.getPostsFeed = async (req, res) => {
     const followingSet = new Set((req.user.following || []).map(id => id.toString()));
     const savedPostsSet = new Set(req.user.savedPosts ? req.user.savedPosts.map(id => id.toString()) : []);
     const blockedUserIds = req.user.blockedUsers || [];
+    const includeNews = req.query.includeNews === 'true';
 
-    // Fetch the 40 most recent community posts directly in a single fast indexed lean query
-    const feedPosts = await Post.find({
+    // Fetch the 40 most recent community posts
+    const feedPostsPromise = Post.find({
       authorId: { $ne: null, $nin: blockedUserIds }, // Exclude admin updates and blocked users
       'reports.user': { $ne: currentUserId } // Exclude posts reported by the current user
     })
@@ -198,7 +199,18 @@ exports.getPostsFeed = async (req, res) => {
       .sort({ createdAt: -1 })
       .limit(40)
       .lean();
- 
+
+    // Optionally fetch news posts in parallel in 1 roundtrip
+    const newsPostsPromise = includeNews 
+      ? Post.find({ authorId: null })
+          .select('_id title content image video category customTime authorName isVerified createdAt')
+          .sort({ createdAt: -1 })
+          .limit(10)
+          .lean()
+      : Promise.resolve(null);
+
+    const [feedPosts, newsPosts] = await Promise.all([feedPostsPromise, newsPostsPromise]);
+
     // Map following and own post indicators in-memory
     const postsWithStatus = feedPosts.map(post => {
       const authorObj = post.authorId;
@@ -223,6 +235,13 @@ exports.getPostsFeed = async (req, res) => {
         isSaved
       };
     });
+
+    if (includeNews) {
+      return res.json({
+        feedPosts: postsWithStatus,
+        newsPosts: newsPosts || []
+      });
+    }
 
     res.json(postsWithStatus);
   } catch (error) {

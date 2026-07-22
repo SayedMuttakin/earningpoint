@@ -1009,37 +1009,38 @@ const HomePage = ({ setActiveTab, setSelectedNewsId, setActiveChatPartner, setSe
       const token = localStorage.getItem('token');
       if (!token) return;
 
-      // Parallelize fetches to load all resources simultaneously with a 5s timeout
-      const [profileRes, newsRes, feedRes] = await Promise.all([
+      // 1-roundtrip unified feed & news fetch + profile fetch in parallel
+      const [feedRes, profileRes] = await Promise.all([
+        fetchWithTimeout(`${API_BASE}/api/posts/feed?includeNews=true`, {
+          headers: { Authorization: `Bearer ${token}` }
+        }, 5000).catch(err => { console.error('Feed fetch failed:', err); return null; }),
         fetchWithTimeout(`${API_BASE}/api/profile`, {
           headers: { Authorization: `Bearer ${token}` }
-        }, 5000).catch(err => { console.error('Profile fetch failed:', err); return null; }),
-        fetchWithTimeout(`${API_BASE}/api/posts?adminOnly=true`, {}, 5000).catch(err => { console.error('News fetch failed:', err); return null; }),
-        fetchWithTimeout(`${API_BASE}/api/posts/feed`, {
-          headers: { Authorization: `Bearer ${token}` }
-        }, 5000).catch(err => { console.error('Feed fetch failed:', err); return null; })
+        }, 5000).catch(err => { console.error('Profile fetch failed:', err); return null; })
       ]);
 
-      // Process user profile
+      if (feedRes && feedRes.ok) {
+        const data = await feedRes.json();
+        const feedList = Array.isArray(data) ? data : (data.feedPosts || []);
+        const newsList = Array.isArray(data) ? [] : (data.newsPosts || []);
+
+        if (feedList.length > 0) {
+          setFeedPosts(feedList);
+          safeLocalStorageSet('cached_feed_posts', JSON.stringify(feedList));
+        }
+
+        if (newsList.length > 0) {
+          const updates = newsList.filter(p => !p.authorId);
+          setNewsPosts(updates);
+          safeLocalStorageSet('cached_news_posts', JSON.stringify(updates));
+          safeLocalStorageSet('cached_admin_updates', JSON.stringify(updates));
+        }
+      }
+
       if (profileRes && profileRes.ok) {
         const userData = await profileRes.json();
         setCurrentUser(userData);
         safeLocalStorageSet('cached_current_user', JSON.stringify(userData));
-      }
-
-      // Process news updates
-      if (newsRes && newsRes.ok) {
-        const data = await newsRes.json();
-        const updates = data.filter(p => !p.authorId);
-        setNewsPosts(updates);
-        safeLocalStorageSet('cached_news_posts', JSON.stringify(updates));
-      }
-
-      // Process feed posts
-      if (feedRes && feedRes.ok) {
-        const feedData = await feedRes.json();
-        setFeedPosts(feedData);
-        safeLocalStorageSet('cached_feed_posts', JSON.stringify(feedData));
       }
     } catch (err) {
       console.error('Failed to fetch home page feed:', err);
@@ -1342,9 +1343,21 @@ const HomePage = ({ setActiveTab, setSelectedNewsId, setActiveChatPartner, setSe
             </div>
 
             {loading ? (
-              <div className="flex flex-col items-center justify-center py-20 gap-3">
-                <Loader2 className="w-8 h-8 text-indigo-500 animate-spin" />
-                <span className="text-slate-400 font-bold text-sm">Loading feed...</span>
+              <div className="space-y-4 pb-12">
+                {[1, 2, 3].map(i => (
+                  <div key={i} className="bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-3xl p-4 space-y-3 animate-pulse">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-full bg-slate-200 dark:bg-slate-800" />
+                      <div className="space-y-1.5 flex-1">
+                        <div className="w-28 h-3.5 bg-slate-200 dark:bg-slate-800 rounded-md" />
+                        <div className="w-16 h-2.5 bg-slate-200 dark:bg-slate-800 rounded-md" />
+                      </div>
+                    </div>
+                    <div className="w-full h-4 bg-slate-200 dark:bg-slate-800 rounded-md" />
+                    <div className="w-3/4 h-4 bg-slate-200 dark:bg-slate-800 rounded-md" />
+                    <div className="w-full h-44 bg-slate-200 dark:bg-slate-800 rounded-2xl" />
+                  </div>
+                ))}
               </div>
             ) : feedPosts.length > 0 ? (
               <div className="space-y-4 pb-12">
