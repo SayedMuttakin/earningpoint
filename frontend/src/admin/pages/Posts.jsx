@@ -3,16 +3,30 @@ import { Plus, Trash2, Image as ImageIcon, X, Send, AlertCircle, CheckCircle, Ed
 import VerifiedBadge from '../../components/VerifiedBadge';
 
 const CATEGORY_OPTIONS = [
-  'General',
-  'World',
+  'Latest',
+  'Top News',
+  'National',
+  'International',
+  'Politics',
+  'Economy',
   'Technology',
   'Sports',
-  'Business',
-  'Platform',
-  'Announcement',
-  'News',
-  'Update'
+  'Entertainment',
+  'Education',
+  'Jobs',
+  'Health',
+  'Religion',
+  'Lifestyle'
 ];
+
+const getFormattedCurrentTime = () => {
+  const now = new Date();
+  const weekday = now.toLocaleDateString('en-US', { weekday: 'long' });
+  const month = now.toLocaleDateString('en-US', { month: 'long' });
+  const day = now.getDate();
+  const time = now.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
+  return `${weekday}, ${month} ${day}, ${time}`;
+};
 
 const Posts = ({ authHeaders, ADMIN_API }) => {
   const [posts, setPosts] = useState([]);
@@ -26,7 +40,7 @@ const Posts = ({ authHeaders, ADMIN_API }) => {
     image: null,
     authorName: 'Zenivio',
     isVerified: true,
-    category: 'General',
+    category: 'Latest',
     customTime: ''
   };
 
@@ -41,7 +55,7 @@ const Posts = ({ authHeaders, ADMIN_API }) => {
 
   const fetchPosts = async () => {
     try {
-      const res = await fetch(`${ADMIN_API}/posts`, { headers: authHeaders });
+      const res = await fetch(`${ADMIN_API}/posts?adminOnly=true`, { headers: authHeaders });
       const data = await res.json();
       if (res.ok) {
         setPosts(data);
@@ -146,6 +160,11 @@ const Posts = ({ authHeaders, ADMIN_API }) => {
       return setError('Content or Image is required');
     }
 
+    const payload = {
+      ...postForm,
+      customTime: postForm.customTime.trim() ? postForm.customTime.trim() : getFormattedCurrentTime()
+    };
+
     try {
       const url = editingPostId ? `${ADMIN_API}/posts/${editingPostId}` : `${ADMIN_API}/posts`;
       const method = editingPostId ? 'PUT' : 'POST';
@@ -153,7 +172,7 @@ const Posts = ({ authHeaders, ADMIN_API }) => {
       const res = await fetch(url, {
         method,
         headers: { ...authHeaders, 'Content-Type': 'application/json' },
-        body: JSON.stringify(postForm),
+        body: JSON.stringify(payload),
       });
 
       if (res.ok) {

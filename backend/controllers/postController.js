@@ -70,6 +70,15 @@ exports.getPostById = async (req, res) => {
   }
 };
 
+const getFormattedCurrentTime = () => {
+  const now = new Date();
+  const weekday = now.toLocaleDateString('en-US', { weekday: 'long' });
+  const month = now.toLocaleDateString('en-US', { month: 'long' });
+  const day = now.getDate();
+  const time = now.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
+  return `${weekday}, ${month} ${day}, ${time}`;
+};
+
 // @desc    Create a new post (Admin)
 // @route   POST /api/admin/posts
 // @access  Private/Admin
@@ -81,6 +90,8 @@ exports.createPost = async (req, res) => {
       return res.status(400).json({ message: 'Content or media is required' });
     }
 
+    const autoTime = getFormattedCurrentTime();
+
     const postData = {
       content,
       title: title || null,
@@ -88,8 +99,8 @@ exports.createPost = async (req, res) => {
       video: video || null,
       authorName: authorName || 'Zenivio',
       isVerified: isVerified !== undefined ? isVerified : true,
-      category: category || 'General',
-      customTime: customTime || null
+      category: category || 'Latest',
+      customTime: (customTime && customTime.trim()) ? customTime.trim() : autoTime
     };
 
     if (createdAt) {
