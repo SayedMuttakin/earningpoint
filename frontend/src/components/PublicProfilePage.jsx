@@ -167,12 +167,46 @@ const ImagePreviewModal = ({ imageUrl, onClose }) => {
 };
 
 const PublicProfilePage = ({ userId, onBack, currentUser, isOwnProfile, setActiveTab, setSelectedReelId, setActiveChatPartner, startEditing }) => {
-  const [profile, setProfile] = useState(null);
+  const [profile, setProfile] = useState(() => {
+    if ((isOwnProfile || userId === 'me') && currentUser) {
+      return {
+        ...currentUser,
+        followersCount: currentUser.followers ? currentUser.followers.length : 0,
+        followingCount: currentUser.following ? currentUser.following.length : 0,
+        totalLikes: 0,
+        isFollowing: false,
+      };
+    }
+    const cached = userId ? localStorage.getItem(`cached_profile_data_${userId}`) : null;
+    if (cached) {
+      try {
+        const parsed = JSON.parse(cached);
+        return parsed.user;
+      } catch (e) {}
+    }
+    return null;
+  });
   const [shareModalOpen, setShareModalOpen] = useState(false);
   const [shareData, setShareData] = useState({ url: '', title: '', text: '' });
-  const [videos, setVideos] = useState([]);
-  const [posts, setPosts] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [videos, setVideos] = useState(() => {
+    const cached = userId ? localStorage.getItem(`cached_profile_data_${userId}`) : null;
+    if (cached) {
+      try { return JSON.parse(cached).videos || []; } catch (e) {}
+    }
+    return [];
+  });
+  const [posts, setPosts] = useState(() => {
+    const cached = userId ? localStorage.getItem(`cached_profile_data_${userId}`) : null;
+    if (cached) {
+      try { return JSON.parse(cached).posts || []; } catch (e) {}
+    }
+    return [];
+  });
+  const [loading, setLoading] = useState(() => {
+    if ((isOwnProfile || userId === 'me') && currentUser) return false;
+    const cached = userId ? localStorage.getItem(`cached_profile_data_${userId}`) : null;
+    return !cached;
+  });
 
   // UGC Block & Report States
   const [showActionsMenu, setShowActionsMenu] = useState(false);

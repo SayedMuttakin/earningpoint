@@ -84,10 +84,31 @@ const UpdateCard = ({ post, onClick }) => {
 };
 
 const UpdatesPage = ({ onBack, selectedPostId, setSelectedPostId }) => {
-  const [posts, setPosts] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [posts, setPosts] = useState(() => {
+    try {
+      const cached = localStorage.getItem('cached_admin_updates') || localStorage.getItem('cached_news_posts');
+      return cached ? JSON.parse(cached) : [];
+    } catch (e) {
+      return [];
+    }
+  });
+  const [loading, setLoading] = useState(() => {
+    try {
+      const cached = localStorage.getItem('cached_admin_updates') || localStorage.getItem('cached_news_posts');
+      return !cached;
+    } catch (e) {
+      return true;
+    }
+  });
   const [refreshing, setRefreshing] = useState(false);
-  const [globalSettings, setGlobalSettings] = useState(null);
+  const [globalSettings, setGlobalSettings] = useState(() => {
+    try {
+      const cached = localStorage.getItem('cached_global_settings');
+      return cached ? JSON.parse(cached) : null;
+    } catch (e) {
+      return null;
+    }
+  });
 
   // Single News Detail states
   const [detailPost, setDetailPost] = useState(null);

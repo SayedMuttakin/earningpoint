@@ -286,12 +286,13 @@ exports.getPublicProfile = async (req, res) => {
 
     const Post = require('../models/Post');
 
-    // Fetch user + posts in parallel
+    // Fetch user + posts in parallel with field projections for maximum performance
     const [user, posts] = await Promise.all([
       User.findById(targetUserId)
         .select('name username referralCode phoneOrEmail profilePic coverPic googleAvatar facebookAvatar isEmailVerified verificationBadge followers following bio location website highlights dob gender dobPrivacy genderPrivacy')
         .lean(),
       Post.find({ authorId: targetUserId })
+        .select('_id content title image video createdAt likes comments')
         .sort({ createdAt: -1 })
         .limit(40)  // Paginate — load first 40 posts only
         .lean()
@@ -357,9 +358,7 @@ exports.getPublicProfile = async (req, res) => {
         title: p.title,
         createdAt: p.createdAt,
         likesCount: p.likes?.length || 0,
-        commentsCount: p.comments?.length || 0,
-        likes: p.likes,
-        comments: p.comments
+        commentsCount: p.comments?.length || 0
       }))
     });
   } catch (error) {

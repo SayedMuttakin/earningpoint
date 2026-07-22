@@ -8,20 +8,25 @@ const { createNotification } = require('./notificationController');
 exports.getPosts = async (req, res) => {
   try {
     const query = {};
-    if (req.query.adminOnly === 'true') {
+    const isAdminOnly = req.query.adminOnly === 'true';
+    if (isAdminOnly) {
       query.authorId = null;
     }
-    const posts = await Post.find(query)
-      .populate('authorId', 'name profilePic googleAvatar facebookAvatar isEmailVerified verificationBadge')
-      .sort({ createdAt: -1 })
-      .limit(30)  // Limit to 30 most recent posts
-      .lean();
+    
+    let postQuery = Post.find(query);
+    if (isAdminOnly) {
+      postQuery = postQuery.select('_id title content image video category customTime authorName isVerified createdAt');
+    } else {
+      postQuery = postQuery.populate('authorId', 'name profilePic googleAvatar facebookAvatar isEmailVerified verificationBadge');
+    }
+
+    const posts = await postQuery.sort({ createdAt: -1 }).limit(30).lean();
     const mapped = posts.map(post => {
       const authorObj = post.authorId;
       return {
         ...post,
-        authorId: authorObj ? authorObj._id.toString() : null,
-        authorDetails: authorObj ? {
+        authorId: authorObj ? (typeof authorObj === 'object' ? authorObj._id.toString() : authorObj.toString()) : null,
+        authorDetails: (authorObj && typeof authorObj === 'object') ? {
           name: authorObj.name,
           profilePic: authorObj.profilePic,
           googleAvatar: authorObj.googleAvatar,
@@ -169,32 +174,31 @@ exports.deletePost = async (req, res) => {
 exports.getPostsFeed = async (req, res) => {
   try {
     const currentUserId = req.user._id;
-    const followingIds = req.user.following || [];
-    const savedPostsIds = req.user.savedPosts ? req.user.savedPosts.map(id => id.toString()) : [];
-
+    const followingSet = new Set((req.user.following || []).map(id => id.toString()));
+    const savedPostsSet = new Set(req.user.savedPosts ? req.user.savedPosts.map(id => id.toString()) : []);
     const blockedUserIds = req.user.blockedUsers || [];
 
-    // Fetch the 40 most recent community posts directly in a single fast indexed query
+    // Fetch the 40 most recent community posts directly in a single fast indexed lean query
     const feedPosts = await Post.find({
       authorId: { $ne: null, $nin: blockedUserIds }, // Exclude admin updates and blocked users
       'reports.user': { $ne: currentUserId } // Exclude posts reported by the current user
     })
       .populate('authorId', 'name profilePic googleAvatar facebookAvatar isEmailVerified verificationBadge')
       .sort({ createdAt: -1 })
-      .limit(40);
+      .limit(40)
+      .lean();
  
     // Map following and own post indicators in-memory
     const postsWithStatus = feedPosts.map(post => {
-      const isFollowing = post.authorId ? followingIds.includes(post.authorId._id.toString()) : false;
-      const isOwnPost = post.authorId ? post.authorId._id.toString() === currentUserId.toString() : false;
-      const isSaved = savedPostsIds.includes(post._id.toString());
-      
-      const postObj = post.toObject();
-      const authorObj = postObj.authorId;
+      const authorObj = post.authorId;
+      const authorIdStr = authorObj ? authorObj._id.toString() : null;
+      const isFollowing = authorIdStr ? followingSet.has(authorIdStr) : false;
+      const isOwnPost = authorIdStr ? authorIdStr === currentUserId.toString() : false;
+      const isSaved = savedPostsSet.has(post._id.toString());
       
       return {
-        ...postObj,
-        authorId: authorObj ? authorObj._id.toString() : null,
+        ...post,
+        authorId: authorIdStr,
         authorDetails: authorObj ? {
           name: authorObj.name,
           profilePic: authorObj.profilePic,
