@@ -15,8 +15,22 @@ import { API_BASE } from '../config';
 import PullToRefresh from './PullToRefresh';
 
 const NotificationPage = ({ onBack, setActiveTab, setSelectedNotificationPostId }) => {
-  const [notifications, setNotifications] = useState([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const [notifications, setNotifications] = useState(() => {
+    try {
+      const cached = localStorage.getItem('cached_user_notifications');
+      return cached ? JSON.parse(cached) : [];
+    } catch (e) {
+      return [];
+    }
+  });
+  const [isLoading, setIsLoading] = useState(() => {
+    try {
+      const cached = localStorage.getItem('cached_user_notifications');
+      return !cached;
+    } catch (e) {
+      return true;
+    }
+  });
   const [refreshing, setRefreshing] = useState(false);
   const [selectedNotification, setSelectedNotification] = useState(null);
 
@@ -33,7 +47,9 @@ const NotificationPage = ({ onBack, setActiveTab, setSelectedNotificationPostId 
       });
       const data = await res.json();
       if (res.ok) {
-        setNotifications(Array.isArray(data) ? data : []);
+        const list = Array.isArray(data) ? data : [];
+        setNotifications(list);
+        localStorage.setItem('cached_user_notifications', JSON.stringify(list));
       }
     } catch (err) {
       console.error('Failed to fetch notifications:', err);
@@ -163,7 +179,19 @@ const NotificationPage = ({ onBack, setActiveTab, setSelectedNotificationPostId 
           <div className="w-full max-w-3xl mx-auto px-4 py-4 pb-32">
             {/* Notification List */}
             <div className="animate-fade-in">
-              {notifications.length === 0 ? (
+              {isLoading ? (
+                <div className="space-y-3 sm:space-y-4">
+                  {[1, 2, 3, 4].map(i => (
+                    <div key={i} className="p-4 sm:p-5 rounded-3xl bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700 flex gap-4 animate-pulse">
+                      <div className="w-12 h-12 rounded-2xl bg-slate-200 dark:bg-slate-700 shrink-0" />
+                      <div className="flex-1 space-y-2 py-1">
+                        <div className="w-32 h-4 bg-slate-200 dark:bg-slate-700 rounded-md" />
+                        <div className="w-full h-3 bg-slate-200 dark:bg-slate-700 rounded-md" />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : notifications.length === 0 ? (
                 <div 
                   className="text-center py-16 sm:py-20 bg-white dark:bg-slate-800 rounded-[2rem] border border-slate-100 dark:border-slate-700 shadow-lg overflow-hidden relative animate-fade-in-up"
                 >

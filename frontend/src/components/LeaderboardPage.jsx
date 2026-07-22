@@ -4,8 +4,22 @@ import PullToRefresh from './PullToRefresh';
 import { API_BASE } from '../config';
 
 const LeaderboardPage = ({ onBack }) => {
-  const [leaderboard, setLeaderboard] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [leaderboard, setLeaderboard] = useState(() => {
+    try {
+      const cached = localStorage.getItem('cached_leaderboard_data');
+      return cached ? JSON.parse(cached) : [];
+    } catch (e) {
+      return [];
+    }
+  });
+  const [loading, setLoading] = useState(() => {
+    try {
+      const cached = localStorage.getItem('cached_leaderboard_data');
+      return !cached;
+    } catch (e) {
+      return true;
+    }
+  });
   const [refreshing, setRefreshing] = useState(false);
 
   const fetchLeaderboard = async () => {
@@ -28,6 +42,7 @@ const LeaderboardPage = ({ onBack }) => {
           rank: user.rank
         }));
         setLeaderboard(formattedData);
+        localStorage.setItem('cached_leaderboard_data', JSON.stringify(formattedData));
       }
     } catch (err) {
       console.error('Failed to fetch leaderboard:', err);
@@ -69,7 +84,32 @@ const LeaderboardPage = ({ onBack }) => {
       </div>
 
       <div className="max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-8 lg:py-16">
-        <div className="flex flex-col lg:flex-row gap-12 lg:gap-24 items-center justify-center max-w-6xl mx-auto">
+        {loading ? (
+          <div className="max-w-xl mx-auto space-y-6 animate-pulse">
+            {/* Podium Skeleton */}
+            <div className="flex items-end justify-center gap-3 h-52">
+              <div className="w-24 h-36 bg-slate-200 rounded-t-2xl" />
+              <div className="w-28 h-48 bg-slate-300 rounded-t-2xl" />
+              <div className="w-24 h-28 bg-slate-200 rounded-t-2xl" />
+            </div>
+            {/* List Skeleton */}
+            <div className="bg-white rounded-3xl p-4 border border-slate-100 space-y-3">
+              {[1, 2, 3, 4, 5].map(i => (
+                <div key={i} className="flex items-center justify-between p-3">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-full bg-slate-200" />
+                    <div className="space-y-1">
+                      <div className="w-28 h-3.5 bg-slate-200 rounded" />
+                      <div className="w-16 h-2.5 bg-slate-200 rounded" />
+                    </div>
+                  </div>
+                  <div className="w-8 h-8 rounded-full bg-slate-200" />
+                </div>
+              ))}
+            </div>
+          </div>
+        ) : (
+          <div className="flex flex-col lg:flex-row gap-12 lg:gap-24 items-center justify-center max-w-6xl mx-auto">
           
           {/* Left Column: Podium designed for Desktop/Mobile hybrid */}
           <div className="w-full lg:w-1/2 flex justify-center order-1">
@@ -175,6 +215,7 @@ const LeaderboardPage = ({ onBack }) => {
           </div>
           
         </div>
+        )}
       </div>
       </div>
     </PullToRefresh>

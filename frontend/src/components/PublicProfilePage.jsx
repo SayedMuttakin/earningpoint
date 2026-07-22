@@ -724,9 +724,38 @@ const PublicProfilePage = ({ userId, onBack, currentUser, isOwnProfile, setActiv
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex flex-col items-center justify-center gap-3">
-        <Loader2 className="w-8 h-8 text-indigo-500 animate-spin" />
-        <span className="text-slate-400 font-bold text-sm">Loading profile...</span>
+      <div className="min-h-screen bg-slate-50 dark:bg-slate-950 pb-24 animate-pulse">
+        {/* Cover Skeleton */}
+        <div className="w-full h-44 sm:h-52 bg-slate-200 dark:bg-slate-800" />
+        
+        <div className="max-w-xl mx-auto px-4 relative -mt-16 space-y-5">
+          {/* Avatar Skeleton */}
+          <div className="flex items-end justify-between">
+            <div className="w-24 h-24 sm:w-28 sm:h-28 rounded-full border-4 border-white dark:border-slate-950 bg-slate-300 dark:bg-slate-800 shadow-md" />
+            <div className="w-24 h-9 bg-slate-200 dark:bg-slate-800 rounded-full" />
+          </div>
+
+          {/* Name & Bio Skeleton */}
+          <div className="space-y-2">
+            <div className="w-40 h-5 bg-slate-200 dark:bg-slate-800 rounded-md" />
+            <div className="w-28 h-3.5 bg-slate-200 dark:bg-slate-800 rounded-md" />
+            <div className="w-full h-4 bg-slate-200 dark:bg-slate-800 rounded-md mt-2" />
+          </div>
+
+          {/* Stats Bar Skeleton */}
+          <div className="grid grid-cols-3 gap-3 py-3 border-y border-slate-100 dark:border-slate-800">
+            <div className="h-10 bg-slate-200 dark:bg-slate-800 rounded-xl" />
+            <div className="h-10 bg-slate-200 dark:bg-slate-800 rounded-xl" />
+            <div className="h-10 bg-slate-200 dark:bg-slate-800 rounded-xl" />
+          </div>
+
+          {/* Grid Skeleton */}
+          <div className="grid grid-cols-3 gap-2">
+            {[1, 2, 3, 4, 5, 6].map(i => (
+              <div key={i} className="aspect-square bg-slate-200 dark:bg-slate-800 rounded-xl" />
+            ))}
+          </div>
+        </div>
       </div>
     );
   }

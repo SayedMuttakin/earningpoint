@@ -372,9 +372,21 @@ const UpdatesPage = ({ onBack, selectedPostId, setSelectedPostId }) => {
 
           {/* Feed */}
           {loading ? (
-            <div className="flex flex-col items-center justify-center py-20 gap-3">
-              <Loader2 className="w-8 h-8 text-indigo-500 animate-spin" />
-              <span className="text-slate-400 font-bold text-sm">Loading updates...</span>
+            <div className="space-y-4">
+              {[1, 2, 3].map(i => (
+                <div key={i} className="bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-2xl p-4 space-y-3 animate-pulse">
+                  <div className="flex items-center gap-3">
+                    <div className="w-9 h-9 rounded-full bg-slate-200 dark:bg-slate-800" />
+                    <div className="space-y-1.5 flex-1">
+                      <div className="w-24 h-3.5 bg-slate-200 dark:bg-slate-800 rounded-md" />
+                      <div className="w-16 h-2.5 bg-slate-200 dark:bg-slate-800 rounded-md" />
+                    </div>
+                  </div>
+                  <div className="w-3/4 h-5 bg-slate-200 dark:bg-slate-800 rounded-md" />
+                  <div className="w-full h-4 bg-slate-200 dark:bg-slate-800 rounded-md" />
+                  <div className="w-full h-40 bg-slate-200 dark:bg-slate-800 rounded-xl" />
+                </div>
+              ))}
             </div>
           ) : posts.length > 0 ? (
             <div className="space-y-4">
