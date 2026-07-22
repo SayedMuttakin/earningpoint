@@ -58,10 +58,10 @@ const UpdateCard = ({ post, onClick }) => {
 
       {/* Content */}
       {post.content && (
-        <div className="text-slate-700 dark:text-slate-350 text-xs sm:text-sm leading-relaxed whitespace-pre-wrap font-medium">
+        <div className="text-slate-700 dark:text-slate-300 text-sm sm:text-base leading-relaxed whitespace-pre-wrap font-medium">
           {shouldTruncate ? `${post.content.slice(0, textThreshold)}...` : post.content}
           {shouldTruncate && (
-            <span className="ml-1 text-indigo-600 font-black text-xs hover:underline">
+            <span className="ml-1 text-indigo-600 font-black text-sm hover:underline">
               Read Details
             </span>
           )}
@@ -334,7 +334,7 @@ const UpdatesPage = ({ onBack, selectedPostId, setSelectedPostId }) => {
               )}
 
               {/* Full news text */}
-              <div className="text-slate-750 dark:text-slate-300 text-xs sm:text-sm leading-relaxed whitespace-pre-wrap font-medium select-text">
+              <div className="text-slate-800 dark:text-slate-200 text-base sm:text-lg leading-relaxed whitespace-pre-wrap font-normal select-text">
                 {detailPost.content}
               </div>
             </div>
