@@ -6,7 +6,8 @@ const getApiBase = () => {
     }
     return "http://localhost:5001";
   }
-  return "https://zenivio.it.com";
+  return typeof window !== 'undefined' ? window.location.origin : '';
 };
 
 export const API_BASE = getApiBase();
+

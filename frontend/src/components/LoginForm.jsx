@@ -3,7 +3,7 @@ import { API_BASE } from '../config';
 import { Capacitor } from '@capacitor/core';
 import { GoogleAuth } from '@codetrix-studio/capacitor-google-auth';
 
-const GOOGLE_CLIENT_ID = '456619750771-n3vdqc5stcbm1avbr3biglg0p2gof4uk.apps.googleusercontent.com';
+const GOOGLE_CLIENT_ID = '69669050668-6sk4ga1t8uui25gpji0ckid2css8okua.apps.googleusercontent.com';
 const FACEBOOK_APP_ID = 'YOUR_FACEBOOK_APP_ID';
 
 // ── SVG Icons ──────────────────────────────────────────────────────────────────

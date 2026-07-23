@@ -196,8 +196,14 @@ const CreatePostPage = ({ currentUser, onBack, setActiveTab, postToEdit = null }
         
         setActiveTab('Home');
       } else {
-        const errorData = await res.json();
-        alert(errorData.message || `Failed to ${postToEdit ? 'save' : 'create'} post`);
+        let errorMessage = `Failed to ${postToEdit ? 'save' : 'create'} post`;
+        try {
+          const errorData = await res.json();
+          if (errorData && errorData.message) errorMessage = errorData.message;
+        } catch (e) {
+          if (res.status === 413) errorMessage = 'File size is too large (max 100MB)';
+        }
+        alert(errorMessage);
       }
     } catch (err) {
       console.error('Post submit error:', err);
