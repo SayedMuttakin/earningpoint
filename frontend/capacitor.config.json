@@ -12,9 +12,9 @@
     },
     "GoogleAuth": {
       "scopes": ["profile", "email"],
-      "serverClientId": "69669050668-6sk4ga1t8uui25gpji0ckid2css8okua.apps.googleusercontent.com",
+      "serverClientId": "1028494965258-90o444tljgmd5r6c5si8d8oc2oudnhnl.apps.googleusercontent.com",
       "forceCodeForRefreshToken": true,
-      "androidClientId": "69669050668-6sk4ga1t8uui25gpji0ckid2css8okua.apps.googleusercontent.com"
+      "androidClientId": "1028494965258-9ql287u3is47brl9sj5icnf4l104ke7r.apps.googleusercontent.com"
     },
     "FacebookLogin": {
       "appId": "YOUR_FACEBOOK_APP_ID",
