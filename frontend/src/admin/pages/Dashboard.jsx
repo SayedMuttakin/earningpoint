@@ -102,7 +102,7 @@ const Dashboard = ({ ADMIN_API, authHeaders }) => {
         </div>
 
         {/* Recent Users */}
-        <div className="bg-[#111827] border border-slate-800 rounded-2xl p-5">
+        <div className="bg-[#111827] border border-slate-800 rounded-2xl p-4 sm:p-5">
           <h3 className="text-white font-bold text-base mb-4">Recent Sign-ups</h3>
           <div className="space-y-3">
             {stats.recentUsers?.map((u, i) => (
@@ -114,7 +114,9 @@ const Dashboard = ({ ADMIN_API, authHeaders }) => {
                   <div className="text-white text-xs font-bold truncate">{u.name || 'No Name'}</div>
                   <div className="text-slate-500 text-[10px] truncate">{u.phoneOrEmail}</div>
                 </div>
-                <div className="text-emerald-400 text-xs font-bold flex-shrink-0">৳{u.balance || 0}</div>
+                <div className="text-amber-400 text-xs font-bold flex-shrink-0 bg-amber-400/10 px-2 py-0.5 rounded-md border border-amber-400/20">
+                  {(u.balance || 0).toLocaleString()} Coins
+                </div>
               </div>
             ))}
           </div>
@@ -122,10 +124,10 @@ const Dashboard = ({ ADMIN_API, authHeaders }) => {
       </div>
 
       {/* Recent Transactions */}
-      <div className="bg-[#111827] border border-slate-800 rounded-2xl p-5">
+      <div className="bg-[#111827] border border-slate-800 rounded-2xl p-4 sm:p-5">
         <h3 className="text-white font-bold text-base mb-4">Recent Transactions</h3>
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm">
+        <div className="overflow-x-auto -mx-4 sm:mx-0 px-4 sm:px-0">
+          <table className="w-full text-sm min-w-[550px]">
             <thead>
               <tr className="border-b border-slate-800">
                 <th className="text-left text-slate-500 text-xs font-bold uppercase tracking-wider pb-2">User</th>
@@ -138,19 +140,31 @@ const Dashboard = ({ ADMIN_API, authHeaders }) => {
             <tbody className="divide-y divide-slate-800">
               {stats.recentTransactions?.map((t, i) => (
                 <tr key={i} className="hover:bg-slate-800/30 transition-colors">
-                  <td className="py-2.5 text-white font-medium text-xs">{t.userId?.name || t.userId?.phoneOrEmail || '—'}</td>
-                  <td className="py-2.5"><span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
-                    t.type === 'withdrawal' ? 'bg-rose-500/20 text-rose-400' :
-                    t.type === 'referral_bonus' ? 'bg-cyan-500/20 text-cyan-400' :
-                    'bg-emerald-500/20 text-emerald-400'
-                  }`}>{t.type}</span></td>
-                  <td className="py-2.5 text-white font-bold text-xs">৳{t.amount}</td>
-                  <td className="py-2.5"><span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
-                    t.status === 'completed' ? 'bg-emerald-500/20 text-emerald-400' :
-                    t.status === 'pending' ? 'bg-amber-500/20 text-amber-400' :
-                    'bg-rose-500/20 text-rose-400'
-                  }`}>{t.status}</span></td>
-                  <td className="py-2.5 text-slate-500 text-xs">{new Date(t.createdAt).toLocaleDateString()}</td>
+                  <td className="py-2.5 text-white font-medium text-xs max-w-[140px] truncate">
+                    {t.userId?.name || t.userId?.phoneOrEmail || '—'}
+                  </td>
+                  <td className="py-2.5">
+                    <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold inline-block ${
+                      t.type === 'withdrawal' ? 'bg-rose-500/20 text-rose-400' :
+                      t.type === 'referral_bonus' ? 'bg-cyan-500/20 text-cyan-400' :
+                      'bg-emerald-500/20 text-emerald-400'
+                    }`}>{t.type}</span>
+                  </td>
+                  <td className="py-2.5 font-bold text-xs">
+                    {t.type === 'withdrawal' ? (
+                      <span className="text-rose-400">৳{t.amount}</span>
+                    ) : (
+                      <span className="text-amber-400">{t.amount} Coins</span>
+                    )}
+                  </td>
+                  <td className="py-2.5">
+                    <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold inline-block ${
+                      t.status === 'completed' ? 'bg-emerald-500/20 text-emerald-400' :
+                      t.status === 'pending' ? 'bg-amber-500/20 text-amber-400' :
+                      'bg-rose-500/20 text-rose-400'
+                    }`}>{t.status}</span>
+                  </td>
+                  <td className="py-2.5 text-slate-500 text-xs whitespace-nowrap">{new Date(t.createdAt).toLocaleDateString()}</td>
                 </tr>
               ))}
             </tbody>

@@ -224,7 +224,7 @@ const AdminLayout = ({ activePage, setActivePage, onLogout, ADMIN_API, authHeade
             {showNotifDropdown && (
               <>
                 <div className="fixed inset-0 z-[998]" onClick={() => setShowNotifDropdown(false)} />
-                <div className="absolute right-0 mt-3 w-80 sm:w-96 bg-[#111827] border border-slate-800 rounded-2xl shadow-2xl z-[999] overflow-hidden flex flex-col max-h-[420px] animate-in fade-in slide-in-from-top-2 duration-200">
+                <div className="absolute right-[-10px] sm:right-0 mt-3 w-[calc(100vw-32px)] sm:w-96 max-w-sm bg-[#111827] border border-slate-800 rounded-2xl shadow-2xl z-[999] overflow-hidden flex flex-col max-h-[420px] animate-in fade-in slide-in-from-top-2 duration-200">
                   <div className="flex items-center justify-between px-4 py-3 border-b border-slate-800 bg-slate-900/50">
                     <span className="text-white font-black text-xs uppercase tracking-wider">Alerts</span>
                     {unreadCount > 0 && (

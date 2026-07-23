@@ -118,8 +118,8 @@ const Transactions = ({ ADMIN_API, authHeaders }) => {
                     <div className="truncate">{t.description || '—'}</div>
                   </td>
                   <td className="px-5 py-3">
-                    <span className={`font-bold text-sm ${t.type === 'withdrawal' ? 'text-rose-400' : 'text-emerald-400'}`}>
-                      {t.type === 'withdrawal' ? '-' : '+'}৳{t.amount}
+                    <span className={`font-bold text-xs ${t.type === 'withdrawal' ? 'text-rose-400' : 'text-amber-400'}`}>
+                      {t.type === 'withdrawal' ? `-৳${t.amount}` : `+${t.amount} Coins`}
                     </span>
                   </td>
                   <td className="px-5 py-3">

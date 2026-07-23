@@ -162,7 +162,7 @@ const Users = ({ ADMIN_API, authHeaders }) => {
                       </div>
                     </div>
                   </td>
-                  <td className="px-5 py-3 hidden sm:table-cell text-emerald-400 font-bold text-xs">৳{u.balance || 0}</td>
+                  <td className="px-5 py-3 hidden sm:table-cell text-amber-400 font-bold text-xs">{(u.balance || 0).toLocaleString()} Coins</td>
                   <td className="px-5 py-3 hidden md:table-cell text-indigo-400 font-bold text-xs">{u.points || 0}</td>
                   <td className="px-5 py-3 hidden lg:table-cell text-slate-500 text-xs">{new Date(u.createdAt).toLocaleDateString()}</td>
                   <td className="px-5 py-3">
@@ -243,8 +243,8 @@ const Users = ({ ADMIN_API, authHeaders }) => {
               {/* Stats */}
               <div className="grid grid-cols-3 gap-3">
                 <div className="bg-slate-800/50 rounded-xl p-3 text-center">
-                  <div className="text-emerald-400 font-black text-lg">৳{selectedUser.user.balance || 0}</div>
-                  <div className="text-slate-500 text-[10px] font-bold uppercase tracking-wider mt-0.5">Balance</div>
+                  <div className="text-amber-400 font-black text-lg">{(selectedUser.user.balance || 0).toLocaleString()} Coins</div>
+                  <div className="text-slate-500 text-[10px] font-bold uppercase tracking-wider mt-0.5">Coin Balance</div>
                 </div>
                 <div className="bg-slate-800/50 rounded-xl p-3 text-center">
                   <div className="text-indigo-400 font-black text-lg">{selectedUser.user.points || 0}</div>
