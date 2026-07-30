@@ -24,6 +24,37 @@ exports.getReferrerName = async (req, res) => {
   }
 };
 
+// Check username availability
+exports.checkUsernameAvailability = async (req, res) => {
+  try {
+    const { username } = req.params;
+    if (!username || !username.trim()) {
+      return res.status(400).json({ available: false, message: 'Username is required' });
+    }
+    const cleanUsername = username.trim();
+    if (!/^[a-zA-Z0-9_]{3,20}$/.test(cleanUsername)) {
+      return res.status(400).json({ available: false, message: 'Invalid username format' });
+    }
+
+    const code = cleanUsername.toUpperCase();
+    const existing = await User.findOne({
+      $or: [
+        { username: { $regex: new RegExp(`^${cleanUsername}$`, 'i') } },
+        { referralCode: code }
+      ]
+    });
+
+    if (existing) {
+      return res.json({ available: false, message: 'Username is already taken' });
+    }
+
+    return res.json({ available: true, message: 'Username is available' });
+  } catch (error) {
+    console.error('Check Username Error:', error);
+    res.status(500).json({ available: false, message: 'Server error checking username' });
+  }
+};
+
 const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID;
 const googleClient = new OAuth2Client(GOOGLE_CLIENT_ID);
 

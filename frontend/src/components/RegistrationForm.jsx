@@ -265,8 +265,9 @@ const RegistrationForm = ({ onToggleForm, onRegisterSuccess }) => {
       if (!/^[a-zA-Z0-9_]{3,20}$/.test(formData.username)) { setUsernameStatus('invalid'); return; }
       setIsCheckingUsername(true);
       try {
-        const response = await fetch(`${API_BASE}/api/auth/referrer/${formData.username}`);
-        setUsernameStatus(response.ok ? 'taken' : 'available');
+        const response = await fetch(`${API_BASE}/api/auth/check-username/${formData.username}`);
+        const data = await response.json();
+        setUsernameStatus(data.available ? 'available' : 'taken');
       } catch { setUsernameStatus(null); }
       finally { setIsCheckingUsername(false); }
     };

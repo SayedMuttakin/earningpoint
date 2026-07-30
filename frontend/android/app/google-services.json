@@ -1,40 +1,41 @@
 {
   "project_info": {
-    "project_number": "410797628659",
-    "project_id": "agile-athlete-467720-c1",
-    "storage_bucket": "agile-athlete-467720-c1.appspot.com"
+    "project_number": "1028494965258",
+    "project_id": "zenivio-bd",
+    "storage_bucket": "zenivio-bd.appspot.com"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:410797628659:android:com.zenivio.app",
+        "mobilesdk_app_id": "1:1028494965258:android:com.zenivio.app",
         "android_client_info": {
           "package_name": "com.zenivio.app"
         }
       },
       "oauth_client": [
         {
-          "client_id": "410797628659-2mckqrqhbarqse925e2a30cb28gq0ii6.apps.googleusercontent.com",
+          "client_id": "1028494965258-9ql287u3is47brl9sj5icnf4l104ke7r.apps.googleusercontent.com",
           "client_type": 1,
           "android_info": {
-            "package_name": "com.zenivio.app"
+            "package_name": "com.zenivio.app",
+            "certificate_hash": "09f4114a5711a3a67a2f5e011af8fef487f8c44b"
           }
         },
         {
-          "client_id": "410797628659-49d55sis32em5iktc44aj349v9bsqo02.apps.googleusercontent.com",
+          "client_id": "1028494965258-90o444tljgmd5r6c5si8d8oc2oudnhnl.apps.googleusercontent.com",
           "client_type": 3
         }
       ],
       "api_key": [
         {
-          "current_key": "PLACEHOLDER"
+          "current_key": "AIzaSy_Placeholder_Key"
         }
       ],
       "services": {
         "appinvite_service": {
           "other_platform_oauth_client": [
             {
-              "client_id": "410797628659-49d55sis32em5iktc44aj349v9bsqo02.apps.googleusercontent.com",
+              "client_id": "1028494965258-90o444tljgmd5r6c5si8d8oc2oudnhnl.apps.googleusercontent.com",
               "client_type": 3
             }
           ]
