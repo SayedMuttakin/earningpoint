@@ -39,10 +39,7 @@ const getCreatorAvatar = (video) => {
   const google = video.authorDetails?.googleAvatar || (video.authorId && typeof video.authorId === 'object' ? video.authorId.googleAvatar : null);
   
   if (pic) {
-    if (pic.startsWith('http') || pic.startsWith('/api') || pic.startsWith('data:')) {
-      return pic;
-    }
-    return `${API_BASE}/api/image?file=${pic}`;
+    return getImageUrl(pic);
   }
   return google || '';
 };

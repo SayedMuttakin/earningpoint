@@ -25,7 +25,7 @@ import {
   Calendar,
   Download
 } from 'lucide-react';
-import { API_BASE } from '../config';
+import { API_BASE, getImageUrl } from '../config';
 import VerifiedBadge from './VerifiedBadge';
 import ShareModal from './ShareModal';
 
@@ -780,9 +780,7 @@ const PublicProfilePage = ({ userId, onBack, currentUser, isOwnProfile, setActiv
       <div className="relative w-full h-44 sm:h-52 bg-slate-200 dark:bg-slate-800 overflow-hidden group">
         {profile.coverPic ? (
           <img
-            src={profile.coverPic.startsWith('http') || profile.coverPic.startsWith('/api') || profile.coverPic.startsWith('data:')
-              ? profile.coverPic
-              : `${API_BASE}/api/image?file=${encodeURIComponent(profile.coverPic)}`}
+            src={getImageUrl(profile.coverPic)}
             alt="Cover banner"
             className="w-full h-full object-cover"
           />
@@ -810,9 +808,7 @@ const PublicProfilePage = ({ userId, onBack, currentUser, isOwnProfile, setActiv
             <div className="w-28 h-28 sm:w-32 sm:h-32 rounded-full overflow-hidden border-4 border-white dark:border-slate-950 bg-slate-100 flex items-center justify-center relative">
               {profile.profilePic ? (
                 <img
-                  src={profile.profilePic.startsWith('http') || profile.profilePic.startsWith('/api') || profile.profilePic.startsWith('data:')
-                    ? profile.profilePic
-                    : `${API_BASE}/api/image?file=${encodeURIComponent(profile.profilePic)}`}
+                  src={getImageUrl(profile.profilePic)}
                   alt={profile.name}
                   className="w-full h-full object-cover"
                 />
@@ -1400,13 +1396,13 @@ const PublicProfilePage = ({ userId, onBack, currentUser, isOwnProfile, setActiv
                           <div className="w-10 h-10 rounded-lg overflow-hidden bg-slate-100 dark:bg-slate-950 shrink-0 flex items-center justify-center text-[8px] border border-slate-100 dark:border-slate-800">
                             {post.video ? (
                               <video 
-                                src={post.video.startsWith('http') || post.video.startsWith('/api') || post.video.startsWith('data:') ? post.video : `${API_BASE}/api/image?file=${encodeURIComponent(post.video)}`}
+                                src={getImageUrl(post.video)}
                                 className="w-full h-full object-cover" 
                                 muted 
                               />
                             ) : post.image ? (
                               <img 
-                                src={post.image.startsWith('http') || post.image.startsWith('/api') || post.image.startsWith('data:') ? post.image : `${API_BASE}/api/image?file=${encodeURIComponent(post.image)}`} 
+                                src={getImageUrl(post.image)} 
                                 alt="" 
                                 className="w-full h-full object-cover" 
                               />
@@ -1698,7 +1694,7 @@ const PublicProfilePage = ({ userId, onBack, currentUser, isOwnProfile, setActiv
                     className="relative w-16 h-16 rounded-full overflow-hidden border border-slate-250 dark:border-slate-800 bg-slate-100 flex items-center justify-center cursor-pointer group shrink-0"
                   >
                     {profile.profilePic ? (
-                      <img src={profile.profilePic.startsWith('data:') || profile.profilePic.startsWith('http') ? profile.profilePic : `${API_BASE}/api/image?file=${encodeURIComponent(profile.profilePic)}`} alt="" className="w-full h-full object-cover group-hover:opacity-80" />
+                      <img src={getImageUrl(profile.profilePic)} alt="" className="w-full h-full object-cover group-hover:opacity-80" />
                     ) : (
                       <User className="w-6 h-6 text-slate-455" />
                     )}
@@ -1713,7 +1709,7 @@ const PublicProfilePage = ({ userId, onBack, currentUser, isOwnProfile, setActiv
                     className="relative h-16 flex-1 rounded-xl overflow-hidden border border-slate-250 dark:border-slate-800 bg-slate-100 flex items-center justify-center cursor-pointer group"
                   >
                     {profile.coverPic ? (
-                      <img src={profile.coverPic.startsWith('data:') || profile.coverPic.startsWith('http') ? profile.coverPic : `${API_BASE}/api/image?file=${encodeURIComponent(profile.coverPic)}`} alt="" className="w-full h-full object-cover group-hover:opacity-80" />
+                      <img src={getImageUrl(profile.coverPic)} alt="" className="w-full h-full object-cover group-hover:opacity-80" />
                     ) : (
                       <div className="w-full h-full bg-gradient-to-r from-violet-600 via-indigo-600 to-purple-700 opacity-90" />
                     )}

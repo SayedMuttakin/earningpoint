@@ -3,7 +3,7 @@ import {
   ArrowLeft, Globe, Users, Lock, ChevronRight, Image as ImageIcon, 
   UserPlus, Smile, MapPin, X, Loader2, Check 
 } from 'lucide-react';
-import { API_BASE } from '../config';
+import { API_BASE, getImageUrl } from '../config';
 
 // Define gradients options
 const GRADIENTS = [
@@ -49,14 +49,10 @@ const CreatePostPage = ({ currentUser, onBack, setActiveTab, postToEdit = null }
   const [imagePreview, setImagePreview] = useState(() => {
     if (postToEdit) {
       if (postToEdit.video) {
-        return postToEdit.video.startsWith('http') || postToEdit.video.startsWith('/api') || postToEdit.video.startsWith('data:') 
-          ? postToEdit.video 
-          : `${API_BASE}/api/image?file=${encodeURIComponent(postToEdit.video)}`;
+        return getImageUrl(postToEdit.video);
       }
       if (postToEdit.image) {
-        return postToEdit.image.startsWith('http') || postToEdit.image.startsWith('/api') || postToEdit.image.startsWith('data:') 
-          ? postToEdit.image 
-          : `${API_BASE}/api/image?file=${encodeURIComponent(postToEdit.image)}`;
+        return getImageUrl(postToEdit.image);
       }
     }
     return null;
@@ -85,9 +81,7 @@ const CreatePostPage = ({ currentUser, onBack, setActiveTab, postToEdit = null }
     if (!u) return `https://ui-avatars.com/api/?name=User&background=7C3AED&color=fff&bold=true`;
     const pic = u.profilePic || u.googleAvatar || u.facebookAvatar;
     if (!pic) return `https://ui-avatars.com/api/?name=${encodeURIComponent(u.name || 'User')}&background=7C3AED&color=fff&bold=true`;
-    return pic.startsWith('http') || pic.startsWith('/api') || pic.startsWith('data:') 
-      ? pic 
-      : `${API_BASE}/api/image?file=${encodeURIComponent(pic)}`;
+    return getImageUrl(pic);
   };
 
   const handleImageChange = (e) => {

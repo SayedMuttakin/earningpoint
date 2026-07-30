@@ -6,8 +6,27 @@ const getApiBase = () => {
     }
     return "http://localhost:5001";
   }
-  return typeof window !== 'undefined' ? window.location.origin : '';
+
+  if (typeof window !== 'undefined') {
+    const origin = window.location.origin;
+    if (origin && !origin.includes('localhost') && !origin.includes('127.0.0.1') && !origin.includes('capacitor')) {
+      return origin;
+    }
+  }
+
+  return 'https://zenivio.it.com';
 };
 
 export const API_BASE = getApiBase();
+
+export const getImageUrl = (url) => {
+  if (!url) return '';
+  if (url.startsWith('http://') || url.startsWith('https://') || url.startsWith('data:')) {
+    return url;
+  }
+  if (url.startsWith('/')) {
+    return `${API_BASE}${url}`;
+  }
+  return `${API_BASE}/api/image?file=${encodeURIComponent(url)}`;
+};
 

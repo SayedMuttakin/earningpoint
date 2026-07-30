@@ -5,7 +5,7 @@ import {
   MoreVertical, Star, X, Users, SquarePen, Check, Plus
 } from 'lucide-react';
 import { io } from 'socket.io-client';
-import { API_BASE } from '../config';
+import { API_BASE, getImageUrl } from '../config';
 import PullToRefresh from './PullToRefresh';
 
 const EMOJIS = [
@@ -30,11 +30,7 @@ const EMOJIS = [
 ];
 
 const getProfilePicUrl = (pic) => {
-  if (!pic) return '';
-  if (pic.startsWith('http') || pic.startsWith('/api') || pic.startsWith('data:')) {
-    return pic;
-  }
-  return `${API_BASE}/api/image?file=${pic}`;
+  return getImageUrl(pic);
 };
 
 const AudioPlayer = ({ src }) => {

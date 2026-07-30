@@ -5,7 +5,7 @@ import {
   Database, HelpCircle, FileText, LogOut, ArrowLeft, Smartphone, 
   CheckCircle2, Search, Rocket, Palette, Headphones, MessageCircle, Plus 
 } from 'lucide-react';
-import { API_BASE } from '../config';
+import { API_BASE, getImageUrl } from '../config';
 import VerifiedBadge from './VerifiedBadge';
 
 const Navbar = ({ 
@@ -47,9 +47,7 @@ const Navbar = ({
     if (!u) return `https://ui-avatars.com/api/?name=User&background=7C3AED&color=fff&bold=true`;
     const pic = u.profilePic || u.googleAvatar || u.facebookAvatar;
     if (!pic) return `https://ui-avatars.com/api/?name=${encodeURIComponent(u.name || 'User')}&background=7C3AED&color=fff&bold=true`;
-    return pic.startsWith('http') || pic.startsWith('/api') || pic.startsWith('data:') 
-      ? pic 
-      : `${API_BASE}/api/image?file=${encodeURIComponent(pic)}`;
+    return getImageUrl(pic);
   };
 
   const allItems = [

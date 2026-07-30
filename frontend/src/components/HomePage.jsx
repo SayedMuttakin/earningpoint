@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Loader2, Plus, Image as ImageIcon, X, Globe, MoreVertical, Search, MessageCircle, Users, Smile, Heart, Send, Bookmark, Download, Trash2, AlertTriangle, UserX, Edit } from 'lucide-react';
-import { API_BASE } from '../config';
+import { API_BASE, getImageUrl } from '../config';
 import VerifiedBadge from './VerifiedBadge';
 import PullToRefresh from './PullToRefresh';
 import BannerAd from './BannerAd';
@@ -225,9 +225,7 @@ const CommentsDrawer = ({ post, onClose, onCommentSubmit, currentUserId, onUserC
                 >
                   {comment.userAvatar ? (
                     <img
-                      src={comment.userAvatar.startsWith('http') || comment.userAvatar.startsWith('/api') || comment.userAvatar.startsWith('data:') 
-                        ? comment.userAvatar 
-                        : `${API_BASE}/api/image?file=${encodeURIComponent(comment.userAvatar)}`}
+                      src={getImageUrl(comment.userAvatar)}
                       alt={comment.userName}
                       className="w-full h-full rounded-full object-cover"
                       onError={(e) => {
@@ -405,9 +403,7 @@ const CommunityPostCard = ({ post, onFollowToggle, onLikeToggle, onCommentClick,
             >
               {post.authorDetails?.profilePic ? (
                 <img 
-                  src={post.authorDetails.profilePic.startsWith('http') || post.authorDetails.profilePic.startsWith('/api') || post.authorDetails.profilePic.startsWith('data:') 
-                    ? post.authorDetails.profilePic 
-                    : `${API_BASE}/api/image?file=${encodeURIComponent(post.authorDetails.profilePic)}`} 
+                  src={getImageUrl(post.authorDetails.profilePic)} 
                   alt={post.authorDetails.name || post.authorName} 
                   className="w-full h-full rounded-full object-cover border-2 border-white dark:border-slate-900"
                 />
@@ -602,11 +598,11 @@ const CommunityPostCard = ({ post, onFollowToggle, onLikeToggle, onCommentClick,
       {/* Media Attachment (Image or Video) */}
       {post.image && (
         <div 
-          onClick={() => onImageClick && onImageClick(post.image.startsWith('http') || post.image.startsWith('/api') || post.image.startsWith('data:') ? post.image : `${API_BASE}/api/image?file=${encodeURIComponent(post.image)}`)}
+          onClick={() => onImageClick && onImageClick(getImageUrl(post.image))}
           className="rounded-2xl overflow-hidden border border-slate-100 dark:border-slate-850 bg-slate-100/40 dark:bg-slate-900/40 mt-1 w-full max-h-[450px] select-none cursor-pointer hover:opacity-95 transition-opacity"
         >
           <img 
-            src={post.image.startsWith('http') || post.image.startsWith('/api') || post.image.startsWith('data:') ? post.image : `${API_BASE}/api/image?file=${encodeURIComponent(post.image)}`} 
+            src={getImageUrl(post.image)} 
             alt="Post Content"
             className="w-full h-auto object-contain max-h-[450px]"
             loading="lazy"
@@ -619,7 +615,7 @@ const CommunityPostCard = ({ post, onFollowToggle, onLikeToggle, onCommentClick,
         <div className="relative rounded-2xl overflow-hidden border border-slate-100 dark:border-slate-850 bg-slate-100/40 dark:bg-slate-900/40 mt-1 flex items-center justify-center w-full max-h-[500px] cursor-pointer group select-none">
           <video 
             ref={videoRef}
-            src={post.video.startsWith('http') || post.video.startsWith('/api') || post.video.startsWith('data:') ? post.video : `${API_BASE}/api/image?file=${encodeURIComponent(post.video)}`} 
+            src={getImageUrl(post.video)} 
             className="w-full h-auto object-contain max-h-[500px]"
             playsInline
             controls={isPlaying}
@@ -1294,7 +1290,7 @@ const HomePage = ({ setActiveTab, setSelectedNewsId, setActiveChatPartner, setSe
                         >
                           {user.profilePic ? (
                             <img
-                              src={user.profilePic.startsWith('http') || user.profilePic.startsWith('/api') || user.profilePic.startsWith('data:') ? user.profilePic : `${API_BASE}/api/image?file=${user.profilePic}`}
+                              src={getImageUrl(user.profilePic)}
                               alt={user.name}
                               className="w-9 h-9 rounded-full object-cover border border-slate-100 dark:border-slate-800 flex-shrink-0"
                             />

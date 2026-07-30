@@ -53,7 +53,7 @@ const NewsSlider = ({ posts, onSeeAll, onCardClick }) => {
                 <div className="h-28 w-full rounded-xl overflow-hidden bg-slate-50 dark:bg-slate-950 border border-slate-100 dark:border-slate-850 flex-shrink-0">
                   {post.image ? (
                     <img 
-                      src={post.image.startsWith('http') || post.image.startsWith('/api') || post.image.startsWith('data:') ? post.image : `${API_BASE}/api/image?file=${encodeURIComponent(post.image)}`} 
+                      src={getImageUrl(post.image)} 
                       alt="News" 
                       className="w-full h-full object-cover"
                     />

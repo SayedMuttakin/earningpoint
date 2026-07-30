@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Loader2, ArrowLeft } from 'lucide-react';
-import { API_BASE } from '../config';
+import { API_BASE, getImageUrl } from '../config';
 import VerifiedBadge from './VerifiedBadge';
 import PullToRefresh from './PullToRefresh';
 import BannerAd from './BannerAd';
@@ -72,7 +72,7 @@ const UpdateCard = ({ post, onClick }) => {
       {post.image && (
         <div className="rounded-xl overflow-hidden border border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 max-h-[220px]">
           <img 
-            src={post.image.startsWith('http') || post.image.startsWith('/api') || post.image.startsWith('data:') ? post.image : `${API_BASE}/api/image?file=${encodeURIComponent(post.image)}`} 
+            src={getImageUrl(post.image)} 
             alt="Attachment"
             className="w-full h-full object-cover"
             loading="lazy"
@@ -326,7 +326,7 @@ const UpdatesPage = ({ onBack, selectedPostId, setSelectedPostId }) => {
               {detailPost.image && (
                 <div className="rounded-2xl overflow-hidden border border-slate-100 dark:border-slate-850 shadow-xs max-h-[280px]">
                   <img 
-                    src={detailPost.image.startsWith('http') || detailPost.image.startsWith('/api') || detailPost.image.startsWith('data:') ? detailPost.image : `${API_BASE}/api/image?file=${encodeURIComponent(detailPost.image)}`} 
+                    src={getImageUrl(detailPost.image)} 
                     alt="News Details" 
                     className="w-full h-full object-cover"
                   />
