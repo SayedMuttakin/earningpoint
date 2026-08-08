@@ -1,5 +1,5 @@
 import React from 'react';
-import { API_BASE } from '../config';
+import { API_BASE, getImageUrl } from '../config';
 
 const NewsSlider = ({ posts, onSeeAll, onCardClick }) => {
   const categories = ['World', 'Technology', 'Sports', 'Business', 'Platform'];

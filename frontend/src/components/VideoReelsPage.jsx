@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Heart, MessageCircle, Share2, Volume2, VolumeX, Play, Pause, Send, Loader2, X, Globe, User, Bookmark, Search, ArrowLeft, Plus, Forward } from 'lucide-react';
-import { API_BASE } from '../config';
+import { API_BASE, getImageUrl } from '../config';
 import VerifiedBadge from './VerifiedBadge';
 import ShareModal from './ShareModal';
 
