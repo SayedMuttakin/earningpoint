@@ -204,12 +204,12 @@ const CommentsDrawer = ({ post, onClose, onCommentSubmit, currentUserId, onUserC
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4">
+    <div className="fixed inset-0 z-[1000] flex items-center justify-center p-3 sm:p-4">
       {/* Backdrop */}
       <div className="absolute inset-0 bg-slate-950/60 backdrop-blur-xs" onClick={onClose} />
       
-      {/* Drawer / Desktop Modal */}
-      <div className="relative z-10 w-full sm:max-w-lg h-[55%] sm:h-[80vh] sm:max-h-[600px] bg-white dark:bg-slate-900 rounded-t-[2rem] sm:rounded-3xl shadow-2xl flex flex-col animate-fade-in-up border-t sm:border border-slate-150 dark:border-slate-800 mb-0">
+      {/* Centered Compact Modal Container */}
+      <div className="relative z-10 w-full max-w-md max-h-[85vh] sm:max-h-[520px] bg-white dark:bg-slate-900 rounded-3xl shadow-2xl flex flex-col animate-fade-in-up border border-slate-100 dark:border-slate-800 overflow-hidden">
         {/* Drag handle */}
         <div className="w-12 h-1 bg-slate-250 dark:bg-slate-750 rounded-full mx-auto my-3 flex-shrink-0" />
 
