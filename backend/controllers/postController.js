@@ -467,6 +467,89 @@ exports.commentPost = async (req, res) => {
   }
 };
 
+// @desc    Reply to a comment on a post (Facebook style nested reply & mention notification)
+// @route   POST /api/posts/:id/comment/:commentId/reply
+// @access  Private
+exports.replyComment = async (req, res) => {
+  try {
+    const { text, replyToUser, replyToUserId } = req.body;
+    if (!text) {
+      return res.status(400).json({ message: 'Reply text is required' });
+    }
+
+    const post = await Post.findById(req.params.id);
+    if (!post) {
+      return res.status(404).json({ message: 'Post not found' });
+    }
+
+    const comment = post.comments.id(req.params.commentId);
+    if (!comment) {
+      return res.status(404).json({ message: 'Comment not found' });
+    }
+
+    if (!comment.replies) {
+      comment.replies = [];
+    }
+
+    const newReply = {
+      user: req.user._id,
+      userName: req.user.name || 'User',
+      userAvatar: req.user.profilePic || req.user.googleAvatar || req.user.facebookAvatar || '',
+      text,
+      replyToUser: replyToUser || comment.userName || '',
+      createdAt: new Date()
+    };
+
+    comment.replies.push(newReply);
+    await post.save();
+
+    // Trigger notification for target user (either replyToUserId or comment owner)
+    const notifyUserId = replyToUserId || (comment.user ? comment.user.toString() : null);
+    if (notifyUserId && notifyUserId.toString() !== req.user._id.toString()) {
+      try {
+        await createNotification(
+          notifyUserId,
+          'New Comment Reply! 💬',
+          `${req.user.name || 'A user'} replied to your comment: "${text.substring(0, 30)}${text.length > 30 ? '...' : ''}"`,
+          'post',
+          post._id
+        );
+      } catch (err) {
+        console.error('Failed to create reply notification:', err);
+      }
+    }
+
+    res.status(201).json(comment);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+// @desc    Get reactions/likes list for a post (Who reacted)
+// @route   GET /api/posts/:id/reactions
+// @access  Public
+exports.getPostReactions = async (req, res) => {
+  try {
+    const post = await Post.findById(req.params.id).populate('likes', 'name username profilePic googleAvatar facebookAvatar verificationBadge');
+    if (!post) {
+      return res.status(404).json({ message: 'Post not found' });
+    }
+
+    const reactionsList = (post.likes || []).map(u => ({
+      _id: u._id,
+      name: u.name,
+      username: u.username,
+      profilePic: u.profilePic || u.googleAvatar || u.facebookAvatar || '',
+      verificationBadge: u.verificationBadge || 'none',
+      type: 'love'
+    }));
+
+    res.json(reactionsList);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
 // @desc    Toggle save post
 // @route   POST /api/posts/:id/save
 // @access  Private

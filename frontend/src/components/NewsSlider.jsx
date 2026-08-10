@@ -46,11 +46,11 @@ const NewsSlider = ({ posts, onSeeAll, onCardClick }) => {
             <div 
               key={post._id}
               onClick={() => onCardClick && onCardClick(post._id)}
-              className="w-52 bg-white dark:bg-slate-900 border border-slate-150/40 dark:border-slate-800/80 rounded-2xl p-3 shrink-0 snap-start active:scale-98 transition-transform cursor-pointer space-y-2.5 shadow-2xs flex flex-col justify-between"
+              className="w-52 bg-white dark:bg-slate-900/90 rounded-2xl p-3 shrink-0 snap-start active:scale-98 transition-all cursor-pointer space-y-2.5 shadow-sm hover:shadow-md flex flex-col justify-between"
             >
               <div className="space-y-2">
                 {/* Cover Image */}
-                <div className="h-28 w-full rounded-xl overflow-hidden bg-slate-50 dark:bg-slate-950 border border-slate-100 dark:border-slate-850 flex-shrink-0">
+                <div className="h-28 w-full rounded-xl overflow-hidden bg-slate-100 dark:bg-slate-800/50 flex-shrink-0">
                   {post.image ? (
                     <img 
                       src={getImageUrl(post.image)} 

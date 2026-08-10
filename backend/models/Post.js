@@ -64,6 +64,18 @@ const PostSchema = new mongoose.Schema({
     ref: 'User',
     default: []
   }],
+  reactions: [{
+    user: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User',
+      required: true
+    },
+    type: {
+      type: String,
+      enum: ['like', 'love', 'haha', 'wow', 'sad', 'angry'],
+      default: 'love'
+    }
+  }],
   comments: [{
     user: {
       type: mongoose.Schema.Types.ObjectId,
@@ -85,7 +97,34 @@ const PostSchema = new mongoose.Schema({
     createdAt: {
       type: Date,
       default: Date.now
-    }
+    },
+    replies: [{
+      user: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User',
+        required: true
+      },
+      userName: {
+        type: String,
+        required: true
+      },
+      userAvatar: {
+        type: String,
+        default: ''
+      },
+      text: {
+        type: String,
+        required: true
+      },
+      replyToUser: {
+        type: String,
+        default: ''
+      },
+      createdAt: {
+        type: Date,
+        default: Date.now
+      }
+    }]
   }],
   reports: [{
     user: {

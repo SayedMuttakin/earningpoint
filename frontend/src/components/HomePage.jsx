@@ -169,17 +169,24 @@ const ImagePreviewModal = ({ imageUrl, onClose }) => {
   );
 };
 
-// Comments Drawer Slide-up Component
+// Comments Drawer Slide-up Component (Facebook Style Nested Replies & Mentions)
 const CommentsDrawer = ({ post, onClose, onCommentSubmit, currentUserId, onUserClick }) => {
   const [commentText, setCommentText] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [replyingTo, setReplyingTo] = useState(null); // { commentId, userName, userId }
   const listRef = React.useRef(null);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!commentText.trim() || isSubmitting) return;
     setIsSubmitting(true);
-    await onCommentSubmit(post._id, commentText.trim());
+    
+    if (replyingTo) {
+      await onCommentSubmit(post._id, commentText.trim(), replyingTo.commentId, replyingTo.userName, replyingTo.userId);
+      setReplyingTo(null);
+    } else {
+      await onCommentSubmit(post._id, commentText.trim());
+    }
     setCommentText('');
     setIsSubmitting(false);
 
@@ -191,13 +198,18 @@ const CommentsDrawer = ({ post, onClose, onCommentSubmit, currentUserId, onUserC
     }, 100);
   };
 
+  const handleReplyClick = (commentId, userName, userId) => {
+    setReplyingTo({ commentId, userName, userId });
+    setCommentText(`@${userName} `);
+  };
+
   return (
     <div className="fixed inset-0 z-50 flex items-end justify-center">
       {/* Backdrop */}
       <div className="absolute inset-0 bg-slate-950/60 backdrop-blur-xs" onClick={onClose} />
       
       {/* Drawer */}
-      <div className="relative z-10 w-full sm:max-w-md h-[38%] bg-white dark:bg-slate-900 rounded-t-[2rem] shadow-2xl flex flex-col animate-fade-in-up border-t border-slate-150 dark:border-slate-800 mb-[76px] sm:mb-0">
+      <div className="relative z-10 w-full sm:max-w-md h-[45%] bg-white dark:bg-slate-900 rounded-t-[2rem] shadow-2xl flex flex-col animate-fade-in-up border-t border-slate-150 dark:border-slate-800 mb-[76px] sm:mb-0">
         {/* Drag handle */}
         <div className="w-12 h-1 bg-slate-250 dark:bg-slate-750 rounded-full mx-auto my-3 flex-shrink-0" />
 
@@ -218,60 +230,112 @@ const CommentsDrawer = ({ post, onClose, onCommentSubmit, currentUserId, onUserC
         <div ref={listRef} className="flex-1 overflow-y-auto px-5 py-4 space-y-4">
           {post.comments && post.comments.length > 0 ? (
             post.comments.map((comment, i) => (
-              <div key={i} className="flex gap-3 items-start">
-                <button
-                  onClick={() => comment.user && onUserClick && onUserClick(comment.user)}
-                  className="w-8 h-8 rounded-full bg-slate-200 dark:bg-slate-800 flex items-center justify-center font-bold text-xs shrink-0 overflow-hidden active:scale-90 transition-transform"
-                >
-                  {comment.userAvatar ? (
-                    <img
-                      src={getImageUrl(comment.userAvatar)}
-                      alt={comment.userName}
-                      className="w-full h-full rounded-full object-cover"
-                      onError={(e) => {
-                        e.target.style.display = 'none';
-                      }}
-                    />
-                  ) : (
-                    <span>{comment.userName ? comment.userName.charAt(0).toUpperCase() : 'U'}</span>
-                  )}
-                </button>
-                <div className="flex-1 bg-slate-50 dark:bg-slate-850 rounded-2xl px-4 py-2.5 relative">
+              <div key={i} className="space-y-2">
+                <div className="flex gap-3 items-start">
                   <button
                     onClick={() => comment.user && onUserClick && onUserClick(comment.user)}
-                    className="block font-black text-xs text-slate-750 dark:text-slate-350 hover:underline text-left"
+                    className="w-8 h-8 rounded-full bg-slate-200 dark:bg-slate-800 flex items-center justify-center font-bold text-xs shrink-0 overflow-hidden active:scale-90 transition-transform"
                   >
-                    {comment.userName || 'User'}
+                    {comment.userAvatar ? (
+                      <img
+                        src={getImageUrl(comment.userAvatar)}
+                        alt={comment.userName}
+                        className="w-full h-full rounded-full object-cover"
+                        onError={(e) => {
+                          e.target.style.display = 'none';
+                        }}
+                      />
+                    ) : (
+                      <span>{comment.userName ? comment.userName.charAt(0).toUpperCase() : 'U'}</span>
+                    )}
                   </button>
-                  <p className="text-xs text-slate-650 dark:text-slate-300 mt-1 leading-relaxed pr-6">
-                    {comment.text}
-                  </p>
-                  
-                  {(comment.user === currentUserId || post.authorId === currentUserId) && (
-                    <button
-                      onClick={async (e) => {
-                        e.stopPropagation();
-                        if (!window.confirm('Delete comment?')) return;
-                        try {
-                          const token = localStorage.getItem('token');
-                          const res = await fetch(`${API_BASE}/api/posts/${post._id}/comment/${comment._id}`, {
-                            method: 'DELETE',
-                            headers: { Authorization: `Bearer ${token}` }
-                          });
-                          if (res.ok) {
-                            window.location.reload();
+                  <div className="flex-1 bg-slate-50 dark:bg-slate-850 rounded-2xl px-4 py-2.5 relative">
+                    <div className="flex items-center justify-between">
+                      <button
+                        onClick={() => comment.user && onUserClick && onUserClick(comment.user)}
+                        className="block font-black text-xs text-slate-750 dark:text-slate-350 hover:underline text-left"
+                      >
+                        {comment.userName || 'User'}
+                      </button>
+                      <button
+                        onClick={() => handleReplyClick(comment._id, comment.userName, comment.user)}
+                        className="text-[10px] font-black text-brand-500 hover:underline mr-6"
+                      >
+                        Reply
+                      </button>
+                    </div>
+                    <p className="text-xs text-slate-650 dark:text-slate-300 mt-1 leading-relaxed pr-6">
+                      {comment.text}
+                    </p>
+                    
+                    {(comment.user === currentUserId || post.authorId === currentUserId) && (
+                      <button
+                        onClick={async (e) => {
+                          e.stopPropagation();
+                          if (!window.confirm('Delete comment?')) return;
+                          try {
+                            const token = localStorage.getItem('token');
+                            const res = await fetch(`${API_BASE}/api/posts/${post._id}/comment/${comment._id}`, {
+                              method: 'DELETE',
+                              headers: { Authorization: `Bearer ${token}` }
+                            });
+                            if (res.ok) {
+                              window.location.reload();
+                            }
+                          } catch (err) {
+                            console.error('Failed to delete comment:', err);
                           }
-                        } catch (err) {
-                          console.error('Failed to delete comment:', err);
-                        }
-                      }}
-                      className="absolute right-3 top-3 text-slate-400 hover:text-red-500 transition-colors p-1 rounded-full cursor-pointer hover:bg-slate-100/50 dark:hover:bg-slate-800/50"
-                      title="Delete Comment"
-                    >
-                      <Trash2 className="w-3.5 h-3.5" />
-                    </button>
-                  )}
+                        }}
+                        className="absolute right-3 top-3 text-slate-400 hover:text-red-500 transition-colors p-1 rounded-full cursor-pointer hover:bg-slate-100/50 dark:hover:bg-slate-800/50"
+                        title="Delete Comment"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    )}
+                  </div>
                 </div>
+
+                {/* Nested Replies */}
+                {comment.replies && comment.replies.length > 0 && (
+                  <div className="ml-10 space-y-2 border-l-2 border-slate-100 dark:border-slate-800 pl-3">
+                    {comment.replies.map((reply, rIdx) => (
+                      <div key={rIdx} className="flex gap-2.5 items-start">
+                        <button
+                          onClick={() => reply.user && onUserClick && onUserClick(reply.user)}
+                          className="w-6.5 h-6.5 rounded-full bg-slate-200 dark:bg-slate-800 flex items-center justify-center font-bold text-[10px] shrink-0 overflow-hidden"
+                        >
+                          {reply.userAvatar ? (
+                            <img src={getImageUrl(reply.userAvatar)} alt={reply.userName} className="w-full h-full rounded-full object-cover" />
+                          ) : (
+                            <span>{reply.userName ? reply.userName.charAt(0).toUpperCase() : 'U'}</span>
+                          )}
+                        </button>
+                        <div className="flex-1 bg-slate-100/70 dark:bg-slate-800/60 rounded-2xl px-3 py-2 text-xs relative">
+                          <div className="flex items-center justify-between">
+                            <button
+                              onClick={() => reply.user && onUserClick && onUserClick(reply.user)}
+                              className="font-black text-[11px] text-slate-800 dark:text-slate-200 hover:underline"
+                            >
+                              {reply.userName}
+                            </button>
+                            <button
+                              onClick={() => handleReplyClick(comment._id, reply.userName, reply.user)}
+                              className="text-[10px] font-black text-brand-500 hover:underline"
+                            >
+                              Reply
+                            </button>
+                          </div>
+                          <p className="mt-0.5 text-slate-700 dark:text-slate-300 leading-normal">
+                            {reply.replyToUser && (
+                              <span className="font-extrabold text-brand-500 mr-1">@{reply.replyToUser}</span>
+                            )}
+                            {reply.text.replace(new RegExp(`^@${reply.replyToUser}\\s*`), '')}
+                          </p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
             ))
           ) : (
@@ -282,13 +346,23 @@ const CommentsDrawer = ({ post, onClose, onCommentSubmit, currentUserId, onUserC
           )}
         </div>
 
+        {/* Replying Banner */}
+        {replyingTo && (
+          <div className="px-4 py-1.5 bg-brand-50 dark:bg-brand-950/40 border-t border-brand-100 dark:border-brand-900/50 flex items-center justify-between text-xs text-brand-600 dark:text-brand-400 font-bold flex-shrink-0">
+            <span>Replying to <span className="underline">@{replyingTo.userName}</span></span>
+            <button onClick={() => { setReplyingTo(null); setCommentText(''); }} className="p-0.5 hover:bg-brand-100 dark:hover:bg-brand-900 rounded-full">
+              <X className="w-3.5 h-3.5" />
+            </button>
+          </div>
+        )}
+
         {/* Input Box */}
         <form onSubmit={handleSubmit} className="p-4 border-t border-slate-100 dark:border-slate-850 flex items-center gap-2 bg-slate-50 dark:bg-slate-900/60 pb-safe flex-shrink-0">
           <input
             type="text"
             value={commentText}
             onChange={(e) => setCommentText(e.target.value)}
-            placeholder="Add a comment..."
+            placeholder={replyingTo ? `Reply to @${replyingTo.userName}...` : "Add a comment..."}
             className="flex-1 bg-white dark:bg-slate-800 border border-slate-250 dark:border-slate-700 rounded-full px-4 py-2 text-xs text-slate-800 dark:text-white focus:outline-none focus:ring-1 focus:ring-brand-500 font-semibold"
           />
           <button
@@ -304,13 +378,95 @@ const CommentsDrawer = ({ post, onClose, onCommentSubmit, currentUserId, onUserC
   );
 };
 
-const CommunityPostCard = ({ post, onFollowToggle, onLikeToggle, onCommentClick, currentUserId, setSelectedReelId, setActiveTab, onUserClick, onImageClick, showToast, onActionTrigger, onShareClick }) => {
+// Reactions List Modal (Who Reacted)
+const ReactionsModal = ({ postId, onClose, onUserClick }) => {
+  const [reactions, setReactions] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchReactions = async () => {
+      try {
+        const res = await fetch(`${API_BASE}/api/posts/${postId}/reactions`);
+        if (res.ok) {
+          const data = await res.json();
+          setReactions(data);
+        }
+      } catch (err) {
+        console.error('Failed to fetch reactions:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchReactions();
+  }, [postId]);
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+      <div className="absolute inset-0 bg-slate-950/60 backdrop-blur-xs" onClick={onClose} />
+      <div className="relative z-10 w-full max-w-sm bg-white dark:bg-slate-900 rounded-3xl shadow-2xl p-5 border border-slate-100 dark:border-slate-800 animate-scale-pulse-glow max-h-[80vh] flex flex-col">
+        <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800">
+          <h3 className="font-extrabold text-slate-900 dark:text-white text-sm flex items-center gap-1.5">
+            <span className="text-rose-500">❤️</span> Reactions ({reactions.length})
+          </h3>
+          <button onClick={onClose} className="p-1 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800">
+            <X className="w-4 h-4 text-slate-400" />
+          </button>
+        </div>
+
+        <div className="flex-1 overflow-y-auto py-3 space-y-3 divide-y divide-slate-100 dark:divide-slate-800/40">
+          {loading ? (
+            <div className="flex justify-center py-6">
+              <Loader2 className="w-5 h-5 animate-spin text-brand-500" />
+            </div>
+          ) : reactions.length === 0 ? (
+            <p className="text-center text-xs text-slate-400 py-6 font-bold">No reactions yet</p>
+          ) : (
+            reactions.map((user) => (
+              <div 
+                key={user._id} 
+                onClick={() => { onClose(); onUserClick && onUserClick(user._id); }}
+                className="flex items-center justify-between pt-2.5 first:pt-0 cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800/50 p-2 rounded-2xl transition-colors"
+              >
+                <div className="flex items-center gap-3 min-w-0">
+                  {user.profilePic ? (
+                    <img src={getImageUrl(user.profilePic)} alt={user.name} className="w-10 h-10 rounded-full object-cover shrink-0" />
+                  ) : (
+                    <div className="w-10 h-10 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 flex items-center justify-center font-black text-xs shrink-0">
+                      {user.name ? user.name[0].toUpperCase() : 'U'}
+                    </div>
+                  )}
+                  <div className="min-w-0">
+                    <p className="text-xs font-bold text-slate-900 dark:text-white truncate flex items-center gap-1">
+                      {user.name}
+                      {user.verificationBadge && user.verificationBadge !== 'none' && <VerifiedBadge size="sm" type={user.verificationBadge} />}
+                    </p>
+                    <p className="text-[10px] text-slate-400 font-semibold truncate">@{user.username || 'user'}</p>
+                  </div>
+                </div>
+                <div className="w-6 h-6 rounded-full bg-rose-50 dark:bg-rose-950/40 flex items-center justify-center text-xs shrink-0 shadow-xs">
+                  ❤️
+                </div>
+              </div>
+            ))
+          )}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+const CommunityPostCard = ({ post, onFollowToggle, onLikeToggle, onCommentClick, currentUserId, setSelectedReelId, setActiveTab, onUserClick, onImageClick, showToast, onActionTrigger, onShareClick, onOpenReactionsModal }) => {
   const [actionLoading, setActionLoading] = useState(false);
   const [isLiking, setIsLiking] = useState(false);
   const [isPlaying, setIsPlaying] = useState(false);
   const [showMenu, setShowMenu] = useState(false);
   const [isSaved, setIsSaved] = useState(post.isSaved || false);
+  const [isLiked, setIsLiked] = useState(() => (post.likes || []).some(id => id.toString() === currentUserId));
   const videoRef = useRef(null);
+
+  const likesCount = post.likes?.length || 0;
+  const commentsCount = post.comments?.length || 0;
+  const shareCount = Math.floor(likesCount * 0.15);
 
   const handleSaveToggle = async (e) => {
     if (e) e.stopPropagation();
@@ -365,11 +521,6 @@ const CommunityPostCard = ({ post, onFollowToggle, onLikeToggle, onCommentClick,
     setIsLiking(false);
   };
 
-  const isLiked = post.likes?.includes(currentUserId);
-  const likesCount = post.likes?.length || 0;
-  const commentsCount = post.comments?.length || 0;
-  const shareCount = Math.max(1, Math.floor(likesCount * 0.15));
-
   const parsedFeeling = (() => {
     if (!post.feeling) return null;
     if (typeof post.feeling === 'object') return post.feeling;
@@ -391,7 +542,7 @@ const CommunityPostCard = ({ post, onFollowToggle, onLikeToggle, onCommentClick,
   })();
 
   return (
-    <article className="bg-white dark:bg-slate-900 border border-slate-150/40 dark:border-slate-800/80 rounded-[2rem] p-4.5 space-y-3.5 shadow-2xs">
+    <article className="bg-white dark:bg-slate-900 rounded-[2rem] p-4.5 space-y-3.5 shadow-sm hover:shadow-md transition-shadow">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
@@ -599,7 +750,7 @@ const CommunityPostCard = ({ post, onFollowToggle, onLikeToggle, onCommentClick,
       {post.image && (
         <div 
           onClick={() => onImageClick && onImageClick(getImageUrl(post.image))}
-          className="rounded-2xl overflow-hidden border border-slate-100 dark:border-slate-850 bg-slate-100/40 dark:bg-slate-900/40 mt-1 w-full max-h-[450px] select-none cursor-pointer hover:opacity-95 transition-opacity"
+          className="rounded-2xl overflow-hidden bg-slate-100/60 dark:bg-slate-800/50 mt-1 w-full max-h-[450px] select-none cursor-pointer hover:opacity-95 transition-opacity"
         >
           <img 
             src={getImageUrl(post.image)} 
@@ -612,7 +763,7 @@ const CommunityPostCard = ({ post, onFollowToggle, onLikeToggle, onCommentClick,
       )}
 
       {post.video && (
-        <div className="relative rounded-2xl overflow-hidden border border-slate-100 dark:border-slate-850 bg-slate-100/40 dark:bg-slate-900/40 mt-1 flex items-center justify-center w-full max-h-[500px] cursor-pointer group select-none">
+        <div className="relative rounded-2xl overflow-hidden bg-slate-100/60 dark:bg-slate-800/50 mt-1 flex items-center justify-center w-full max-h-[500px] cursor-pointer group select-none">
           <video 
             ref={videoRef}
             src={getImageUrl(post.video)} 
@@ -785,6 +936,7 @@ const fetchWithTimeout = async (url, options = {}, timeout = 5000) => {
 
 const HomePage = ({ setActiveTab, setSelectedNewsId, setActiveChatPartner, setSelectedReelId, highlightedPostId, setHighlightedPostId, setPostToEdit, onUserClick }) => {
   const [activeCommentPost, setActiveCommentPost] = useState(null);
+  const [showReactionsPostId, setShowReactionsPostId] = useState(null);
   const [shareModalOpen, setShareModalOpen] = useState(false);
   const [shareData, setShareData] = useState({ url: '', title: '', text: '' });
   const [newsPosts, setNewsPosts] = useState(() => {
@@ -1180,44 +1332,44 @@ const HomePage = ({ setActiveTab, setSelectedNewsId, setActiveChatPartner, setSe
         });
       }
     } catch (err) {
-      console.error('Failed to toggle like:', err);
+      console.error('Failed to toggle like');
     }
   };
 
-  // Comment submit
-  const handleCommentSubmit = async (postId, text) => {
+  // Comment or Reply submit
+  const handleCommentSubmit = async (postId, text, commentId = null, replyToUser = '', replyToUserId = null) => {
     try {
       const token = localStorage.getItem('token');
-      const res = await fetch(`${API_BASE}/api/posts/${postId}/comment`, {
+      const endpoint = commentId 
+        ? `${API_BASE}/api/posts/${postId}/comment/${commentId}/reply`
+        : `${API_BASE}/api/posts/${postId}/comment`;
+
+      const bodyData = commentId 
+        ? { text, replyToUser, replyToUserId }
+        : { text };
+
+      const res = await fetch(endpoint, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${token}`
         },
-        body: JSON.stringify({ text })
+        body: JSON.stringify(bodyData)
       });
+
       if (res.ok) {
-        const newComment = await res.json();
-        
-        setFeedPosts(prev => {
-          const updated = prev.map(p => {
-            if (p._id === postId) {
-              const newComments = [...(p.comments || []), newComment];
-              const updatedPost = { ...p, comments: newComments };
-              // Also update the active comment post if it's the one open
-              if (activeCommentPost && activeCommentPost._id === postId) {
-                setActiveCommentPost(updatedPost);
-              }
-              return updatedPost;
-            }
-            return p;
-          });
-          safeLocalStorageSet('cached_feed_posts', JSON.stringify(updated));
-          return updated;
+        // Fetch updated post data to refresh comments & replies
+        const postRes = await fetch(`${API_BASE}/api/posts/${postId}`, {
+          headers: { Authorization: `Bearer ${token}` }
         });
+        if (postRes.ok) {
+          const updatedPost = await postRes.json();
+          setActiveCommentPost(updatedPost);
+          setFeedPosts(prev => prev.map(p => p._id === postId ? { ...p, comments: updatedPost.comments } : p));
+        }
       }
     } catch (err) {
-      console.error('Failed to submit comment:', err);
+      console.error('Failed to submit comment/reply:', err);
     }
   };
 
@@ -1251,7 +1403,7 @@ const HomePage = ({ setActiveTab, setSelectedNewsId, setActiveChatPartner, setSe
 
             {/* Search Users to Follow or Chat */}
             <div className="relative z-20">
-              <div className="flex items-center bg-white dark:bg-slate-900 rounded-2xl px-4 py-1 border border-slate-200/50 dark:border-slate-800 shadow-2xs focus-within:border-[#7C3AED]/30 transition-all">
+              <div className="flex items-center bg-white dark:bg-slate-900 rounded-2xl px-4 py-1 shadow-2xs focus-within:border-[#7C3AED]/30 transition-all">
                 <Search className="w-4.5 h-4.5 text-slate-400 mr-2 flex-shrink-0" />
                 <input
                   type="text"
@@ -1269,7 +1421,7 @@ const HomePage = ({ setActiveTab, setSelectedNewsId, setActiveChatPartner, setSe
 
               {/* Search Results Dropdown Overlay */}
               {userSearchQuery && (
-                <div className="absolute top-13 left-0 right-0 bg-white dark:bg-slate-900 border border-slate-150/40 dark:border-slate-800 rounded-2xl shadow-xl z-50 p-2 max-h-[300px] overflow-y-auto divide-y divide-slate-100 dark:divide-slate-850">
+                <div className="absolute top-13 left-0 right-0 bg-white dark:bg-slate-900 rounded-2xl shadow-xl z-50 p-2 max-h-[300px] overflow-y-auto divide-y divide-slate-100 dark:divide-slate-850">
                   {searchingUsers ? (
                     <div className="flex items-center justify-center py-6 gap-2">
                       <Loader2 className="w-4 h-4 text-indigo-500 animate-spin" />
@@ -1375,6 +1527,7 @@ const HomePage = ({ setActiveTab, setSelectedNewsId, setActiveChatPartner, setSe
                       setShareData({ url, title, text });
                       setShareModalOpen(true);
                     }}
+                    onOpenReactionsModal={(id) => setShowReactionsPostId(id)}
                   />
                 ))}
               </div>
@@ -1534,6 +1687,14 @@ const HomePage = ({ setActiveTab, setSelectedNewsId, setActiveChatPartner, setSe
           text={shareData.text} 
           showToast={showToastNotification} 
         />
+
+        {showReactionsPostId && (
+          <ReactionsModal 
+            postId={showReactionsPostId} 
+            onClose={() => setShowReactionsPostId(null)} 
+            onUserClick={onUserClick} 
+          />
+        )}
 
         {/* Toast Notification */}
         {showToast && (

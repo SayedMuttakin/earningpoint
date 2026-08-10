@@ -41,6 +41,16 @@ router.post('/:id/like', protect, postController.toggleLikePost);
 // @access  Private
 router.post('/:id/comment', protect, postController.commentPost);
 
+// @route   POST /api/posts/:id/comment/:commentId/reply
+// @desc    Reply to a comment on a post
+// @access  Private
+router.post('/:id/comment/:commentId/reply', protect, postController.replyComment);
+
+// @route   GET /api/posts/:id/reactions
+// @desc    Get reactions list for a post
+// @access  Public
+router.get('/:id/reactions', postController.getPostReactions);
+
 // @route   POST /api/posts/:id/save
 // @desc    Toggle save post
 // @access  Private
