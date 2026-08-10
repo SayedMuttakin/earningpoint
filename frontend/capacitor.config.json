@@ -3,6 +3,7 @@
   "appName": "Zenivio",
   "webDir": "dist",
   "server": {
+    "url": "https://zenivio.it.com",
     "androidScheme": "https",
     "cleartext": true,
     "allowNavigation": ["zenivio.it.com"]
