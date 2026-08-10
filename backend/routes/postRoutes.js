@@ -36,6 +36,11 @@ router.post('/', protect, upload.single('image'), postController.createUserPost)
 // @access  Private
 router.post('/:id/like', protect, postController.toggleLikePost);
 
+// @route   POST /api/posts/:id/react
+// @desc    Toggle reaction on a post
+// @access  Private
+router.post('/:id/react', protect, postController.toggleReactionPost);
+
 // @route   POST /api/posts/:id/comment
 // @desc    Add a comment to a post
 // @access  Private

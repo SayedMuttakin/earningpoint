@@ -443,8 +443,8 @@ const ReactionsModal = ({ postId, onClose, onUserClick }) => {
                     <p className="text-[10px] text-slate-400 font-semibold truncate">@{user.username || 'user'}</p>
                   </div>
                 </div>
-                <div className="w-6 h-6 rounded-full bg-rose-50 dark:bg-rose-950/40 flex items-center justify-center text-xs shrink-0 shadow-xs">
-                  ❤️
+                <div className="w-7 h-7 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-sm shrink-0 shadow-xs border border-slate-200 dark:border-slate-700">
+                  {user.emoji || '❤️'}
                 </div>
               </div>
             ))
@@ -462,7 +462,31 @@ const CommunityPostCard = ({ post, onFollowToggle, onLikeToggle, onCommentClick,
   const [showMenu, setShowMenu] = useState(false);
   const [isSaved, setIsSaved] = useState(post.isSaved || false);
   const [isLiked, setIsLiked] = useState(() => (post.likes || []).some(id => id.toString() === currentUserId));
+  const [showReactionPicker, setShowReactionPicker] = useState(false);
+  const [currentReaction, setCurrentReaction] = useState(post.userReaction || (isLiked ? 'love' : null));
   const videoRef = useRef(null);
+
+  const handleReactSelect = async (type) => {
+    setShowReactionPicker(false);
+    try {
+      const token = localStorage.getItem('token');
+      const res = await fetch(`${API_BASE}/api/posts/${post._id}/react`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify({ type })
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setCurrentReaction(data.userReaction);
+        setIsLiked(data.isLiked);
+      }
+    } catch (err) {
+      console.error('Failed to react:', err);
+    }
+  };
 
   const likesCount = post.likes?.length || 0;
   const commentsCount = post.comments?.length || 0;
@@ -790,22 +814,60 @@ const CommunityPostCard = ({ post, onFollowToggle, onLikeToggle, onCommentClick,
       )}
 
       {/* Action Icons Row */}
-      <div className="flex items-center justify-between pt-1 select-none">
+      <div className="flex items-center justify-between pt-1 select-none relative">
         <div className="flex items-center gap-4.5">
-          {/* Heart / Like Button */}
+          {/* Reaction Picker Popover */}
+          {showReactionPicker && (
+            <div className="absolute -top-12 left-0 bg-white dark:bg-slate-800 rounded-full shadow-2xl p-1.5 flex items-center gap-2 border border-slate-100 dark:border-slate-700 z-30 animate-fade-in-up">
+              {[
+                { type: 'like', emoji: '👍', label: 'Like' },
+                { type: 'love', emoji: '❤️', label: 'Love' },
+                { type: 'haha', emoji: '😆', label: 'Haha' },
+                { type: 'wow', emoji: '😮', label: 'Wow' },
+                { type: 'sad', emoji: '😢', label: 'Sad' },
+                { type: 'angry', emoji: '😡', label: 'Angry' }
+              ].map((r) => (
+                <button
+                  key={r.type}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleReactSelect(r.type);
+                  }}
+                  className="w-8 h-8 rounded-full hover:bg-slate-100 dark:hover:bg-slate-700 flex items-center justify-center text-lg hover:scale-125 transition-transform"
+                  title={r.label}
+                >
+                  {r.emoji}
+                </button>
+              ))}
+            </div>
+          )}
+
+          {/* Heart / Reaction Button */}
           <button 
-            onClick={handleLikeClick}
+            onClick={() => setShowReactionPicker(!showReactionPicker)}
+            onContextMenu={(e) => { e.preventDefault(); setShowReactionPicker(true); }}
             disabled={isLiking}
             className="flex items-center gap-1.5 group active:scale-90 transition-transform"
           >
-            <Heart 
-              className={`w-6 h-6 transition-colors duration-200 ${
-                isLiked 
-                  ? 'fill-red-500 stroke-red-500 scale-110 animate-pulse' 
-                  : 'text-slate-700 dark:text-slate-350 group-hover:text-red-500'
-              }`} 
-              strokeWidth={2}
-            />
+            {currentReaction ? (
+              <span className="text-xl animate-bounce">
+                {currentReaction === 'like' && '👍'}
+                {currentReaction === 'love' && '❤️'}
+                {currentReaction === 'haha' && '😆'}
+                {currentReaction === 'wow' && '😮'}
+                {currentReaction === 'sad' && '😢'}
+                {currentReaction === 'angry' && '😡'}
+              </span>
+            ) : (
+              <Heart 
+                className={`w-6 h-6 transition-colors duration-200 ${
+                  isLiked 
+                    ? 'fill-red-500 stroke-red-500 scale-110 animate-pulse' 
+                    : 'text-slate-700 dark:text-slate-350 group-hover:text-red-500'
+                }`} 
+                strokeWidth={2}
+              />
+            )}
             <span className="text-xs font-black text-slate-650 dark:text-slate-400 mt-0.5">
               {likesCount > 0 ? (likesCount >= 1000 ? `${(likesCount/1000).toFixed(1)}k` : likesCount) : 'Like'}
             </span>
@@ -853,13 +915,31 @@ const CommunityPostCard = ({ post, onFollowToggle, onLikeToggle, onCommentClick,
       <div className="space-y-1.5 pt-0.5">
         {/* Liked By Summary */}
         {likesCount > 0 && (
-          <div className="flex items-center gap-2">
-            <div className="flex -space-x-1.5">
-              <div className="w-4.5 h-4.5 rounded-full bg-gradient-to-tr from-rose-500 to-orange-500 border border-white dark:border-slate-900" />
-              <div className="w-4.5 h-4.5 rounded-full bg-gradient-to-tr from-purple-500 to-indigo-500 border border-white dark:border-slate-900" />
+          <div 
+            onClick={() => onOpenReactionsModal && onOpenReactionsModal(post._id)}
+            className="flex items-center gap-2 cursor-pointer hover:opacity-80 transition-opacity"
+          >
+            <div className="flex -space-x-2">
+              {post.recentLikers && post.recentLikers.length > 0 ? (
+                post.recentLikers.slice(0, 2).map((liker, lIdx) => (
+                  <div key={lIdx} className="w-5 h-5 rounded-full overflow-hidden border border-white dark:border-slate-900 shrink-0 bg-slate-200 dark:bg-slate-800">
+                    {liker.profilePic ? (
+                      <img src={getImageUrl(liker.profilePic)} alt={liker.name} className="w-full h-full object-cover" />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center font-bold text-[9px] text-slate-600 dark:text-slate-300">
+                        {liker.name ? liker.name[0].toUpperCase() : 'U'}
+                      </div>
+                    )}
+                  </div>
+                ))
+              ) : (
+                <div className="w-5 h-5 rounded-full bg-rose-500 text-white flex items-center justify-center text-[10px] font-bold">
+                  ❤️
+                </div>
+              )}
             </div>
             <span className="text-xs text-slate-800 dark:text-slate-200 font-bold leading-none">
-              Liked by <span className="font-extrabold">{post.authorDetails?.name || post.authorName || 'user'}</span> and <span className="font-extrabold">{likesCount} others</span>
+              Liked by <span className="font-extrabold">{likesCount} people</span> <span className="text-[10px] text-brand-500 font-extrabold ml-1">(View reactions)</span>
             </span>
           </div>
         )}

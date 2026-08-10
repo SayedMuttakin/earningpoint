@@ -190,12 +190,13 @@ exports.getPostsFeed = async (req, res) => {
     const blockedUserIds = req.user.blockedUsers || [];
     const includeNews = req.query.includeNews === 'true';
 
-    // Fetch the 40 most recent community posts
+    // Fetch the 40 most recent community posts with populated likers
     const feedPostsPromise = Post.find({
       authorId: { $ne: null, $nin: blockedUserIds }, // Exclude admin updates and blocked users
       'reports.user': { $ne: currentUserId } // Exclude posts reported by the current user
     })
       .populate('authorId', 'name profilePic googleAvatar facebookAvatar isEmailVerified verificationBadge')
+      .populate('likes', 'name profilePic googleAvatar facebookAvatar')
       .sort({ createdAt: -1 })
       .limit(40)
       .lean();
@@ -219,6 +220,13 @@ exports.getPostsFeed = async (req, res) => {
       const isOwnPost = authorIdStr ? authorIdStr === currentUserId.toString() : false;
       const isSaved = savedPostsSet.has(post._id.toString());
       
+      const likersList = Array.isArray(post.likes) ? post.likes : [];
+      const recentLikers = likersList.slice(-3).map(u => ({
+        _id: u._id ? u._id.toString() : u.toString(),
+        name: u.name || 'User',
+        profilePic: u.profilePic || u.googleAvatar || u.facebookAvatar || ''
+      }));
+
       return {
         ...post,
         authorId: authorIdStr,
@@ -230,6 +238,7 @@ exports.getPostsFeed = async (req, res) => {
           isEmailVerified: authorObj.isEmailVerified,
           verificationBadge: authorObj.verificationBadge || 'none'
         } : null,
+        recentLikers,
         isFollowing,
         isOwnPost,
         isSaved
@@ -525,24 +534,121 @@ exports.replyComment = async (req, res) => {
   }
 };
 
+// @desc    Toggle reaction on a post (like, love, haha, wow, sad, angry)
+// @route   POST /api/posts/:id/react
+// @access  Private
+exports.toggleReactionPost = async (req, res) => {
+  try {
+    const { type = 'love' } = req.body;
+    const post = await Post.findById(req.params.id);
+    if (!post) {
+      return res.status(404).json({ message: 'Post not found' });
+    }
+
+    const userId = req.user._id;
+
+    if (!post.reactions) post.reactions = [];
+    if (!post.likes) post.likes = [];
+
+    const existingIndex = post.reactions.findIndex(r => r.user.toString() === userId.toString());
+    const isLiked = post.likes.some(id => id.toString() === userId.toString());
+
+    let activeReaction = type;
+
+    if (existingIndex > -1) {
+      if (post.reactions[existingIndex].type === type) {
+        // Remove reaction if same reaction clicked
+        post.reactions.splice(existingIndex, 1);
+        post.likes = post.likes.filter(id => id.toString() !== userId.toString());
+        activeReaction = null;
+      } else {
+        // Change reaction type
+        post.reactions[existingIndex].type = type;
+      }
+    } else {
+      // Add reaction
+      post.reactions.push({ user: userId, type });
+      if (!isLiked) post.likes.push(userId);
+
+      // Trigger notification for post author
+      if (post.authorId && post.authorId.toString() !== userId.toString()) {
+        const emojiMap = { like: '👍', love: '❤️', haha: '😆', wow: '😮', sad: '😢', angry: '😡' };
+        const emoji = emojiMap[type] || '❤️';
+        try {
+          await createNotification(
+            post.authorId,
+            `New Reaction! ${emoji}`,
+            `${req.user.name || 'A user'} reacted ${emoji} to your post: "${post.content.substring(0, 30)}${post.content.length > 30 ? '...' : ''}"`,
+            'post',
+            post._id
+          );
+        } catch (err) {
+          console.error('Failed to create reaction notification:', err);
+        }
+      }
+    }
+
+    await post.save();
+
+    res.json({
+      likesCount: post.likes.length,
+      userReaction: activeReaction,
+      isLiked: activeReaction !== null
+    });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
 // @desc    Get reactions/likes list for a post (Who reacted)
 // @route   GET /api/posts/:id/reactions
 // @access  Public
 exports.getPostReactions = async (req, res) => {
   try {
-    const post = await Post.findById(req.params.id).populate('likes', 'name username profilePic googleAvatar facebookAvatar verificationBadge');
+    const post = await Post.findById(req.params.id)
+      .populate('likes', 'name username profilePic googleAvatar facebookAvatar verificationBadge')
+      .populate('reactions.user', 'name username profilePic googleAvatar facebookAvatar verificationBadge');
+
     if (!post) {
       return res.status(404).json({ message: 'Post not found' });
     }
 
-    const reactionsList = (post.likes || []).map(u => ({
-      _id: u._id,
-      name: u.name,
-      username: u.username,
-      profilePic: u.profilePic || u.googleAvatar || u.facebookAvatar || '',
-      verificationBadge: u.verificationBadge || 'none',
-      type: 'love'
-    }));
+    const emojiMap = {
+      like: '👍',
+      love: '❤️',
+      haha: '😆',
+      wow: '😮',
+      sad: '😢',
+      angry: '😡'
+    };
+
+    let reactionsList = [];
+
+    if (post.reactions && post.reactions.length > 0) {
+      reactionsList = post.reactions.map(r => {
+        const u = r.user;
+        if (!u) return null;
+        return {
+          _id: u._id,
+          name: u.name,
+          username: u.username,
+          profilePic: u.profilePic || u.googleAvatar || u.facebookAvatar || '',
+          verificationBadge: u.verificationBadge || 'none',
+          reactionType: r.type || 'love',
+          emoji: emojiMap[r.type] || '❤️'
+        };
+      }).filter(Boolean);
+    } else {
+      reactionsList = (post.likes || []).map(u => ({
+        _id: u._id,
+        name: u.name,
+        username: u.username,
+        profilePic: u.profilePic || u.googleAvatar || u.facebookAvatar || '',
+        verificationBadge: u.verificationBadge || 'none',
+        reactionType: 'love',
+        emoji: '❤️'
+      }));
+    }
 
     res.json(reactionsList);
   } catch (error) {
