@@ -143,20 +143,21 @@ export const AdMobService = {
   isShowingRewarded: false,
   async showRewarded(onReward, placement = 'rewarded', onError = null, onDismiss = null) {
     if (dynamicConfig && dynamicConfig.showAds === false) {
-      console.log('[AdMob] Ads are disabled via admin panel. Bypassing Rewarded...');
-      if (onReward) onReward();
+      console.log('[AdMob] Ads are disabled via admin panel.');
+      if (onError) onError("Ads are currently disabled by Admin.");
       if (onDismiss) onDismiss();
       return;
     }
 
     if (this.isShowingRewarded) {
       console.warn('[AdMob] Reward video already showing or loading.');
+      if (onDismiss) onDismiss();
       return;
     }
 
     if (!Capacitor.isNativePlatform()) {
-      console.log('[AdMob] Not on native platform. Faking reward.');
-      if (onReward) onReward();
+      console.log('[AdMob] Not on native platform.');
+      if (onError) onError("AdMob ads can only be viewed inside the Android Mobile App.");
       if (onDismiss) onDismiss();
       return;
     }
@@ -185,12 +186,8 @@ export const AdMobService = {
       // 2. Dismissed Listener
       listeners.push(await AdMob.addListener('onRewardedVideoAdDismissed', () => {
         console.log('[DEBUG-ADMOB] Reward video dismissed');
-        if (!rewardGranted) {
-          console.warn('[DEBUG-ADMOB] Video dismissed but no reward event fired yet.');
-          // In some cases, reward event fires AFTER dismissal or not at all if skipped early.
-        }
         if (onDismiss && !rewardGranted) {
-            onDismiss(); // Only fire onDismiss if they didn't get reward (since reward handles isLoading)
+          onDismiss();
         }
         cleanup(listeners);
       }));
@@ -198,7 +195,8 @@ export const AdMobService = {
       // 3. Failed to Load Listener
       listeners.push(await AdMob.addListener('onRewardedVideoAdFailedToLoad', (info) => {
         console.error('[DEBUG-ADMOB] Reward video failed to load:', info);
-        if (onError) onError("Ad failed to load. Please try again later.");
+        if (onError) onError("Ad failed to load from AdMob. Please try again in a few moments.");
+        if (onDismiss) onDismiss();
         cleanup(listeners);
       }));
 
@@ -206,6 +204,7 @@ export const AdMobService = {
       listeners.push(await AdMob.addListener('onRewardedVideoAdFailedToShow', (info) => {
         console.error('[DEBUG-ADMOB] Reward video failed to show:', info);
         if (onError) onError("Ad failed to show. Please try again.");
+        if (onDismiss) onDismiss();
         cleanup(listeners);
       }));
 
@@ -222,11 +221,12 @@ export const AdMobService = {
           if (onDismiss && !rewardGranted) onDismiss();
           cleanup(listeners);
         }
-      }, 45000);
+      }, 30000);
 
     } catch (err) {
       console.error(`[DEBUG-ADMOB] Catch error during rewarded ad (${placement}):`, err);
-      if (onError) onError("Error loading ad.");
+      if (onError) onError("Ad unavailable right now. Please try again later.");
+      if (onDismiss) onDismiss();
       this.isShowingRewarded = false;
     }
   },

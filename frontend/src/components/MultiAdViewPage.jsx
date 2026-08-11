@@ -77,38 +77,28 @@ const MultiAdViewPage = ({ config, onClose, onCoinsEarned }) => {
       setTimeout(() => setCongrats(null), 3500);
     };
 
-    const onError = () => {
-      if (adType === 'native') AdMobService.hideNativeSimulatedAd();
+    const onError = (msg) => {
       isAdLoading.current = false;
       setLoadingSlot(null);
       setIsPlaying(false);
-      // Fallback: show simulated ad
-      setIsPlaying(true);
-      setTimeout(async () => {
-        setIsPlaying(false);
-        markSlotWatched(idx);
-        await creditCoins(idx);
-        setCongrats({ slotIndex: idx, coins: config.coins });
-        setTimeout(() => setCongrats(null), 3500);
-      }, 5000);
+      if (msg) {
+        alert(msg);
+      }
+    };
+
+    const onDismiss = () => {
+      isAdLoading.current = false;
+      setLoadingSlot(null);
+      setIsPlaying(false);
     };
 
     try {
       if (adType === 'rewarded') {
-        setIsPlaying(true);
-        await AdMobService.showRewarded(onSuccess, 'rewarded');
+        await AdMobService.showRewarded(onSuccess, 'rewarded', onError, onDismiss);
       } else if (adType === 'interstitial') {
-        setIsPlaying(true);
         await AdMobService.showInterstitial(onSuccess);
-      } else if (adType === 'native') {
-        setIsPlaying(true);
-        await AdMobService.showNativeSimulatedAd();
-        setTimeout(async () => {
-          await AdMobService.hideNativeSimulatedAd();
-          onSuccess();
-        }, 8000);
       } else {
-        // Simulated fallback
+        // Fallback for non-admob tasks
         setIsPlaying(true);
         setTimeout(onSuccess, 5000);
       }
