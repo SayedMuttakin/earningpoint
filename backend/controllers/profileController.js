@@ -471,4 +471,68 @@ exports.getBlockedUsers = async (req, res) => {
   }
 };
 
+// GET /api/profile/:userId/followers — Get list of followers for a user
+exports.getFollowersList = async (req, res) => {
+  try {
+    const { userId } = req.params;
+    const targetUser = await User.findById(userId).populate('followers', 'name username profilePic googleAvatar facebookAvatar isEmailVerified verificationBadge phoneOrEmail');
+
+    if (!targetUser) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    const currentUserId = req.user._id.toString();
+    const currentUserFollowing = (req.user.following || []).map(id => id.toString());
+
+    const followersList = (targetUser.followers || []).map(u => ({
+      _id: u._id,
+      name: u.name,
+      username: u.username || 'user',
+      profilePic: u.profilePic || u.googleAvatar || u.facebookAvatar || '',
+      isEmailVerified: u.isEmailVerified,
+      verificationBadge: u.verificationBadge,
+      phoneOrEmail: u.phoneOrEmail,
+      isFollowing: currentUserFollowing.includes(u._id.toString()),
+      isSelf: u._id.toString() === currentUserId
+    }));
+
+    res.json(followersList);
+  } catch (error) {
+    console.error('Error fetching followers list:', error);
+    res.status(500).json({ message: 'Server Error' });
+  }
+};
+
+// GET /api/profile/:userId/following — Get list of users followed by a user
+exports.getFollowingList = async (req, res) => {
+  try {
+    const { userId } = req.params;
+    const targetUser = await User.findById(userId).populate('following', 'name username profilePic googleAvatar facebookAvatar isEmailVerified verificationBadge phoneOrEmail');
+
+    if (!targetUser) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    const currentUserId = req.user._id.toString();
+    const currentUserFollowing = (req.user.following || []).map(id => id.toString());
+
+    const followingList = (targetUser.following || []).map(u => ({
+      _id: u._id,
+      name: u.name,
+      username: u.username || 'user',
+      profilePic: u.profilePic || u.googleAvatar || u.facebookAvatar || '',
+      isEmailVerified: u.isEmailVerified,
+      verificationBadge: u.verificationBadge,
+      phoneOrEmail: u.phoneOrEmail,
+      isFollowing: currentUserFollowing.includes(u._id.toString()),
+      isSelf: u._id.toString() === currentUserId
+    }));
+
+    res.json(followingList);
+  } catch (error) {
+    console.error('Error fetching following list:', error);
+    res.status(500).json({ message: 'Server Error' });
+  }
+};
+
 

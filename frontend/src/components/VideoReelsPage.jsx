@@ -570,9 +570,24 @@ const VideoReelsPage = ({ selectedReelId, onBack }) => {
     }
   };
 
+  const handleBackClick = () => {
+    if (onBack) {
+      onBack();
+    } else if (setActiveTab) {
+      setActiveTab('Home');
+    }
+  };
+
   if (loading) {
     return (
-      <div className="h-[calc(100vh-76px)] flex flex-col items-center justify-center bg-black text-slate-400 space-y-3">
+      <div className="h-[calc(100vh-76px)] flex flex-col items-center justify-center bg-black text-slate-400 space-y-3 relative">
+        <button 
+          onClick={handleBackClick}
+          className="fixed top-4 left-4 z-[99999] p-3 rounded-full bg-black/60 hover:bg-black/80 text-white backdrop-blur-md border border-white/20 shadow-2xl active:scale-95 transition-all cursor-pointer"
+          title="Go Back"
+        >
+          <ArrowLeft className="w-6 h-6 stroke-[2.5]" />
+        </button>
         <Loader2 className="w-8 h-8 animate-spin text-brand-500" />
         <span className="text-xs font-bold tracking-wide">Loading reels...</span>
       </div>
@@ -581,7 +596,14 @@ const VideoReelsPage = ({ selectedReelId, onBack }) => {
 
   if (videos.length === 0) {
     return (
-      <div className="h-[calc(100vh-76px)] flex flex-col items-center justify-center bg-black text-slate-400 space-y-3 px-6 text-center">
+      <div className="h-[calc(100vh-76px)] flex flex-col items-center justify-center bg-black text-slate-400 space-y-3 px-6 text-center relative">
+        <button 
+          onClick={handleBackClick}
+          className="fixed top-4 left-4 z-[99999] p-3 rounded-full bg-black/60 hover:bg-black/80 text-white backdrop-blur-md border border-white/20 shadow-2xl active:scale-95 transition-all cursor-pointer"
+          title="Go Back"
+        >
+          <ArrowLeft className="w-6 h-6 stroke-[2.5]" />
+        </button>
         <Play className="w-12 h-12 text-slate-600 opacity-60" />
         <p className="text-sm font-bold">No Video Reels posted yet.</p>
         <p className="text-xs text-slate-500 leading-relaxed max-w-xs">Be the first to post a video from the Create Post (+) modal on the home tab!</p>
@@ -591,6 +613,14 @@ const VideoReelsPage = ({ selectedReelId, onBack }) => {
 
   return (
     <div className="w-full h-[calc(100vh-76px)] bg-black relative overflow-hidden flex flex-col">
+      {/* Fixed Glossy Top-Left Floating Back Button */}
+      <button 
+        onClick={handleBackClick}
+        className="fixed top-4 left-4 z-[99999] p-3 rounded-full bg-black/60 hover:bg-black/80 text-white backdrop-blur-md border border-white/20 shadow-2xl active:scale-95 transition-all cursor-pointer"
+        title="Go Back"
+      >
+        <ArrowLeft className="w-6 h-6 stroke-[2.5]" />
+      </button>
       {/* Vertical Snap Scrolling Container */}
       <div
         onScroll={handleScroll}

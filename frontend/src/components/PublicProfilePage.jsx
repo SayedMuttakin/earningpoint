@@ -166,16 +166,10 @@ const ImagePreviewModal = ({ imageUrl, onClose }) => {
   );
 };
 
-const PublicProfilePage = ({ userId, onBack, currentUser, isOwnProfile, setActiveTab, setSelectedReelId, setActiveChatPartner, startEditing }) => {
+const PublicProfilePage = ({ userId, onBack, currentUser, isOwnProfile, setActiveTab, setSelectedReelId, setActiveChatPartner, startEditing, onUserClick }) => {
   const [profile, setProfile] = useState(() => {
-    if ((isOwnProfile || userId === 'me') && currentUser) {
-      return {
-        ...currentUser,
-        followersCount: currentUser.followers ? currentUser.followers.length : 0,
-        followingCount: currentUser.following ? currentUser.following.length : 0,
-        totalLikes: 0,
-        isFollowing: false,
-      };
+    if ((isOwnProfile || userId === 'me' || (currentUser && (userId === currentUser._id || userId === currentUser.id))) && currentUser) {
+      return currentUser;
     }
     const cached = userId ? localStorage.getItem(`cached_profile_data_${userId}`) : null;
     if (cached) {
@@ -188,6 +182,7 @@ const PublicProfilePage = ({ userId, onBack, currentUser, isOwnProfile, setActiv
   });
   const [shareModalOpen, setShareModalOpen] = useState(false);
   const [shareData, setShareData] = useState({ url: '', title: '', text: '' });
+  const [followListModal, setFollowListModal] = useState(null); // null or 'followers' | 'following'
   const [videos, setVideos] = useState(() => {
     const cached = userId ? localStorage.getItem(`cached_profile_data_${userId}`) : null;
     if (cached) {
@@ -888,11 +883,19 @@ const PublicProfilePage = ({ userId, onBack, currentUser, isOwnProfile, setActiv
             <span className="text-base font-black text-slate-900 dark:text-white block">{totalPosts}</span>
             <span className="text-[10px] text-slate-400 font-bold block mt-0.5 uppercase tracking-wider">Posts</span>
           </div>
-          <div className="flex-1 border-x border-slate-100 dark:border-slate-800/50">
+          <div 
+            onClick={() => setFollowListModal('followers')}
+            className="flex-1 border-x border-slate-100 dark:border-slate-800/50 cursor-pointer hover:opacity-80 transition-opacity"
+            title="View Followers"
+          >
             <span className="text-base font-black text-slate-900 dark:text-white block">{formatCount(profile.followersCount)}</span>
             <span className="text-[10px] text-slate-400 font-bold block mt-0.5 uppercase tracking-wider">Followers</span>
           </div>
-          <div className="flex-1">
+          <div 
+            onClick={() => setFollowListModal('following')}
+            className="flex-1 cursor-pointer hover:opacity-80 transition-opacity"
+            title="View Following"
+          >
             <span className="text-base font-black text-slate-900 dark:text-white block">{formatCount(profile.followingCount)}</span>
             <span className="text-[10px] text-slate-400 font-bold block mt-0.5 uppercase tracking-wider">Following</span>
           </div>
@@ -1959,6 +1962,17 @@ const PublicProfilePage = ({ userId, onBack, currentUser, isOwnProfile, setActiv
         text={shareData.text} 
         showToast={showToastNotification} 
       />
+
+      {followListModal && (
+        <FollowListModal
+          targetUserId={profile._id}
+          initialTab={followListModal}
+          onClose={() => setFollowListModal(null)}
+          onUserClick={onUserClick}
+          setActiveChatPartner={setActiveChatPartner}
+          setActiveTab={setActiveTab}
+        />
+      )}
     </div>
   );
 };

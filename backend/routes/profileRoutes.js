@@ -13,6 +13,8 @@ const {
   blockUser,
   reportUser,
   getBlockedUsers,
+  getFollowersList,
+  getFollowingList
 } = require('../controllers/profileController');
 
 router.get('/', protect, getProfile);
@@ -25,6 +27,8 @@ router.post('/follow/:userId', protect, followUser);
 router.post('/block/:userId', protect, blockUser);
 router.post('/report/:userId', protect, reportUser);
 router.get('/blocked', protect, getBlockedUsers);
+router.get('/:userId/followers', protect, getFollowersList);
+router.get('/:userId/following', protect, getFollowingList);
 router.get('/:userId', protect, getPublicProfile);
 
 module.exports = router;
