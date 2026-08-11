@@ -23,7 +23,8 @@ import {
   Volume2,
   VolumeX,
   Calendar,
-  Download
+  Download,
+  Search
 } from 'lucide-react';
 import { API_BASE, getImageUrl } from '../config';
 import VerifiedBadge from './VerifiedBadge';
