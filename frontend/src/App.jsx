@@ -11,7 +11,9 @@ import { API_BASE } from './config';
 
 import { AdMob } from '@capacitor-community/admob';
 import { App as CapacitorApp } from '@capacitor/app';
+import { Capacitor } from '@capacitor/core';
 import { AdMobService } from './utils/admob';
+import AppUpdateModal from './components/AppUpdateModal';
 
 // Lazy load other sub-pages/components to split bundle size and make initial load super fast
 const CartPage = lazy(() => import('./components/CartPage'));
@@ -236,7 +238,11 @@ function App() {
     }
   }, [isAuthenticated]);
 
-  // Initialize AdMob
+  const CURRENT_APP_VERSION = '1.0.3';
+  const [appUpdateConfig, setAppUpdateConfig] = useState(null);
+  const [showUpdateModal, setShowUpdateModal] = useState(false);
+
+  // Initialize AdMob & check for Play Store App updates
   useEffect(() => {
     const initAdMob = async () => {
       try {
@@ -244,19 +250,26 @@ function App() {
           testingDevices: ['2077ef9a63d2b398840261c8221a0c9b'],
         });
         console.log('AdMob Initialized');
-        
-        // Fetch global settings dynamically to retrieve current AdMob configs
-        try {
-          const res = await fetch(`${API_BASE}/api/earning/settings`);
-          const settings = await res.json();
-          if (settings && settings.admobConfig) {
-            AdMobService.setConfig(settings.admobConfig);
-          }
-        } catch (settingsErr) {
-          console.error('Failed to load dynamic AdMob config:', settingsErr);
-        }
       } catch (err) {
         console.error('AdMob initialization failed:', err);
+      }
+
+      // Fetch global settings dynamically to retrieve AdMob & App Update configs
+      try {
+        const res = await fetch(`${API_BASE}/api/earning/settings`);
+        const settings = await res.json();
+        if (settings && settings.admobConfig) {
+          AdMobService.setConfig(settings.admobConfig);
+        }
+        if (settings && settings.appUpdateConfig) {
+          setAppUpdateConfig(settings.appUpdateConfig);
+          const latest = settings.appUpdateConfig.latestAppVersion;
+          if (latest && latest !== CURRENT_APP_VERSION) {
+            setShowUpdateModal(true);
+          }
+        }
+      } catch (settingsErr) {
+        console.error('Failed to load dynamic settings:', settingsErr);
       }
     };
     initAdMob();
@@ -523,7 +536,13 @@ function App() {
                 handleBackNavigation();
               }} 
               selectedPostId={selectedNewsId}
-              setSelectedPostId={setSelectedNewsId}
+            />
+          )}
+          {/* In-App Update Prompt Modal */}
+          {showUpdateModal && (
+            <AppUpdateModal 
+              updateConfig={appUpdateConfig} 
+              onClose={() => setShowUpdateModal(false)} 
             />
           )}
         </Suspense>
@@ -533,6 +552,12 @@ function App() {
 
   return (
     <Suspense fallback={<PageLoader />}>
+      {showUpdateModal && (
+        <AppUpdateModal 
+          updateConfig={appUpdateConfig} 
+          onClose={() => setShowUpdateModal(false)} 
+        />
+      )}
       {showForgotPassword ? (
         <ForgotPasswordPage onBack={() => setShowForgotPassword(false)} />
       ) : isLogin ? (

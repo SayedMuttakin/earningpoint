@@ -100,6 +100,13 @@ const GlobalSettingSchema = new mongoose.Schema({
     showAds: { type: Boolean, default: true },
     useTestAds: { type: Boolean, default: true }
   },
+  // App Version & Force Update Configuration
+  appUpdateConfig: {
+    latestAppVersion: { type: String, default: '1.0.4' },
+    minAppVersion: { type: String, default: '1.0.3' },
+    forceUpdate: { type: Boolean, default: false },
+    updateNotes: { type: String, default: 'New features, performance enhancements & bug fixes are available!' }
+  },
   // Referral Campaign Configuration
   referralCampaignTarget: {
     type: Number,

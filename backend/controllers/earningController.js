@@ -788,6 +788,7 @@ exports.getGlobalSettings = async (req, res) => {
       nativeAdsConfig: settings.nativeAdsConfig,
       fortuneWheelConfig: settings.fortuneWheelConfig,
       admobConfig: settings.admobConfig,
+      appUpdateConfig: settings.appUpdateConfig,
       referralCampaignTarget: settings.referralCampaignTarget,
       referralCampaignReward: settings.referralCampaignReward,
       zinipayEnabled: settings.zinipayEnabled !== false

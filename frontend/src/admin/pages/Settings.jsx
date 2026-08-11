@@ -322,6 +322,93 @@ const Settings = ({ ADMIN_API, authHeaders, onLogout }) => {
         </form>
       </div>
 
+      {/* App Version & Force Update Manager */}
+      <div className="bg-[#111827] border border-slate-800 rounded-2xl p-6">
+        <h3 className="text-white font-bold text-base mb-1">App Update Prompt & Release Manager</h3>
+        <p className="text-slate-500 text-xs mb-5">Control in-app update popups on Play Store. Prompt app users to update when a new version is released.</p>
+
+        <form onSubmit={handleUpdateSettings} className="space-y-4">
+          <div className="flex items-center justify-between p-4 bg-slate-900/50 rounded-xl border border-slate-800/80">
+            <div>
+              <h4 className="text-white text-sm font-bold">Force Update (Un-dismissable)</h4>
+              <p className="text-slate-500 text-xs mt-0.5">Require users to update before accessing the app.</p>
+            </div>
+            <label className="relative inline-flex items-center cursor-pointer">
+              <input 
+                type="checkbox" 
+                checked={globalSettings.appUpdateConfig?.forceUpdate === true} 
+                onChange={(e) => setGlobalSettings({
+                  ...globalSettings, 
+                  appUpdateConfig: {
+                    ...globalSettings.appUpdateConfig, 
+                    forceUpdate: e.target.checked
+                  }
+                })}
+                className="sr-only peer"
+              />
+              <div className="w-11 h-6 bg-slate-800 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-slate-400 after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-rose-600 peer-checked:after:bg-white"></div>
+            </label>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label className="text-slate-400 text-xs font-bold uppercase tracking-wider block mb-2">Latest Play Store Version</label>
+              <input 
+                type="text" 
+                value={globalSettings.appUpdateConfig?.latestAppVersion || '1.0.4'} 
+                onChange={(e) => setGlobalSettings({
+                  ...globalSettings, 
+                  appUpdateConfig: {
+                    ...globalSettings.appUpdateConfig, 
+                    latestAppVersion: e.target.value
+                  }
+                })}
+                placeholder="e.g. 1.0.4"
+                className="w-full bg-slate-800 border border-slate-700 focus:border-indigo-500 rounded-xl px-4 py-3 text-white text-sm outline-none" 
+              />
+            </div>
+            <div>
+              <label className="text-slate-400 text-xs font-bold uppercase tracking-wider block mb-2">Min Required App Version</label>
+              <input 
+                type="text" 
+                value={globalSettings.appUpdateConfig?.minAppVersion || '1.0.3'} 
+                onChange={(e) => setGlobalSettings({
+                  ...globalSettings, 
+                  appUpdateConfig: {
+                    ...globalSettings.appUpdateConfig, 
+                    minAppVersion: e.target.value
+                  }
+                })}
+                placeholder="e.g. 1.0.3"
+                className="w-full bg-slate-800 border border-slate-700 focus:border-indigo-500 rounded-xl px-4 py-3 text-white text-sm outline-none" 
+              />
+            </div>
+          </div>
+
+          <div>
+            <label className="text-slate-400 text-xs font-bold uppercase tracking-wider block mb-2">Update Release Notes</label>
+            <textarea 
+              rows={2}
+              value={globalSettings.appUpdateConfig?.updateNotes || 'New features, performance enhancements & bug fixes are available!'} 
+              onChange={(e) => setGlobalSettings({
+                ...globalSettings, 
+                appUpdateConfig: {
+                  ...globalSettings.appUpdateConfig, 
+                  updateNotes: e.target.value
+                }
+              })}
+              placeholder="Enter release notes for users..."
+              className="w-full bg-slate-800 border border-slate-700 focus:border-indigo-500 rounded-xl px-4 py-3 text-white text-sm outline-none resize-none" 
+            />
+          </div>
+
+          <button type="submit" disabled={settingsLoading}
+            className="w-full py-3 mt-2 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-bold rounded-xl transition-all disabled:opacity-50 shadow-lg shadow-emerald-500/20 active:scale-95">
+            {settingsLoading ? 'Saving...' : 'Save App Update Settings'}
+          </button>
+        </form>
+      </div>
+
       {/* Referral Campaign Configuration */}
       <div className="bg-[#111827] border border-slate-800 rounded-2xl p-6">
         <h3 className="text-white font-bold text-base mb-1">Referral Campaign Settings</h3>

@@ -631,6 +631,7 @@ exports.updateGlobalSettings = async (req, res) => {
       promoBanner,
       promoBanners,
       admobConfig,
+      appUpdateConfig,
       referralCampaignTarget,
       referralCampaignReward,
       zinipayApiKey,
@@ -654,6 +655,7 @@ exports.updateGlobalSettings = async (req, res) => {
     if (promoBanner !== undefined) settings.promoBanner = promoBanner;
     if (promoBanners !== undefined) settings.promoBanners = promoBanners;
     if (admobConfig !== undefined) settings.admobConfig = admobConfig;
+    if (appUpdateConfig !== undefined) settings.appUpdateConfig = appUpdateConfig;
     if (referralCampaignTarget !== undefined) settings.referralCampaignTarget = Number(referralCampaignTarget);
     if (referralCampaignReward !== undefined) settings.referralCampaignReward = Number(referralCampaignReward);
     if (zinipayApiKey !== undefined) settings.zinipayApiKey = zinipayApiKey;
