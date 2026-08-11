@@ -62,10 +62,17 @@ function App() {
   const [showOnboarding, setShowOnboarding] = useState(() => !localStorage.getItem('hasSeenOnboarding'));
   const [isLogin, setIsLogin] = useState(true);
   const [isAuthenticated, setIsAuthenticated] = useState(() => !!localStorage.getItem('token'));
-  const [activeTab, _setActiveTab] = useState(reelIdFromUrl ? 'Video' : (profileIdFromUrl ? 'PublicProfile' : 'Home'));
-  const [navigationHistory, setNavigationHistory] = useState([reelIdFromUrl ? 'Video' : (profileIdFromUrl ? 'PublicProfile' : 'Home')]);
+  const [activeTab, _setActiveTab] = useState(() => {
+    if (reelIdFromUrl) return 'Video';
+    if (profileIdFromUrl) return 'PublicProfile';
+    return localStorage.getItem('active_tab') || 'Home';
+  });
+  const [navigationHistory, setNavigationHistory] = useState([
+    reelIdFromUrl ? 'Video' : (profileIdFromUrl ? 'PublicProfile' : (localStorage.getItem('active_tab') || 'Home'))
+  ]);
 
   const setActiveTab = (tab) => {
+    localStorage.setItem('active_tab', tab);
     setNavigationHistory(prev => {
       if (tab === 'Home') {
         return ['Home'];
@@ -82,13 +89,15 @@ function App() {
   const handleBackNavigation = () => {
     setNavigationHistory(prev => {
       if (prev.length <= 1) {
+        localStorage.setItem('active_tab', 'Home');
         _setActiveTab('Home');
         setPostToEdit(null);
         return ['Home'];
       }
       const newHistory = prev.slice(0, -1);
-      const targetTab = newHistory[newHistory.length - 1];
-      _setActiveTab(targetTab || 'Home');
+      const targetTab = newHistory[newHistory.length - 1] || 'Home';
+      localStorage.setItem('active_tab', targetTab);
+      _setActiveTab(targetTab);
       if (targetTab !== 'CreatePost') {
         setPostToEdit(null);
       }

@@ -5,6 +5,7 @@ import VerifiedBadge from './VerifiedBadge';
 import PullToRefresh from './PullToRefresh';
 import BannerAd from './BannerAd';
 import NewsTicker from './NewsTicker';
+import NewsSlider from './NewsSlider';
 
 const UpdateCard = ({ post, onClick }) => {
   const [isExpanded, setIsExpanded] = useState(false);
@@ -356,6 +357,20 @@ const UpdatesPage = ({ onBack, selectedPostId, setSelectedPostId }) => {
             setDetailPost(posts.find(p => p._id === postId) || null);
           }}
         />
+
+        {/* Horizontal News Cards Slider */}
+        {posts && posts.length > 0 && (
+          <div className="max-w-xl mx-auto px-4 w-full pt-3 pb-1">
+            <NewsSlider 
+              posts={posts} 
+              onSeeAll={() => {}} 
+              onCardClick={(postId) => {
+                if (setSelectedPostId) setSelectedPostId(postId);
+                setDetailPost(posts.find(p => p._id === postId) || null);
+              }}
+            />
+          </div>
+        )}
 
         <div className="max-w-xl mx-auto px-4 w-full pt-6">
           {/* Header */}
