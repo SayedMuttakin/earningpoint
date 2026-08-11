@@ -13,6 +13,7 @@ import {
 } from 'lucide-react';
 import { API_BASE } from '../config';
 import PullToRefresh from './PullToRefresh';
+import { playNotificationSound } from '../utils/sound';
 
 const NotificationPage = ({ onBack, setActiveTab, setSelectedNotificationPostId }) => {
   const [notifications, setNotifications] = useState(() => {
@@ -37,6 +38,17 @@ const NotificationPage = ({ onBack, setActiveTab, setSelectedNotificationPostId 
   // Fetch notifications from the backend
   useEffect(() => {
     fetchNotifications();
+
+    const handleReclick = (e) => {
+      if (e.detail && e.detail.tab === 'Notification') {
+        const mainEl = document.querySelector('main');
+        if (mainEl) mainEl.scrollTo({ top: 0, behavior: 'smooth' });
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+        fetchNotifications();
+      }
+    };
+    window.addEventListener('tabReclickRefresh', handleReclick);
+    return () => window.removeEventListener('tabReclickRefresh', handleReclick);
   }, []);
 
   const fetchNotifications = async () => {

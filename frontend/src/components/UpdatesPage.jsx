@@ -116,6 +116,19 @@ const UpdatesPage = ({ onBack, selectedPostId, setSelectedPostId }) => {
   const [detailLoading, setDetailLoading] = useState(false);
   const [detailError, setDetailError] = useState(false);
 
+  useEffect(() => {
+    const handleReclick = (e) => {
+      if (e.detail && e.detail.tab === 'Updates') {
+        const mainEl = document.querySelector('main');
+        if (mainEl) mainEl.scrollTo({ top: 0, behavior: 'smooth' });
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+        handleRefresh();
+      }
+    };
+    window.addEventListener('tabReclickRefresh', handleReclick);
+    return () => window.removeEventListener('tabReclickRefresh', handleReclick);
+  }, []);
+
   const fetchPosts = async () => {
     try {
       const response = await fetch(`${API_BASE}/api/posts?adminOnly=true`);

@@ -14,6 +14,7 @@ import { App as CapacitorApp } from '@capacitor/app';
 import { Capacitor } from '@capacitor/core';
 import { AdMobService } from './utils/admob';
 import AppUpdateModal from './components/AppUpdateModal';
+import { playNotificationSound } from './utils/sound';
 
 // Lazy load other sub-pages/components to split bundle size and make initial load super fast
 const CartPage = lazy(() => import('./components/CartPage'));
@@ -181,6 +182,14 @@ function App() {
 
       newSocket.on('connect', () => {
         newSocket.emit('join_user_room', { userId: currentUser._id });
+      });
+
+      newSocket.on('new_notification', () => {
+        playNotificationSound();
+      });
+
+      newSocket.on('receive_message', () => {
+        playNotificationSound();
       });
 
       newSocket.on('online_users', (usersList) => {

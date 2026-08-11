@@ -243,7 +243,7 @@ const Navbar = ({
               </button>
               <span 
                 className="text-2xl sm:text-3xl font-black bg-gradient-to-r from-brand-500 to-brand-700 bg-clip-text text-transparent cursor-pointer transform hover:scale-105 transition-all duration-300 select-none"
-                onClick={() => setActiveTab && setActiveTab('Home')}
+                onClick={() => handleTabButtonClick('Home')}
               >
                 Zenivio
               </span>
@@ -253,7 +253,7 @@ const Navbar = ({
             <div className="flex items-center gap-1">
               {/* Notification (Bell) Button - Placed before Messenger */}
               <button 
-                onClick={() => setActiveTab && setActiveTab('Notification')}
+                onClick={() => handleTabButtonClick('Notification')}
                 className="relative p-2 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 hover:scale-105 active:scale-95 transition-all duration-300 flex items-center justify-center border border-transparent hover:border-slate-150/40 dark:hover:border-slate-750/30"
                 title="Notifications"
               >
@@ -267,7 +267,7 @@ const Navbar = ({
 
               {/* Messenger Button */}
               <button 
-                onClick={() => setActiveTab && setActiveTab('Messenger')}
+                onClick={() => handleTabButtonClick('Messenger')}
                 className="relative p-2 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 hover:scale-105 active:scale-95 transition-all duration-300 flex items-center justify-center border border-transparent hover:border-slate-150/40 dark:hover:border-slate-750/30"
                 title="Messenger Chat"
               >
@@ -288,7 +288,7 @@ const Navbar = ({
           
           {/* Home Tab */}
           <button 
-            onClick={() => setActiveTab && setActiveTab('Home')}
+            onClick={() => handleTabButtonClick('Home')}
             className={`flex flex-col items-center justify-center w-12 transition-all duration-300 active:scale-90 ${activeTab === 'Home' ? 'text-blue-500 dark:text-blue-400' : 'text-slate-450 dark:text-slate-500'}`}
           >
             <Home className="w-5.5 h-5.5" strokeWidth={activeTab === 'Home' ? 2.5 : 2} fill={activeTab === 'Home' ? 'currentColor' : 'none'} />
@@ -297,7 +297,7 @@ const Navbar = ({
 
           {/* News Tab */}
           <button 
-            onClick={() => setActiveTab && setActiveTab('Updates')}
+            onClick={() => handleTabButtonClick('Updates')}
             className={`flex flex-col items-center justify-center w-12 transition-all duration-300 active:scale-90 ${activeTab === 'Updates' ? 'text-rose-500 dark:text-rose-400' : 'text-slate-450 dark:text-slate-500'}`}
           >
             <Newspaper className="w-5.5 h-5.5" strokeWidth={activeTab === 'Updates' ? 2.5 : 2} fill={activeTab === 'Updates' ? 'currentColor' : 'none'} />
@@ -306,7 +306,7 @@ const Navbar = ({
 
           {/* Create Post Tab (Styled Round Plus Button) */}
           <button 
-            onClick={() => setActiveTab && setActiveTab('CreatePost')}
+            onClick={() => handleTabButtonClick('CreatePost')}
             className={`flex items-center justify-center w-12 h-12 rounded-full transition-all duration-300 active:scale-90 shadow-md ${
               activeTab === 'CreatePost' 
                 ? 'bg-gradient-to-tr from-brand-600 to-indigo-600 text-white shadow-indigo-500/50 scale-105' 
@@ -319,7 +319,7 @@ const Navbar = ({
 
           {/* Cart Tab */}
           <button 
-            onClick={() => setActiveTab && setActiveTab('Cart')}
+            onClick={() => handleTabButtonClick('Cart')}
             className={`flex flex-col items-center justify-center w-12 transition-all duration-300 active:scale-90 ${activeTab === 'Cart' ? 'text-emerald-500 dark:text-emerald-400' : 'text-slate-450 dark:text-slate-500'}`}
           >
             <ShoppingCart className="w-5.5 h-5.5" strokeWidth={activeTab === 'Cart' ? 2.5 : 2} fill={activeTab === 'Cart' ? 'currentColor' : 'none'} />
@@ -328,7 +328,7 @@ const Navbar = ({
 
           {/* Profile Tab */}
           <button 
-            onClick={() => setActiveTab && setActiveTab('MyProfile')}
+            onClick={() => handleTabButtonClick('MyProfile')}
             className={`flex flex-col items-center justify-center w-12 transition-all duration-300 active:scale-90 ${
               (activeTab === 'MyProfile' || activeTab === 'EditProfile' || (activeTab === 'PublicProfile' && (activePublicProfileUserId === 'me' || (currentUser && (activePublicProfileUserId === currentUser._id || activePublicProfileUserId === currentUser.id)))))
                 ? 'text-indigo-500 dark:text-indigo-400' 
