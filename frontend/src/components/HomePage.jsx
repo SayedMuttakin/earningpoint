@@ -944,15 +944,7 @@ const CommunityPostCard = ({ post, onFollowToggle, onLikeToggle, onCommentClick,
           </div>
         )}
 
-        {/* Caption */}
-        {!post.bgGradient && (
-          <div className="text-xs leading-relaxed text-slate-750 dark:text-slate-300">
-            <span className="font-extrabold mr-2 text-slate-900 dark:text-white">
-              {post.authorDetails?.name || post.authorName || 'User'}
-            </span>
-            {post.content.length > 120 ? `${post.content.substring(0, 120)}...` : post.content}
-          </div>
-        )}
+
 
         {/* Inline Comments List (Last 2 comments) */}
         {commentsCount > 0 && (

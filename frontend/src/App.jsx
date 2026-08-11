@@ -408,18 +408,20 @@ function App() {
 
   if (isAuthenticated) {
     return (
-      <div className="min-h-screen bg-slate-100/50 dark:bg-slate-950">
-        <Navbar 
-          onLogout={handleLogout} 
-          activeTab={activeTab} 
-          setActiveTab={setActiveTab} 
-          currentUser={currentUser} 
-          activePublicProfileUserId={activePublicProfileUserId} 
-          darkMode={darkMode}
-          onToggleDarkMode={handleToggleDarkMode}
-          navigateToSettingsSubMenu={navigateToSettingsSubMenu}
-        />
-        <Suspense fallback={<PageLoader />}>
+      <div className="fixed inset-0 h-screen w-full bg-slate-100/60 dark:bg-slate-950 flex flex-col items-center justify-between overflow-hidden">
+        <div className="relative w-full max-w-md h-full flex flex-col bg-white dark:bg-slate-950 shadow-2xl overflow-hidden">
+          <Navbar 
+            onLogout={handleLogout} 
+            activeTab={activeTab} 
+            setActiveTab={setActiveTab} 
+            currentUser={currentUser} 
+            activePublicProfileUserId={activePublicProfileUserId} 
+            darkMode={darkMode}
+            onToggleDarkMode={handleToggleDarkMode}
+            navigateToSettingsSubMenu={navigateToSettingsSubMenu}
+          />
+          <main className="flex-1 overflow-y-auto overflow-x-hidden pt-16 pb-20 relative no-scrollbar">
+            <Suspense fallback={<PageLoader />}>
           {/* HomePage is always mounted but hidden when not active — prevents re-fetching on every tab switch */}
           <div style={{ display: activeTab === 'Home' ? 'block' : 'none' }}>
             <HomePage 
@@ -547,6 +549,8 @@ function App() {
               selectedPostId={selectedNewsId}
             />
           )}
+        </Suspense>
+          </main>
           {/* In-App Update Prompt Modal */}
           {showUpdateModal && (
             <AppUpdateModal 
@@ -554,7 +558,7 @@ function App() {
               onClose={() => setShowUpdateModal(false)} 
             />
           )}
-        </Suspense>
+        </div>
       </div>
     );
   }
