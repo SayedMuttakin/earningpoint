@@ -164,11 +164,11 @@ const Navbar = ({
         <>
           {/* Backdrop */}
           <div 
-            className="fixed inset-0 z-[60] bg-slate-955/70 backdrop-blur-xs animate-fade-in"
+            className="fixed inset-0 z-[99999] bg-slate-955/70 backdrop-blur-xs animate-fade-in"
             onClick={() => setIsSidebarOpen(false)}
           />
           {/* Drawer Panel */}
-          <div className="fixed top-0 left-0 h-fit max-h-[95vh] w-[85%] sm:w-[70%] md:w-[320px] bg-white dark:bg-slate-900 shadow-2xl z-[70] flex flex-col overflow-hidden rounded-br-[2.5rem] animate-slide-in">
+          <div className="fixed top-0 left-0 h-fit max-h-[95vh] w-[85%] sm:w-[70%] md:w-[340px] bg-white dark:bg-slate-900 shadow-2xl z-[100000] flex flex-col overflow-hidden rounded-br-[2.5rem] animate-slide-in">
             {/* Header / Profile Card */}
             <div className="px-4.5 py-5 border-b border-slate-100 dark:border-slate-800 bg-gradient-to-br from-indigo-500/5 via-purple-500/5 to-transparent dark:from-indigo-950/10 dark:via-purple-950/5">
               <div className="flex items-center gap-3">
@@ -231,7 +231,7 @@ const Navbar = ({
 
       {/* Desktop & Top Mobile Navbar (Fixed at top of container) */}
       {activeTab !== 'Video' && (
-        <nav className="fixed top-0 left-0 right-0 mx-auto w-full max-w-md bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-b border-slate-200/80 dark:border-slate-800/80 shadow-xs z-[9998] h-16 flex items-center px-4">
+        <nav className="fixed top-0 left-0 right-0 mx-auto w-full max-w-xl bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-b border-slate-200/80 dark:border-slate-800/80 shadow-xs z-[9998] h-16 flex items-center px-4">
           <div className="flex justify-between items-center w-full">
             {/* Left Side: Mobile Menu Button and Brand */}
             <div className="flex items-center gap-1 sm:gap-2 relative z-50">
@@ -283,7 +283,7 @@ const Navbar = ({
       )}
 
       {/* Sticky Flat Bottom Navigation (Pinned strictly to Viewport Window) */}
-      <div className="fixed bottom-0 left-0 right-0 mx-auto w-full max-w-md bg-gradient-to-r from-indigo-50/95 via-purple-50/95 to-pink-50/95 dark:from-slate-900/95 dark:via-slate-950/50 dark:to-slate-900/95 backdrop-blur-md rounded-t-[24px] z-[9999] shadow-[0_-8px_30px_rgba(99,102,241,0.15)] h-[76px] pb-safe flex items-center px-2">
+      <div className="fixed bottom-0 left-0 right-0 mx-auto w-full max-w-xl bg-gradient-to-r from-indigo-50/95 via-purple-50/95 to-pink-50/95 dark:from-slate-900/95 dark:via-slate-950/50 dark:to-slate-900/95 backdrop-blur-md rounded-t-[24px] z-[9999] shadow-[0_-8px_30px_rgba(99,102,241,0.15)] h-[76px] pb-safe flex items-center px-2">
         <div className="flex justify-around items-center w-full relative h-full">
           
           {/* Home Tab */}

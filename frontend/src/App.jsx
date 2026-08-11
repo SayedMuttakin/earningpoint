@@ -408,8 +408,8 @@ function App() {
 
   if (isAuthenticated) {
     return (
-      <div className="fixed inset-0 h-screen w-full bg-slate-100/60 dark:bg-slate-950 flex flex-col items-center justify-between overflow-hidden">
-        <div className="relative w-full max-w-md h-full flex flex-col bg-white dark:bg-slate-950 shadow-2xl overflow-hidden">
+      <div className="fixed inset-0 h-screen w-full bg-gradient-to-br from-slate-200 via-indigo-50/40 to-slate-200 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950 flex flex-col items-center justify-between overflow-hidden">
+        <div className="relative w-full max-w-xl h-full flex flex-col bg-white dark:bg-slate-950 shadow-2xl overflow-hidden border-x border-slate-200/50 dark:border-slate-800/50">
           <Navbar 
             onLogout={handleLogout} 
             activeTab={activeTab} 
