@@ -229,57 +229,55 @@ const Navbar = ({
         </>
       )}
 
-      {/* Desktop & Top Mobile Navbar */}
+      {/* Desktop & Top Mobile Navbar (Fixed at top of container) */}
       {activeTab !== 'Video' && (
-        <nav className="sticky top-0 z-50 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-700 shadow-sm">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="flex justify-between h-16 relative">
-              {/* Left Side: Mobile Menu Button and Brand */}
-              <div className="flex items-center gap-1 sm:gap-2 relative z-50">
-                <button 
-                  onClick={() => setIsSidebarOpen(true)}
-                  className="text-slate-500 dark:text-slate-400 hover:text-brand-600 p-2 transition-colors"
-                >
-                  <Menu className="h-7 w-7" />
-                </button>
-                <span 
-                  className="text-2xl sm:text-3xl font-black bg-gradient-to-r from-brand-500 to-brand-700 bg-clip-text text-transparent cursor-pointer transform hover:scale-105 transition-all duration-300 select-none"
-                  onClick={() => setActiveTab && setActiveTab('Home')}
-                >
-                  Zenivio
-                </span>
-              </div>
-
-              {/* Right Side: Notification & Messenger Icons */}
-              <div className="flex items-center gap-1">
-                {/* Notification (Bell) Button - Placed before Messenger */}
-                <button 
-                  onClick={() => setActiveTab && setActiveTab('Notification')}
-                  className="relative p-2 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 hover:scale-105 active:scale-95 transition-all duration-300 flex items-center justify-center border border-transparent hover:border-slate-150/40 dark:hover:border-slate-750/30"
-                  title="Notifications"
-                >
-                  <div className="relative">
-                    <Bell className="w-6.5 h-6.5 text-slate-700 dark:text-slate-200" strokeWidth={2} />
-                    {unreadCount > 0 && (
-                      <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-rose-500 rounded-full border-2 border-white dark:border-slate-900 animate-pulse" />
-                    )}
-                  </div>
-                </button>
-
-                {/* Messenger Button */}
-                <button 
-                  onClick={() => setActiveTab && setActiveTab('Messenger')}
-                  className="relative p-2 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 hover:scale-105 active:scale-95 transition-all duration-300 flex items-center justify-center border border-transparent hover:border-slate-150/40 dark:hover:border-slate-750/30"
-                  title="Messenger Chat"
-                >
-                  <div className="relative">
-                    <MessageCircle className="w-6.5 h-6.5 text-slate-700 dark:text-slate-200 transform active:scale-90 transition-transform duration-300" strokeWidth={2} />
-                    <span className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 bg-emerald-500 rounded-full border-2 border-white dark:border-slate-900 animate-pulse" />
-                  </div>
-                </button>
-              </div>
-              
+        <nav className="fixed top-0 left-0 right-0 mx-auto w-full max-w-md bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-b border-slate-200/80 dark:border-slate-800/80 shadow-xs z-[9998] h-16 flex items-center px-4">
+          <div className="flex justify-between items-center w-full">
+            {/* Left Side: Mobile Menu Button and Brand */}
+            <div className="flex items-center gap-1 sm:gap-2 relative z-50">
+              <button 
+                onClick={() => setIsSidebarOpen(true)}
+                className="text-slate-500 dark:text-slate-400 hover:text-brand-600 p-2 transition-colors"
+              >
+                <Menu className="h-7 w-7" />
+              </button>
+              <span 
+                className="text-2xl sm:text-3xl font-black bg-gradient-to-r from-brand-500 to-brand-700 bg-clip-text text-transparent cursor-pointer transform hover:scale-105 transition-all duration-300 select-none"
+                onClick={() => setActiveTab && setActiveTab('Home')}
+              >
+                Zenivio
+              </span>
             </div>
+
+            {/* Right Side: Notification & Messenger Icons */}
+            <div className="flex items-center gap-1">
+              {/* Notification (Bell) Button - Placed before Messenger */}
+              <button 
+                onClick={() => setActiveTab && setActiveTab('Notification')}
+                className="relative p-2 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 hover:scale-105 active:scale-95 transition-all duration-300 flex items-center justify-center border border-transparent hover:border-slate-150/40 dark:hover:border-slate-750/30"
+                title="Notifications"
+              >
+                <div className="relative">
+                  <Bell className="w-6.5 h-6.5 text-slate-700 dark:text-slate-200" strokeWidth={2} />
+                  {unreadCount > 0 && (
+                    <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-rose-500 rounded-full border-2 border-white dark:border-slate-900 animate-pulse" />
+                  )}
+                </div>
+              </button>
+
+              {/* Messenger Button */}
+              <button 
+                onClick={() => setActiveTab && setActiveTab('Messenger')}
+                className="relative p-2 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 hover:scale-105 active:scale-95 transition-all duration-300 flex items-center justify-center border border-transparent hover:border-slate-150/40 dark:hover:border-slate-750/30"
+                title="Messenger Chat"
+              >
+                <div className="relative">
+                  <MessageCircle className="w-6.5 h-6.5 text-slate-700 dark:text-slate-200 transform active:scale-90 transition-transform duration-300" strokeWidth={2} />
+                  <span className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 bg-emerald-500 rounded-full border-2 border-white dark:border-slate-900 animate-pulse" />
+                </div>
+              </button>
+            </div>
+            
           </div>
         </nav>
       )}

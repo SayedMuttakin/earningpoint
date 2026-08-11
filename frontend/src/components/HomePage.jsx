@@ -1458,7 +1458,7 @@ const HomePage = ({ setActiveTab, setSelectedNewsId, setActiveChatPartner, setSe
       <PullToRefresh onRefresh={handleRefresh} refreshing={refreshing}>
         <div className="min-h-screen bg-slate-50 dark:bg-slate-950 pb-24 flex flex-col relative">
         {/* Content Body */}
-        <main className="max-w-md mx-auto px-4 pt-5 pb-8 w-full flex-1 space-y-6">
+        <main className="max-w-md mx-auto px-4 pt-20 pb-24 w-full flex-1 space-y-6">
           {/* Banner */}
           <BannerSection onStartEarning={() => setActiveTab && setActiveTab('Earning')} />
 
