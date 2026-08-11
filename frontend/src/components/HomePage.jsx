@@ -1462,18 +1462,6 @@ const HomePage = ({ setActiveTab, setSelectedNewsId, setActiveChatPartner, setSe
           {/* Banner */}
           <BannerSection onStartEarning={() => setActiveTab && setActiveTab('Earning')} />
 
-          {/* Latest News Slider */}
-          {!loading && newsPosts.length > 0 && (
-            <NewsSlider 
-              posts={newsPosts} 
-              onSeeAll={() => setActiveTab && setActiveTab('Updates')} 
-              onCardClick={(postId) => {
-                if (setSelectedNewsId) setSelectedNewsId(postId);
-                if (setActiveTab) setActiveTab('Updates');
-              }}
-            />
-          )}
-
           {/* Community Feed Section */}
           <div className="space-y-4 pt-1">
             <div className="flex items-center justify-between">
