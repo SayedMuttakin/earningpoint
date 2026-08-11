@@ -166,6 +166,185 @@ const ImagePreviewModal = ({ imageUrl, onClose }) => {
   );
 };
 
+const FollowListModal = ({ targetUserId, initialTab, onClose, onUserClick, setActiveChatPartner, setActiveTab }) => {
+  const [activeTab, setActiveTabMode] = useState(initialTab || 'followers');
+  const [usersList, setUsersList] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [searchQuery, setSearchQuery] = useState('');
+
+  useEffect(() => {
+    fetchUsersList(activeTab);
+  }, [activeTab]);
+
+  const fetchUsersList = async (tab) => {
+    setLoading(true);
+    try {
+      const token = localStorage.getItem('token');
+      const res = await fetch(`${API_BASE}/api/profile/${targetUserId}/${tab}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setUsersList(Array.isArray(data) ? data : []);
+      }
+    } catch (err) {
+      console.error('Failed to fetch follow list:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleFollowToggle = async (userId) => {
+    try {
+      const token = localStorage.getItem('token');
+      const res = await fetch(`${API_BASE}/api/profile/follow/${userId}`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setUsersList(prev => prev.map(u => {
+          if (u._id === userId) {
+            return { ...u, isFollowing: data.isFollowing };
+          }
+          return u;
+        }));
+      }
+    } catch (err) {
+      console.error('Failed to toggle follow:', err);
+    }
+  };
+
+  const filteredUsers = usersList.filter(u => 
+    (u.name && u.name.toLowerCase().includes(searchQuery.toLowerCase())) ||
+    (u.username && u.username.toLowerCase().includes(searchQuery.toLowerCase()))
+  );
+
+  return (
+    <div className="fixed inset-0 z-[300] flex items-center justify-center p-3 sm:p-4">
+      {/* Backdrop */}
+      <div className="absolute inset-0 bg-slate-950/60 backdrop-blur-xs animate-fade-in" onClick={onClose} />
+
+      {/* Modal Container */}
+      <div className="relative z-10 w-full max-w-md max-h-[85vh] h-[520px] bg-white dark:bg-slate-900 rounded-3xl shadow-2xl flex flex-col animate-fade-in-up border border-slate-100 dark:border-slate-800 overflow-hidden">
+        
+        {/* Header with Tabs */}
+        <div className="flex items-center justify-between px-5 py-3.5 border-b border-slate-100 dark:border-slate-800 flex-shrink-0">
+          <div className="flex items-center gap-4">
+            <button
+              onClick={() => setActiveTabMode('followers')}
+              className={`text-sm font-black transition-colors ${activeTab === 'followers' ? 'text-[#7C3AED] dark:text-indigo-400 border-b-2 border-[#7C3AED] pb-1' : 'text-slate-400 hover:text-slate-600'}`}
+            >
+              Followers
+            </button>
+            <button
+              onClick={() => setActiveTabMode('following')}
+              className={`text-sm font-black transition-colors ${activeTab === 'following' ? 'text-[#7C3AED] dark:text-indigo-400 border-b-2 border-[#7C3AED] pb-1' : 'text-slate-400 hover:text-slate-600'}`}
+            >
+              Following
+            </button>
+          </div>
+          <button
+            onClick={onClose}
+            className="p-1.5 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400 dark:text-slate-500 transition-colors"
+          >
+            <X className="w-5 h-5" />
+          </button>
+        </div>
+
+        {/* Search Bar */}
+        <div className="px-4 py-2 border-b border-slate-100 dark:border-slate-800/50 bg-slate-50/50 dark:bg-slate-950/50 flex-shrink-0">
+          <div className="relative">
+            <input
+              type="text"
+              placeholder="Search user..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl py-2 pl-9 pr-4 text-xs font-bold text-slate-800 dark:text-slate-200 focus:outline-none focus:border-indigo-500"
+            />
+            <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+          </div>
+        </div>
+
+        {/* Users List */}
+        <div className="flex-1 overflow-y-auto px-4 py-3 space-y-2 no-scrollbar">
+          {loading ? (
+            <div className="flex flex-col items-center justify-center py-12 space-y-3 text-slate-400">
+              <Loader2 className="w-7 h-7 animate-spin text-[#7C3AED]" />
+              <span className="text-xs font-bold">Loading users...</span>
+            </div>
+          ) : filteredUsers.length > 0 ? (
+            filteredUsers.map((u) => (
+              <div 
+                key={u._id} 
+                className="flex items-center justify-between p-2.5 rounded-2xl hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors border border-transparent hover:border-slate-100 dark:hover:border-slate-800"
+              >
+                <div 
+                  onClick={() => {
+                    onClose();
+                    if (onUserClick) onUserClick(u._id);
+                  }}
+                  className="flex items-center gap-3 min-w-0 flex-1 cursor-pointer"
+                >
+                  <div className="w-10 h-10 rounded-full bg-slate-200 dark:bg-slate-800 flex items-center justify-center font-black text-xs text-slate-700 dark:text-slate-200 flex-shrink-0 overflow-hidden">
+                    {u.profilePic ? (
+                      <img src={getImageUrl(u.profilePic)} alt={u.name} className="w-full h-full object-cover" />
+                    ) : (
+                      <span>{u.name ? u.name.charAt(0).toUpperCase() : 'U'}</span>
+                    )}
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <h4 className="text-xs font-black text-slate-900 dark:text-white truncate flex items-center gap-1">
+                      {u.name}
+                      {u.verificationBadge && u.verificationBadge !== 'none' && (
+                        <VerifiedBadge type={u.verificationBadge === 'golden' ? 'golden' : 'blue'} iconClassName="w-3.5 h-3.5 flex-shrink-0" />
+                      )}
+                    </h4>
+                    <span className="text-[10px] font-bold text-slate-400 block truncate">@{u.username || 'user'}</span>
+                  </div>
+                </div>
+
+                {!u.isSelf && (
+                  <div className="flex items-center gap-2 flex-shrink-0 ml-2">
+                    {/* Follow Toggle Button */}
+                    <button
+                      onClick={() => handleFollowToggle(u._id)}
+                      className={`px-3 py-1.5 rounded-xl text-[11px] font-black transition-all active:scale-95 ${
+                        u.isFollowing
+                          ? 'bg-slate-100 dark:bg-slate-800 text-slate-500'
+                          : 'bg-[#7C3AED] hover:bg-indigo-700 text-white shadow-xs'
+                      }`}
+                    >
+                      {u.isFollowing ? 'Following' : '+ Follow'}
+                    </button>
+
+                    {/* Chat Button */}
+                    <button
+                      onClick={() => {
+                        onClose();
+                        if (setActiveChatPartner) setActiveChatPartner(u);
+                        if (setActiveTab) setActiveTab('Messenger');
+                      }}
+                      className="p-2 rounded-xl bg-indigo-50 dark:bg-[#7C3AED]/10 text-[#7C3AED] hover:bg-indigo-100 active:scale-95 transition-all"
+                      title="Message"
+                    >
+                      <MessageCircle className="w-4 h-4" />
+                    </button>
+                  </div>
+                )}
+              </div>
+            ))
+          ) : (
+            <div className="text-center py-12 text-slate-400 font-bold text-xs">
+              No {activeTab} found.
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+};
+
 const PublicProfilePage = ({ userId, onBack, currentUser, isOwnProfile, setActiveTab, setSelectedReelId, setActiveChatPartner, startEditing, onUserClick }) => {
   const [profile, setProfile] = useState(() => {
     if ((isOwnProfile || userId === 'me' || (currentUser && (userId === currentUser._id || userId === currentUser.id))) && currentUser) {

@@ -21,6 +21,19 @@ const Navbar = ({
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
 
+  const handleTabButtonClick = (targetTab) => {
+    if (activeTab === targetTab) {
+      const mainEl = document.querySelector('main');
+      if (mainEl) {
+        mainEl.scrollTo({ top: 0, behavior: 'smooth' });
+      }
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      window.dispatchEvent(new CustomEvent('tabReclickRefresh', { detail: { tab: targetTab } }));
+    } else {
+      if (setActiveTab) setActiveTab(targetTab);
+    }
+  };
+
   useEffect(() => {
     fetchUnreadCount();
     const interval = setInterval(fetchUnreadCount, 30000); // Polling every 30 seconds
