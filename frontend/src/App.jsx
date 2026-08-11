@@ -408,7 +408,7 @@ function App() {
 
   if (isAuthenticated) {
     return (
-      <div className="min-h-screen bg-slate-100/50 dark:bg-slate-950 transition-colors duration-300">
+      <div className="min-h-screen bg-slate-100/50 dark:bg-slate-950">
         <Navbar 
           onLogout={handleLogout} 
           activeTab={activeTab} 
