@@ -174,7 +174,17 @@ const CommentsDrawer = ({ post, onClose, onCommentSubmit, currentUserId, onUserC
   const [commentText, setCommentText] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [replyingTo, setReplyingTo] = useState(null); // { commentId, userName, userId }
+  const [activeReactionCommentId, setActiveReactionCommentId] = useState(null);
+  const [commentReactions, setCommentReactions] = useState({});
   const listRef = React.useRef(null);
+
+  const handleCommentReact = (commentId, reactionType) => {
+    setCommentReactions(prev => ({
+      ...prev,
+      [commentId]: prev[commentId] === reactionType ? null : reactionType
+    }));
+    setActiveReactionCommentId(null);
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -267,6 +277,62 @@ const CommentsDrawer = ({ post, onClose, onCommentSubmit, currentUserId, onUserC
                     <p className="text-xs text-slate-650 dark:text-slate-300 mt-1 leading-relaxed pr-6">
                       {comment.text}
                     </p>
+
+                    {/* Reaction & Reply Actions Bar */}
+                    <div className="flex items-center gap-4 mt-2 border-t border-slate-100/50 dark:border-slate-800/50 pt-1.5">
+                      {/* React Button & Popover */}
+                      <div className="relative">
+                        <button
+                          onClick={() => setActiveReactionCommentId(activeReactionCommentId === comment._id ? null : comment._id)}
+                          className="text-[10px] font-black text-slate-500 hover:text-rose-500 flex items-center gap-1 transition-colors"
+                        >
+                          {commentReactions[comment._id] ? (
+                            <span className="text-xs font-bold text-rose-500 flex items-center gap-1">
+                              {commentReactions[comment._id] === 'like' && '👍 Like'}
+                              {commentReactions[comment._id] === 'love' && '❤️ Love'}
+                              {commentReactions[comment._id] === 'haha' && '😆 Haha'}
+                              {commentReactions[comment._id] === 'wow' && '😮 Wow'}
+                              {commentReactions[comment._id] === 'sad' && '😢 Sad'}
+                              {commentReactions[comment._id] === 'angry' && '😡 Angry'}
+                            </span>
+                          ) : (
+                            <span>React</span>
+                          )}
+                        </button>
+
+                        {/* Comment Multi-Emoji Reaction Picker Popover */}
+                        {activeReactionCommentId === comment._id && (
+                          <div className="absolute bottom-6 left-0 bg-white dark:bg-slate-800 rounded-full shadow-2xl p-1 flex items-center gap-1 border border-slate-100 dark:border-slate-700 z-50 animate-fade-in-up">
+                            {[
+                              { type: 'like', emoji: '👍' },
+                              { type: 'love', emoji: '❤️' },
+                              { type: 'haha', emoji: '😆' },
+                              { type: 'wow', emoji: '😮' },
+                              { type: 'sad', emoji: '😢' },
+                              { type: 'angry', emoji: '😡' }
+                            ].map(r => (
+                              <button
+                                key={r.type}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleCommentReact(comment._id, r.type);
+                                }}
+                                className="w-7 h-7 rounded-full hover:bg-slate-100 dark:hover:bg-slate-700 flex items-center justify-center text-sm hover:scale-125 transition-transform"
+                              >
+                                {r.emoji}
+                              </button>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+
+                      <button
+                        onClick={() => handleReplyClick(comment._id, comment.userName, comment.user)}
+                        className="text-[10px] font-black text-brand-500 hover:underline"
+                      >
+                        Reply
+                      </button>
+                    </div>
                     
                     {(comment.user === currentUserId || post.authorId === currentUserId) && (
                       <button
@@ -817,57 +883,20 @@ const CommunityPostCard = ({ post, onFollowToggle, onLikeToggle, onCommentClick,
       <div className="flex items-center justify-between pt-1 select-none relative">
         <div className="flex items-center gap-4.5">
           {/* Reaction Picker Popover */}
-          {showReactionPicker && (
-            <div className="absolute -top-12 left-0 bg-white dark:bg-slate-800 rounded-full shadow-2xl p-1.5 flex items-center gap-2 border border-slate-100 dark:border-slate-700 z-30 animate-fade-in-up">
-              {[
-                { type: 'like', emoji: '👍', label: 'Like' },
-                { type: 'love', emoji: '❤️', label: 'Love' },
-                { type: 'haha', emoji: '😆', label: 'Haha' },
-                { type: 'wow', emoji: '😮', label: 'Wow' },
-                { type: 'sad', emoji: '😢', label: 'Sad' },
-                { type: 'angry', emoji: '😡', label: 'Angry' }
-              ].map((r) => (
-                <button
-                  key={r.type}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleReactSelect(r.type);
-                  }}
-                  className="w-8 h-8 rounded-full hover:bg-slate-100 dark:hover:bg-slate-700 flex items-center justify-center text-lg hover:scale-125 transition-transform"
-                  title={r.label}
-                >
-                  {r.emoji}
-                </button>
-              ))}
-            </div>
-          )}
-
-          {/* Heart / Reaction Button */}
+          {/* Single Tap Heart / Love Button */}
           <button 
-            onClick={() => setShowReactionPicker(!showReactionPicker)}
-            onContextMenu={(e) => { e.preventDefault(); setShowReactionPicker(true); }}
+            onClick={handleLikeToggle}
             disabled={isLiking}
             className="flex items-center gap-1.5 group active:scale-90 transition-transform"
           >
-            {currentReaction ? (
-              <span className="text-xl">
-                {currentReaction === 'like' && '👍'}
-                {currentReaction === 'love' && '❤️'}
-                {currentReaction === 'haha' && '😆'}
-                {currentReaction === 'wow' && '😮'}
-                {currentReaction === 'sad' && '😢'}
-                {currentReaction === 'angry' && '😡'}
-              </span>
-            ) : (
-              <Heart 
-                className={`w-6 h-6 transition-colors duration-200 ${
-                  isLiked 
-                    ? 'fill-red-500 stroke-red-500 scale-110 animate-pulse' 
-                    : 'text-slate-700 dark:text-slate-350 group-hover:text-red-500'
-                }`} 
-                strokeWidth={2}
-              />
-            )}
+            <Heart 
+              className={`w-6 h-6 transition-all duration-200 ${
+                isLiked 
+                  ? 'fill-red-500 stroke-red-500 scale-110 animate-pulse' 
+                  : 'text-slate-700 dark:text-slate-350 group-hover:text-red-500'
+              }`} 
+              strokeWidth={2}
+            />
             <span className="text-xs font-black text-slate-650 dark:text-slate-400 mt-0.5">
               {likesCount > 0 ? (likesCount >= 1000 ? `${(likesCount/1000).toFixed(1)}k` : likesCount) : 'Like'}
             </span>
