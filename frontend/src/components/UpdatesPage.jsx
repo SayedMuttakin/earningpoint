@@ -348,7 +348,7 @@ const UpdatesPage = ({ onBack, selectedPostId, setSelectedPostId }) => {
   // Normal List View
   return (
     <PullToRefresh onRefresh={handleRefresh} refreshing={refreshing}>
-      <div className="min-h-screen bg-slate-50 dark:bg-slate-950 pt-16 pb-24 flex flex-col">
+      <div className="min-h-screen bg-slate-50 dark:bg-slate-950 pt-0 pb-24 flex flex-col">
         {/* Scrolling News Ticker at the top */}
         <NewsTicker 
           posts={posts} 

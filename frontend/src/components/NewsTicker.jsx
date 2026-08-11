@@ -7,7 +7,7 @@ const NewsTicker = ({ posts, onCardClick }) => {
   const animationDuration = Math.max(60, posts.length * 25);
 
   return (
-    <div className="bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200 py-3 shadow-2xs border-b border-slate-100 dark:border-slate-850 select-none overflow-hidden w-full">
+    <div className="sticky top-0 z-30 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md text-slate-800 dark:text-slate-200 py-3 shadow-2xs border-b border-slate-100 dark:border-slate-850 select-none overflow-hidden w-full">
       <div className="max-w-xl mx-auto px-4 flex items-center">
         {/* Red pulsating active dot */}
         <div className="flex items-center gap-2 pr-3.5 border-r border-slate-200 dark:border-slate-800 shrink-0">
