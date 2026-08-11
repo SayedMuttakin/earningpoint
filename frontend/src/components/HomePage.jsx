@@ -39,17 +39,26 @@ const formatRelativeTime = (dateStr) => {
 
 const safeLocalStorageSet = (key, value) => {
   try {
-    localStorage.setItem(key, value);
-  } catch (e) {
-    console.warn(`[Local Storage] Failed to save key "${key}":`, e);
-    if (e.name === 'QuotaExceededError' || e.code === 22) {
+    let finalValue = value;
+    if (typeof value === 'string' && value.length > 250000) {
       try {
-        localStorage.removeItem('cached_feed_posts');
-        localStorage.removeItem('cached_news_posts');
-      } catch (innerErr) {
-        console.error('Failed to clear local storage items:', innerErr);
-      }
+        const parsed = JSON.parse(value);
+        if (Array.isArray(parsed)) {
+          const trimmed = parsed.slice(0, 10).map(p => ({
+            ...p,
+            content: p.content ? p.content.slice(0, 200) : '',
+            image: (p.image && (p.image.length > 100000 || p.image.startsWith('data:image'))) ? null : p.image
+          }));
+          finalValue = JSON.stringify(trimmed);
+        }
+      } catch (_) {}
     }
+    localStorage.setItem(key, finalValue);
+  } catch (e) {
+    try {
+      localStorage.removeItem('cached_feed_posts');
+      localStorage.removeItem('cached_news_posts');
+    } catch (_) {}
   }
 };
 
@@ -551,6 +560,21 @@ const CommunityPostCard = ({ post, onFollowToggle, onLikeToggle, onCommentClick,
       }
     } catch (err) {
       console.error('Failed to react:', err);
+    }
+  };
+
+  const handleLikeToggle = async () => {
+    if (isLiking) return;
+    setIsLiking(true);
+    setIsLiked(prev => !prev);
+    try {
+      if (onLikeToggle) {
+        await onLikeToggle(post._id);
+      }
+    } catch (err) {
+      console.error('Failed to toggle like:', err);
+    } finally {
+      setIsLiking(false);
     }
   };
 
