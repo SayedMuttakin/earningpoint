@@ -15,18 +15,18 @@ const TEST_ADMOB_IDS = {
 
 // Real Ad Unit IDs (Update these with unique IDs per placement)
 const REAL_ADMOB_IDS = {
-  interstitial: 'ca-app-pub-7161684117324999/1594218732',
-  rewardedInterstitial: 'ca-app-pub-7161684117324999/7790027198',
-  rewarded: 'ca-app-pub-7161684117324999/6435481873',
-  rewarded_daily: 'ca-app-pub-7161684117324999/6435481873', // Daily Checkin
-  rewarded_videos: 'ca-app-pub-7161684117324999/6435481873', // Videos (+25)
-  rewarded_view_ads: 'ca-app-pub-7161684117324999/6435481873', // View Ads (+10)
-  native: 'ca-app-pub-7161684117324999/5630767711',
-  appOpen: 'ca-app-pub-7161684117324999/6476945526'
+  banner: 'ca-app-pub-2974645883080760/8899354808',
+  interstitial: 'ca-app-pub-2974645883080760/5216094812',
+  rewardedInterstitial: 'ca-app-pub-2974645883080760/1057357952',
+  rewarded: 'ca-app-pub-2974645883080760/6644726557',
+  rewarded_daily: 'ca-app-pub-2974645883080760/6644726557',
+  rewarded_videos: 'ca-app-pub-2974645883080760/6644726557',
+  rewarded_view_ads: 'ca-app-pub-2974645883080760/6644726557',
+  appOpen: 'ca-app-pub-2974645883080760/5123193103'
 };
 
-// Toggle for Test Mode (Set to false for production to default to REAL_ADMOB_IDS)
-const USE_TEST_ADS = true;
+// Toggle for Test Mode (Set to false for production so it defaults to REAL_ADMOB_IDS)
+const USE_TEST_ADS = false;
 
 let dynamicConfig = null;
 
