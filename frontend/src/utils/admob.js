@@ -68,12 +68,42 @@ export const AdMobService = {
     console.log('[AdMob] Dynamic config loaded:', config);
   },
 
-  async showBanner() {
-    // Disabled native banner overlays to prevent covering bottom navigation bar
+  async showBanner(size = 'banner') {
+    if (dynamicConfig && dynamicConfig.showAds === false) {
+      console.log('[AdMob] Ads are disabled via admin panel.');
+      return;
+    }
+
+    if (!Capacitor.isNativePlatform()) {
+      console.log('[AdMob] Not native platform, skipping native banner.');
+      return;
+    }
+
+    try {
+      const adId = getAdId('banner');
+      const adSize = size === 'big' ? BannerAdSize.MEDIUM_RECTANGLE : BannerAdSize.BANNER;
+      
+      await AdMob.showBanner({
+        adId: adId,
+        adSize: adSize,
+        position: BannerAdPosition.BOTTOM_CENTER,
+        margin: 76,
+        isTesting: false
+      });
+      console.log('[AdMob] Banner shown successfully');
+    } catch (err) {
+      console.error('[AdMob] Failed to show banner:', err);
+    }
   },
 
   async hideBanner() {
-    // Disabled native banner overlays
+    if (!Capacitor.isNativePlatform()) return;
+    try {
+      await AdMob.hideBanner();
+      await AdMob.removeBanner();
+    } catch (err) {
+      console.error('[AdMob] Failed to hide banner:', err);
+    }
   },
 
   async showInterstitial(onClose) {

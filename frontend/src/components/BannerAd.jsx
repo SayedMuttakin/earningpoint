@@ -3,10 +3,16 @@ import { AdMobService } from '../utils/admob';
 import { Capacitor } from '@capacitor/core';
 
 const BannerAd = ({ globalSettings, size = 'banner' }) => {
-  // Render the styled HTML test banner inline on all platforms (Web and Native)
-  // to prevent overlapping the bottom navigation bar and display the ad exactly where intended.
+  useEffect(() => {
+    if (Capacitor.isNativePlatform()) {
+      AdMobService.showBanner(size);
+      return () => {
+        AdMobService.hideBanner();
+      };
+    }
+  }, [size]);
 
-  // Web fallback — premium realistic AdMob test banner ad
+  // Web fallback — realistic AdMob test banner ad
   return (
     <div className="relative w-full h-[60px] border border-slate-200/80 dark:border-slate-700/80 rounded-2xl bg-white dark:bg-slate-900 flex items-center justify-center overflow-hidden shadow-sm">
       {/* Test Ad Badge in the top-right corner */}

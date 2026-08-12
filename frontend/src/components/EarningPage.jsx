@@ -138,8 +138,14 @@ const ipPackages = [
 
 
 const BigAdBanner = ({ globalSettings }) => {
-  // Render the styled HTML test banner inline on all platforms (Web and Native)
-  // to avoid native floating overlays that cover page scroll content.
+  useEffect(() => {
+    if (Capacitor.isNativePlatform()) {
+      AdMobService.showBanner('big');
+      return () => {
+        AdMobService.hideBanner();
+      };
+    }
+  }, []);
 
   // Web fallback — premium realistic AdMob test 320x250 ad
   return (
