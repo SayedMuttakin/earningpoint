@@ -429,6 +429,26 @@ function App() {
             onToggleDarkMode={handleToggleDarkMode}
             navigateToSettingsSubMenu={navigateToSettingsSubMenu}
           />
+          {/* MessengerPage is always mounted outside main to overlay top/bottom navbars when active */}
+          <div className={activeTab === 'Messenger' ? 'absolute inset-0 z-[9999] bg-white dark:bg-slate-950 flex flex-col overflow-hidden' : 'hidden'}>
+            <Suspense fallback={<PageLoader />}>
+              <MessengerPage 
+                onBack={() => {
+                  setActiveChatPartner(null);
+                  handleBackNavigation();
+                }} 
+                activeChatPartner={activeChatPartner}
+                setActiveChatPartner={setActiveChatPartner}
+                socket={socket}
+                onlineUsers={onlineUsers}
+                incomingCallData={incomingCallData}
+                setIncomingCallData={setIncomingCallData}
+                setActiveTab={setActiveTab}
+                setActivePublicProfileUserId={setActivePublicProfileUserId}
+              />
+            </Suspense>
+          </div>
+
           <main className="flex-1 overflow-y-auto overflow-x-hidden pt-16 pb-20 relative no-scrollbar">
             <Suspense fallback={<PageLoader />}>
           {/* HomePage is always mounted but hidden when not active — prevents re-fetching on every tab switch */}
@@ -532,23 +552,7 @@ function App() {
           )}
           
           {activeTab === 'Support' && <SupportPage onBack={() => handleBackNavigation()} />}
-          {/* MessengerPage is always mounted but hidden when not active — keeps socket alive and chat list cached */}
-          <div className={activeTab === 'Messenger' ? 'fixed inset-0 z-[100] bg-white dark:bg-slate-950 flex flex-col' : 'hidden'}>
-            <MessengerPage 
-              onBack={() => {
-                setActiveChatPartner(null);
-                handleBackNavigation();
-              }} 
-              activeChatPartner={activeChatPartner}
-              setActiveChatPartner={setActiveChatPartner}
-              socket={socket}
-              onlineUsers={onlineUsers}
-              incomingCallData={incomingCallData}
-              setIncomingCallData={setIncomingCallData}
-              setActiveTab={setActiveTab}
-              setActivePublicProfileUserId={setActivePublicProfileUserId}
-            />
-          </div>
+
           {activeTab === 'Updates' && (
             <UpdatesPage 
               onBack={() => {
