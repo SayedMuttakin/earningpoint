@@ -1134,6 +1134,17 @@ const HomePage = ({ setActiveTab, setSelectedNewsId, setActiveChatPartner, setSe
   const [activeActionModal, setActiveActionModal] = useState(null); // null or { type: 'delete' | 'report' | 'block', post }
   const [reportReason, setReportReason] = useState('spam');
 
+  // User Search Discovery States
+  const [userSearchQuery, setUserSearchQuery] = useState('');
+  const [userSearchResults, setUserSearchResults] = useState([]);
+  const [searchingUsers, setSearchingUsers] = useState(false);
+
+  // Silent Infinite Scroll Pagination States (30 posts batch, hidden page numbers)
+  const [page, setPage] = useState(1);
+  const [hasMorePosts, setHasMorePosts] = useState(true);
+  const [fetchingMore, setFetchingMore] = useState(false);
+  const bottomSentinelRef = useRef(null);
+
   // Prevent background scroll when modal is open
   useEffect(() => {
     if (activeActionModal) {
@@ -1229,11 +1240,6 @@ const HomePage = ({ setActiveTab, setSelectedNewsId, setActiveChatPartner, setSe
     toastTimerRef.current = setTimeout(() => setShowToast(false), 2500);
   };
 
-  // User Search Discovery States
-  const [userSearchQuery, setUserSearchQuery] = useState('');
-  const [userSearchResults, setUserSearchResults] = useState([]);
-  const [searchingUsers, setSearchingUsers] = useState(false);
-
   const handleUserSearchChange = async (query) => {
     setUserSearchQuery(query);
     if (!query.trim()) {
@@ -1308,11 +1314,6 @@ const HomePage = ({ setActiveTab, setSelectedNewsId, setActiveChatPartner, setSe
     window.addEventListener('tabReclickRefresh', handleReclick);
     return () => window.removeEventListener('tabReclickRefresh', handleReclick);
   }, []);
-  // Silent Infinite Scroll Pagination States (30 posts batch, hidden page numbers)
-  const [page, setPage] = useState(1);
-  const [hasMorePosts, setHasMorePosts] = useState(true);
-  const [fetchingMore, setFetchingMore] = useState(false);
-  const bottomSentinelRef = useRef(null);
 
   const fetchMorePosts = async () => {
     if (fetchingMore || !hasMorePosts) return;
