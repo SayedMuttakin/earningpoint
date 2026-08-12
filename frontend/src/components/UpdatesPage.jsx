@@ -381,7 +381,7 @@ const RelatedNewsSlider = ({ posts, onSelect }) => {
       const container = sliderRef.current;
       if (!container) return;
 
-      const cardWidth = 188; // 176px card + 12px gap
+      const cardWidth = 200; // 192px card + 8px gap
       const maxScrollLeft = container.scrollWidth - container.clientWidth;
 
       if (container.scrollLeft >= maxScrollLeft - 10) {
@@ -397,29 +397,34 @@ const RelatedNewsSlider = ({ posts, onSelect }) => {
   return (
     <div 
       ref={sliderRef}
-      className="flex gap-3 overflow-x-auto pb-2 no-scrollbar snap-x scroll-smooth"
+      className="flex gap-3.5 overflow-x-auto pb-2.5 no-scrollbar snap-x scroll-smooth w-full"
     >
       {posts.map((rel) => (
         <div 
           key={rel._id}
           onClick={() => onSelect(rel)}
-          className="w-44 bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-2xl p-2.5 flex-shrink-0 snap-start cursor-pointer hover:shadow-md transition-all space-y-2 select-none"
+          className="w-48 bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800/90 rounded-2xl p-3 flex-shrink-0 snap-start cursor-pointer hover:shadow-md transition-all select-none flex flex-col justify-between"
         >
-          <div className="w-full h-24 rounded-xl overflow-hidden bg-slate-100 dark:bg-slate-800">
-            {rel.image ? (
-              <img src={getImageUrl(rel.image)} alt={rel.title} className="w-full h-full object-cover" />
-            ) : (
-              <div className="w-full h-full bg-indigo-500/10 flex items-center justify-center text-[#7C3AED] font-black text-lg">Z</div>
-            )}
+          <div className="space-y-2">
+            <div className="w-full h-24 rounded-xl overflow-hidden bg-slate-100 dark:bg-slate-800 flex-shrink-0">
+              {rel.image ? (
+                <img src={getImageUrl(rel.image)} alt={rel.title} className="w-full h-full object-cover" />
+              ) : (
+                <div className="w-full h-full bg-indigo-500/10 flex items-center justify-center text-[#7C3AED] font-black text-lg">Z</div>
+              )}
+            </div>
+            <h4 className="text-xs font-bold text-slate-900 dark:text-white line-clamp-2 leading-snug">
+              {rel.title || rel.content}
+            </h4>
           </div>
-          <h4 className="text-xs font-bold text-slate-900 dark:text-white line-clamp-2 leading-snug">
-            {rel.title || rel.content}
-          </h4>
-          <div className="flex items-center justify-between text-[9.5px] font-bold text-slate-400">
-            <span className="text-[#7C3AED] dark:text-indigo-400">
+
+          <div className="flex items-center justify-between text-[10px] font-bold gap-1.5 pt-2 mt-2 border-t border-slate-100 dark:border-slate-800/80">
+            <span className="text-[#7C3AED] dark:text-indigo-400 font-extrabold truncate max-w-[85px]">
               {rel.category || 'National'}
             </span>
-            <span>{rel.customTime || formatRelativeTime(rel.createdAt)}</span>
+            <span className="text-slate-400 dark:text-slate-500 font-semibold whitespace-nowrap flex-shrink-0">
+              {formatRelativeTime(rel.createdAt)}
+            </span>
           </div>
         </div>
       ))}
