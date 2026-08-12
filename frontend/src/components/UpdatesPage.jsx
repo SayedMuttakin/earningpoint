@@ -303,6 +303,62 @@ const UpdatesPage = ({ onBack, selectedPostId, setSelectedPostId }) => {
     }
   };
 
+const RelatedNewsSlider = ({ posts, onSelect }) => {
+  const sliderRef = React.useRef(null);
+
+  React.useEffect(() => {
+    if (!posts || posts.length <= 1) return;
+
+    const interval = setInterval(() => {
+      const container = sliderRef.current;
+      if (!container) return;
+
+      const cardWidth = 188; // 176px card + 12px gap
+      const maxScrollLeft = container.scrollWidth - container.clientWidth;
+
+      if (container.scrollLeft >= maxScrollLeft - 10) {
+        container.scrollTo({ left: 0, behavior: 'smooth' });
+      } else {
+        container.scrollBy({ left: cardWidth, behavior: 'smooth' });
+      }
+    }, 3000);
+
+    return () => clearInterval(interval);
+  }, [posts]);
+
+  return (
+    <div 
+      ref={sliderRef}
+      className="flex gap-3 overflow-x-auto pb-2 no-scrollbar snap-x scroll-smooth"
+    >
+      {posts.map((rel) => (
+        <div 
+          key={rel._id}
+          onClick={() => onSelect(rel)}
+          className="w-44 bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-2xl p-2.5 flex-shrink-0 snap-start cursor-pointer hover:shadow-md transition-all space-y-2 select-none"
+        >
+          <div className="w-full h-24 rounded-xl overflow-hidden bg-slate-100 dark:bg-slate-800">
+            {rel.image ? (
+              <img src={getImageUrl(rel.image)} alt={rel.title} className="w-full h-full object-cover" />
+            ) : (
+              <div className="w-full h-full bg-indigo-500/10 flex items-center justify-center text-[#7C3AED] font-black text-lg">Z</div>
+            )}
+          </div>
+          <h4 className="text-xs font-bold text-slate-900 dark:text-white line-clamp-2 leading-snug">
+            {rel.title || rel.content}
+          </h4>
+          <div className="flex items-center justify-between text-[9.5px] font-bold text-slate-400">
+            <span className="text-[#7C3AED] dark:text-indigo-400">
+              {rel.category || 'National'}
+            </span>
+            <span>{rel.customTime || formatRelativeTime(rel.createdAt)}</span>
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+};
+
   // Render news detail view
   if (selectedPostId) {
     if (detailLoading || (!detailPost && !detailError)) {
@@ -329,8 +385,17 @@ const UpdatesPage = ({ onBack, selectedPostId, setSelectedPostId }) => {
     }
 
     if (detailPost) {
-      const paragraphs = detailPost.content ? detailPost.content.split('\n\n') : [];
-      const relatedNews = posts.filter(p => p._id !== detailPost._id).slice(0, 5);
+      const rawParagraphs = detailPost.content ? detailPost.content.split('\n\n').filter(p => p.trim()) : [];
+      const paragraphs = rawParagraphs.length > 0 ? rawParagraphs : [detailPost.content || ''];
+      
+      const relatedNews = [...posts]
+        .filter(p => p._id !== detailPost._id)
+        .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+        .slice(0, 8);
+
+      // Determine 3 even positions for Ad Banners inside the article body
+      const mid1Index = Math.max(0, Math.floor(paragraphs.length / 3));
+      const mid2Index = Math.max(mid1Index + 1, Math.floor((paragraphs.length * 2) / 3));
 
       return (
         <div className="min-h-screen bg-slate-50 dark:bg-slate-950 pb-24 flex flex-col animate-fade-in select-none">
@@ -354,9 +419,6 @@ const UpdatesPage = ({ onBack, selectedPostId, setSelectedPostId }) => {
           </div>
 
           <div className="max-w-xl mx-auto px-4 w-full pt-4 space-y-4">
-            {/* Top Banner Ad */}
-            <BannerAd size="banner" />
-
             {/* Category Tag */}
             <div>
               <span className="inline-block px-3 py-1 bg-indigo-500/10 text-[#7C3AED] dark:text-indigo-400 rounded-lg text-xs font-black tracking-wide">
@@ -396,59 +458,45 @@ const UpdatesPage = ({ onBack, selectedPostId, setSelectedPostId }) => {
               </div>
             )}
 
-            {/* Content Paragraphs with Interspersed Real Admob Banner Ads */}
+            {/* Content Paragraphs with Exactly 3 Evenly-Spaced Real AdMob Banner Ads */}
             <div className="space-y-4 text-slate-800 dark:text-slate-200 text-sm sm:text-base leading-relaxed font-normal select-text pt-2">
               {paragraphs.map((p, idx) => (
                 <React.Fragment key={idx}>
                   <p className="whitespace-pre-wrap">{p}</p>
-                  {(idx === 0 || idx === 2) && (
-                    <div className="my-4">
+                  
+                  {/* Ad #1: After 1st Section */}
+                  {idx === mid1Index && (
+                    <div className="my-5">
+                      <BannerAd size="big" />
+                    </div>
+                  )}
+
+                  {/* Ad #2: In the Middle Section */}
+                  {idx === mid2Index && (
+                    <div className="my-5">
                       <BannerAd size="big" />
                     </div>
                   )}
                 </React.Fragment>
               ))}
+
+              {/* Ad #3: At the End of Content */}
+              <div className="pt-3">
+                <BannerAd size="big" />
+              </div>
             </div>
 
-            {/* Bottom Big Banner Ad */}
-            <div className="pt-2">
-              <BannerAd size="big" />
-            </div>
-
-            {/* Related News Slider Section */}
+            {/* Related News Slider Section with 3-Second Auto Scroll */}
             {relatedNews.length > 0 && (
               <div className="pt-6 border-t border-slate-100 dark:border-slate-800 space-y-3">
                 <div className="flex items-center justify-between">
                   <h3 className="text-base font-black text-slate-900 dark:text-white">Related News</h3>
                   <span className="text-xs font-black text-[#7C3AED] dark:text-indigo-400">See all</span>
                 </div>
-                <div className="flex gap-3 overflow-x-auto pb-2 no-scrollbar snap-x">
-                  {relatedNews.map((rel) => (
-                    <div 
-                      key={rel._id}
-                      onClick={() => {
-                        if (setSelectedPostId) setSelectedPostId(rel._id);
-                        setDetailPost(rel);
-                        window.scrollTo({ top: 0, behavior: 'smooth' });
-                      }}
-                      className="w-44 bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-2xl p-2.5 flex-shrink-0 snap-start cursor-pointer hover:shadow-md transition-all space-y-2"
-                    >
-                      <div className="w-full h-24 rounded-xl overflow-hidden bg-slate-100 dark:bg-slate-800">
-                        {rel.image ? (
-                          <img src={getImageUrl(rel.image)} alt={rel.title} className="w-full h-full object-cover" />
-                        ) : (
-                          <div className="w-full h-full bg-indigo-500/10 flex items-center justify-center text-[#7C3AED] font-black text-lg">Z</div>
-                        )}
-                      </div>
-                      <h4 className="text-xs font-bold text-slate-900 dark:text-white line-clamp-2 leading-snug">
-                        {rel.title || rel.content}
-                      </h4>
-                      <span className="text-[9px] font-bold text-[#7C3AED] dark:text-indigo-400 block">
-                        {rel.category || 'National'}
-                      </span>
-                    </div>
-                  ))}
-                </div>
+                <RelatedNewsSlider 
+                  posts={relatedNews} 
+                  onSelect={(rel) => handleSelectPost(rel._id)} 
+                />
               </div>
             )}
           </div>
