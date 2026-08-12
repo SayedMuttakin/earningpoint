@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Loader2, ArrowLeft, MoreVertical, Newspaper } from 'lucide-react';
+import { Loader2, ArrowLeft, MoreVertical, Newspaper, Bookmark, Share2 } from 'lucide-react';
 import { API_BASE, getImageUrl } from '../config';
 import VerifiedBadge from './VerifiedBadge';
 import PullToRefresh from './PullToRefresh';
@@ -21,6 +21,22 @@ const formatRelativeTime = (dateStr) => {
     if (diffHours < 24) return `${diffHours}h ago`;
     if (diffDays < 7) return `${diffDays}d ago`;
     return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+  } catch (e) {
+    return 'Recently';
+  }
+};
+
+const formatExactDateShort = (dateStr) => {
+  try {
+    const date = new Date(dateStr);
+    const day = date.getDate();
+    const month = date.toLocaleDateString('en-US', { month: 'short' });
+    const year = date.getFullYear();
+    let hours = date.getHours();
+    const minutes = date.getMinutes().toString().padStart(2, '0');
+    const ampm = hours >= 12 ? 'PM' : 'AM';
+    hours = hours % 12 || 12;
+    return `${day} ${month} ${year}, ${hours}:${minutes} ${ampm}`;
   } catch (e) {
     return 'Recently';
   }
@@ -303,71 +319,128 @@ const UpdatesPage = ({ onBack, selectedPostId, setSelectedPostId }) => {
     }
 
     if (detailPost) {
+      const paragraphs = detailPost.content ? detailPost.content.split('\n\n') : [];
+      const relatedNews = posts.filter(p => p._id !== detailPost._id).slice(0, 5);
+
       return (
         <div className="min-h-screen bg-slate-50 dark:bg-slate-950 pb-24 flex flex-col animate-fade-in select-none">
-          {/* Scrolling News Ticker at the top */}
-          <NewsTicker 
-            posts={posts} 
-            onCardClick={(postId) => {
-              if (setSelectedPostId) setSelectedPostId(postId);
-              setDetailPost(posts.find(p => p._id === postId) || null);
-            }}
-          />
-
-          <div className="max-w-xl mx-auto px-4 w-full pt-6 flex-1 flex flex-col">
-            {/* Back to feed link */}
-            <div className="flex items-center gap-3.5 mb-6">
-              <button 
-                onClick={handleBackToFeed}
-                className="w-10 h-10 rounded-full bg-white dark:bg-slate-900 border border-slate-200/50 dark:border-slate-800 flex items-center justify-center hover:bg-slate-100 dark:hover:bg-slate-800 transition-all active:scale-95 text-slate-700 dark:text-slate-350 shadow-xs"
-              >
-                <ArrowLeft className="w-5 h-5" />
+          {/* Top Sticky Header Bar matching screenshot */}
+          <div className="sticky top-0 z-40 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-b border-slate-100 dark:border-slate-800 px-4 py-3 flex items-center justify-between">
+            <button 
+              onClick={handleBackToFeed}
+              className="p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 transition-colors"
+            >
+              <ArrowLeft className="w-5 h-5" />
+            </button>
+            <span className="text-xs font-black text-slate-400 uppercase tracking-wider">Zenivio News</span>
+            <div className="flex items-center gap-1.5">
+              <button className="p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300">
+                <Bookmark className="w-5 h-5" />
               </button>
-              <span className="text-xs font-black text-slate-400">Back to Updates</span>
+              <button className="p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300">
+                <Share2 className="w-5 h-5" />
+              </button>
             </div>
+          </div>
 
-            {/* Content Container */}
-            <div className="bg-white dark:bg-slate-900 border border-slate-150/40 dark:border-slate-800 rounded-3xl p-5 sm:p-6 space-y-5 shadow-2xs">
-              <span className="inline-block px-2.5 py-1 bg-indigo-50 dark:bg-indigo-950/40 border border-indigo-100/50 dark:border-indigo-900/30 text-[#7C3AED] dark:text-indigo-400 rounded-lg text-[10px] font-black tracking-wide">
-                {detailPost.category || 'Zenivio News'}
+          <div className="max-w-xl mx-auto px-4 w-full pt-4 space-y-4">
+            {/* Top Banner Ad */}
+            <BannerAd size="banner" />
+
+            {/* Category Tag */}
+            <div>
+              <span className="inline-block px-3 py-1 bg-indigo-500/10 text-[#7C3AED] dark:text-indigo-400 rounded-lg text-xs font-black tracking-wide">
+                {detailPost.category || 'National'}
               </span>
+            </div>
 
-              <h1 className="text-xl sm:text-2xl font-black text-slate-850 dark:text-white leading-tight">
-                {detailPost.title}
-              </h1>
+            {/* Headline Title */}
+            <h1 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white leading-tight">
+              {detailPost.title}
+            </h1>
 
-              {/* Author & Verification Card */}
-              <div className="flex items-center gap-3 pb-3 border-b border-slate-100 dark:border-slate-800">
-                <div className="w-9 h-9 rounded-full overflow-hidden flex-shrink-0 bg-white border border-slate-100 dark:border-slate-800 shadow-xs p-[1px]">
-                  <img src="/zenivio-logo.png" alt="Zenivio" className="w-full h-full object-contain" />
-                </div>
-                <div>
-                  <div className="flex items-center gap-1.5">
-                    <span className="font-black text-slate-850 dark:text-slate-200 text-xs sm:text-sm">{detailPost.authorName || 'Zenivio Official'}</span>
-                    {detailPost.isVerified !== false && (
-                      <VerifiedBadge iconClassName="w-[14px] h-[14px] fill-blue-500 text-white" />
-                    )}
-                  </div>
-                  <span className="text-slate-400 dark:text-slate-500 text-[10px] font-bold">{detailPost.customTime || formatDateLong(detailPost.createdAt)}</span>
-                </div>
+            {/* Author & Verification Card (Zenivio News with verified badge, clean time display, NO view count) */}
+            <div className="flex items-center gap-3 py-2.5 border-y border-slate-100 dark:border-slate-800">
+              <div className="w-10 h-10 rounded-full overflow-hidden flex-shrink-0 bg-white border border-slate-100 dark:border-slate-800 shadow-xs p-[1px]">
+                <img src="/zenivio-logo.png" alt="Zenivio News" className="w-full h-full object-contain" />
               </div>
-
-              {/* Full News Image Cover */}
-              {detailPost.image && (
-                <div className="rounded-2xl overflow-hidden border border-slate-100 dark:border-slate-850 shadow-xs max-h-[280px]">
-                  <img 
-                    src={getImageUrl(detailPost.image)} 
-                    alt="News Details" 
-                    className="w-full h-full object-cover"
-                  />
+              <div className="min-w-0 flex-1">
+                <div className="flex items-center gap-1.5">
+                  <span className="font-black text-slate-900 dark:text-slate-100 text-sm">Zenivio News</span>
+                  <VerifiedBadge iconClassName="w-[14px] h-[14px] fill-blue-500 text-white" />
                 </div>
-              )}
-
-              {/* Full news text */}
-              <div className="text-slate-800 dark:text-slate-200 text-base sm:text-lg leading-relaxed whitespace-pre-wrap font-normal select-text">
-                {detailPost.content}
+                <span className="text-slate-400 dark:text-slate-500 text-[11px] font-bold block truncate">
+                  {detailPost.customTime || `${formatExactDateShort(detailPost.createdAt)} · ${formatRelativeTime(detailPost.createdAt)}`}
+                </span>
               </div>
             </div>
+
+            {/* Cover Image */}
+            {detailPost.image && (
+              <div className="rounded-2xl overflow-hidden border border-slate-100 dark:border-slate-800 bg-slate-100 dark:bg-slate-900 max-h-[300px]">
+                <img 
+                  src={getImageUrl(detailPost.image)} 
+                  alt={detailPost.title} 
+                  className="w-full h-full object-cover"
+                />
+              </div>
+            )}
+
+            {/* Content Paragraphs with Interspersed Real Admob Banner Ads */}
+            <div className="space-y-4 text-slate-800 dark:text-slate-200 text-sm sm:text-base leading-relaxed font-normal select-text pt-2">
+              {paragraphs.map((p, idx) => (
+                <React.Fragment key={idx}>
+                  <p className="whitespace-pre-wrap">{p}</p>
+                  {(idx === 0 || idx === 2) && (
+                    <div className="my-4">
+                      <BannerAd size="banner" />
+                    </div>
+                  )}
+                </React.Fragment>
+              ))}
+            </div>
+
+            {/* Bottom Big Banner Ad */}
+            <div className="pt-2">
+              <BannerAd size="big" />
+            </div>
+
+            {/* Related News Slider Section */}
+            {relatedNews.length > 0 && (
+              <div className="pt-6 border-t border-slate-100 dark:border-slate-800 space-y-3">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-base font-black text-slate-900 dark:text-white">Related News</h3>
+                  <span className="text-xs font-black text-[#7C3AED] dark:text-indigo-400">See all</span>
+                </div>
+                <div className="flex gap-3 overflow-x-auto pb-2 no-scrollbar snap-x">
+                  {relatedNews.map((rel) => (
+                    <div 
+                      key={rel._id}
+                      onClick={() => {
+                        if (setSelectedPostId) setSelectedPostId(rel._id);
+                        setDetailPost(rel);
+                        window.scrollTo({ top: 0, behavior: 'smooth' });
+                      }}
+                      className="w-44 bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-2xl p-2.5 flex-shrink-0 snap-start cursor-pointer hover:shadow-md transition-all space-y-2"
+                    >
+                      <div className="w-full h-24 rounded-xl overflow-hidden bg-slate-100 dark:bg-slate-800">
+                        {rel.image ? (
+                          <img src={getImageUrl(rel.image)} alt={rel.title} className="w-full h-full object-cover" />
+                        ) : (
+                          <div className="w-full h-full bg-indigo-500/10 flex items-center justify-center text-[#7C3AED] font-black text-lg">Z</div>
+                        )}
+                      </div>
+                      <h4 className="text-xs font-bold text-slate-900 dark:text-white line-clamp-2 leading-snug">
+                        {rel.title || rel.content}
+                      </h4>
+                      <span className="text-[9px] font-bold text-[#7C3AED] dark:text-indigo-400 block">
+                        {rel.category || 'National'}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
         </div>
       );
