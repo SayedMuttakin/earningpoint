@@ -59,6 +59,7 @@ function App() {
   const profileIdFromUrl = urlParams.get('profileId');
   const postIdFromUrl = urlParams.get('post');
   const [resetPasswordToken, setResetPasswordToken] = useState(resetToken || null);
+  const [postUploadState, setPostUploadState] = useState(null);
 
   const [showSplash, setShowSplash] = useState(true);
   const [showOnboarding, setShowOnboarding] = useState(() => !localStorage.getItem('hasSeenOnboarding'));
@@ -415,9 +416,6 @@ function App() {
       </Suspense>
     );
   }
-
-  // Global Post Upload Banner State
-  const [postUploadState, setPostUploadState] = useState(null);
 
   if (isAuthenticated) {
     return (
