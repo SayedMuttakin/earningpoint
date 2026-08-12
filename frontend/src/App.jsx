@@ -266,7 +266,7 @@ function App() {
     }
   }, [isAuthenticated]);
 
-  const CURRENT_APP_VERSION = '1.0.5';
+  const CURRENT_APP_VERSION = '1.0.6';
   const [appUpdateConfig, setAppUpdateConfig] = useState(null);
   const [showUpdateModal, setShowUpdateModal] = useState(false);
 
