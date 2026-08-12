@@ -42,6 +42,24 @@ const formatExactDateShort = (dateStr) => {
   }
 };
 
+const getCleanShortTime = (post) => {
+  if (post.createdAt) {
+    return formatRelativeTime(post.createdAt);
+  }
+  if (post.customTime) {
+    const str = post.customTime.trim();
+    const parts = str.split(',');
+    if (parts.length >= 3) {
+      return parts[parts.length - 1].trim(); // e.g. "6.00 Pm"
+    }
+    if (str.length > 16) {
+      return str.slice(0, 16) + '...';
+    }
+    return str;
+  }
+  return 'Recently';
+};
+
 const CompactNewsCard = ({ post, onClick }) => {
   const category = post.category || 'Latest';
   
@@ -92,12 +110,12 @@ const CompactNewsCard = ({ post, onClick }) => {
 
         <div className="flex items-center justify-between text-[11px] font-bold text-slate-400 dark:text-slate-500">
           <div className="flex items-center gap-1.5 min-w-0 truncate">
-            <span className={`font-black ${catClass}`}>
+            <span className={`font-black flex-shrink-0 ${catClass}`}>
               {category}
             </span>
-            <span>•</span>
-            <span className="truncate">
-              {post.customTime || formatRelativeTime(post.createdAt)}
+            <span className="text-slate-300 dark:text-slate-700 flex-shrink-0">•</span>
+            <span className="truncate text-[10px] font-bold text-slate-400 dark:text-slate-500">
+              {getCleanShortTime(post)}
             </span>
           </div>
 
@@ -112,6 +130,67 @@ const CompactNewsCard = ({ post, onClick }) => {
           </button>
         </div>
       </div>
+    </div>
+  );
+};
+
+const RelatedNewsSlider = ({ posts, onSelect }) => {
+  const sliderRef = React.useRef(null);
+
+  React.useEffect(() => {
+    if (!posts || posts.length <= 1) return;
+
+    const interval = setInterval(() => {
+      const container = sliderRef.current;
+      if (!container) return;
+
+      const cardWidth = 200; // 192px card + 8px gap
+      const maxScrollLeft = container.scrollWidth - container.clientWidth;
+
+      if (container.scrollLeft >= maxScrollLeft - 10) {
+        container.scrollTo({ left: 0, behavior: 'smooth' });
+      } else {
+        container.scrollBy({ left: cardWidth, behavior: 'smooth' });
+      }
+    }, 3000);
+
+    return () => clearInterval(interval);
+  }, [posts]);
+
+  return (
+    <div 
+      ref={sliderRef}
+      className="flex gap-3 overflow-x-auto pb-2 no-scrollbar snap-x scroll-smooth w-full"
+    >
+      {posts.map((rel) => (
+        <div 
+          key={rel._id}
+          onClick={() => onSelect(rel)}
+          className="w-48 bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-2xl p-2.5 flex-shrink-0 snap-start cursor-pointer hover:shadow-md transition-all space-y-2 select-none flex flex-col justify-between"
+        >
+          <div className="space-y-2">
+            <div className="w-full h-24 rounded-xl overflow-hidden bg-slate-100 dark:bg-slate-800">
+              {rel.image ? (
+                <img src={getImageUrl(rel.image)} alt={rel.title} className="w-full h-full object-cover" />
+              ) : (
+                <div className="w-full h-full bg-indigo-500/10 flex items-center justify-center text-[#7C3AED] font-black text-lg">Z</div>
+              )}
+            </div>
+            <h4 className="text-xs font-bold text-slate-900 dark:text-white line-clamp-2 leading-snug">
+              {rel.title || rel.content}
+            </h4>
+          </div>
+
+          <div className="flex items-center justify-between text-[10px] font-bold text-slate-400 gap-1 pt-1.5 border-t border-slate-100 dark:border-slate-800/80">
+            <span className="text-[#7C3AED] dark:text-indigo-400 font-extrabold truncate max-w-[80px]">
+              {rel.category || 'National'}
+            </span>
+            <span className="text-slate-400 dark:text-slate-500 font-semibold whitespace-nowrap">
+              {getCleanShortTime(rel)}
+            </span>
+          </div>
+        </div>
+      ))}
     </div>
   );
 };
