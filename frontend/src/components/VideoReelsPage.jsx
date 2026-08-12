@@ -134,31 +134,25 @@ const ReelCard = ({ video, isActive, isMuted, toggleMute, currentUserId, onLikeT
       />
 
       {/* Top Transparent Header (Matches TikTok top bar) */}
-      <div className="absolute top-0 left-0 right-0 z-30 flex items-center justify-between p-4 bg-gradient-to-b from-black/60 to-transparent">
+      <div className="absolute top-0 left-0 right-0 z-50 flex items-center justify-between p-4 pt-5 bg-gradient-to-b from-black/80 via-black/40 to-transparent">
         <button 
           onClick={onBack}
-          className="p-2 rounded-full hover:bg-white/10 text-white transition-colors filter drop-shadow-md animate-fade-in"
+          className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-black/40 hover:bg-black/60 backdrop-blur-md text-white border border-white/20 transition-all active:scale-95 shadow-lg"
+          title="Go Back"
         >
-          <ArrowLeft className="w-6.5 h-6.5" />
+          <ArrowLeft className="w-5 h-5 stroke-[2.5]" />
+          <span className="text-xs font-black tracking-wide">Back</span>
         </button>
-        <button 
-          onClick={() => alert('Search feature coming soon!')}
-          className="p-2 rounded-full hover:bg-white/10 text-white transition-colors filter drop-shadow-md animate-fade-in"
-        >
-          <Search className="w-6.5 h-6.5" />
-        </button>
+        <div className="flex items-center gap-2">
+          <button 
+            onClick={toggleMute}
+            className="p-2 rounded-full bg-black/40 hover:bg-black/60 backdrop-blur-md text-white border border-white/20 transition-all active:scale-95"
+            title={isMuted ? 'Unmute' : 'Mute'}
+          >
+            {isMuted ? <VolumeX className="w-5 h-5" /> : <Volume2 className="w-5 h-5" />}
+          </button>
+        </div>
       </div>
-
-      {/* Floating Mute Indicator */}
-      <button
-        onClick={(e) => {
-          e.stopPropagation();
-          toggleMute();
-        }}
-        className="absolute top-16 right-4 z-20 p-2.5 rounded-full bg-black/40 text-white backdrop-blur-xs hover:bg-black/60 transition-colors"
-      >
-        {isMuted ? <VolumeX className="w-5 h-5" /> : <Volume2 className="w-5 h-5" />}
-      </button>
 
       {/* Play/Pause Overlay Animation */}
       {showPlayOverlay && (

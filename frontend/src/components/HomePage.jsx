@@ -606,6 +606,24 @@ const CommunityPostCard = ({ post, onFollowToggle, onLikeToggle, onCommentClick,
     }
   };
 
+  useEffect(() => {
+    if (!post.video || !videoRef.current) return;
+    const el = videoRef.current;
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (!entry.isIntersecting || entry.intersectionRatio < 0.4) {
+          if (el && !el.paused) {
+            el.pause();
+            setIsPlaying(false);
+          }
+        }
+      },
+      { threshold: [0.1, 0.4, 0.8] }
+    );
+    observer.observe(el);
+    return () => observer.unobserve(el);
+  }, [post.video]);
+
   const handlePlayPause = (e) => {
     e.stopPropagation();
     if (videoRef.current) {
@@ -877,10 +895,11 @@ const CommunityPostCard = ({ post, onFollowToggle, onLikeToggle, onCommentClick,
       )}
 
       {post.video && (
-        <div className="relative rounded-2xl overflow-hidden bg-slate-100/60 dark:bg-slate-800/50 mt-1 flex items-center justify-center w-full max-h-[500px] cursor-pointer group select-none">
+        <div className="relative rounded-2xl overflow-hidden bg-slate-900 mt-1 flex items-center justify-center w-full max-h-[500px] cursor-pointer group select-none">
           <video 
             ref={videoRef}
-            src={getImageUrl(post.video)} 
+            src={`${getImageUrl(post.video)}#t=0.001`} 
+            preload="metadata"
             className="w-full h-auto object-contain max-h-[500px]"
             playsInline
             controls={isPlaying}
@@ -891,9 +910,9 @@ const CommunityPostCard = ({ post, onFollowToggle, onLikeToggle, onCommentClick,
           {!isPlaying && (
             <div 
               onClick={handlePlayPause}
-              className="absolute inset-0 bg-black/20 flex items-center justify-center group-hover:bg-black/35 transition-colors"
+              className="absolute inset-0 bg-black/30 flex items-center justify-center group-hover:bg-black/45 transition-colors"
             >
-              <div className="w-14 h-14 rounded-full bg-white/95 text-black flex items-center justify-center shadow-lg transition-transform group-hover:scale-110 active:scale-95 animate-fade-in">
+              <div className="w-14 h-14 rounded-full bg-white/95 text-slate-900 flex items-center justify-center shadow-2xl transition-transform group-hover:scale-110 active:scale-95 animate-fade-in border border-white/40">
                 <svg className="w-6 h-6 fill-current translate-x-0.5" viewBox="0 0 24 24">
                   <path d="M8 5v14l11-7z" />
                 </svg>

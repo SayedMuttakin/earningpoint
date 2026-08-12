@@ -448,6 +448,12 @@ function App() {
               />
             </Suspense>
           </div>
+          {/* VideoReelsPage is rendered outside main for full screen immersive view with back button */}
+          <div className={activeTab === 'Video' ? 'absolute inset-0 z-[9999] bg-black flex flex-col overflow-hidden' : 'hidden'}>
+            <Suspense fallback={<PageLoader />}>
+              <VideoReelsPage selectedReelId={selectedReelId} onBack={() => handleBackNavigation()} />
+            </Suspense>
+          </div>
 
           <main className="flex-1 overflow-y-auto overflow-x-hidden pt-16 pb-20 relative no-scrollbar">
             <Suspense fallback={<PageLoader />}>
@@ -468,9 +474,7 @@ function App() {
               }}
             />
           </div>
-          {activeTab === 'Video' && (
-            <VideoReelsPage selectedReelId={selectedReelId} onBack={() => handleBackNavigation()} />
-          )}
+
           {activeTab === 'CreatePost' && (
             <CreatePostPage currentUser={currentUser} onBack={() => handleBackNavigation()} setActiveTab={setActiveTab} postToEdit={postToEdit} />
           )}

@@ -242,6 +242,26 @@ const CreatePostPage = ({ currentUser, onBack, setActiveTab, postToEdit = null }
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex flex-col pb-20 relative">
+      {/* Facebook-style Animated Post Uploading Banner */}
+      {postingLoading && (
+        <div className="fixed top-0 left-0 right-0 z-[500] bg-slate-900/95 text-white backdrop-blur-md px-5 py-3.5 flex items-center justify-between shadow-2xl animate-fade-in-down border-b border-indigo-500/30">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-full bg-[#7C3AED]/20 border border-[#7C3AED]/50 flex items-center justify-center flex-shrink-0">
+              <Loader2 className="w-5 h-5 text-[#7C3AED] animate-spin" />
+            </div>
+            <div>
+              <h4 className="text-xs font-black text-white flex items-center gap-1.5">
+                Posting to Zenivio...
+                <span className="inline-block w-2 h-2 rounded-full bg-[#7C3AED] animate-ping" />
+              </h4>
+              <p className="text-[11px] font-bold text-slate-400">Uploading post & media, please wait</p>
+            </div>
+          </div>
+          <div className="w-28 bg-slate-800 rounded-full h-2 overflow-hidden border border-slate-700">
+            <div className="bg-gradient-to-r from-indigo-500 via-[#7C3AED] to-pink-500 h-full animate-pulse w-4/5 rounded-full" />
+          </div>
+        </div>
+      )}
       {/* Top Header */}
       <header className="sticky top-0 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 h-16 flex items-center justify-between px-4 z-30">
         <div className="flex items-center gap-3">
