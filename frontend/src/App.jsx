@@ -530,6 +530,7 @@ function App() {
               onBack={() => handleBackNavigation()} 
               setActiveTab={setActiveTab}
               setSelectedNotificationPostId={setSelectedNotificationPostId}
+              setActivePublicProfileUserId={setActivePublicProfileUserId}
             />
           )}
           {activeTab === 'PublicProfile' && (

@@ -15,7 +15,7 @@ import { API_BASE } from '../config';
 import PullToRefresh from './PullToRefresh';
 import { playNotificationSound } from '../utils/sound';
 
-const NotificationPage = ({ onBack, setActiveTab, setSelectedNotificationPostId }) => {
+const NotificationPage = ({ onBack, setActiveTab, setSelectedNotificationPostId, setActivePublicProfileUserId }) => {
   const [notifications, setNotifications] = useState(() => {
     try {
       const cached = localStorage.getItem('cached_user_notifications');
@@ -256,9 +256,13 @@ const NotificationPage = ({ onBack, setActiveTab, setSelectedNotificationPostId 
                         className="flex-1 min-w-0 py-0.5 sm:py-1 cursor-pointer" 
                         onClick={() => {
                           if (!n.isRead) markAsRead(n._id);
-                          if (n.type === 'post' && n.postId && setSelectedNotificationPostId && setActiveTab) {
+                          if (n.postId && setSelectedNotificationPostId && setActiveTab) {
                             setSelectedNotificationPostId(n.postId);
                             setActiveTab('Home');
+                            onBack();
+                          } else if ((n.type === 'follow' || n.senderId) && setActivePublicProfileUserId && setActiveTab) {
+                            setActivePublicProfileUserId(n.senderId);
+                            setActiveTab('PublicProfile');
                             onBack();
                           } else {
                             setSelectedNotification(n);

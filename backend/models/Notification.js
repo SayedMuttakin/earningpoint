@@ -16,7 +16,7 @@ const notificationSchema = new mongoose.Schema({
   },
   type: {
     type: String,
-    enum: ['post', 'earning', 'withdrawal', 'conversion', 'system', 'premium', 'announcement', 'badge'],
+    enum: ['post', 'like', 'comment', 'follow', 'earning', 'withdrawal', 'conversion', 'system', 'premium', 'announcement', 'badge'],
     default: 'system'
   },
   isRead: {
@@ -26,6 +26,11 @@ const notificationSchema = new mongoose.Schema({
   postId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Post',
+    default: null
+  },
+  senderId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
     default: null
   },
   createdAt: {

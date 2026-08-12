@@ -88,15 +88,30 @@ exports.deleteNotification = async (req, res) => {
 };
 
 // Helper for other controllers to create notifications
-exports.createNotification = async (userId, title, message, type = 'system', postId = null) => {
+exports.createNotification = async (userId, title, message, type = 'system', postId = null, senderId = null) => {
   try {
     const notification = await Notification.create({
       userId,
       title,
       message,
       type,
-      postId
+      postId,
+      senderId
     });
+
+    if (global.io) {
+      global.io.to(userId.toString()).emit('new_notification', {
+        _id: notification._id,
+        userId,
+        title,
+        message,
+        type,
+        postId,
+        senderId,
+        createdAt: notification.createdAt
+      });
+    }
+
     return notification;
   } catch (error) {
     console.error('Error creating notification:', error);

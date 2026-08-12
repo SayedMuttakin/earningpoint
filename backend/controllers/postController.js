@@ -413,9 +413,10 @@ exports.toggleLikePost = async (req, res) => {
           await createNotification(
             post.authorId,
             'New Like! ❤️',
-            `${req.user.name || 'A user'} liked your post: "${post.content.substring(0, 30)}${post.content.length > 30 ? '...' : ''}"`,
-            'post',
-            post._id
+            `${req.user.name || 'A user'} liked your post: "${post.content ? post.content.substring(0, 30) : 'post'}${post.content && post.content.length > 30 ? '...' : ''}"`,
+            'like',
+            post._id,
+            userId
           );
         } catch (err) {
           console.error('Failed to create like notification:', err);
@@ -467,8 +468,9 @@ exports.commentPost = async (req, res) => {
           post.authorId,
           'New Comment! 💬',
           `${req.user.name || 'A user'} commented: "${text.substring(0, 30)}${text.length > 30 ? '...' : ''}"`,
-          'post',
-          post._id
+          'comment',
+          post._id,
+          req.user._id
         );
       } catch (err) {
         console.error('Failed to create comment notification:', err);

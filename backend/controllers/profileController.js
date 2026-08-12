@@ -212,6 +212,21 @@ exports.followUser = async (req, res) => {
       targetUser.followers.push(currentUserId);
       await currentUser.save();
       await targetUser.save();
+
+      try {
+        const { createNotification } = require('./notificationController');
+        createNotification(
+          targetUserId,
+          'New Follower! 👤',
+          `${currentUser.name || 'A user'} started following you.`,
+          'follow',
+          null,
+          currentUserId
+        );
+      } catch (e) {
+        console.error('Failed to create follow notification:', e);
+      }
+
       return res.json({ isFollowing: true, message: 'Followed user successfully' });
     }
   } catch (error) {
