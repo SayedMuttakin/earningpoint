@@ -41,7 +41,7 @@ const MOCK_LOCATIONS = [
   'New York, USA', 'London, UK', 'Paris, France', 'Tokyo, Japan'
 ];
 
-const CreatePostPage = ({ currentUser, onBack, setActiveTab, postToEdit = null }) => {
+const CreatePostPage = ({ currentUser, onBack, setActiveTab, postToEdit = null, setPostUploadState }) => {
   const [content, setContent] = useState(postToEdit ? postToEdit.content : '');
   const [privacy, setPrivacy] = useState(postToEdit ? postToEdit.privacy : 'public'); // public, friends, private
   const [selectedGradient, setSelectedGradient] = useState(postToEdit && postToEdit.bgGradient ? postToEdit.bgGradient : 'none');
@@ -130,11 +130,17 @@ const CreatePostPage = ({ currentUser, onBack, setActiveTab, postToEdit = null }
     }
   };
 
-  const handlePostSubmit = async (e) => {
-    if (e) e.preventDefault();
-    if (!content.trim() && !selectedImage && !imagePreview) return;
+  const handlePostSubmit = async () => {
+    if ((!content.trim() && !selectedImage && !imagePreview) || postingLoading) return;
 
     setPostingLoading(true);
+    if (setPostUploadState) {
+      setPostUploadState({ status: 'uploading', progress: 45, message: 'Uploading post & media...' });
+    }
+
+    // Switch to Home tab immediately so user sees upload progress at top
+    setActiveTab('Home');
+
     const token = localStorage.getItem('token');
     
     const formData = new FormData();
@@ -174,7 +180,6 @@ const CreatePostPage = ({ currentUser, onBack, setActiveTab, postToEdit = null }
       });
 
       if (res.ok) {
-        // Clear inputs and navigate back
         setContent('');
         setSelectedGradient('none');
         setSelectedImage(null);
@@ -185,10 +190,15 @@ const CreatePostPage = ({ currentUser, onBack, setActiveTab, postToEdit = null }
         setClearImage(false);
         setClearVideo(false);
         
-        // Refresh feed posts cache
         localStorage.removeItem('cached_feed_posts');
         
-        setActiveTab('Home');
+        if (setPostUploadState) {
+          setPostUploadState({ status: 'success', progress: 100, message: 'Post published successfully!' });
+          setTimeout(() => setPostUploadState(null), 3000);
+        }
+
+        // Trigger feed refresh on Home Page
+        window.dispatchEvent(new CustomEvent('tabReclickRefresh', { detail: { tab: 'Home' } }));
       } else {
         let errorMessage = `Failed to ${postToEdit ? 'save' : 'create'} post`;
         try {
@@ -197,11 +207,17 @@ const CreatePostPage = ({ currentUser, onBack, setActiveTab, postToEdit = null }
         } catch (e) {
           if (res.status === 413) errorMessage = 'File size is too large (max 100MB)';
         }
-        alert(errorMessage);
+        if (setPostUploadState) {
+          setPostUploadState({ status: 'error', progress: 0, message: errorMessage });
+          setTimeout(() => setPostUploadState(null), 4000);
+        }
       }
     } catch (err) {
       console.error('Post submit error:', err);
-      alert('An error occurred. Please try again.');
+      if (setPostUploadState) {
+        setPostUploadState({ status: 'error', progress: 0, message: 'An error occurred during upload.' });
+        setTimeout(() => setPostUploadState(null), 4000);
+      }
     } finally {
       setPostingLoading(false);
     }

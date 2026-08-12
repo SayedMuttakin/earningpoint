@@ -9,6 +9,7 @@ import SplashScreen from './components/SplashScreen';
 import OnboardingScreen from './components/OnboardingScreen';
 import { API_BASE } from './config';
 
+import { Check, Loader2, X } from 'lucide-react';
 import { AdMob } from '@capacitor-community/admob';
 import { App as CapacitorApp } from '@capacitor/app';
 import { Capacitor } from '@capacitor/core';
@@ -415,10 +416,54 @@ function App() {
     );
   }
 
+  // Global Post Upload Banner State
+  const [postUploadState, setPostUploadState] = useState(null);
+
   if (isAuthenticated) {
     return (
       <div className="fixed inset-0 h-screen w-full bg-gradient-to-br from-slate-200 via-indigo-50/40 to-slate-200 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950 flex flex-col items-center justify-between overflow-hidden">
         <div className="relative w-full max-w-xl h-full flex flex-col bg-white dark:bg-slate-950 shadow-2xl overflow-hidden border-x border-slate-200/50 dark:border-slate-800/50">
+          
+          {/* Global Facebook-style Animated Post Upload Banner */}
+          {postUploadState && (
+            <div className="fixed top-0 left-0 right-0 z-[10000] bg-slate-900/95 text-white backdrop-blur-md px-5 py-3.5 flex items-center justify-between shadow-2xl animate-fade-in-down border-b border-indigo-500/40 max-w-xl mx-auto">
+              <div className="flex items-center gap-3">
+                {postUploadState.status === 'uploading' ? (
+                  <div className="w-9 h-9 rounded-full bg-[#7C3AED]/20 border border-[#7C3AED]/50 flex items-center justify-center flex-shrink-0">
+                    <Loader2 className="w-5 h-5 text-[#7C3AED] animate-spin" />
+                  </div>
+                ) : postUploadState.status === 'success' ? (
+                  <div className="w-9 h-9 rounded-full bg-emerald-500/20 border border-emerald-500/50 flex items-center justify-center flex-shrink-0 text-emerald-400">
+                    <Check className="w-5 h-5" />
+                  </div>
+                ) : (
+                  <div className="w-9 h-9 rounded-full bg-rose-500/20 border border-rose-500/50 flex items-center justify-center flex-shrink-0 text-rose-400">
+                    <X className="w-5 h-5" />
+                  </div>
+                )}
+                <div>
+                  <h4 className="text-xs font-black text-white flex items-center gap-1.5">
+                    {postUploadState.status === 'uploading' ? 'Posting to Zenivio...' : postUploadState.status === 'success' ? 'Post Published!' : 'Upload Failed'}
+                    {postUploadState.status === 'uploading' && (
+                      <span className="inline-block w-2 h-2 rounded-full bg-[#7C3AED] animate-ping" />
+                    )}
+                  </h4>
+                  <p className="text-[10.5px] font-bold text-slate-400">
+                    {postUploadState.message || 'Uploading post and media...'}
+                  </p>
+                </div>
+              </div>
+              {postUploadState.status === 'uploading' && (
+                <div className="w-24 bg-slate-800 rounded-full h-2 overflow-hidden border border-slate-700">
+                  <div 
+                    className="bg-gradient-to-r from-indigo-500 via-[#7C3AED] to-pink-500 h-full transition-all duration-300 rounded-full animate-pulse"
+                    style={{ width: `${postUploadState.progress || 80}%` }}
+                  />
+                </div>
+              )}
+            </div>
+          )}
+
           <Navbar 
             onLogout={handleLogout} 
             activeTab={activeTab} 
@@ -476,7 +521,7 @@ function App() {
           </div>
 
           {activeTab === 'CreatePost' && (
-            <CreatePostPage currentUser={currentUser} onBack={() => handleBackNavigation()} setActiveTab={setActiveTab} postToEdit={postToEdit} />
+            <CreatePostPage currentUser={currentUser} onBack={() => handleBackNavigation()} setActiveTab={setActiveTab} postToEdit={postToEdit} setPostUploadState={setPostUploadState} />
           )}
           {activeTab === 'Cart' && <CartPage onBuyNow={handleBuyNow} />}
           {activeTab === 'Checkout' && <CheckoutPage product={selectedProduct} onBack={() => handleBackNavigation()} onSuccess={(method) => { setSelectedPaymentMethod(method); setActiveTab('PaymentSuccess'); }} />}

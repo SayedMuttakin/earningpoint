@@ -1308,15 +1308,70 @@ const HomePage = ({ setActiveTab, setSelectedNewsId, setActiveChatPartner, setSe
     window.addEventListener('tabReclickRefresh', handleReclick);
     return () => window.removeEventListener('tabReclickRefresh', handleReclick);
   }, []);
+  // Silent Infinite Scroll Pagination States (30 posts batch, hidden page numbers)
+  const [page, setPage] = useState(1);
+  const [hasMorePosts, setHasMorePosts] = useState(true);
+  const [fetchingMore, setFetchingMore] = useState(false);
+  const bottomSentinelRef = useRef(null);
+
+  const fetchMorePosts = async () => {
+    if (fetchingMore || !hasMorePosts) return;
+    setFetchingMore(true);
+    const nextPage = page + 1;
+    try {
+      const token = localStorage.getItem('token');
+      const res = await fetch(`${API_BASE}/api/posts/feed?page=${nextPage}&limit=30`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      if (res.ok) {
+        const data = await res.json();
+        const newPosts = Array.isArray(data) ? data : (data.feedPosts || []);
+        if (newPosts.length > 0) {
+          setFeedPosts(prev => {
+            const existingIds = new Set(prev.map(p => p._id ? p._id.toString() : ''));
+            const uniqueNew = newPosts.filter(p => !existingIds.has(p._id ? p._id.toString() : ''));
+            return [...prev, ...uniqueNew];
+          });
+          setPage(nextPage);
+          if (newPosts.length < 30) {
+            setHasMorePosts(false);
+          }
+        } else {
+          setHasMorePosts(false);
+        }
+      }
+    } catch (err) {
+      console.error('Failed to fetch more posts:', err);
+    } finally {
+      setFetchingMore(false);
+    }
+  };
+
+  useEffect(() => {
+    if (!hasMorePosts || fetchingMore || !bottomSentinelRef.current) return;
+    const sentinel = bottomSentinelRef.current;
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          fetchMorePosts();
+        }
+      },
+      { threshold: 0.1 }
+    );
+    observer.observe(sentinel);
+    return () => observer.unobserve(sentinel);
+  }, [page, hasMorePosts, fetchingMore]);
 
   const fetchHomeData = async () => {
+    setPage(1);
+    setHasMorePosts(true);
     try {
       const token = localStorage.getItem('token');
       if (!token) return;
 
       // 1-roundtrip unified feed & news fetch + profile fetch in parallel
       const [feedRes, profileRes] = await Promise.all([
-        fetchWithTimeout(`${API_BASE}/api/posts/feed?includeNews=true`, {
+        fetchWithTimeout(`${API_BASE}/api/posts/feed?includeNews=true&page=1&limit=30`, {
           headers: { Authorization: `Bearer ${token}` }
         }, 5000).catch(err => { console.error('Feed fetch failed:', err); return null; }),
         fetchWithTimeout(`${API_BASE}/api/profile`, {
@@ -1675,6 +1730,18 @@ const HomePage = ({ setActiveTab, setSelectedNewsId, setActiveChatPartner, setSe
                     onOpenReactionsModal={(id) => setShowReactionsPostId(id)}
                   />
                 ))}
+
+                {/* Silent Bottom Infinite Scroll Sentinel (No Page Numbers Displayed) */}
+                {hasMorePosts && (
+                  <div ref={bottomSentinelRef} className="py-6 flex flex-col items-center justify-center">
+                    {fetchingMore && (
+                      <div className="flex items-center gap-2 text-[#7C3AED] font-bold text-xs">
+                        <Loader2 className="w-5 h-5 animate-spin" />
+                        <span>Loading more posts...</span>
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
             ) : (
               <div className="bg-white dark:bg-slate-900 border border-slate-150/40 dark:border-slate-800 rounded-3xl p-10 text-center text-slate-400 font-bold text-sm">

@@ -190,7 +190,11 @@ exports.getPostsFeed = async (req, res) => {
     const blockedUserIds = req.user.blockedUsers || [];
     const includeNews = req.query.includeNews === 'true';
 
-    // Fetch the 40 most recent community posts with populated likers
+    const page = Math.max(1, parseInt(req.query.page, 10) || 1);
+    const limit = Math.min(50, Math.max(1, parseInt(req.query.limit, 10) || 30));
+    const skip = (page - 1) * limit;
+
+    // Fetch the 30 most recent community posts with populated likers (paginated)
     const feedPostsPromise = Post.find({
       authorId: { $ne: null, $nin: blockedUserIds }, // Exclude admin updates and blocked users
       'reports.user': { $ne: currentUserId } // Exclude posts reported by the current user
@@ -198,7 +202,8 @@ exports.getPostsFeed = async (req, res) => {
       .populate('authorId', 'name profilePic googleAvatar facebookAvatar isEmailVerified verificationBadge')
       .populate('likes', 'name profilePic googleAvatar facebookAvatar')
       .sort({ createdAt: -1 })
-      .limit(40)
+      .skip(skip)
+      .limit(limit)
       .lean();
 
     // Optionally fetch news posts in parallel in 1 roundtrip
