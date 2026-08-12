@@ -1,7 +1,8 @@
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 import { API_BASE, getImageUrl } from '../config';
 
 const NewsSlider = ({ posts, onSeeAll, onCardClick }) => {
+  const sliderRef = useRef(null);
   const categories = ['World', 'Technology', 'Sports', 'Business', 'Platform'];
   
   const formatDate = (dateStr) => {
@@ -13,14 +14,38 @@ const NewsSlider = ({ posts, onSeeAll, onCardClick }) => {
     }
   };
 
+  // 3-Second Auto Scroll
+  useEffect(() => {
+    if (!posts || posts.length <= 1) return;
+
+    const interval = setInterval(() => {
+      const container = sliderRef.current;
+      if (!container) return;
+
+      const cardWidth = 224; // 208px card + 16px gap
+      const maxScrollLeft = container.scrollWidth - container.clientWidth;
+
+      if (container.scrollLeft >= maxScrollLeft - 10) {
+        container.scrollTo({ left: 0, behavior: 'smooth' });
+      } else {
+        container.scrollBy({ left: cardWidth, behavior: 'smooth' });
+      }
+    }, 3000); // 3 seconds per card
+
+    return () => clearInterval(interval);
+  }, [posts]);
+
   return (
     <div className="space-y-3.5 pt-2">
       <div className="flex items-center justify-between">
-        <h2 className="text-lg font-black text-slate-850 dark:text-white">Latest News</h2>
+        <h2 className="text-lg font-black text-slate-850 dark:text-white">Top News</h2>
         <button onClick={onSeeAll} className="text-xs font-black text-[#7C3AED] hover:underline transition-colors">See All</button>
       </div>
 
-      <div className="flex gap-4 overflow-x-auto pb-2 scrollbar-none snap-x w-full">
+      <div 
+        ref={sliderRef}
+        className="flex gap-4 overflow-x-auto pb-2 no-scrollbar snap-x w-full scroll-smooth"
+      >
         {posts.map((post, idx) => {
           const category = post.category || categories[idx % categories.length];
           const badgeColors = {
@@ -46,7 +71,7 @@ const NewsSlider = ({ posts, onSeeAll, onCardClick }) => {
             <div 
               key={post._id}
               onClick={() => onCardClick && onCardClick(post._id)}
-              className="w-52 bg-white dark:bg-slate-900/90 rounded-2xl p-3 shrink-0 snap-start active:scale-98 transition-all cursor-pointer space-y-2.5 shadow-sm hover:shadow-md flex flex-col justify-between"
+              className="w-52 bg-white dark:bg-slate-900/90 rounded-2xl p-3 shrink-0 snap-start active:scale-98 transition-all cursor-pointer space-y-2.5 shadow-sm hover:shadow-md flex flex-col justify-between border border-slate-100 dark:border-slate-800"
             >
               <div className="space-y-2">
                 {/* Cover Image */}

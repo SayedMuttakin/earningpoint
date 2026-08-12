@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Loader2, ArrowLeft } from 'lucide-react';
+import { Loader2, ArrowLeft, MoreVertical, Newspaper } from 'lucide-react';
 import { API_BASE, getImageUrl } from '../config';
 import VerifiedBadge from './VerifiedBadge';
 import PullToRefresh from './PullToRefresh';
@@ -7,80 +7,96 @@ import BannerAd from './BannerAd';
 import NewsTicker from './NewsTicker';
 import NewsSlider from './NewsSlider';
 
-const UpdateCard = ({ post, onClick }) => {
-  const [isExpanded, setIsExpanded] = useState(false);
-  const textThreshold = 180;
-  const shouldTruncate = post.content.length > textThreshold;
+const formatRelativeTime = (dateStr) => {
+  try {
+    const date = new Date(dateStr);
+    const now = new Date();
+    const diffMs = now - date;
+    const diffMins = Math.floor(diffMs / 60000);
+    const diffHours = Math.floor(diffMins / 60);
+    const diffDays = Math.floor(diffHours / 24);
+
+    if (diffMins < 1) return 'Just now';
+    if (diffMins < 60) return `${diffMins} min ago`;
+    if (diffHours < 24) return `${diffHours}h ago`;
+    if (diffDays < 7) return `${diffDays}d ago`;
+    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+  } catch (e) {
+    return 'Recently';
+  }
+};
+
+const CompactNewsCard = ({ post, onClick }) => {
+  const category = post.category || 'Latest';
   
-  const formatDate = (dateStr) => {
-    try {
-      const date = new Date(dateStr);
-      return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-    } catch (e) {
-      return 'Today';
-    }
+  const categoryColors = {
+    Latest: 'text-indigo-600 dark:text-indigo-400',
+    'Top News': 'text-rose-600 dark:text-rose-400',
+    National: 'text-[#7C3AED] dark:text-indigo-400',
+    International: 'text-purple-600 dark:text-purple-400',
+    Politics: 'text-red-600 dark:text-red-400',
+    Economy: 'text-blue-600 dark:text-blue-400',
+    Technology: 'text-teal-600 dark:text-teal-400',
+    Sports: 'text-orange-600 dark:text-orange-400',
+    Entertainment: 'text-pink-600 dark:text-pink-400',
+    Education: 'text-sky-600 dark:text-sky-400',
+    Jobs: 'text-amber-600 dark:text-amber-400',
+    Health: 'text-green-600 dark:text-green-400',
   };
+  
+  const catClass = categoryColors[category] || 'text-[#7C3AED] dark:text-indigo-400';
 
   return (
-    <article
+    <div
       id={`post-${post._id}`}
       onClick={onClick}
-      className="bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800/80 rounded-2xl overflow-hidden shadow-xs animate-fade-in p-4 space-y-3 cursor-pointer active:scale-[0.99] hover:shadow-sm transition-all"
+      className="flex items-center gap-3.5 bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800/80 rounded-2xl p-3 shadow-xs hover:shadow-md transition-all active:scale-[0.99] cursor-pointer select-none"
     >
-      {/* Header */}
-      <div className="flex items-center gap-2">
-        <div className="w-9 h-9 rounded-full overflow-hidden flex-shrink-0 bg-white border border-slate-100 dark:border-slate-800 shadow-xs p-[1.5px]">
-          <img 
-            src="/zenivio-logo.png" 
-            alt="Zenivio" 
-            className="w-full h-full object-contain"
-          />
-        </div>
-        <div className="flex items-center gap-2">
-          <span className="font-bold text-slate-800 dark:text-slate-200 text-sm">{post.authorName || 'Zenivio'}</span>
-          {post.isVerified !== false && (
-            <VerifiedBadge iconClassName="w-[14px] h-[14px] fill-blue-500 text-white" />
-          )}
-          <span className="text-slate-400 dark:text-slate-500 text-xs font-semibold">· {post.customTime || formatDate(post.createdAt)}</span>
-          {post.category && (
-            <span className="ml-auto text-[10px] font-black px-2 py-0.5 rounded bg-indigo-500/10 text-[#7C3AED] dark:text-indigo-400">
-              {post.category}
-            </span>
-          )}
-        </div>
-      </div>
-
-      {/* Title */}
-      {post.title && (
-        <h2 className="text-base font-black text-slate-950 dark:text-white leading-tight">
-          {post.title}
-        </h2>
-      )}
-
-      {/* Content */}
-      {post.content && (
-        <div className="text-slate-700 dark:text-slate-300 text-sm sm:text-base leading-relaxed whitespace-pre-wrap font-medium">
-          {shouldTruncate ? `${post.content.slice(0, textThreshold)}...` : post.content}
-          {shouldTruncate && (
-            <span className="ml-1 text-indigo-600 font-black text-sm hover:underline">
-              Read Details
-            </span>
-          )}
-        </div>
-      )}
-
-      {/* Image */}
-      {post.image && (
-        <div className="rounded-xl overflow-hidden border border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 max-h-[220px]">
-          <img 
-            src={getImageUrl(post.image)} 
-            alt="Attachment"
+      {/* Thumbnail Image */}
+      <div className="w-24 h-24 sm:w-28 sm:h-28 rounded-2xl overflow-hidden bg-slate-100 dark:bg-slate-800 flex-shrink-0">
+        {post.image ? (
+          <img
+            src={getImageUrl(post.image)}
+            alt={post.title || 'News'}
             className="w-full h-full object-cover"
             loading="lazy"
           />
+        ) : (
+          <div className="w-full h-full bg-gradient-to-br from-indigo-500/20 to-purple-500/20 flex items-center justify-center text-[#7C3AED] font-black text-2xl">
+            Z
+          </div>
+        )}
+      </div>
+
+      {/* Title & Metadata */}
+      <div className="flex-1 min-w-0 flex flex-col justify-between h-24 sm:h-28 py-0.5">
+        <h3 className="text-xs sm:text-sm font-black text-slate-900 dark:text-white leading-snug line-clamp-2">
+          {post.title || post.content}
+        </h3>
+
+        <div className="flex items-center justify-between text-[11px] font-bold text-slate-400 dark:text-slate-500">
+          <div className="flex items-center gap-1.5 min-w-0 truncate">
+            <span className={`font-black ${catClass}`}>
+              {category}
+            </span>
+            <span>•</span>
+            <span className="truncate">
+              {post.customTime || formatRelativeTime(post.createdAt)}
+            </span>
+          </div>
+
+          <button 
+            onClick={(e) => {
+              e.stopPropagation();
+              onClick();
+            }} 
+            className="p-1 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full text-slate-400 transition-colors"
+          >
+            <MoreVertical className="w-4 h-4" />
+          </button>
         </div>
-      )}
-    </article>
+      </div>
+    </div>
   );
 };
 
@@ -385,50 +401,45 @@ const UpdatesPage = ({ onBack, selectedPostId, setSelectedPostId }) => {
           </div>
         )}
 
-        <div className="max-w-xl mx-auto px-4 w-full pt-6">
-          {/* Header */}
-          <div className="flex items-center justify-between pb-6 mb-6 border-b border-slate-150 dark:border-slate-800">
-            <button 
-              onClick={onBack}
-              className="w-10 h-10 rounded-full bg-white dark:bg-slate-900 border border-slate-200/50 dark:border-slate-800 flex items-center justify-center hover:bg-slate-100 dark:hover:bg-slate-800 transition-all active:scale-95 shadow-xs"
-            >
-              <ArrowLeft className="w-5 h-5 text-slate-700 dark:text-slate-350" />
-            </button>
-            <h1 className="text-xl font-black text-slate-850 dark:text-white">Official Updates</h1>
-            <div className="w-10" /> {/* Spacer */}
+        <div className="max-w-xl mx-auto px-4 w-full pt-4">
+          {/* Section Header matching screenshot */}
+          <div className="flex items-center justify-between pb-3 mb-3 border-b border-slate-100 dark:border-slate-800">
+            <div className="flex items-center gap-2">
+              <Newspaper className="w-5 h-5 text-[#7C3AED] dark:text-indigo-400" />
+              <h2 className="text-base sm:text-lg font-black text-slate-900 dark:text-white">Latest News</h2>
+            </div>
+            <button className="text-xs font-black text-[#7C3AED] dark:text-indigo-400 hover:underline">See all</button>
           </div>
 
           {/* Feed */}
           {loading ? (
-            <div className="space-y-4">
-              {[1, 2, 3].map(i => (
-                <div key={i} className="bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-2xl p-4 space-y-3 animate-pulse">
-                  <div className="flex items-center gap-3">
-                    <div className="w-9 h-9 rounded-full bg-slate-200 dark:bg-slate-800" />
-                    <div className="space-y-1.5 flex-1">
-                      <div className="w-24 h-3.5 bg-slate-200 dark:bg-slate-800 rounded-md" />
-                      <div className="w-16 h-2.5 bg-slate-200 dark:bg-slate-800 rounded-md" />
-                    </div>
+            <div className="space-y-3">
+              {[1, 2, 3, 4].map(i => (
+                <div key={i} className="flex items-center gap-3.5 bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-2xl p-3 animate-pulse">
+                  <div className="w-24 h-24 sm:w-28 sm:h-28 rounded-2xl bg-slate-200 dark:bg-slate-800 flex-shrink-0" />
+                  <div className="flex-1 space-y-2">
+                    <div className="w-full h-4 bg-slate-200 dark:bg-slate-800 rounded-md" />
+                    <div className="w-3/4 h-4 bg-slate-200 dark:bg-slate-800 rounded-md" />
+                    <div className="w-1/2 h-3 bg-slate-200 dark:bg-slate-800 rounded-md" />
                   </div>
-                  <div className="w-3/4 h-5 bg-slate-200 dark:bg-slate-800 rounded-md" />
-                  <div className="w-full h-4 bg-slate-200 dark:bg-slate-800 rounded-md" />
-                  <div className="w-full h-40 bg-slate-200 dark:bg-slate-800 rounded-xl" />
                 </div>
               ))}
             </div>
           ) : posts.length > 0 ? (
-            <div className="space-y-4">
-              {posts.map(post => (
-                <UpdateCard 
-                  key={post._id} 
-                  post={post} 
-                  onClick={() => setSelectedPostId && setSelectedPostId(post._id)}
-                />
-              ))}
+            <div className="space-y-3">
+              {[...posts]
+                .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+                .map(post => (
+                  <CompactNewsCard 
+                    key={post._id} 
+                    post={post} 
+                    onClick={() => setSelectedPostId && setSelectedPostId(post._id)}
+                  />
+                ))}
             </div>
           ) : (
             <div className="text-center py-20 text-slate-400 font-bold text-sm">
-              No official updates available.
+              No news updates available.
             </div>
           )}
         </div>
