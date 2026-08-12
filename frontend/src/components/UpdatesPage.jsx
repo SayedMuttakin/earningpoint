@@ -46,17 +46,6 @@ const getCleanShortTime = (post) => {
   if (post.createdAt) {
     return formatRelativeTime(post.createdAt);
   }
-  if (post.customTime) {
-    const str = post.customTime.trim();
-    const parts = str.split(',');
-    if (parts.length >= 3) {
-      return parts[parts.length - 1].trim(); // e.g. "6.00 Pm"
-    }
-    if (str.length > 16) {
-      return str.slice(0, 16) + '...';
-    }
-    return str;
-  }
   return 'Recently';
 };
 
@@ -487,14 +476,7 @@ const RelatedNewsSlider = ({ posts, onSelect }) => {
               <ArrowLeft className="w-5 h-5" />
             </button>
             <span className="text-xs font-black text-slate-400 uppercase tracking-wider">Zenivio News</span>
-            <div className="flex items-center gap-1.5">
-              <button className="p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300">
-                <Bookmark className="w-5 h-5" />
-              </button>
-              <button className="p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300">
-                <Share2 className="w-5 h-5" />
-              </button>
-            </div>
+            <div className="w-9" /> {/* Spacer */}
           </div>
 
           <div className="max-w-xl mx-auto px-4 w-full pt-4 space-y-4">
