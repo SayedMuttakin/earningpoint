@@ -15,7 +15,7 @@ import { App as CapacitorApp } from '@capacitor/app';
 import { Capacitor } from '@capacitor/core';
 import { AdMobService } from './utils/admob';
 import AppUpdateModal from './components/AppUpdateModal';
-import { playNotificationSound } from './utils/sound';
+import { playNotificationSound, triggerSystemNotification } from './utils/sound';
 
 // Lazy load other sub-pages/components to split bundle size and make initial load super fast
 const CartPage = lazy(() => import('./components/CartPage'));
@@ -186,12 +186,20 @@ function App() {
         newSocket.emit('join_user_room', { userId: currentUser._id });
       });
 
-      newSocket.on('new_notification', () => {
-        playNotificationSound();
+      newSocket.on('new_notification', (data) => {
+        triggerSystemNotification(
+          data?.title || 'Zenivio Notification',
+          data?.message || 'You have a new update on Zenivio',
+          data
+        );
       });
 
-      newSocket.on('receive_message', () => {
-        playNotificationSound();
+      newSocket.on('receive_message', (data) => {
+        triggerSystemNotification(
+          data?.senderName ? `Message from ${data.senderName}` : 'New Message',
+          data?.text || 'Sent you a message',
+          data
+        );
       });
 
       newSocket.on('online_users', (usersList) => {
@@ -258,7 +266,7 @@ function App() {
     }
   }, [isAuthenticated]);
 
-  const CURRENT_APP_VERSION = '1.0.3';
+  const CURRENT_APP_VERSION = '1.0.5';
   const [appUpdateConfig, setAppUpdateConfig] = useState(null);
   const [showUpdateModal, setShowUpdateModal] = useState(false);
 

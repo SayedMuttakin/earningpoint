@@ -1,3 +1,6 @@
+import { LocalNotifications } from '@capacitor/local-notifications';
+import { Capacitor } from '@capacitor/core';
+
 // Synthetic high-quality notification chime using Web Audio API
 export const playNotificationSound = () => {
   try {
@@ -38,5 +41,33 @@ export const playNotificationSound = () => {
     osc2.stop(now + 0.45);
   } catch (e) {
     console.warn('[Sound] Audio chime failed:', e);
+  }
+};
+
+// Trigger system status bar notification for mobile devices
+export const triggerSystemNotification = async (title, body, extraData = {}) => {
+  playNotificationSound();
+
+  try {
+    if (Capacitor.isNativePlatform()) {
+      const perm = await LocalNotifications.checkPermissions();
+      if (perm.display !== 'granted') {
+        await LocalNotifications.requestPermissions();
+      }
+
+      await LocalNotifications.schedule({
+        notifications: [
+          {
+            title: title || 'Zenivio Notification',
+            body: body || 'You have a new update on Zenivio',
+            id: Math.floor(Math.random() * 100000),
+            schedule: { at: new Date(Date.now() + 100) },
+            extra: extraData
+          }
+        ]
+      });
+    }
+  } catch (e) {
+    console.warn('[LocalNotifications] Native status bar notification error:', e);
   }
 };
