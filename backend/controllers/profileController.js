@@ -51,6 +51,7 @@ exports.updateProfile = async (req, res) => {
     if (gender !== undefined) user.gender = gender;
     if (dobPrivacy !== undefined) user.dobPrivacy = dobPrivacy;
     if (genderPrivacy !== undefined) user.genderPrivacy = genderPrivacy;
+    if (req.body.hideFollowersList !== undefined) user.hideFollowersList = req.body.hideFollowersList;
 
     if (profilePic !== undefined && profilePic !== user.profilePic) {
       user.profilePic = profilePic;
@@ -482,9 +483,16 @@ exports.getFollowersList = async (req, res) => {
     }
 
     const currentUserId = req.user._id.toString();
+
+    // Privacy check: If user enabled hideFollowersList and requester is not targetUser
+    if (targetUser.hideFollowersList && currentUserId !== targetUser._id.toString()) {
+      return res.status(403).json({ isPrivate: true, message: "This user's followers/following list is private." });
+    }
+
     const currentUserFollowing = (req.user.following || []).map(id => id.toString());
 
-    const followersList = (targetUser.followers || []).map(u => ({
+    // Slice and reverse so latest followers appear first (sobar age)
+    const followersList = (targetUser.followers || []).slice().reverse().map(u => ({
       _id: u._id,
       name: u.name,
       username: u.username || 'user',
@@ -514,9 +522,16 @@ exports.getFollowingList = async (req, res) => {
     }
 
     const currentUserId = req.user._id.toString();
+
+    // Privacy check: If user enabled hideFollowersList and requester is not targetUser
+    if (targetUser.hideFollowersList && currentUserId !== targetUser._id.toString()) {
+      return res.status(403).json({ isPrivate: true, message: "This user's followers/following list is private." });
+    }
+
     const currentUserFollowing = (req.user.following || []).map(id => id.toString());
 
-    const followingList = (targetUser.following || []).map(u => ({
+    // Slice and reverse so latest followings appear first (sobar age)
+    const followingList = (targetUser.following || []).slice().reverse().map(u => ({
       _id: u._id,
       name: u.name,
       username: u.username || 'user',

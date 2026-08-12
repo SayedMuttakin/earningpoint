@@ -533,7 +533,7 @@ function App() {
           
           {activeTab === 'Support' && <SupportPage onBack={() => handleBackNavigation()} />}
           {/* MessengerPage is always mounted but hidden when not active — keeps socket alive and chat list cached */}
-          <div style={{ display: activeTab === 'Messenger' ? 'block' : 'none' }}>
+          <div className={activeTab === 'Messenger' ? 'fixed inset-0 z-[100] bg-white dark:bg-slate-950 flex flex-col' : 'hidden'}>
             <MessengerPage 
               onBack={() => {
                 setActiveChatPartner(null);

@@ -171,6 +171,7 @@ const FollowListModal = ({ targetUserId, initialTab, onClose, onUserClick, setAc
   const [activeTab, setActiveTabMode] = useState(initialTab || 'followers');
   const [usersList, setUsersList] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [isPrivate, setIsPrivate] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
 
   useEffect(() => {
@@ -179,14 +180,25 @@ const FollowListModal = ({ targetUserId, initialTab, onClose, onUserClick, setAc
 
   const fetchUsersList = async (tab) => {
     setLoading(true);
+    setIsPrivate(false);
     try {
       const token = localStorage.getItem('token');
       const res = await fetch(`${API_BASE}/api/profile/${targetUserId}/${tab}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
+      if (res.status === 403) {
+        setIsPrivate(true);
+        setUsersList([]);
+        return;
+      }
       if (res.ok) {
         const data = await res.json();
-        setUsersList(Array.isArray(data) ? data : []);
+        if (data.isPrivate) {
+          setIsPrivate(true);
+          setUsersList([]);
+        } else {
+          setUsersList(Array.isArray(data) ? data : []);
+        }
       }
     } catch (err) {
       console.error('Failed to fetch follow list:', err);
@@ -273,6 +285,16 @@ const FollowListModal = ({ targetUserId, initialTab, onClose, onUserClick, setAc
             <div className="flex flex-col items-center justify-center py-12 space-y-3 text-slate-400">
               <Loader2 className="w-7 h-7 animate-spin text-[#7C3AED]" />
               <span className="text-xs font-bold">Loading users...</span>
+            </div>
+          ) : isPrivate ? (
+            <div className="flex flex-col items-center justify-center py-16 px-4 text-center space-y-3">
+              <div className="w-14 h-14 rounded-full bg-indigo-50 dark:bg-indigo-950/50 flex items-center justify-center text-[#7C3AED] dark:text-indigo-400">
+                <Lock className="w-7 h-7" />
+              </div>
+              <h4 className="text-sm font-black text-slate-900 dark:text-white">This List is Private</h4>
+              <p className="text-xs text-slate-400 font-bold max-w-xs leading-relaxed">
+                This user has hidden their followers and following list in their privacy settings.
+              </p>
             </div>
           ) : filteredUsers.length > 0 ? (
             filteredUsers.map((u) => (

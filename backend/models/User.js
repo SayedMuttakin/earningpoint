@@ -48,6 +48,10 @@ const UserSchema = new mongoose.Schema({
     type: String,
     default: '',
   },
+  hideFollowersList: {
+    type: Boolean,
+    default: false,
+  },
   profilePic: {
     type: String,
     default: '',

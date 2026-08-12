@@ -79,6 +79,34 @@ const SettingsPage = ({
   // Activity Status & Read Receipts
   const [activityStatus, setActivityStatus] = useState(() => localStorage.getItem('activity_status') !== 'false');
   const [readReceipts, setReadReceipts] = useState(() => localStorage.getItem('read_receipts') !== 'false');
+  const [hideFollowersList, setHideFollowersList] = useState(false);
+
+  useEffect(() => {
+    if (user && user.hideFollowersList !== undefined) {
+      setHideFollowersList(user.hideFollowersList);
+    }
+  }, [user]);
+
+  const toggleHideFollowersList = async () => {
+    const newVal = !hideFollowersList;
+    setHideFollowersList(newVal);
+    try {
+      const token = localStorage.getItem('token');
+      const res = await fetch(`${API_BASE}/api/profile/update`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify({ hideFollowersList: newVal })
+      });
+      if (res.ok) {
+        showToast(newVal ? 'Followers/Following list is now hidden' : 'Followers/Following list is now visible');
+      }
+    } catch (err) {
+      console.error('Failed to update privacy setting:', err);
+    }
+  };
 
   // App Performance settings
   const [dataSaver, setDataSaver] = useState(() => localStorage.getItem('data_saver') === 'true');
@@ -373,6 +401,13 @@ const SettingsPage = ({
       items: [
         { label: 'Profile Privacy', sub: 'Read our terms of service and privacy policies', action: () => { closeSubMenu(); onTermsClick(); } },
         { label: 'Blocked Users', sub: 'Manage restricted and blocked users list', action: () => { closeSubMenu(); setShowBlockedModal(true); } },
+        { 
+          label: 'Hide Followers / Following List', 
+          sub: 'Only total counts will be visible to other users', 
+          isToggle: true, 
+          value: hideFollowersList, 
+          action: () => toggleHideFollowersList()
+        },
         { 
           label: 'Activity Status', 
           sub: 'Show or hide when you are active on the app', 
