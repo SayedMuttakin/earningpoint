@@ -556,6 +556,7 @@ function App() {
                 handleBackNavigation();
               }} 
               selectedPostId={selectedNewsId}
+              setSelectedPostId={setSelectedNewsId}
             />
           )}
         </Suspense>

@@ -117,6 +117,9 @@ const CompactNewsCard = ({ post, onClick }) => {
 };
 
 const UpdatesPage = ({ onBack, selectedPostId, setSelectedPostId }) => {
+  const [internalSelectedPostId, setInternalSelectedPostId] = useState(null);
+  const activePostId = selectedPostId || internalSelectedPostId;
+
   const [posts, setPosts] = useState(() => {
     try {
       const cached = localStorage.getItem('cached_admin_updates') || localStorage.getItem('cached_news_posts');
@@ -224,7 +227,7 @@ const UpdatesPage = ({ onBack, selectedPostId, setSelectedPostId }) => {
 
   useEffect(() => {
     const handleHardwareBack = (e) => {
-      if (selectedPostId) {
+      if (activePostId) {
         e.preventDefault();
         handleBackToFeed();
       }
@@ -233,18 +236,18 @@ const UpdatesPage = ({ onBack, selectedPostId, setSelectedPostId }) => {
     return () => {
       document.removeEventListener('appBackButton', handleHardwareBack);
     };
-  }, [selectedPostId]);
+  }, [activePostId]);
 
-  // Fetch news details if selectedPostId changes
+  // Fetch news details if activePostId changes
   useEffect(() => {
     const fetchDetailPost = async () => {
-      if (!selectedPostId) {
+      if (!activePostId) {
         setDetailPost(null);
         return;
       }
 
       // Try finding in existing posts array
-      const found = posts.find(p => p._id === selectedPostId);
+      const found = posts.find(p => p._id === activePostId);
       if (found) {
         setDetailPost(found);
         return;
@@ -253,7 +256,7 @@ const UpdatesPage = ({ onBack, selectedPostId, setSelectedPostId }) => {
       setDetailLoading(true);
       setDetailError(false);
       try {
-        const res = await fetch(`${API_BASE}/api/posts/${selectedPostId}`);
+        const res = await fetch(`${API_BASE}/api/posts/${activePostId}`);
         if (res.ok) {
           const data = await res.json();
           setDetailPost(data);
@@ -269,7 +272,7 @@ const UpdatesPage = ({ onBack, selectedPostId, setSelectedPostId }) => {
     };
 
     fetchDetailPost();
-  }, [selectedPostId, posts]);
+  }, [activePostId, posts]);
 
   const handleRefresh = () => {
     setRefreshing(true);
@@ -277,7 +280,14 @@ const UpdatesPage = ({ onBack, selectedPostId, setSelectedPostId }) => {
     fetchGlobalSettings();
   };
 
+  const handleSelectPost = (postId) => {
+    setInternalSelectedPostId(postId);
+    if (setSelectedPostId) setSelectedPostId(postId);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
   const handleBackToFeed = () => {
+    setInternalSelectedPostId(null);
     if (setSelectedPostId) {
       setSelectedPostId(null);
     }
@@ -454,10 +464,7 @@ const UpdatesPage = ({ onBack, selectedPostId, setSelectedPostId }) => {
         {/* Scrolling News Ticker at the top */}
         <NewsTicker 
           posts={posts} 
-          onCardClick={(postId) => {
-            if (setSelectedPostId) setSelectedPostId(postId);
-            setDetailPost(posts.find(p => p._id === postId) || null);
-          }}
+          onCardClick={(postId) => handleSelectPost(postId)}
         />
 
         {/* Horizontal News Cards Slider */}
@@ -466,10 +473,7 @@ const UpdatesPage = ({ onBack, selectedPostId, setSelectedPostId }) => {
             <NewsSlider 
               posts={posts} 
               onSeeAll={() => {}} 
-              onCardClick={(postId) => {
-                if (setSelectedPostId) setSelectedPostId(postId);
-                setDetailPost(posts.find(p => p._id === postId) || null);
-              }}
+              onCardClick={(postId) => handleSelectPost(postId)}
             />
           </div>
         )}
@@ -502,11 +506,12 @@ const UpdatesPage = ({ onBack, selectedPostId, setSelectedPostId }) => {
             <div className="space-y-3">
               {[...posts]
                 .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+                .slice(0, 10)
                 .map(post => (
                   <CompactNewsCard 
                     key={post._id} 
                     post={post} 
-                    onClick={() => setSelectedPostId && setSelectedPostId(post._id)}
+                    onClick={() => handleSelectPost(post._id)}
                   />
                 ))}
             </div>
