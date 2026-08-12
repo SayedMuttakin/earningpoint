@@ -674,7 +674,7 @@ const CommunityPostCard = ({ post, onFollowToggle, onLikeToggle, onCommentClick,
   })();
 
   return (
-    <article className="bg-white dark:bg-slate-900 rounded-[2rem] p-4.5 space-y-3.5 shadow-sm hover:shadow-md transition-shadow">
+    <article id={`post-${post._id}`} className="bg-white dark:bg-slate-900 rounded-[2rem] p-4.5 space-y-3.5 shadow-sm hover:shadow-md transition-shadow">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
@@ -1431,15 +1431,44 @@ const HomePage = ({ setActiveTab, setSelectedNewsId, setActiveChatPartner, setSe
 
   useEffect(() => {
     if (highlightedPostId) {
+      const targetPostId = typeof highlightedPostId === 'object' ? highlightedPostId.postId : highlightedPostId;
+      const shouldOpenComment = typeof highlightedPostId === 'object' ? !!highlightedPostId.openComment : false;
+
+      if (!targetPostId) return;
+
       const fetchHighlightedPost = async () => {
         try {
           const token = localStorage.getItem('token');
-          const res = await fetch(`${API_BASE}/api/posts/${highlightedPostId}`, {
+          const res = await fetch(`${API_BASE}/api/posts/${targetPostId}`, {
             headers: { Authorization: `Bearer ${token}` }
           });
           if (res.ok) {
             const postData = await res.json();
-            setActiveCommentPost(postData);
+
+            // Ensure post exists in feedPosts list so it renders on screen
+            setFeedPosts(prev => {
+              const exists = prev.some(p => p._id && p._id.toString() === postData._id.toString());
+              if (!exists) {
+                return [postData, ...prev];
+              }
+              return prev;
+            });
+
+            // ONLY open comment drawer if it was a comment notification!
+            if (shouldOpenComment) {
+              setActiveCommentPost(postData);
+            } else {
+              setActiveCommentPost(null); // Ensure comments drawer is closed for Like / Post notifications!
+            }
+
+            // Smooth scroll the post card into view on Home feed!
+            setTimeout(() => {
+              const postEl = document.getElementById(`post-${targetPostId}`);
+              if (postEl) {
+                postEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+              }
+            }, 300);
+
             if (setHighlightedPostId) setHighlightedPostId(null);
           }
         } catch (err) {

@@ -257,7 +257,11 @@ const NotificationPage = ({ onBack, setActiveTab, setSelectedNotificationPostId,
                         onClick={() => {
                           if (!n.isRead) markAsRead(n._id);
                           if (n.postId && setSelectedNotificationPostId && setActiveTab) {
-                            setSelectedNotificationPostId(n.postId);
+                            const isCommentNotif = n.type === 'comment' || (n.title && n.title.toLowerCase().includes('comment')) || (n.message && n.message.toLowerCase().includes('commented'));
+                            setSelectedNotificationPostId({
+                              postId: n.postId,
+                              openComment: isCommentNotif
+                            });
                             setActiveTab('Home');
                             onBack();
                           } else if ((n.type === 'follow' || n.senderId) && setActivePublicProfileUserId && setActiveTab) {
