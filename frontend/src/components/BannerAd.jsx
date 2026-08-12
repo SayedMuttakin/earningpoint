@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect } from 'react';
 import { AdMobService } from '../utils/admob';
 import { Capacitor } from '@capacitor/core';
 
@@ -12,22 +12,25 @@ const BannerAd = ({ globalSettings, size = 'banner' }) => {
     }
   }, [size]);
 
-  // Web fallback — realistic AdMob test banner ad
+  const isBig = size === 'big' || size === 'medium_rectangle' || size === 'large';
+
   return (
-    <div className="relative w-full h-[60px] border border-slate-200/80 dark:border-slate-700/80 rounded-2xl bg-white dark:bg-slate-900 flex items-center justify-center overflow-hidden shadow-sm">
-      {/* Test Ad Badge in the top-right corner */}
-      <div className="absolute top-0 right-0 bg-[#4A5568] dark:bg-slate-700 text-white text-[9px] px-2 py-0.5 rounded-bl-lg font-bold tracking-wide uppercase select-none">
-        Test Ad
+    <div className={`relative w-full ${isBig ? 'h-[250px]' : 'h-[85px]'} border border-slate-200/80 dark:border-slate-800 rounded-2xl bg-gradient-to-br from-white via-slate-50 to-slate-100 dark:from-slate-900 dark:via-slate-900/90 dark:to-slate-950 flex flex-col items-center justify-center overflow-hidden shadow-xs my-2 select-none`}>
+      {/* Sponsored Badge */}
+      <div className="absolute top-2 right-2 bg-indigo-500/10 dark:bg-indigo-900/30 text-[#7C3AED] dark:text-indigo-400 text-[10px] px-2 py-0.5 rounded-md font-black tracking-wide uppercase select-none">
+        Ad
       </div>
       
-      {/* Center Layout split by divider */}
-      <div className="flex items-center justify-center gap-3 sm:gap-4 select-none">
-        <span className="text-[#3182CE] dark:text-blue-400 font-black text-sm tracking-widest uppercase">
-          SPONSORED
+      {/* Ad Card Content */}
+      <div className="flex flex-col items-center justify-center gap-1.5 p-4 text-center">
+        <span className="text-[#7C3AED] dark:text-indigo-400 font-black text-xs tracking-widest uppercase">
+          SPONSORED ADVERTISEMENT
         </span>
-        <div className="h-6 w-px bg-slate-300 dark:bg-slate-700" />
-        <span className="text-[#718096] dark:text-slate-400 text-sm font-semibold tracking-tight">
-          468x60 Banner Ad
+        <span className="text-slate-500 dark:text-slate-400 text-xs font-bold">
+          {isBig ? '320x250 Medium Rectangle Ad' : '320x100 Responsive Banner Ad'}
+        </span>
+        <span className="text-[10px] text-slate-400 dark:text-slate-500 font-medium">
+          (Real AdMob Ads render automatically inside Mobile App)
         </span>
       </div>
     </div>

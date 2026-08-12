@@ -403,7 +403,7 @@ const UpdatesPage = ({ onBack, selectedPostId, setSelectedPostId }) => {
                   <p className="whitespace-pre-wrap">{p}</p>
                   {(idx === 0 || idx === 2) && (
                     <div className="my-4">
-                      <BannerAd size="banner" />
+                      <BannerAd size="big" />
                     </div>
                   )}
                 </React.Fragment>
