@@ -1450,21 +1450,44 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
     if (isLoading) return;
     setCurrentAdInfo({ name: adName, type: adType, coins, time: 0 });
     
-    if (adType === 'Rewarded Video' || adType === 'Rewarded Interstitial') {
-      setIsLoading(true);
-      await AdMobService.showRewarded(() => handleCustomAdReward(coins, adName), 'rewarded');
-    } else if (adType === 'App Open Ad') {
-      setIsLoading(true);
-      await AdMobService.showAppOpenAd(() => handleCustomAdReward(coins, adName));
-    } else if (adType === 'Interstitial') {
-      setIsLoading(true);
-      await AdMobService.showInterstitial(() => handleCustomAdReward(coins, adName));
-    } else if (adType === 'Native Ad') {
-      setShowNativeAd(true);
-      setCurrentAdInfo({ name: adName, type: adType, coins, time: 5 });
-      await AdMobService.showNativeSimulatedAd();
-    } else {
-      setShowOfferwallAd(true);
+    setIsLoading(true);
+    const resetLoading = () => setIsLoading(false);
+
+    try {
+      if (adType === 'Rewarded Video' || adType === 'Rewarded Interstitial') {
+        await AdMobService.showRewarded(
+          () => {
+            handleCustomAdReward(coins, adName);
+            resetLoading();
+          },
+          'rewarded',
+          (errMsg) => {
+            showToast(errMsg, 'error');
+            resetLoading();
+          },
+          () => resetLoading()
+        );
+      } else if (adType === 'App Open Ad') {
+        await AdMobService.showAppOpenAd(() => {
+          handleCustomAdReward(coins, adName);
+          resetLoading();
+        });
+      } else if (adType === 'Interstitial') {
+        await AdMobService.showInterstitial(() => {
+          handleCustomAdReward(coins, adName);
+          resetLoading();
+        });
+      } else if (adType === 'Native Ad') {
+        resetLoading();
+        setShowNativeAd(true);
+        setCurrentAdInfo({ name: adName, type: adType, coins, time: 5 });
+      } else {
+        resetLoading();
+        setShowOfferwallAd(true);
+      }
+    } catch (e) {
+      console.error('Ad option click error:', e);
+      resetLoading();
     }
   };
 
