@@ -356,8 +356,8 @@ const TermsPrivacyPage = ({ onBack, initialTab = 'terms', standalone = false, da
       `}</style>
 
       {/* 1. TOP BAR / HEADER */}
-      <header className="sticky top-0 z-40 bg-white/80 dark:bg-slate-900/85 backdrop-blur-lg border-b border-slate-200/60 dark:border-slate-800/80 transition-all duration-300 no-print">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+      <header className="sticky top-0 z-40 bg-white/80 dark:bg-slate-900/85 backdrop-blur-lg border-b border-slate-200/60 dark:border-slate-800/80 transition-all duration-300 no-print pt-[env(safe-area-inset-top,0px)]">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-14 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <button 
               onClick={onBack} 

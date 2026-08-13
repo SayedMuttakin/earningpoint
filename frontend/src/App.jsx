@@ -266,7 +266,7 @@ function App() {
     }
   }, [isAuthenticated]);
 
-  const CURRENT_APP_VERSION = '1.0.8';
+  const CURRENT_APP_VERSION = '1.0.9';
   const [appUpdateConfig, setAppUpdateConfig] = useState(null);
   const [showUpdateModal, setShowUpdateModal] = useState(false);
 
@@ -290,7 +290,7 @@ function App() {
           AdMobService.setConfig(settings.admobConfig);
         }
         if (settings && settings.appUpdateConfig) {
-          const config = settings.appUpdateConfig;
+          const config = { ...settings.appUpdateConfig };
           setAppUpdateConfig(config);
           const latest = config.latestAppVersion;
           
@@ -310,7 +310,11 @@ function App() {
               }
             }
 
-            if (isOutdated || (config.forceUpdate && latest !== CURRENT_APP_VERSION)) {
+            if (isOutdated) {
+              config.forceUpdate = true;
+              setAppUpdateConfig(config);
+              setShowUpdateModal(true);
+            } else if (config.forceUpdate && latest !== CURRENT_APP_VERSION) {
               setShowUpdateModal(true);
             }
           }

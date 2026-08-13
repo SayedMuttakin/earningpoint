@@ -436,8 +436,8 @@ const VerificationPage = ({ onBack }) => {
     return (
       <div className="w-full min-h-screen bg-white dark:bg-slate-955 flex flex-col relative pb-24 select-none">
         {/* Header */}
-        <div className="sticky top-0 z-10 bg-white dark:bg-slate-955 border-b border-slate-100 dark:border-slate-900 shadow-3xs">
-          <div className="max-w-md mx-auto px-4 py-4 flex items-center justify-between relative">
+        <div className="sticky top-0 z-10 bg-white dark:bg-slate-955 border-b border-slate-100 dark:border-slate-900 shadow-3xs pt-[env(safe-area-inset-top,0px)]">
+          <div className="max-w-md mx-auto px-4 py-2.5 flex items-center justify-between relative">
             <button 
               onClick={onBack} 
               className="p-2 hover:bg-slate-100 dark:hover:bg-slate-900 rounded-full text-slate-700 dark:text-slate-300 active:scale-90 transition-transform cursor-pointer"
@@ -475,8 +475,8 @@ const VerificationPage = ({ onBack }) => {
     return (
       <div className="w-full min-h-screen bg-white dark:bg-slate-955 flex flex-col relative pb-24 select-none">
         {/* Header */}
-        <div className="sticky top-0 z-10 bg-white dark:bg-slate-955 border-b border-slate-100 dark:border-slate-900 shadow-3xs">
-          <div className="max-w-md mx-auto px-4 py-4 flex items-center justify-between relative">
+        <div className="sticky top-0 z-10 bg-white dark:bg-slate-955 border-b border-slate-100 dark:border-slate-900 shadow-3xs pt-[env(safe-area-inset-top,0px)]">
+          <div className="max-w-md mx-auto px-4 py-2.5 flex items-center justify-between relative">
             <button 
               onClick={onBack} 
               className="p-2 hover:bg-slate-100 dark:hover:bg-slate-900 rounded-full text-slate-700 dark:text-slate-300 active:scale-90 transition-transform cursor-pointer"
@@ -511,8 +511,8 @@ const VerificationPage = ({ onBack }) => {
     return (
       <div className="w-full min-h-screen bg-white dark:bg-slate-955 flex flex-col relative pb-24 select-none">
         {/* Header */}
-        <div className="sticky top-0 z-10 bg-white dark:bg-slate-955 border-b border-slate-100 dark:border-slate-900 shadow-3xs">
-          <div className="max-w-md mx-auto px-4 py-4 flex items-center justify-between relative">
+        <div className="sticky top-0 z-10 bg-white dark:bg-slate-955 border-b border-slate-100 dark:border-slate-900 shadow-3xs pt-[env(safe-area-inset-top,0px)]">
+          <div className="max-w-md mx-auto px-4 py-2.5 flex items-center justify-between relative">
             <button 
               onClick={onBack} 
               className="p-2 hover:bg-slate-100 dark:hover:bg-slate-900 rounded-full text-slate-700 dark:text-slate-300 active:scale-90 transition-transform cursor-pointer"
@@ -589,8 +589,8 @@ const VerificationPage = ({ onBack }) => {
         `}</style>
 
         {/* Header */}
-        <div className="sticky top-0 z-10 bg-white dark:bg-slate-955 border-b border-slate-100 dark:border-slate-900 shadow-3xs">
-          <div className="max-w-md mx-auto px-4 py-4 flex items-center justify-between relative">
+        <div className="sticky top-0 z-10 bg-white dark:bg-slate-955 border-b border-slate-100 dark:border-slate-900 shadow-3xs pt-[env(safe-area-inset-top,0px)]">
+          <div className="max-w-md mx-auto px-4 py-2.5 flex items-center justify-between relative">
             <button 
               onClick={() => {
                 if (step === 1) {

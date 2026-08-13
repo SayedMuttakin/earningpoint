@@ -99,7 +99,7 @@ const CheckoutPage = ({ product, onBack, onSuccess }) => {
 
   return (
     <PullToRefresh onRefresh={handleRefresh} refreshing={refreshing}>
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 pt-[max(16px,env(safe-area-inset-top))] pb-12">
       {/* Back Button */}
       <button 
         onClick={onBack}

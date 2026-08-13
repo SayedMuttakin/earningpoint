@@ -990,7 +990,7 @@ const PublicProfilePage = ({ userId, onBack, currentUser, isOwnProfile, setActiv
         {!isOwn && (
           <button
             onClick={onBack}
-            className="absolute top-4 left-4 p-2.5 bg-black/40 hover:bg-black/60 backdrop-blur-md text-white rounded-full z-50 transition-all active:scale-90 shadow-md border border-white/10 flex items-center justify-center cursor-pointer"
+            className="absolute top-[max(16px,env(safe-area-inset-top))] left-4 p-2.5 bg-black/40 hover:bg-black/60 backdrop-blur-md text-white rounded-full z-50 transition-all active:scale-90 shadow-md border border-white/10 flex items-center justify-center cursor-pointer"
           >
             <ArrowLeft className="w-5 h-5" strokeWidth={2.5} />
           </button>

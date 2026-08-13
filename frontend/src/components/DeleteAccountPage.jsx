@@ -51,8 +51,8 @@ const DeleteAccountPage = ({ onBack, onLogout }) => {
   return (
     <PullToRefresh onRefresh={handleRefresh} refreshing={refreshing}>
       <div className="w-full min-h-screen bg-slate-50 dark:bg-slate-900 flex flex-col pb-24">
-        <div className="sticky top-0 z-10 bg-white dark:bg-slate-800 border-b border-slate-100 dark:border-slate-700 shadow-sm">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex items-center">
+        <div className="sticky top-0 z-10 bg-white dark:bg-slate-800 border-b border-slate-100 dark:border-slate-700 shadow-sm pt-[env(safe-area-inset-top,0px)]">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2.5 flex items-center">
             <button onClick={onBack} className="w-10 h-10 rounded-full bg-slate-50 dark:bg-slate-700 flex items-center justify-center hover:bg-slate-100 dark:hover:bg-slate-600 transition-colors mr-4">
               <ChevronLeft className="w-6 h-6 text-slate-700 dark:text-slate-200" />
             </button>

@@ -647,7 +647,7 @@ const SettingsPage = ({
           `}</style>
 
           {/* Sticky Header Section */}
-          <div className="sticky top-0 z-30 bg-slate-50/90 dark:bg-slate-955/90 backdrop-blur-md px-4 py-3 flex items-center justify-between border-b border-slate-200/50 dark:border-slate-900">
+          <div className="sticky top-0 z-30 bg-slate-50/90 dark:bg-slate-955/90 backdrop-blur-md px-4 pt-[max(10px,env(safe-area-inset-top))] pb-2.5 flex items-center justify-between border-b border-slate-200/50 dark:border-slate-900">
             <button 
               onClick={() => {
                 if (showProfileModal) {

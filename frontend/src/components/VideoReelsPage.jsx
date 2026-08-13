@@ -133,8 +133,8 @@ const ReelCard = ({ video, isActive, isMuted, toggleMute, currentUserId, onLikeT
         className="w-full h-full object-cover cursor-pointer"
       />
 
-      {/* Top Transparent Header (Matches TikTok top bar) */}
-      <div className="absolute top-0 left-0 right-0 z-50 flex items-center justify-between p-4 pt-5 bg-gradient-to-b from-black/80 via-black/40 to-transparent">
+      {/* Top Transparent Header (Matches TikTok top bar with safe area top padding) */}
+      <div className="absolute top-0 left-0 right-0 z-50 flex items-center justify-between p-4 pt-[max(16px,env(safe-area-inset-top))] pb-3 bg-gradient-to-b from-black/80 via-black/40 to-transparent">
         <button 
           onClick={onBack}
           className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-black/40 hover:bg-black/60 backdrop-blur-md text-white border border-white/20 transition-all active:scale-95 shadow-lg"

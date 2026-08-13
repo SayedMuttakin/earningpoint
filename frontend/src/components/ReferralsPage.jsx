@@ -223,8 +223,8 @@ const ReferralsPage = ({ onBack }) => {
     return (
       <div className="w-full min-h-screen bg-slate-50 dark:bg-slate-950 flex flex-col pb-6 select-none animate-fade-in">
         {/* Header */}
-        <div className="sticky top-0 z-10 bg-white dark:bg-slate-900 border-b border-slate-100 dark:border-slate-800 shadow-3xs">
-          <div className="max-w-md mx-auto px-4 py-3 flex items-center gap-3">
+        <div className="sticky top-0 z-10 bg-white dark:bg-slate-900 border-b border-slate-100 dark:border-slate-800 shadow-3xs pt-[env(safe-area-inset-top,0px)]">
+          <div className="max-w-md mx-auto px-4 py-2.5 flex items-center gap-3">
             <button 
               onClick={() => setShowRulesPage(false)} 
               className="w-9 h-9 rounded-full bg-slate-50 dark:bg-slate-800 flex items-center justify-center hover:bg-slate-100 dark:hover:bg-slate-700 active:scale-90 transition-transform flex-shrink-0"
@@ -432,8 +432,8 @@ const ReferralsPage = ({ onBack }) => {
     <PullToRefresh onRefresh={handleRefresh} refreshing={refreshing}>
       <div className="w-full min-h-screen bg-slate-50 dark:bg-slate-950 flex flex-col pb-24 animate-fade-in">
         {/* Header */}
-        <div className="sticky top-0 z-10 bg-white dark:bg-slate-900 border-b border-slate-100 dark:border-slate-800 shadow-3xs">
-          <div className="max-w-md mx-auto px-4 py-3 flex items-center justify-between">
+        <div className="sticky top-0 z-10 bg-white dark:bg-slate-900 border-b border-slate-100 dark:border-slate-800 shadow-3xs pt-[env(safe-area-inset-top,0px)]">
+          <div className="max-w-md mx-auto px-4 py-2.5 flex items-center justify-between">
             <button onClick={onBack} className="w-9 h-9 rounded-full bg-slate-50 dark:bg-slate-800 flex items-center justify-center hover:bg-slate-100 dark:hover:bg-slate-700 active:scale-90 transition-transform">
               <ChevronLeft className="w-5 h-5 text-slate-700 dark:text-slate-350" />
             </button>

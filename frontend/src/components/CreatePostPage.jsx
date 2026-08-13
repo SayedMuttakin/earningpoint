@@ -279,28 +279,30 @@ const CreatePostPage = ({ currentUser, onBack, setActiveTab, postToEdit = null, 
         </div>
       )}
       {/* Top Header */}
-      <header className="sticky top-0 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 h-16 flex items-center justify-between px-4 z-30">
-        <div className="flex items-center gap-3">
-          <button 
-            onClick={onBack}
-            className="p-1.5 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-350 transition-colors"
+      <header className="sticky top-0 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 flex flex-col justify-center px-4 pt-[env(safe-area-inset-top,0px)] pb-1.5 z-30">
+        <div className="h-13 flex items-center justify-between w-full">
+          <div className="flex items-center gap-3">
+            <button 
+              onClick={onBack}
+              className="p-1.5 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-350 transition-colors"
+            >
+              <ArrowLeft className="w-6 h-6" />
+            </button>
+            <h1 className="text-lg font-black text-slate-800 dark:text-white">{postToEdit ? 'Edit Post' : 'Create Post'}</h1>
+          </div>
+          
+          <button
+            onClick={handlePostSubmit}
+            disabled={(!content.trim() && !selectedImage) || postingLoading}
+            className="px-5 py-2 bg-brand-600 hover:bg-brand-700 disabled:bg-slate-200 dark:disabled:bg-slate-800 disabled:text-slate-400 dark:disabled:text-slate-600 text-white font-black text-sm rounded-full shadow-md active:scale-95 transition-all flex items-center gap-2"
           >
-            <ArrowLeft className="w-6 h-6" />
+            {postingLoading ? (
+              <><Loader2 className="w-4.5 h-4.5 animate-spin" /> {postToEdit ? 'Saving...' : 'Posting...'}</>
+            ) : (
+              postToEdit ? 'Save' : 'Post'
+            )}
           </button>
-          <h1 className="text-lg font-black text-slate-800 dark:text-white">{postToEdit ? 'Edit Post' : 'Create Post'}</h1>
         </div>
-        
-        <button
-          onClick={handlePostSubmit}
-          disabled={(!content.trim() && !selectedImage) || postingLoading}
-          className="px-5 py-2 bg-brand-600 hover:bg-brand-700 disabled:bg-slate-200 dark:disabled:bg-slate-800 disabled:text-slate-400 dark:disabled:text-slate-600 text-white font-black text-sm rounded-full shadow-md active:scale-95 transition-all flex items-center gap-2"
-        >
-          {postingLoading ? (
-            <><Loader2 className="w-4.5 h-4.5 animate-spin" /> {postToEdit ? 'Saving...' : 'Posting...'}</>
-          ) : (
-            postToEdit ? 'Save' : 'Post'
-          )}
-        </button>
       </header>
 
       {/* Main Body */}

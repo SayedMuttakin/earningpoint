@@ -301,7 +301,7 @@ const SupportPage = ({ onBack }) => {
   return (
     <div className="absolute inset-0 z-50 bg-slate-50 dark:bg-slate-950 flex flex-col overflow-hidden">
       {/* Header */}
-      <div className="bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800/80 px-4 py-3 flex items-center justify-between shrink-0 shadow-sm z-10 relative">
+      <div className="bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800/80 px-4 pt-[max(12px,env(safe-area-inset-top))] pb-2.5 flex items-center justify-between shrink-0 shadow-sm z-10 relative">
         <div className="flex items-center gap-2 sm:gap-3">
           <button onClick={onBack} className="p-2 -ml-1 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 transition-colors">
             <ArrowLeft className="w-6 h-6" />
