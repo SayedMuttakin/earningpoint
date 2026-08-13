@@ -181,7 +181,7 @@ const Navbar = ({
             onClick={() => setIsSidebarOpen(false)}
           />
           {/* Drawer Panel */}
-          <div className="fixed top-0 left-0 h-fit max-h-[95vh] w-[85%] sm:w-[70%] md:w-[340px] bg-white dark:bg-slate-900 shadow-2xl z-[100000] flex flex-col overflow-hidden rounded-br-[2.5rem] animate-slide-in">
+          <div className="fixed top-0 left-0 h-fit max-h-[95vh] w-[85%] sm:w-[70%] md:w-[340px] bg-white dark:bg-slate-900 shadow-2xl z-[100000] flex flex-col overflow-hidden rounded-br-[2.5rem] animate-slide-in pt-[max(12px,env(safe-area-inset-top))]">
             {/* Header / Profile Card */}
             <div className="px-4.5 py-5 border-b border-slate-100 dark:border-slate-800 bg-gradient-to-br from-indigo-500/5 via-purple-500/5 to-transparent dark:from-indigo-950/10 dark:via-purple-950/5">
               <div className="flex items-center gap-3">
@@ -214,7 +214,7 @@ const Navbar = ({
               </div>
             </div>
 
-            {/* Panel: Categories (Full Width List, No sub-menus, No scrollbar visible) */}
+            {/* Panel: Categories */}
             <div className="flex-1 overflow-y-auto no-scrollbar px-2.5 py-4 space-y-1 bg-slate-55/10 dark:bg-slate-955/10">
               {allItems.map((item) => (
                 <button
@@ -242,10 +242,10 @@ const Navbar = ({
         </>
       )}
 
-      {/* Desktop & Top Mobile Navbar (Fixed at top of container) */}
+      {/* Desktop & Top Mobile Navbar (Fixed at top of container with safe-area top padding for notch/curved displays) */}
       {activeTab !== 'Video' && (
-        <nav className="fixed top-0 left-0 right-0 mx-auto w-full max-w-xl bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-b border-slate-200/80 dark:border-slate-800/80 shadow-xs z-[9998] h-16 flex items-center px-4">
-          <div className="flex justify-between items-center w-full">
+        <nav className="fixed top-0 left-0 right-0 mx-auto w-full max-w-xl bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-b border-slate-200/80 dark:border-slate-800/80 shadow-xs z-[9998] flex flex-col justify-center px-4 pt-[max(12px,env(safe-area-inset-top))] pb-1">
+          <div className="flex justify-between items-center w-full h-14">
             {/* Left Side: Mobile Menu Button and Brand */}
             <div className="flex items-center gap-1 sm:gap-2 relative z-50">
               <button 
@@ -365,6 +365,5 @@ const Navbar = ({
     </>
   );
 };
-
 
 export default Navbar;

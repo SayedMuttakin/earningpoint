@@ -473,7 +473,7 @@ const RelatedNewsSlider = ({ posts, onSelect }) => {
       return (
         <div className="min-h-screen bg-slate-50 dark:bg-slate-950 pb-24 flex flex-col animate-fade-in select-none">
           {/* Top Sticky Header Bar matching screenshot */}
-          <div className="sticky top-0 z-40 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-b border-slate-100 dark:border-slate-800 px-4 py-3 flex items-center justify-between">
+          <div className="sticky top-0 z-40 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-b border-slate-100 dark:border-slate-800 px-4 pt-[max(12px,env(safe-area-inset-top))] pb-3 flex items-center justify-between">
             <button 
               onClick={handleBackToFeed}
               className="p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 transition-colors"
