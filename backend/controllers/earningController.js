@@ -788,7 +788,12 @@ exports.getGlobalSettings = async (req, res) => {
       nativeAdsConfig: settings.nativeAdsConfig,
       fortuneWheelConfig: settings.fortuneWheelConfig,
       admobConfig: settings.admobConfig,
-      appUpdateConfig: settings.appUpdateConfig,
+      appUpdateConfig: (settings.appUpdateConfig && settings.appUpdateConfig.latestAppVersion) ? settings.appUpdateConfig : {
+        latestAppVersion: '1.0.8',
+        minAppVersion: '1.0.8',
+        forceUpdate: true,
+        updateNotes: 'New high-speed updates, curved screen layout fix, and performance enhancements are available! Please update now from Google Play Store.'
+      },
       referralCampaignTarget: settings.referralCampaignTarget,
       referralCampaignReward: settings.referralCampaignReward,
       zinipayEnabled: settings.zinipayEnabled !== false

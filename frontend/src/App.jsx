@@ -290,10 +290,29 @@ function App() {
           AdMobService.setConfig(settings.admobConfig);
         }
         if (settings && settings.appUpdateConfig) {
-          setAppUpdateConfig(settings.appUpdateConfig);
-          const latest = settings.appUpdateConfig.latestAppVersion;
-          if (latest && latest !== CURRENT_APP_VERSION) {
-            setShowUpdateModal(true);
+          const config = settings.appUpdateConfig;
+          setAppUpdateConfig(config);
+          const latest = config.latestAppVersion;
+          
+          if (latest) {
+            const currentParts = CURRENT_APP_VERSION.split('.').map(Number);
+            const latestParts = latest.split('.').map(Number);
+            
+            let isOutdated = false;
+            for (let i = 0; i < Math.max(currentParts.length, latestParts.length); i++) {
+              const curr = currentParts[i] || 0;
+              const lat = latestParts[i] || 0;
+              if (lat > curr) {
+                isOutdated = true;
+                break;
+              } else if (lat < curr) {
+                break;
+              }
+            }
+
+            if (isOutdated || (config.forceUpdate && latest !== CURRENT_APP_VERSION)) {
+              setShowUpdateModal(true);
+            }
           }
         }
       } catch (settingsErr) {
