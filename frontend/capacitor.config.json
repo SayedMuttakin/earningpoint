@@ -21,6 +21,13 @@
     "FacebookLogin": {
       "appId": "YOUR_FACEBOOK_APP_ID",
       "appName": "Zenivio"
+    },
+    "SplashScreen": {
+      "launchShowDuration": 2000,
+      "launchAutoHide": true,
+      "backgroundColor": "#1B0631",
+      "androidSplashResourceName": "splash",
+      "showSpinner": false
     }
   }
 }

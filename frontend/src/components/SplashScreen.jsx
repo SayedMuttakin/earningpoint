@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 
-// Preload the app icon for instant display
+// Preload the splash icon for instant display
 const preloadImg = new Image();
-preloadImg.src = '/logo.png';
+preloadImg.src = '/splash-icon.png';
 
 // Floating particle
 const Particle = ({ cx, cy, r, delay, dur }) => (
@@ -44,20 +44,20 @@ const SplashScreen = ({ onFinish }) => {
   return (
     <div
       className="fixed inset-0 z-50 flex flex-col items-center justify-center overflow-hidden"
-      style={{ background: 'linear-gradient(160deg, #F5F0FF 0%, #FFFFFF 55%, #EDE9FE 100%)' }}
+      style={{ background: '#1B0631' }}
     >
       {/* ── Decorative blobs ── */}
       <div
         className="absolute top-[-80px] left-[-80px] w-[280px] h-[280px] rounded-full pointer-events-none"
-        style={{ background: 'radial-gradient(circle, rgba(167,139,250,0.3) 0%, transparent 70%)' }}
+        style={{ background: 'radial-gradient(circle, rgba(167,139,250,0.2) 0%, transparent 70%)' }}
       />
       <div
         className="absolute bottom-[-60px] right-[-60px] w-[240px] h-[240px] rounded-full pointer-events-none"
-        style={{ background: 'radial-gradient(circle, rgba(139,92,246,0.25) 0%, transparent 70%)' }}
+        style={{ background: 'radial-gradient(circle, rgba(139,92,246,0.2) 0%, transparent 70%)' }}
       />
       <div
         className="absolute top-[45%] right-[-40px] w-[160px] h-[160px] rounded-full pointer-events-none"
-        style={{ background: 'radial-gradient(circle, rgba(196,181,253,0.2) 0%, transparent 70%)' }}
+        style={{ background: 'radial-gradient(circle, rgba(196,181,253,0.15) 0%, transparent 70%)' }}
       />
 
       {/* ── Floating SVG particles ── */}
@@ -85,7 +85,7 @@ const SplashScreen = ({ onFinish }) => {
           }}
         />
 
-        {/* App icon — actual project icon, preloaded for zero-delay display */}
+        {/* App icon — actual splash screen icon */}
         <motion.div
           initial={{ opacity: 0, scale: 0.7, y: 20 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
@@ -93,13 +93,13 @@ const SplashScreen = ({ onFinish }) => {
           className="mb-4"
         >
           <img
-            src="/logo.png"
+            src="/splash-icon.png"
             alt="Zenivio"
-            width={96}
-            height={96}
+            width={112}
+            height={112}
             fetchpriority="high"
             decoding="sync"
-            style={{ width: 96, height: 96, objectFit: 'contain', borderRadius: 22, display: 'block' }}
+            style={{ width: 112, height: 112, objectFit: 'contain', display: 'block' }}
           />
         </motion.div>
 
@@ -112,11 +112,11 @@ const SplashScreen = ({ onFinish }) => {
         >
           <h1
             className="text-3xl font-bold tracking-tight mb-1"
-            style={{ color: '#1E1B4B' }}
+            style={{ color: '#FFFFFF' }}
           >
             Zenivio
           </h1>
-          <p className="text-sm font-medium" style={{ color: '#8B5CF6' }}>
+          <p className="text-sm font-medium" style={{ color: '#C084FC' }}>
             Earn · Connect · Grow
           </p>
         </motion.div>
