@@ -266,7 +266,7 @@ function App() {
     }
   }, [isAuthenticated]);
 
-  const CURRENT_APP_VERSION = '1.0.7';
+  const CURRENT_APP_VERSION = '1.0.8';
   const [appUpdateConfig, setAppUpdateConfig] = useState(null);
   const [showUpdateModal, setShowUpdateModal] = useState(false);
 
@@ -506,7 +506,7 @@ function App() {
             </Suspense>
           </div>
 
-          <main className="flex-1 overflow-y-auto overflow-x-hidden pt-[calc(4rem+max(4px,env(safe-area-inset-top)))] pb-20 relative no-scrollbar">
+          <main className="flex-1 overflow-y-auto overflow-x-hidden pt-[calc(3.5rem+env(safe-area-inset-top,0px))] pb-20 relative no-scrollbar">
             <Suspense fallback={<PageLoader />}>
           {/* HomePage is always mounted but hidden when not active — prevents re-fetching on every tab switch */}
           <div style={{ display: activeTab === 'Home' ? 'block' : 'none' }}>

@@ -244,8 +244,8 @@ const Navbar = ({
 
       {/* Desktop & Top Mobile Navbar (Fixed at top of container with safe-area top padding for notch/curved displays) */}
       {activeTab !== 'Video' && (
-        <nav className="fixed top-0 left-0 right-0 mx-auto w-full max-w-xl bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-b border-slate-200/80 dark:border-slate-800/80 shadow-xs z-[9998] flex flex-col justify-center px-4 pt-[max(12px,env(safe-area-inset-top))] pb-1">
-          <div className="flex justify-between items-center w-full h-14">
+        <nav className="fixed top-0 left-0 right-0 mx-auto w-full max-w-xl bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-b border-slate-200/80 dark:border-slate-800/80 shadow-xs z-[9998] flex flex-col justify-center px-4 pt-[env(safe-area-inset-top,0px)] pb-1">
+          <div className="flex justify-between items-center w-full h-13">
             {/* Left Side: Mobile Menu Button and Brand */}
             <div className="flex items-center gap-1 sm:gap-2 relative z-50">
               <button 

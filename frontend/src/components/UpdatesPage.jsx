@@ -472,19 +472,19 @@ const RelatedNewsSlider = ({ posts, onSelect }) => {
 
       return (
         <div className="min-h-screen bg-slate-50 dark:bg-slate-950 pb-24 flex flex-col animate-fade-in select-none">
-          {/* Top Sticky Header Bar matching screenshot */}
-          <div className="sticky top-0 z-40 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-b border-slate-100 dark:border-slate-800 px-4 pt-[max(12px,env(safe-area-inset-top))] pb-3 flex items-center justify-between">
+          {/* Compact Top Sub-header */}
+          <div className="sticky top-0 z-40 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-b border-slate-100 dark:border-slate-800/80 px-3 py-1 flex items-center justify-between shadow-3xs">
             <button 
               onClick={handleBackToFeed}
-              className="p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 transition-colors"
+              className="p-1.5 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 transition-colors"
             >
-              <ArrowLeft className="w-5 h-5" />
+              <ArrowLeft className="w-4 h-4" />
             </button>
-            <span className="text-xs font-black text-slate-400 uppercase tracking-wider">Zenivio News</span>
-            <div className="w-9" /> {/* Spacer */}
+            <span className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">Zenivio News</span>
+            <div className="w-7" /> {/* Spacer */}
           </div>
 
-          <div className="max-w-xl mx-auto px-4 w-full pt-4 space-y-4">
+          <div className="max-w-xl mx-auto px-4 w-full pt-2 space-y-3">
             {/* Category Tag */}
             <div>
               <span className="inline-block px-3 py-1 bg-indigo-500/10 text-[#7C3AED] dark:text-indigo-400 rounded-lg text-xs font-black tracking-wide">
