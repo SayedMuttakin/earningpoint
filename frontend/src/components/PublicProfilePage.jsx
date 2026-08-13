@@ -125,15 +125,15 @@ const ImagePreviewModal = ({ imageUrl, onClose }) => {
 
   return (
     <div 
-      className="fixed inset-0 z-[200] flex flex-col items-center justify-center bg-black/95 backdrop-blur-sm animate-fade-in"
+      className="fixed inset-0 z-[10005] flex flex-col items-center justify-center bg-black/95 backdrop-blur-md animate-fade-in"
       onClick={onClose}
     >
-      {/* Top action bar */}
-      <div className="absolute top-4 left-0 right-0 flex items-center justify-between px-6 z-10">
+      {/* Top action bar with safe-area top padding */}
+      <div className="absolute top-[max(16px,env(safe-area-inset-top))] left-0 right-0 flex items-center justify-between px-5 z-50">
         <button
           onClick={handleDownload}
           disabled={downloading}
-          className="flex items-center gap-2 bg-white/10 hover:bg-white/20 active:scale-95 text-white text-xs font-bold px-4 py-2 rounded-full backdrop-blur-md transition-all"
+          className="flex items-center gap-2 bg-white/15 hover:bg-white/25 active:scale-95 text-white text-xs font-black px-4 py-2.5 rounded-full backdrop-blur-md transition-all border border-white/20 shadow-lg cursor-pointer"
         >
           {downloading ? (
             <>
@@ -142,25 +142,29 @@ const ImagePreviewModal = ({ imageUrl, onClose }) => {
             </>
           ) : (
             <>
-              <Download className="w-4 h-4" />
+              <Download className="w-4 h-4 stroke-[2.5]" />
               <span>Download</span>
             </>
           )}
         </button>
+
+        {/* High visibility Close Button */}
         <button
           onClick={onClose}
-          className="p-2 bg-white/10 hover:bg-white/20 active:scale-95 text-white rounded-full backdrop-blur-md transition-all"
+          className="flex items-center gap-1.5 bg-rose-600 hover:bg-rose-700 active:scale-90 text-white text-xs font-black px-4 py-2.5 rounded-full shadow-2xl backdrop-blur-md transition-all border border-rose-400/40 cursor-pointer"
+          title="Close Preview"
         >
-          <X className="w-5 h-5" />
+          <X className="w-5 h-5 stroke-[2.5]" />
+          <span>Close</span>
         </button>
       </div>
 
-      {/* Image Container */}
-      <div className="w-full max-w-4xl max-h-[85vh] p-4 flex items-center justify-center select-none" onClick={(e) => e.stopPropagation()}>
+      {/* Image Container — click image or background to close */}
+      <div className="w-full max-w-4xl max-h-[85vh] p-4 flex items-center justify-center select-none" onClick={onClose}>
         <img
           src={imageUrl}
           alt="Preview"
-          className="w-auto h-auto max-w-full max-h-[85vh] object-contain rounded-lg shadow-2xl animate-scale-up"
+          className="w-auto h-auto max-w-full max-h-[85vh] object-contain rounded-xl shadow-2xl animate-scale-up border border-white/10"
         />
       </div>
     </div>

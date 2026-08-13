@@ -1561,7 +1561,7 @@ const MessengerPage = ({
         {!activePartner ? (
           <>
             {/* Header matches screenshot */}
-            <div className="px-4.5 pt-5 pb-2 flex items-center justify-between shrink-0 z-10 bg-white dark:bg-slate-950">
+            <div className="px-4.5 pt-[max(12px,env(safe-area-inset-top))] pb-2 flex items-center justify-between shrink-0 z-10 bg-white dark:bg-slate-950">
               <button onClick={onBack} className="p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-900 text-slate-700 dark:text-slate-300 transition-colors">
                 <ArrowLeft className="w-6 h-6" />
               </button>

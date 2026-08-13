@@ -158,7 +158,7 @@ const NotificationPage = ({ onBack, setActiveTab, setSelectedNotificationPostId,
     <div className="fixed inset-0 z-[9999] bg-slate-50 dark:bg-slate-900 flex flex-col">
       {/* Header - Premium Minimal (Fixed outside scroll) */}
       <div className="w-full bg-white/80 dark:bg-slate-900/80 backdrop-blur-md z-50 border-b border-slate-200/50 dark:border-slate-800/50">
-        <div className="w-full max-w-3xl mx-auto pt-safe px-4 py-3 flex items-center justify-between">
+        <div className="w-full max-w-3xl mx-auto pt-[max(12px,env(safe-area-inset-top))] px-4 pb-2.5 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <button 
               onClick={onBack}
