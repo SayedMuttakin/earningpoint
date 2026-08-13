@@ -266,11 +266,11 @@ function App() {
     }
   }, [isAuthenticated]);
 
-  const CURRENT_APP_VERSION = '1.0.9';
+  const CURRENT_APP_VERSION = '1.0.8';
   const [appUpdateConfig, setAppUpdateConfig] = useState(null);
   const [showUpdateModal, setShowUpdateModal] = useState(false);
 
-  // Initialize AdMob & check for Play Store App updates
+  // Initialize AdMob & check for Play Store App updates (Native Android Only)
   useEffect(() => {
     const initAdMob = async () => {
       try {
@@ -282,19 +282,21 @@ function App() {
         console.error('AdMob initialization failed:', err);
       }
 
-      // Fetch global settings dynamically to retrieve AdMob & App Update configs
+      // Fetch global settings dynamically
       try {
         const res = await fetch(`${API_BASE}/api/earning/settings`);
         const settings = await res.json();
         if (settings && settings.admobConfig) {
           AdMobService.setConfig(settings.admobConfig);
         }
-        if (settings && settings.appUpdateConfig) {
+        
+        // Play Store App Updates: ONLY check on Native Mobile App (never on Web Browser)
+        if (Capacitor.isNativePlatform() && settings && settings.appUpdateConfig) {
           const config = { ...settings.appUpdateConfig };
           setAppUpdateConfig(config);
           const latest = config.latestAppVersion;
           
-          if (latest) {
+          if (latest && config.forceUpdate === true) {
             const currentParts = CURRENT_APP_VERSION.split('.').map(Number);
             const latestParts = latest.split('.').map(Number);
             
@@ -311,10 +313,6 @@ function App() {
             }
 
             if (isOutdated) {
-              config.forceUpdate = true;
-              setAppUpdateConfig(config);
-              setShowUpdateModal(true);
-            } else if (config.forceUpdate && latest !== CURRENT_APP_VERSION) {
               setShowUpdateModal(true);
             }
           }
