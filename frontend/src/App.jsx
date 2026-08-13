@@ -62,7 +62,7 @@ function App() {
   const [postUploadState, setPostUploadState] = useState(null);
 
   const [showSplash, setShowSplash] = useState(true);
-  const [showOnboarding, setShowOnboarding] = useState(() => !localStorage.getItem('hasSeenOnboarding'));
+  const [showOnboarding, setShowOnboarding] = useState(false);
   const [isLogin, setIsLogin] = useState(true);
   const [isAuthenticated, setIsAuthenticated] = useState(() => !!localStorage.getItem('token'));
   const [activeTab, _setActiveTab] = useState(() => {
@@ -388,17 +388,6 @@ function App() {
 
   if (showSplash) {
     return <SplashScreen onFinish={() => setShowSplash(false)} />;
-  }
-
-  if (showOnboarding) {
-    return (
-      <OnboardingScreen 
-        onComplete={() => {
-          localStorage.setItem('hasSeenOnboarding', 'true');
-          setShowOnboarding(false);
-        }} 
-      />
-    );
   }
 
   const path = window.location.pathname.toLowerCase();
