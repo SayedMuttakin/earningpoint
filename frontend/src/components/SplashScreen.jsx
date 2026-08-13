@@ -116,8 +116,8 @@ const SplashScreen = ({ onFinish }) => {
           >
             Zenivio
           </h1>
-          <p className="text-sm font-medium" style={{ color: '#C084FC' }}>
-            Earn · Connect · Grow
+          <p className="text-xs sm:text-sm font-semibold tracking-wide" style={{ color: '#C084FC' }}>
+            More Than a Social Network
           </p>
         </motion.div>
       </div>
