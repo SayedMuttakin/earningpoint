@@ -575,16 +575,17 @@ const RelatedNewsSlider = ({ posts, onSelect }) => {
 
       return (
         <div className="min-h-screen bg-slate-50 dark:bg-slate-950 pb-24 flex flex-col animate-fade-in select-none">
-          {/* Compact Top Sub-header */}
-          <div className="sticky top-0 z-40 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-b border-slate-100 dark:border-slate-800/80 px-3 py-1 flex items-center justify-between shadow-3xs">
+          {/* Top Sub-header with Safe Area Top Padding */}
+          <div className="sticky top-0 z-40 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-b border-slate-100 dark:border-slate-800/80 pt-[max(10px,env(safe-area-inset-top))] px-4 pb-2 flex items-center justify-between shadow-3xs">
             <button 
               onClick={handleBackToFeed}
-              className="p-1.5 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 transition-colors"
+              className="w-10 h-10 flex items-center justify-center rounded-full bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-100 transition-all active:scale-90 shadow-xs cursor-pointer"
+              title="Go Back"
             >
-              <ArrowLeft className="w-4 h-4" />
+              <ArrowLeft className="w-6 h-6 stroke-[2.5]" />
             </button>
-            <span className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">Zenivio News</span>
-            <div className="w-7" /> {/* Spacer */}
+            <span className="text-xs font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">Zenivio News</span>
+            <div className="w-10" /> {/* Spacer */}
           </div>
 
           <div className="max-w-xl mx-auto px-4 w-full pt-2 space-y-3">
@@ -697,15 +698,15 @@ const RelatedNewsSlider = ({ posts, onSelect }) => {
               setSeeAllMode(null);
               setSeeAllPage(1);
             }}
-            className="p-1.5 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 transition-colors flex items-center gap-1.5 active:scale-95 cursor-pointer"
+            className="w-10 h-10 flex items-center justify-center rounded-full bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-100 transition-all active:scale-90 shadow-xs cursor-pointer"
+            title="Back"
           >
-            <ArrowLeft className="w-5 h-5" />
-            <span className="text-xs font-black">Back</span>
+            <ArrowLeft className="w-6 h-6 stroke-[2.5]" />
           </button>
           <h1 className="text-sm sm:text-base font-black text-slate-900 dark:text-white">
             {title} ({sortedPosts.length})
           </h1>
-          <div className="w-12" />
+          <div className="w-10" />
         </div>
 
         {/* 2-Column Grid layout for All News (10 items per page) */}

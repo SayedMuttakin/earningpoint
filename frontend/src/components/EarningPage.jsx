@@ -138,37 +138,7 @@ const ipPackages = [
 
 
 const BigAdBanner = ({ globalSettings }) => {
-  useEffect(() => {
-    if (Capacitor.isNativePlatform()) {
-      AdMobService.showBanner('big');
-      return () => {
-        AdMobService.hideBanner();
-      };
-    }
-  }, []);
-
-  // Web fallback — premium realistic AdMob test 320x250 ad
-  return (
-    <div className="w-full mt-2">
-      <div className="relative w-full h-[250px] border border-slate-200/80 dark:border-slate-700/80 rounded-2xl bg-white dark:bg-slate-900 flex flex-col items-center justify-center overflow-hidden shadow-sm">
-        {/* Test Ad Badge in the top-right corner */}
-        <div className="absolute top-0 right-0 bg-[#4A5568] dark:bg-slate-700 text-white text-[10px] px-3 py-1 rounded-bl-xl font-bold tracking-wide uppercase select-none">
-          Test Ad
-        </div>
-        
-        {/* Ad Content */}
-        <div className="flex flex-col items-center gap-3 select-none">
-          <span className="text-[#3182CE] dark:text-blue-400 font-black text-sm tracking-widest uppercase">
-            SPONSORED
-          </span>
-          <div className="w-20 h-px bg-slate-350 dark:bg-slate-700" />
-          <span className="text-[#718096] dark:text-slate-400 text-sm font-semibold tracking-tight">
-            320x250 Medium Rectangle
-          </span>
-        </div>
-      </div>
-    </div>
-  );
+  return <BannerAd size="big" globalSettings={globalSettings} />;
 };
 
 
