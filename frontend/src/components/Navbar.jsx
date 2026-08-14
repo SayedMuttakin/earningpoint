@@ -243,14 +243,14 @@ const Navbar = ({
       )}
 
       {/* Desktop & Top Mobile Navbar (Fixed at top of container with safe-area top padding for notch/curved displays) */}
-      {activeTab !== 'Video' && (
+      {activeTab !== 'Video' && activeTab !== 'Messenger' && activeTab !== 'Support' && (
         <nav className="fixed top-0 left-0 right-0 mx-auto w-full max-w-xl bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-b border-slate-200/80 dark:border-slate-800/80 shadow-xs z-[9998] flex flex-col justify-center px-4 pt-[env(safe-area-inset-top,0px)] pb-1">
           <div className="flex justify-between items-center w-full h-13">
             {/* Left Side: Mobile Menu Button and Brand */}
             <div className="flex items-center gap-1 sm:gap-2 relative z-50">
               <button 
                 onClick={() => setIsSidebarOpen(true)}
-                className="text-slate-500 dark:text-slate-400 hover:text-brand-600 p-2 transition-colors"
+                className="text-slate-500 dark:text-slate-400 hover:text-brand-600 p-2 transition-colors cursor-pointer"
               >
                 <Menu className="h-7 w-7" />
               </button>
@@ -267,7 +267,7 @@ const Navbar = ({
               {/* Notification (Bell) Button - Placed before Messenger */}
               <button 
                 onClick={() => handleTabButtonClick('Notification')}
-                className="relative p-2 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 hover:scale-105 active:scale-95 transition-all duration-300 flex items-center justify-center border border-transparent hover:border-slate-150/40 dark:hover:border-slate-750/30"
+                className="relative p-2 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 hover:scale-105 active:scale-95 transition-all duration-300 flex items-center justify-center border border-transparent hover:border-slate-150/40 dark:hover:border-slate-750/30 cursor-pointer"
                 title="Notifications"
               >
                 <div className="relative">
@@ -281,7 +281,7 @@ const Navbar = ({
               {/* Messenger Button */}
               <button 
                 onClick={() => handleTabButtonClick('Messenger')}
-                className="relative p-2 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 hover:scale-105 active:scale-95 transition-all duration-300 flex items-center justify-center border border-transparent hover:border-slate-150/40 dark:hover:border-slate-750/30"
+                className="relative p-2 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 hover:scale-105 active:scale-95 transition-all duration-300 flex items-center justify-center border border-transparent hover:border-slate-150/40 dark:hover:border-slate-750/30 cursor-pointer"
                 title="Messenger Chat"
               >
                 <div className="relative">
@@ -296,7 +296,8 @@ const Navbar = ({
       )}
 
       {/* Sticky Flat Bottom Navigation (Pinned strictly to Viewport Window) */}
-      <div className="fixed bottom-0 left-0 right-0 mx-auto w-full max-w-xl bg-gradient-to-r from-indigo-50/95 via-purple-50/95 to-pink-50/95 dark:from-slate-900/95 dark:via-slate-950/50 dark:to-slate-900/95 backdrop-blur-md rounded-t-[24px] z-[9999] shadow-[0_-8px_30px_rgba(99,102,241,0.15)] h-[76px] pb-safe flex items-center px-2">
+      {activeTab !== 'Video' && activeTab !== 'Messenger' && activeTab !== 'Support' && (
+        <div className="fixed bottom-0 left-0 right-0 mx-auto w-full max-w-xl bg-gradient-to-r from-indigo-50/95 via-purple-50/95 to-pink-50/95 dark:from-slate-900/95 dark:via-slate-950/50 dark:to-slate-900/95 backdrop-blur-md rounded-t-[24px] z-[9999] shadow-[0_-8px_30px_rgba(99,102,241,0.15)] h-[76px] pb-safe flex items-center px-2">
         <div className="flex justify-around items-center w-full relative h-full">
           
           {/* Home Tab */}
@@ -359,9 +360,9 @@ const Navbar = ({
                 : 'text-slate-450 dark:text-slate-500'
             }`}>Profile</span>
           </button>
-          
+          </div>
         </div>
-      </div>
+      )}
     </>
   );
 };

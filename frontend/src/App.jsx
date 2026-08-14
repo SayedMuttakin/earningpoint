@@ -509,6 +509,12 @@ function App() {
               />
             </Suspense>
           </div>
+          {/* SupportPage is mounted outside main for full screen chat view with back button and bottom input field */}
+          <div className={activeTab === 'Support' ? 'absolute inset-0 z-[9999] bg-white dark:bg-slate-950 flex flex-col overflow-hidden' : 'hidden'}>
+            <Suspense fallback={<PageLoader />}>
+              <SupportPage onBack={() => handleBackNavigation()} />
+            </Suspense>
+          </div>
           {/* VideoReelsPage is rendered outside main for full screen immersive view with back button */}
           <div className={activeTab === 'Video' ? 'absolute inset-0 z-[9999] bg-black flex flex-col overflow-hidden' : 'hidden'}>
             <Suspense fallback={<PageLoader />}>
@@ -617,8 +623,6 @@ function App() {
             />
           )}
           
-          {activeTab === 'Support' && <SupportPage onBack={() => handleBackNavigation()} />}
-
           {activeTab === 'Updates' && (
             <UpdatesPage 
               onBack={() => {
