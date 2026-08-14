@@ -437,7 +437,7 @@ function App() {
 
   if (isAuthenticated) {
     return (
-      <div className="fixed inset-0 h-screen w-full bg-gradient-to-br from-slate-200 via-indigo-50/40 to-slate-200 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950 flex flex-col items-center justify-between overflow-hidden">
+      <div className="fixed inset-0 h-[100dvh] w-full bg-gradient-to-br from-slate-200 via-indigo-50/40 to-slate-200 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950 flex flex-col items-center justify-between overflow-hidden">
         <div className="relative w-full max-w-xl h-full flex flex-col bg-white dark:bg-slate-950 shadow-2xl overflow-hidden border-x border-slate-200/50 dark:border-slate-800/50">
           
           {/* Global Facebook-style Animated Post Upload Banner */}
@@ -494,9 +494,10 @@ function App() {
           <div className={activeTab === 'Messenger' ? 'absolute inset-0 z-[9999] bg-white dark:bg-slate-950 flex flex-col overflow-hidden' : 'hidden'}>
             <Suspense fallback={<PageLoader />}>
               <MessengerPage 
+                currentUser={currentUser} 
                 onBack={() => {
+                  setActiveTab('Home');
                   setActiveChatPartner(null);
-                  handleBackNavigation();
                 }} 
                 activeChatPartner={activeChatPartner}
                 setActiveChatPartner={setActiveChatPartner}
@@ -522,7 +523,7 @@ function App() {
             </Suspense>
           </div>
 
-          <main className="flex-1 overflow-y-auto overflow-x-hidden pt-[calc(3.5rem+env(safe-area-inset-top,0px))] pb-20 relative no-scrollbar">
+          <main className="flex-1 overflow-y-auto overflow-x-hidden pt-[calc(3.5rem+max(4px,env(safe-area-inset-top,4px)))] pb-[calc(76px+max(14px,env(safe-area-inset-bottom,14px)))] relative no-scrollbar">
             <Suspense fallback={<PageLoader />}>
           {/* HomePage is always mounted but hidden when not active — prevents re-fetching on every tab switch */}
           <div style={{ display: activeTab === 'Home' ? 'block' : 'none' }}>

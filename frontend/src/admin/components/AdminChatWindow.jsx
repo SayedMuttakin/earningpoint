@@ -112,8 +112,8 @@ const AdminChatWindow = ({ session, onClose, API_BASE }) => {
             return (
               <div key={i} className={`flex ${isAdmin ? 'justify-end' : 'justify-start'}`}>
                 <div className={`flex gap-2 max-w-[80%] ${isAdmin ? 'flex-row-reverse' : 'flex-row'}`}>
-                  <div className={`w-8 h-8 rounded-full flex-shrink-0 flex items-center justify-center ${isAdmin ? 'bg-indigo-600' : 'bg-slate-700'}`}>
-                    {isAdmin ? <Bot className="w-4 h-4 text-white" /> : <User className="w-4 h-4 text-slate-300" />}
+                  <div className={`w-8 h-8 rounded-full flex-shrink-0 flex items-center justify-center overflow-hidden ${isAdmin ? 'bg-white p-0.5 border border-indigo-200' : 'bg-slate-700'}`}>
+                    {isAdmin ? <img src="/zenivio-logo.png" alt="Zenivio Support" className="w-full h-full object-contain" /> : <User className="w-4 h-4 text-slate-300" />}
                   </div>
                   <div className={`p-3 rounded-2xl ${isAdmin ? 'bg-indigo-600 text-white rounded-tr-sm' : 'bg-slate-800 text-slate-200 border border-slate-700 rounded-tl-sm shadow-sm'}`}>
                     <p className="text-sm leading-relaxed whitespace-pre-wrap">{msg.content}</p>

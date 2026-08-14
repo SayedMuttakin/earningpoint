@@ -244,7 +244,7 @@ const Navbar = ({
 
       {/* Desktop & Top Mobile Navbar (Fixed at top of container with safe-area top padding for notch/curved displays) */}
       {activeTab !== 'Video' && activeTab !== 'Messenger' && activeTab !== 'Support' && (
-        <nav className="fixed top-0 left-0 right-0 mx-auto w-full max-w-xl bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-b border-slate-200/80 dark:border-slate-800/80 shadow-xs z-[9998] flex flex-col justify-center px-4 pt-[env(safe-area-inset-top,0px)] pb-1">
+        <nav className="fixed top-0 left-0 right-0 mx-auto w-full max-w-xl bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-b border-slate-200/80 dark:border-slate-800/80 shadow-xs z-[9998] flex flex-col justify-center px-4 pt-[max(8px,env(safe-area-inset-top,8px))] pb-1">
           <div className="flex justify-between items-center w-full h-13">
             {/* Left Side: Mobile Menu Button and Brand */}
             <div className="flex items-center gap-1 sm:gap-2 relative z-50">
@@ -295,9 +295,9 @@ const Navbar = ({
         </nav>
       )}
 
-      {/* Sticky Flat Bottom Navigation (Pinned strictly to Viewport Window) */}
+      {/* Sticky Flat Bottom Navigation (Pinned strictly to Viewport Window with Safe Area Clearance) */}
       {activeTab !== 'Video' && activeTab !== 'Messenger' && activeTab !== 'Support' && (
-        <div className="fixed bottom-0 left-0 right-0 mx-auto w-full max-w-xl bg-gradient-to-r from-indigo-50/95 via-purple-50/95 to-pink-50/95 dark:from-slate-900/95 dark:via-slate-950/50 dark:to-slate-900/95 backdrop-blur-md rounded-t-[24px] z-[9999] shadow-[0_-8px_30px_rgba(99,102,241,0.15)] h-[76px] pb-safe flex items-center px-2">
+        <div className="fixed bottom-0 left-0 right-0 mx-auto w-full max-w-xl bg-gradient-to-r from-indigo-50/95 via-purple-50/95 to-pink-50/95 dark:from-slate-900/95 dark:via-slate-950/95 dark:to-slate-900/95 backdrop-blur-md rounded-t-[24px] z-[9999] shadow-[0_-8px_30px_rgba(99,102,241,0.15)] min-h-[68px] pt-1.5 pb-[max(12px,env(safe-area-inset-bottom,12px))] px-3 flex items-center">
         <div className="flex justify-around items-center w-full relative h-full">
           
           {/* Home Tab */}

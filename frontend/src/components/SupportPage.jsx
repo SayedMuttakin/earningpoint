@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Send, ArrowLeft, Loader2, User as UserIcon, WifiOff, Phone, Video, PhoneOff, Image, Mic, Smile, ThumbsUp } from 'lucide-react';
+import { Send, ArrowLeft, Loader2, User as UserIcon, WifiOff, Phone, Video, PhoneOff, Image, Mic, Smile } from 'lucide-react';
 import VerifiedBadge from './VerifiedBadge';
 import { io } from 'socket.io-client';
 import { API_BASE } from '../config';
@@ -451,26 +451,19 @@ const SupportPage = ({ onBack }) => {
             </button>
           </div>
 
-          {/* Conditional Send / ThumbsUp Button */}
-          {messageInput.trim() ? (
-            <button
-              type="submit"
-              className="w-10 h-10 bg-indigo-600 hover:bg-indigo-700 active:scale-95 text-white rounded-full flex items-center justify-center shrink-0 transition-all shadow-md shadow-indigo-600/30 cursor-pointer"
-            >
-              <Send className="w-4.5 h-4.5" />
-            </button>
-          ) : (
-            <button
-              type="button"
-              onClick={() => {
-                socket.emit('send_message', { sessionId, sender: 'user', content: '👍' });
-              }}
-              className="w-10 h-10 hover:bg-slate-100 dark:hover:bg-slate-850 text-indigo-600 active:scale-90 rounded-full flex items-center justify-center shrink-0 transition-all cursor-pointer"
-              title="Send Like"
-            >
-              <ThumbsUp className="w-5 h-5 fill-indigo-600" />
-            </button>
-          )}
+          {/* Send Button */}
+          <button
+            type="submit"
+            disabled={!messageInput.trim()}
+            className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 transition-all ${
+              messageInput.trim()
+                ? 'bg-indigo-600 hover:bg-indigo-700 active:scale-95 text-white shadow-md shadow-indigo-600/30 cursor-pointer'
+                : 'bg-slate-200 dark:bg-slate-800 text-slate-400 dark:text-slate-600 cursor-not-allowed opacity-60'
+            }`}
+            title="Send Message"
+          >
+            <Send className="w-4.5 h-4.5" />
+          </button>
         </form>
       </div>
 

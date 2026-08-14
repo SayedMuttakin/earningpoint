@@ -22,6 +22,13 @@
   --breakpoint-2xl: 99999px;
 }
 
+:root {
+  --sat: env(safe-area-inset-top, 0px);
+  --sab: env(safe-area-inset-bottom, 0px);
+  --sal: env(safe-area-inset-left, 0px);
+  --sar: env(safe-area-inset-right, 0px);
+}
+
 @layer base {
   body {
     background-color: var(--color-white);
@@ -56,6 +63,20 @@
 }
 
 @layer utilities {
+  /* ── Safe Area Helpers ── */
+  .pb-safe {
+    padding-bottom: max(12px, env(safe-area-inset-bottom, 12px));
+  }
+  .pt-safe {
+    padding-top: max(12px, env(safe-area-inset-top, 12px));
+  }
+  .min-h-screen-dvh {
+    min-height: 100dvh;
+  }
+  .h-screen-dvh {
+    height: 100dvh;
+  }
+
   /* ── Animations ── */
   .animate-float {
     animation: float 4s ease-in-out infinite;

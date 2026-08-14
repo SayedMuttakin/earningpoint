@@ -801,16 +801,16 @@ const CommunityPostCard = ({ post, onFollowToggle, onLikeToggle, onCommentClick,
                   setShowMenu(false);
                 }}
               />
-              <div className="absolute right-0 mt-1.5 w-40 bg-white dark:bg-slate-800 rounded-2xl shadow-xl border border-slate-100 dark:border-slate-700/80 py-1.5 z-40 animate-fade-in text-left">
+              <div className="absolute right-0 mt-2 w-52 bg-white dark:bg-slate-850 rounded-2xl shadow-2xl border border-slate-150 dark:border-slate-700/90 py-2 z-40 animate-fade-in text-left">
                 <button
                   onClick={async (e) => {
                     e.stopPropagation();
                     setShowMenu(false);
                     await handleSaveToggle();
                   }}
-                  className="w-full flex items-center gap-2 px-3.5 py-2 text-xs font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-750 transition-colors"
+                  className="w-full flex items-center gap-3 px-4 py-3 text-sm font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
                 >
-                  <Bookmark className={`w-4 h-4 ${isSaved ? 'fill-yellow-500 text-yellow-500' : ''}`} />
+                  <Bookmark className={`w-5 h-5 ${isSaved ? 'fill-yellow-500 text-yellow-500' : 'text-slate-500'}`} />
                   <span>{isSaved ? 'Unsave Post' : 'Save Post'}</span>
                 </button>
 
@@ -822,9 +822,9 @@ const CommunityPostCard = ({ post, onFollowToggle, onLikeToggle, onCommentClick,
                         setShowMenu(false);
                         if (onActionTrigger) onActionTrigger('edit', post);
                       }}
-                      className="w-full flex items-center gap-2 px-3.5 py-2 text-xs font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-750 transition-colors"
+                      className="w-full flex items-center gap-3 px-4 py-3 text-sm font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
                     >
-                      <Edit className="w-4 h-4" />
+                      <Edit className="w-5 h-5 text-indigo-500" />
                       <span>Edit Post</span>
                     </button>
                     <button
@@ -833,9 +833,9 @@ const CommunityPostCard = ({ post, onFollowToggle, onLikeToggle, onCommentClick,
                         setShowMenu(false);
                         if (onActionTrigger) onActionTrigger('delete', post);
                       }}
-                      className="w-full flex items-center gap-2 px-3.5 py-2 text-xs font-bold text-red-500 hover:bg-red-50 dark:hover:bg-red-950/20 transition-colors"
+                      className="w-full flex items-center gap-3 px-4 py-3 text-sm font-bold text-red-500 hover:bg-red-50 dark:hover:bg-red-950/30 transition-colors"
                     >
-                      <Trash2 className="w-4 h-4" />
+                      <Trash2 className="w-5 h-5 text-red-500" />
                       <span>Delete Post</span>
                     </button>
                   </>
@@ -847,9 +847,9 @@ const CommunityPostCard = ({ post, onFollowToggle, onLikeToggle, onCommentClick,
                         setShowMenu(false);
                         if (onActionTrigger) onActionTrigger('report', post);
                       }}
-                      className="w-full flex items-center gap-2 px-3.5 py-2 text-xs font-bold text-amber-600 dark:text-amber-500 hover:bg-slate-50 dark:hover:bg-slate-750 transition-colors"
+                      className="w-full flex items-center gap-3 px-4 py-3 text-sm font-bold text-amber-600 dark:text-amber-500 hover:bg-amber-50/50 dark:hover:bg-amber-950/20 transition-colors"
                     >
-                      <AlertTriangle className="w-4 h-4" />
+                      <AlertTriangle className="w-5 h-5 text-amber-500" />
                       <span>Report Post</span>
                     </button>
                     <button
@@ -858,9 +858,9 @@ const CommunityPostCard = ({ post, onFollowToggle, onLikeToggle, onCommentClick,
                         setShowMenu(false);
                         if (onActionTrigger) onActionTrigger('block', post);
                       }}
-                      className="w-full flex items-center gap-2 px-3.5 py-2 text-xs font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-750 transition-colors"
+                      className="w-full flex items-center gap-3 px-4 py-3 text-sm font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
                     >
-                      <UserX className="w-4 h-4" />
+                      <UserX className="w-5 h-5 text-slate-500" />
                       <span>Block User</span>
                     </button>
                   </>
