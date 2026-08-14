@@ -23,9 +23,9 @@
       "appName": "Zenivio"
     },
     "SplashScreen": {
-      "launchShowDuration": 2000,
+      "launchShowDuration": 1000,
       "launchAutoHide": true,
-      "backgroundColor": "#1B0631",
+      "backgroundColor": "#FFFFFF",
       "androidSplashResourceName": "splash",
       "showSpinner": false
     }
