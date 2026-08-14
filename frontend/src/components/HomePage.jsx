@@ -1830,13 +1830,13 @@ const HomePage = ({ setActiveTab, setSelectedNewsId, setActiveChatPartner, setSe
                   <div className="flex gap-3">
                     <button 
                       onClick={() => setActiveActionModal(null)}
-                      className="flex-1 py-2.5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 text-xs font-black rounded-xl cursor-pointer transition-colors"
+                      className="flex-1 py-2.5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 text-xs font-black rounded-xl cursor-pointer transition-colors active:scale-95"
                     >
                       Cancel
                     </button>
                     <button 
                       onClick={handleDeleteConfirm}
-                      className="flex-1 py-2.5 bg-red-655 hover:bg-red-700 text-white text-xs font-black rounded-xl cursor-pointer transition-colors shadow-md shadow-red-500/10"
+                      className="flex-1 py-2.5 bg-rose-600 hover:bg-rose-700 text-white text-xs font-black rounded-xl cursor-pointer transition-all shadow-md shadow-rose-500/20 active:scale-95"
                     >
                       Delete
                     </button>
@@ -1853,13 +1853,13 @@ const HomePage = ({ setActiveTab, setSelectedNewsId, setActiveChatPartner, setSe
                   <div className="flex gap-3">
                     <button 
                       onClick={() => setActiveActionModal(null)}
-                      className="flex-1 py-2.5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 text-xs font-black rounded-xl cursor-pointer transition-colors"
+                      className="flex-1 py-2.5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 text-xs font-black rounded-xl cursor-pointer transition-colors active:scale-95"
                     >
                       Cancel
                     </button>
                     <button 
                       onClick={handleBlockConfirm}
-                      className="flex-1 py-2.5 bg-red-655 hover:bg-red-700 text-black text-xs font-black rounded-xl cursor-pointer transition-colors shadow-md shadow-red-500/10"
+                      className="flex-1 py-2.5 bg-rose-600 hover:bg-rose-700 text-white text-xs font-black rounded-xl cursor-pointer transition-all shadow-md shadow-rose-500/20 active:scale-95"
                     >
                       Block User
                     </button>
