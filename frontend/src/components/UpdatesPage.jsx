@@ -286,6 +286,7 @@ const RelatedNewsSlider = ({ posts, onSelect }) => {
 
 const UpdatesPage = ({ onBack, selectedPostId, setSelectedPostId }) => {
   const [internalSelectedPostId, setInternalSelectedPostId] = useState(null);
+  const activePostId = selectedPostId || internalSelectedPostId;
   const [seeAllMode, setSeeAllMode] = useState(null); // null | 'latest' | 'recent' | 'all'
   const [seeAllPage, setSeeAllPage] = useState(1);
   const [recentPage, setRecentPage] = useState(1);
