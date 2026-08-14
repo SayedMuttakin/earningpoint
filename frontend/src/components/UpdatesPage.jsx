@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Loader2, ArrowLeft, MoreVertical, Newspaper, Bookmark, Share2, Clock, Sparkles, Grid } from 'lucide-react';
+import { Loader2, ArrowLeft, MoreVertical, Newspaper, Bookmark, Share2, Clock, Sparkles, Grid, ChevronLeft, ChevronRight } from 'lucide-react';
 import { API_BASE, getImageUrl } from '../config';
 import VerifiedBadge from './VerifiedBadge';
 import PullToRefresh from './PullToRefresh';
@@ -162,6 +162,67 @@ const RecentGridNewsCard = ({ post, onClick }) => {
   );
 };
 
+const Pagination = ({ currentPage, totalPages, onPageChange }) => {
+  if (totalPages <= 1) return null;
+
+  const pages = [];
+  for (let i = 1; i <= totalPages; i++) {
+    pages.push(i);
+  }
+
+  return (
+    <div className="flex items-center justify-center gap-1.5 py-4 select-none">
+      {/* Prev Button */}
+      <button
+        onClick={() => onPageChange(currentPage - 1)}
+        disabled={currentPage === 1}
+        className={`px-3 py-1.5 rounded-xl text-xs font-black flex items-center gap-1 transition-all ${
+          currentPage === 1
+            ? 'opacity-30 cursor-not-allowed text-slate-400 bg-slate-100 dark:bg-slate-800/50'
+            : 'text-slate-700 dark:text-slate-200 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:bg-slate-50 active:scale-95 shadow-xs cursor-pointer'
+        }`}
+      >
+        <ChevronLeft className="w-4 h-4" />
+        <span className="text-[11px]">Prev</span>
+      </button>
+
+      {/* Number Buttons */}
+      <div className="flex items-center gap-1">
+        {pages.map((p) => {
+          const isActive = p === currentPage;
+          return (
+            <button
+              key={p}
+              onClick={() => onPageChange(p)}
+              className={`w-8 h-8 rounded-xl text-xs font-black transition-all cursor-pointer ${
+                isActive
+                  ? 'bg-[#7C3AED] text-white shadow-md shadow-indigo-500/30 scale-105'
+                  : 'bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 hover:bg-slate-50 active:scale-95 shadow-xs'
+              }`}
+            >
+              {p}
+            </button>
+          );
+        })}
+      </div>
+
+      {/* Next Button */}
+      <button
+        onClick={() => onPageChange(currentPage + 1)}
+        disabled={currentPage === totalPages}
+        className={`px-3 py-1.5 rounded-xl text-xs font-black flex items-center gap-1 transition-all ${
+          currentPage === totalPages
+            ? 'opacity-30 cursor-not-allowed text-slate-400 bg-slate-100 dark:bg-slate-800/50'
+            : 'text-slate-700 dark:text-slate-200 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:bg-slate-50 active:scale-95 shadow-xs cursor-pointer'
+        }`}
+      >
+        <span className="text-[11px]">Next</span>
+        <ChevronRight className="w-4 h-4" />
+      </button>
+    </div>
+  );
+};
+
 const RelatedNewsSlider = ({ posts, onSelect }) => {
   const sliderRef = React.useRef(null);
 
@@ -225,8 +286,9 @@ const RelatedNewsSlider = ({ posts, onSelect }) => {
 
 const UpdatesPage = ({ onBack, selectedPostId, setSelectedPostId }) => {
   const [internalSelectedPostId, setInternalSelectedPostId] = useState(null);
-  const activePostId = selectedPostId || internalSelectedPostId;
   const [seeAllMode, setSeeAllMode] = useState(null); // null | 'latest' | 'recent' | 'all'
+  const [seeAllPage, setSeeAllPage] = useState(1);
+  const [recentPage, setRecentPage] = useState(1);
 
   const [posts, setPosts] = useState(() => {
     try {
@@ -621,13 +683,20 @@ const RelatedNewsSlider = ({ posts, onSelect }) => {
     };
     const title = titleMap[seeAllMode] || 'All News';
 
+    const SEE_ALL_PER_PAGE = 10;
+    const totalSeeAllPages = Math.ceil(sortedPosts.length / SEE_ALL_PER_PAGE) || 1;
+    const paginatedSeeAllPosts = sortedPosts.slice((seeAllPage - 1) * SEE_ALL_PER_PAGE, seeAllPage * SEE_ALL_PER_PAGE);
+
     return (
       <div className="min-h-screen bg-slate-50 dark:bg-slate-950 pb-24 flex flex-col animate-fade-in select-none">
         {/* Header with Safe Area Top Padding */}
         <div className="sticky top-0 z-40 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-b border-slate-100 dark:border-slate-800/80 pt-[max(12px,env(safe-area-inset-top))] px-4 pb-2.5 flex items-center justify-between shadow-3xs">
           <button 
-            onClick={() => setSeeAllMode(null)}
-            className="p-1.5 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 transition-colors flex items-center gap-1.5 active:scale-95"
+            onClick={() => {
+              setSeeAllMode(null);
+              setSeeAllPage(1);
+            }}
+            className="p-1.5 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 transition-colors flex items-center gap-1.5 active:scale-95 cursor-pointer"
           >
             <ArrowLeft className="w-5 h-5" />
             <span className="text-xs font-black">Back</span>
@@ -638,10 +707,10 @@ const RelatedNewsSlider = ({ posts, onSelect }) => {
           <div className="w-12" />
         </div>
 
-        {/* 2-Column Grid layout for All News */}
+        {/* 2-Column Grid layout for All News (10 items per page) */}
         <div className="max-w-xl mx-auto px-4 w-full pt-4 space-y-4">
           <div className="grid grid-cols-2 gap-3 sm:gap-4">
-            {sortedPosts.map(post => (
+            {paginatedSeeAllPosts.map(post => (
               <RecentGridNewsCard 
                 key={post._id} 
                 post={post} 
@@ -649,10 +718,26 @@ const RelatedNewsSlider = ({ posts, onSelect }) => {
               />
             ))}
           </div>
+
+          {/* Pagination Controls for All News */}
+          <Pagination 
+            currentPage={seeAllPage}
+            totalPages={totalSeeAllPages}
+            onPageChange={(p) => {
+              setSeeAllPage(p);
+              window.scrollTo({ top: 0, behavior: 'smooth' });
+            }}
+          />
         </div>
       </div>
     );
   }
+
+  const sortedPosts = [...posts].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+  const allRecentPosts = sortedPosts.slice(5);
+  const RECENT_PER_PAGE = 10;
+  const totalRecentPages = Math.ceil(allRecentPosts.length / RECENT_PER_PAGE) || 1;
+  const paginatedRecentPosts = allRecentPosts.slice((recentPage - 1) * RECENT_PER_PAGE, recentPage * RECENT_PER_PAGE);
 
   // Normal Feed View
   return (
@@ -669,7 +754,10 @@ const RelatedNewsSlider = ({ posts, onSelect }) => {
           <div className="max-w-xl mx-auto px-4 w-full pt-3 pb-1">
             <NewsSlider 
               posts={posts} 
-              onSeeAll={() => setSeeAllMode('all')} 
+              onSeeAll={() => {
+                setSeeAllMode('all');
+                setSeeAllPage(1);
+              }} 
               onCardClick={(postId) => handleSelectPost(postId)}
             />
           </div>
@@ -683,7 +771,10 @@ const RelatedNewsSlider = ({ posts, onSelect }) => {
               <h2 className="text-base sm:text-lg font-black text-slate-900 dark:text-white">Latest News</h2>
             </div>
             <button 
-              onClick={() => setSeeAllMode('latest')}
+              onClick={() => {
+                setSeeAllMode('latest');
+                setSeeAllPage(1);
+              }}
               className="text-xs font-black text-[#7C3AED] dark:text-indigo-400 hover:underline cursor-pointer active:scale-95 transition-all"
             >
               See all
@@ -706,8 +797,7 @@ const RelatedNewsSlider = ({ posts, onSelect }) => {
             </div>
           ) : posts.length > 0 ? (
             <div className="space-y-3">
-              {[...posts]
-                .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+              {sortedPosts
                 .slice(0, 5)
                 .map(post => (
                   <CompactNewsCard 
@@ -724,9 +814,9 @@ const RelatedNewsSlider = ({ posts, onSelect }) => {
           )}
         </div>
 
-        {/* Recent News Section (2 Columns Grid at bottom) */}
-        {posts && posts.length > 0 && (
-          <div className="max-w-xl mx-auto px-4 w-full pt-6 pb-4">
+        {/* Recent News Section (2 Columns Grid at bottom with 10-per-page Pagination) */}
+        {allRecentPosts.length > 0 && (
+          <div id="recent-news-section" className="max-w-xl mx-auto px-4 w-full pt-6 pb-4 scroll-mt-6">
             <div className="flex items-center justify-between pb-3 mb-3 border-b border-slate-100 dark:border-slate-800">
               <div className="flex items-center gap-2">
                 <Clock className="w-5 h-5 text-[#7C3AED] dark:text-indigo-400" />
@@ -736,26 +826,37 @@ const RelatedNewsSlider = ({ posts, onSelect }) => {
                 </div>
               </div>
               <button 
-                onClick={() => setSeeAllMode('recent')}
+                onClick={() => {
+                  setSeeAllMode('recent');
+                  setSeeAllPage(1);
+                }}
                 className="text-xs font-black text-[#7C3AED] dark:text-indigo-400 hover:underline cursor-pointer active:scale-95 transition-all"
               >
                 See all
               </button>
             </div>
 
-            {/* 2 Columns Grid Layout */}
+            {/* 2 Columns Grid Layout (10 items per page) */}
             <div className="grid grid-cols-2 gap-3 sm:gap-4">
-              {[...posts]
-                .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
-                .slice(5)
-                .map(post => (
-                  <RecentGridNewsCard 
-                    key={post._id} 
-                    post={post} 
-                    onClick={() => handleSelectPost(post._id)}
-                  />
-                ))}
+              {paginatedRecentPosts.map(post => (
+                <RecentGridNewsCard 
+                  key={post._id} 
+                  post={post} 
+                  onClick={() => handleSelectPost(post._id)}
+                />
+              ))}
             </div>
+
+            {/* Pagination for Recent News Section */}
+            <Pagination 
+              currentPage={recentPage}
+              totalPages={totalRecentPages}
+              onPageChange={(p) => {
+                setRecentPage(p);
+                const el = document.getElementById('recent-news-section');
+                if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+              }}
+            />
           </div>
         )}
       </div>
