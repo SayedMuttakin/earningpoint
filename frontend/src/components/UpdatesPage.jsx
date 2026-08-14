@@ -629,10 +629,10 @@ const RelatedNewsSlider = ({ posts, onSelect }) => {
             )}
 
             {/* Content Paragraphs with Exactly 3 Evenly-Spaced Real AdMob Banner Ads */}
-            <div className="space-y-4 text-slate-800 dark:text-slate-200 text-sm sm:text-base leading-relaxed font-normal select-text pt-2">
+            <div className="space-y-5 text-slate-800 dark:text-slate-100 text-[16px] leading-[1.8] font-normal select-text pt-2">
               {paragraphs.map((p, idx) => (
                 <React.Fragment key={idx}>
-                  <p className="whitespace-pre-wrap">{p}</p>
+                  <p className="whitespace-pre-wrap text-[16px] leading-[1.85] font-normal text-slate-800 dark:text-slate-200">{p}</p>
                   
                   {/* Ad #1: After 1st Section */}
                   {idx === mid1Index && (

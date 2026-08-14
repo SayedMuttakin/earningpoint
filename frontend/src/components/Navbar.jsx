@@ -233,10 +233,6 @@ const Navbar = ({
                   <ChevronRight className="w-3.5 h-3.5 text-indigo-500 dark:text-indigo-400 flex-shrink-0 ml-0.5" strokeWidth={3} />
                 </button>
               ))}
-              
-              <div className="pt-8 pb-4 text-center text-[10px] text-slate-400 dark:text-slate-600 font-bold space-y-1">
-                <div>Zenivio v2.1.0 • Built with ❤️</div>
-              </div>
             </div>
           </div>
         </>

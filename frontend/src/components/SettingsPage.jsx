@@ -704,10 +704,6 @@ const SettingsPage = ({
                 </button>
               ))}
             </div>
-
-            <div className="mt-12 text-center">
-              <p className="text-xs text-slate-400 dark:text-slate-500 font-bold tracking-wide">Zenivio v2.1.0 • Built with ❤️</p>
-            </div>
           </div>
         </div>
       </PullToRefresh>
