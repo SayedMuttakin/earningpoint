@@ -320,7 +320,7 @@ const SupportPage = ({ onBack }) => {
           
           {/* Avatar with Status Badge */}
           <div className="relative">
-            <div className="w-10 h-10 rounded-full bg-white border border-slate-200 dark:border-slate-700 shadow-xs flex items-center justify-center overflow-hidden p-1 flex-shrink-0">
+            <div className="w-10 h-10 rounded-full bg-purple-50 dark:bg-purple-950/40 border border-purple-200/60 dark:border-purple-800/40 shadow-xs flex items-center justify-center overflow-hidden p-1.5 flex-shrink-0">
               <img src="/zenivio-logo.png" alt="Zenivio Support" className="w-full h-full object-contain" />
             </div>
             <span className="absolute bottom-0 right-0 w-3 h-3 bg-emerald-500 border-2 border-white dark:border-slate-900 rounded-full" />
@@ -360,7 +360,7 @@ const SupportPage = ({ onBack }) => {
       <div className="flex-1 overflow-y-auto w-full max-w-4xl mx-auto p-4 space-y-4">
         {/* Chat Session Welcome Info */}
         <div className="flex flex-col items-center justify-center text-center py-6 mb-2">
-          <div className="w-16 h-16 rounded-2xl bg-white border border-slate-200 dark:border-slate-800 shadow-md flex items-center justify-center overflow-hidden p-2.5 mb-2">
+          <div className="w-16 h-16 rounded-2xl bg-purple-50 dark:bg-purple-950/40 border border-purple-200/70 dark:border-purple-800/40 shadow-sm flex items-center justify-center overflow-hidden p-2.5 mb-2">
             <img src="/zenivio-logo.png" alt="Zenivio Support" className="w-full h-full object-contain" />
           </div>
           <h3 className="font-black text-slate-800 dark:text-white flex items-center gap-1.5 text-base">
@@ -377,7 +377,7 @@ const SupportPage = ({ onBack }) => {
             <div key={i} className={`flex ${isUser ? 'justify-end' : 'justify-start'} w-full`}>
               <div className={`flex gap-2.5 max-w-[82%] items-end ${isUser ? 'flex-row-reverse' : 'flex-row'}`}>
                 {!isUser && (
-                  <div className="w-8 h-8 rounded-full bg-white border border-slate-200 dark:border-slate-700 flex-shrink-0 flex items-center justify-center overflow-hidden p-0.5 shadow-xs">
+                  <div className="w-8 h-8 rounded-full bg-purple-50 dark:bg-purple-950/40 border border-purple-200/60 dark:border-purple-800/40 flex-shrink-0 flex items-center justify-center overflow-hidden p-1 shadow-xs">
                     <img src="/zenivio-logo.png" alt="Zenivio" className="w-full h-full object-contain" />
                   </div>
                 )}
@@ -400,7 +400,7 @@ const SupportPage = ({ onBack }) => {
         {isAdminTyping && (
           <div className="flex justify-start">
             <div className="flex gap-2.5 items-end">
-              <div className="w-8 h-8 rounded-full bg-white border border-slate-200 dark:border-slate-700 flex-shrink-0 flex items-center justify-center overflow-hidden p-0.5 shadow-xs">
+              <div className="w-8 h-8 rounded-full bg-purple-50 dark:bg-purple-950/40 border border-purple-200/60 dark:border-purple-800/40 flex-shrink-0 flex items-center justify-center overflow-hidden p-1 shadow-xs">
                 <img src="/zenivio-logo.png" alt="Zenivio" className="w-full h-full object-contain" />
               </div>
               <div className="bg-white dark:bg-slate-800 border border-slate-200/50 dark:border-slate-700/50 p-3.5 px-4 rounded-2xl rounded-bl-xs flex items-center gap-1 shadow-xs">
