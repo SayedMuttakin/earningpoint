@@ -1,5 +1,4 @@
-import React, { useState, useEffect } from 'react';
-import { Loader2, ArrowLeft, MoreVertical, Newspaper, Bookmark, Share2 } from 'lucide-react';
+import { Loader2, ArrowLeft, MoreVertical, Newspaper, Bookmark, Share2, Clock, Sparkles, Grid } from 'lucide-react';
 import { API_BASE, getImageUrl } from '../config';
 import VerifiedBadge from './VerifiedBadge';
 import PullToRefresh from './PullToRefresh';
@@ -123,6 +122,45 @@ const CompactNewsCard = ({ post, onClick }) => {
   );
 };
 
+const RecentGridNewsCard = ({ post, onClick }) => {
+  const category = post.category || 'National';
+  
+  return (
+    <div
+      id={`post-grid-${post._id}`}
+      onClick={onClick}
+      className="bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800/80 rounded-2xl p-2.5 flex flex-col justify-between hover:shadow-md transition-all active:scale-[0.98] cursor-pointer select-none space-y-2 group"
+    >
+      <div className="space-y-2">
+        <div className="w-full h-28 sm:h-32 rounded-xl overflow-hidden bg-slate-100 dark:bg-slate-800 relative">
+          {post.image ? (
+            <img
+              src={getImageUrl(post.image)}
+              alt={post.title || 'News'}
+              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+              loading="lazy"
+            />
+          ) : (
+            <div className="w-full h-full bg-gradient-to-br from-indigo-500/20 to-purple-500/20 flex items-center justify-center text-[#7C3AED] font-black text-2xl">
+              Z
+            </div>
+          )}
+          <span className="absolute top-2 left-2 bg-slate-900/85 backdrop-blur-md text-white text-[9px] font-black px-2 py-0.5 rounded-md shadow-xs">
+            {category}
+          </span>
+        </div>
+        <h4 className="text-xs sm:text-sm font-black text-slate-900 dark:text-white line-clamp-2 leading-snug group-hover:text-[#7C3AED] transition-colors">
+          {post.title || post.content}
+        </h4>
+      </div>
+
+      <div className="flex items-center justify-between text-[10px] font-bold text-slate-400 dark:text-slate-500 pt-2 border-t border-slate-100 dark:border-slate-800/80">
+        <span className="truncate">{getCleanShortTime(post)}</span>
+      </div>
+    </div>
+  );
+};
+
 const RelatedNewsSlider = ({ posts, onSelect }) => {
   const sliderRef = React.useRef(null);
 
@@ -187,6 +225,7 @@ const RelatedNewsSlider = ({ posts, onSelect }) => {
 const UpdatesPage = ({ onBack, selectedPostId, setSelectedPostId }) => {
   const [internalSelectedPostId, setInternalSelectedPostId] = useState(null);
   const activePostId = selectedPostId || internalSelectedPostId;
+  const [seeAllMode, setSeeAllMode] = useState(null); // null | 'latest' | 'recent' | 'all'
 
   const [posts, setPosts] = useState(() => {
     try {
@@ -571,7 +610,50 @@ const RelatedNewsSlider = ({ posts, onSelect }) => {
     }
   }
 
-  // Normal List View
+  // Render Full "See All" View if user clicks See All button
+  if (seeAllMode) {
+    const sortedPosts = [...posts].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+    const titleMap = {
+      latest: 'All Latest News',
+      recent: 'All Recent News',
+      all: 'All News Archives'
+    };
+    const title = titleMap[seeAllMode] || 'All News';
+
+    return (
+      <div className="min-h-screen bg-slate-50 dark:bg-slate-950 pb-24 flex flex-col animate-fade-in select-none">
+        {/* Header with Safe Area Top Padding */}
+        <div className="sticky top-0 z-40 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-b border-slate-100 dark:border-slate-800/80 pt-[max(12px,env(safe-area-inset-top))] px-4 pb-2.5 flex items-center justify-between shadow-3xs">
+          <button 
+            onClick={() => setSeeAllMode(null)}
+            className="p-1.5 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 transition-colors flex items-center gap-1.5 active:scale-95"
+          >
+            <ArrowLeft className="w-5 h-5" />
+            <span className="text-xs font-black">Back</span>
+          </button>
+          <h1 className="text-sm sm:text-base font-black text-slate-900 dark:text-white">
+            {title} ({sortedPosts.length})
+          </h1>
+          <div className="w-12" />
+        </div>
+
+        {/* 2-Column Grid layout for All News */}
+        <div className="max-w-xl mx-auto px-4 w-full pt-4 space-y-4">
+          <div className="grid grid-cols-2 gap-3 sm:gap-4">
+            {sortedPosts.map(post => (
+              <RecentGridNewsCard 
+                key={post._id} 
+                post={post} 
+                onClick={() => handleSelectPost(post._id)}
+              />
+            ))}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Normal Feed View
   return (
     <PullToRefresh onRefresh={handleRefresh} refreshing={refreshing}>
       <div className="min-h-screen bg-slate-50 dark:bg-slate-950 pt-0 pb-24 flex flex-col">
@@ -586,23 +668,28 @@ const RelatedNewsSlider = ({ posts, onSelect }) => {
           <div className="max-w-xl mx-auto px-4 w-full pt-3 pb-1">
             <NewsSlider 
               posts={posts} 
-              onSeeAll={() => {}} 
+              onSeeAll={() => setSeeAllMode('all')} 
               onCardClick={(postId) => handleSelectPost(postId)}
             />
           </div>
         )}
 
+        {/* Latest News Section */}
         <div className="max-w-xl mx-auto px-4 w-full pt-4">
-          {/* Section Header matching screenshot */}
           <div className="flex items-center justify-between pb-3 mb-3 border-b border-slate-100 dark:border-slate-800">
             <div className="flex items-center gap-2">
               <Newspaper className="w-5 h-5 text-[#7C3AED] dark:text-indigo-400" />
               <h2 className="text-base sm:text-lg font-black text-slate-900 dark:text-white">Latest News</h2>
             </div>
-            <button className="text-xs font-black text-[#7C3AED] dark:text-indigo-400 hover:underline">See all</button>
+            <button 
+              onClick={() => setSeeAllMode('latest')}
+              className="text-xs font-black text-[#7C3AED] dark:text-indigo-400 hover:underline cursor-pointer active:scale-95 transition-all"
+            >
+              See all
+            </button>
           </div>
 
-          {/* Feed */}
+          {/* Latest News List */}
           {loading ? (
             <div className="space-y-3">
               {[1, 2, 3, 4].map(i => (
@@ -620,7 +707,7 @@ const RelatedNewsSlider = ({ posts, onSelect }) => {
             <div className="space-y-3">
               {[...posts]
                 .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
-                .slice(0, 10)
+                .slice(0, 5)
                 .map(post => (
                   <CompactNewsCard 
                     key={post._id} 
@@ -635,6 +722,41 @@ const RelatedNewsSlider = ({ posts, onSelect }) => {
             </div>
           )}
         </div>
+
+        {/* Recent News Section (2 Columns Grid at bottom) */}
+        {posts && posts.length > 0 && (
+          <div className="max-w-xl mx-auto px-4 w-full pt-6 pb-4">
+            <div className="flex items-center justify-between pb-3 mb-3 border-b border-slate-100 dark:border-slate-800">
+              <div className="flex items-center gap-2">
+                <Clock className="w-5 h-5 text-[#7C3AED] dark:text-indigo-400" />
+                <div>
+                  <h2 className="text-base sm:text-lg font-black text-slate-900 dark:text-white leading-none">Recent News</h2>
+                  <p className="text-[10px] font-bold text-slate-400 mt-0.5">সাম্প্রতিক খবরাখবর</p>
+                </div>
+              </div>
+              <button 
+                onClick={() => setSeeAllMode('recent')}
+                className="text-xs font-black text-[#7C3AED] dark:text-indigo-400 hover:underline cursor-pointer active:scale-95 transition-all"
+              >
+                See all
+              </button>
+            </div>
+
+            {/* 2 Columns Grid Layout */}
+            <div className="grid grid-cols-2 gap-3 sm:gap-4">
+              {[...posts]
+                .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+                .slice(5)
+                .map(post => (
+                  <RecentGridNewsCard 
+                    key={post._id} 
+                    post={post} 
+                    onClick={() => handleSelectPost(post._id)}
+                  />
+                ))}
+            </div>
+          </div>
+        )}
       </div>
     </PullToRefresh>
   );
