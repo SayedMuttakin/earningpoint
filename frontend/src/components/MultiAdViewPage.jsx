@@ -93,17 +93,15 @@ const MultiAdViewPage = ({ config, onClose, onCoinsEarned }) => {
     };
 
     try {
-      if (adType === 'rewarded') {
+      if (adType === 'rewarded' || adType === 'native') {
         await AdMobService.showRewarded(onSuccess, 'rewarded', onError, onDismiss);
       } else if (adType === 'interstitial') {
-        await AdMobService.showInterstitial(onSuccess);
+        await AdMobService.showInterstitial(onSuccess, onError, onDismiss);
       } else {
-        // Fallback for non-admob tasks
-        setIsPlaying(true);
-        setTimeout(onSuccess, 5000);
+        await AdMobService.showRewarded(onSuccess, 'rewarded', onError, onDismiss);
       }
     } catch (_) {
-      onError();
+      onError("Failed to load Ad. Please try again.");
     }
   };
 

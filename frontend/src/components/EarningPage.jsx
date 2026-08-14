@@ -1317,7 +1317,7 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
     const isLast = currentGkIndex >= 9;
 
     // Show ad first, then advance
-    AdMobService.showInterstitial(() => {
+    const advanceGk = () => {
       if (!isLast) {
         setCurrentGkIndex(prev => prev + 1);
         setGkSelected(null);
@@ -1351,7 +1351,20 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
         localStorage.setItem('gk_last_played', new Date().toDateString());
         setShowGkQuizView(false);
       }
-    });
+    };
+
+    AdMobService.showInterstitial(
+      advanceGk,
+      (errMsg) => {
+        // On ad fail: if not last question, allow them to keep answering, but if last question with high score, alert them
+        if (!isLast) {
+          advanceGk();
+        } else {
+          showToast(errMsg || "Ad failed to load. Please try again to claim your reward.", "error");
+          setGkAnswered(false);
+        }
+      }
+    );
   };
 
   const handleMathQuizSubmit = () => {
@@ -1362,8 +1375,7 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
     const correct = quizSelected === quizQuestion.answer;
     const coinsPerQ = quizType === 'binary' ? 30 : quizType === 'word' ? 25 : 20;
 
-    // Show ad, then claim reward
-    AdMobService.showInterstitial(async () => {
+    const claimAndAdvance = async () => {
       if (correct) {
         try {
           const token = localStorage.getItem('token');
@@ -1394,7 +1406,21 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
       setTimeout(() => {
         startNewQuiz(quizType);
       }, 800);
-    });
+    };
+
+    // Only attempt ad if correct answer
+    if (correct) {
+      AdMobService.showInterstitial(
+        claimAndAdvance,
+        (errMsg) => {
+          showToast(errMsg || "Ad failed to load. Please try again.", "error");
+          fetchQuizStatus();
+          setTimeout(() => startNewQuiz(quizType), 800);
+        }
+      );
+    } else {
+      claimAndAdvance();
+    }
   };
 
   const launchQuiz = (type) => {
@@ -1602,9 +1628,14 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
   }, [showNativeAd, currentAdInfo.time]);
 
   const handleVerifiedAdAction = (title, onVerified) => {
-    AdMobService.showInterstitial(() => {
-      if (onVerified) onVerified();
-    });
+    AdMobService.showInterstitial(
+      () => {
+        if (onVerified) onVerified();
+      },
+      (errMsg) => {
+        showToast(errMsg || "Ad failed to load. Please try again to complete the task.", "error");
+      }
+    );
   };
 
   const itemsToSkipIntro = useMemo(() => new Set(['Premium IP', 'Refer & Earn', 'Wallet', 'History', 'Tutorial', 'Invite Friends', 'Daily Quiz', 'Math Quiz', 'Binary Quiz', 'Word Quiz', 'Meta']), []);
@@ -2254,9 +2285,14 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
                     }, 5200);
                   };
 
-                  AdMobService.showInterstitial(() => {
-                    startSpinAction();
-                  });
+                  AdMobService.showInterstitial(
+                    () => {
+                      startSpinAction();
+                    },
+                    (errMsg) => {
+                      showToast(errMsg || "Ad failed to load. Please try again to spin.", "error");
+                    }
+                  );
                 }}
                 className="w-full max-w-sm bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 text-white font-black py-4 rounded-2xl transition-all shadow-xl shadow-amber-500/20 active:scale-95 disabled:opacity-50 disabled:grayscale uppercase tracking-widest text-lg"
               >
@@ -2666,38 +2702,43 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
               onClick={() => {
                 if (mysteryBoxStatus.claimedToday || isOpeningBox || isLoading) return;
                 
-                AdMobService.showInterstitial(async () => {
-                  setIsOpeningBox(true);
-                  setIsLoading(true);
-                  try {
-                    const token = localStorage.getItem('token');
-                    const response = await fetch(`${API_BASE}/api/earning/mystery-claim`, {
-                      method: 'POST',
-                      headers: { Authorization: `Bearer ${token}` },
-                    });
-                    const data = await response.json();
-                    
-                    // Simulate box opening animation delay
-                    setTimeout(() => {
+                AdMobService.showInterstitial(
+                  async () => {
+                    setIsOpeningBox(true);
+                    setIsLoading(true);
+                    try {
+                      const token = localStorage.getItem('token');
+                      const response = await fetch(`${API_BASE}/api/earning/mystery-claim`, {
+                        method: 'POST',
+                        headers: { Authorization: `Bearer ${token}` },
+                      });
+                      const data = await response.json();
+                      
+                      // Simulate box opening animation delay
+                      setTimeout(() => {
+                        setIsOpeningBox(false);
+                        setIsLoading(false);
+                        if (response.ok) {
+                          setBalance(data.balance);
+                          if (data.coins !== undefined) setCoins(data.coins);
+                          if (data.lifetimeCoins !== undefined) setLifetimeCoins(data.lifetimeCoins);
+                          setMysteryBoxStatus({ lastMysteryBoxDate: data.lastMysteryBoxDate, claimedToday: true });
+                          setMysteryBoxReward(data.reward);
+                          showToast(`🎉 Congratulations! You won ${data.reward} Coins!`, "success");
+                        } else {
+                          showToast(data.message || 'Failed to open Mystery Box.', "error");
+                        }
+                      }, 2000);
+                    } catch (err) {
                       setIsOpeningBox(false);
                       setIsLoading(false);
-                      if (response.ok) {
-                        setBalance(data.balance);
-                        if (data.coins !== undefined) setCoins(data.coins);
-                        if (data.lifetimeCoins !== undefined) setLifetimeCoins(data.lifetimeCoins);
-                        setMysteryBoxStatus({ lastMysteryBoxDate: data.lastMysteryBoxDate, claimedToday: true });
-                        setMysteryBoxReward(data.reward);
-                        showToast(`🎉 Congratulations! You won ${data.reward} Coins!`, "success");
-                      } else {
-                        showToast(data.message || 'Failed to open Mystery Box.', "error");
-                      }
-                    }, 2000);
-                  } catch (err) {
-                    setIsOpeningBox(false);
-                    setIsLoading(false);
-                    showToast('Network error.', "error");
+                      showToast('Network error.', "error");
+                    }
+                  },
+                  (errMsg) => {
+                    showToast(errMsg || "Ad failed to load. Please try again to open Mystery Box.", "error");
                   }
-                });
+                );
               }}
               className={`relative flex flex-col items-center justify-center p-8 rounded-3xl transition-all overflow-hidden ${
                 mysteryBoxStatus.claimedToday
@@ -2872,28 +2913,33 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
                           <button
                             onClick={async () => {
                               if (!canClaim) return;
-                              AdMobService.showInterstitial(async () => {
-                                setIsLoading(true);
-                                try {
-                                  const token = localStorage.getItem('token');
-                                  const response = await fetch(`${API_BASE}/api/earning/weekly-missions/complete/${mission._id}`, {
-                                    method: 'POST',
-                                    headers: { Authorization: `Bearer ${token}` }
-                                  });
-                                  const data = await response.json();
-                                  setIsLoading(false);
-                                  if (response.ok) {
-                                    showToast(data.message || 'Mission completed!', 'success');
-                                    fetchBalance();
-                                    fetchWeeklyMissions();
-                                  } else {
-                                    showToast(data.message || 'Failed', 'error');
+                              AdMobService.showInterstitial(
+                                async () => {
+                                  setIsLoading(true);
+                                  try {
+                                    const token = localStorage.getItem('token');
+                                    const response = await fetch(`${API_BASE}/api/earning/weekly-missions/complete/${mission._id}`, {
+                                      method: 'POST',
+                                      headers: { Authorization: `Bearer ${token}` }
+                                    });
+                                    const data = await response.json();
+                                    setIsLoading(false);
+                                    if (response.ok) {
+                                      showToast(data.message || 'Mission completed!', 'success');
+                                      fetchBalance();
+                                      fetchWeeklyMissions();
+                                    } else {
+                                      showToast(data.message || 'Failed', 'error');
+                                    }
+                                  } catch (err) {
+                                    setIsLoading(false);
+                                    showToast('Network error', 'error');
                                   }
-                                } catch (err) {
-                                  setIsLoading(false);
-                                  showToast('Network error', 'error');
+                                },
+                                (errMsg) => {
+                                  showToast(errMsg || "Ad failed to load. Please try again.", "error");
                                 }
-                              });
+                              );
                             }}
                             disabled={!canClaim || isLoading}
                             className={`px-5 py-2 rounded-2xl text-sm font-black transition-all active:scale-95 ${
@@ -2908,28 +2954,33 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
                           <button
                             onClick={async () => {
                               if (mission.actionUrl) window.open(mission.actionUrl, '_blank');
-                              AdMobService.showInterstitial(async () => {
-                                setIsLoading(true);
-                                try {
-                                  const token = localStorage.getItem('token');
-                                  const response = await fetch(`${API_BASE}/api/earning/weekly-missions/complete/${mission._id}`, {
-                                    method: 'POST',
-                                    headers: { Authorization: `Bearer ${token}` }
-                                  });
-                                  const data = await response.json();
-                                  setIsLoading(false);
-                                  if (response.ok) {
-                                    showToast(data.message || 'Mission completed!', 'success');
-                                    fetchBalance();
-                                    fetchWeeklyMissions();
-                                  } else {
-                                    showToast(data.message || 'Failed', 'error');
+                              AdMobService.showInterstitial(
+                                async () => {
+                                  setIsLoading(true);
+                                  try {
+                                    const token = localStorage.getItem('token');
+                                    const response = await fetch(`${API_BASE}/api/earning/weekly-missions/complete/${mission._id}`, {
+                                      method: 'POST',
+                                      headers: { Authorization: `Bearer ${token}` }
+                                    });
+                                    const data = await response.json();
+                                    setIsLoading(false);
+                                    if (response.ok) {
+                                      showToast(data.message || 'Mission completed!', 'success');
+                                      fetchBalance();
+                                      fetchWeeklyMissions();
+                                    } else {
+                                      showToast(data.message || 'Failed', 'error');
+                                    }
+                                  } catch (err) {
+                                    setIsLoading(false);
+                                    showToast('Network error', 'error');
                                   }
-                                } catch (err) {
-                                  setIsLoading(false);
-                                  showToast('Network error', 'error');
+                                },
+                                (errMsg) => {
+                                  showToast(errMsg || "Ad failed to load. Please try again.", "error");
                                 }
-                              });
+                              );
                             }}
                             disabled={isLoading}
                             className="px-5 py-2 rounded-2xl text-sm font-black bg-gradient-to-r from-indigo-500 to-blue-600 text-white shadow-lg shadow-indigo-500/30 hover:shadow-indigo-500/50 active:scale-95 transition-all"
@@ -3645,7 +3696,7 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
                 {[
                   { id: 'l4-reward-video', name: 'Reward Video', icon: <RewardVideoIcon className="w-7 h-7" />, coins: 25, color: 'from-red-500 to-rose-600', action: () => openMultiAdView({ key: 'reward_video', name: 'Reward Video', adType: 'rewarded', coins: 25, logo: 'https://img.icons8.com/color/96/youtube-play.png', color: 'from-red-500 to-rose-600' }) },
                   { id: 'l4-interstitial', name: 'Interstitial Ad', icon: <InterstitialAdIcon className="w-7 h-7" />, coins: 15, color: 'from-blue-500 to-indigo-600', action: () => openMultiAdView({ key: 'interstitial_ad', name: 'Interstitial Ad', adType: 'interstitial', coins: 15, logo: 'https://img.icons8.com/color/96/google-ads.png', color: 'from-blue-500 to-indigo-600' }) },
-                  { id: 'l4-native', name: 'Native Ad Click', icon: <NativeAdClickIcon className="w-7 h-7" />, coins: 10, color: 'from-indigo-500 to-blue-600', action: () => openMultiAdView({ key: 'native_ad', name: 'Native Ad Click', adType: 'native', coins: 10, logo: 'https://img.icons8.com/color/96/facebook-new.png', color: 'from-indigo-500 to-blue-600' }) },
+                  { id: 'l4-native', name: 'Native Ad Click', icon: <NativeAdClickIcon className="w-7 h-7" />, coins: 10, color: 'from-indigo-500 to-blue-600', action: () => openMultiAdView({ key: 'native_ad', name: 'Native Ad Click', adType: 'rewarded', coins: 10, logo: 'https://img.icons8.com/color/96/facebook-new.png', color: 'from-indigo-500 to-blue-600' }) },
                   { id: 'l4-bonus', name: 'Bonus Ad', icon: <BonusAdIcon className="w-7 h-7" />, coins: 30, color: 'from-amber-400 to-orange-500', action: () => openMultiAdView({ key: 'bonus_ad', name: 'Bonus Ad', adType: 'rewarded', coins: 30, logo: 'https://img.icons8.com/color/96/gift.png', color: 'from-amber-400 to-orange-500' }) },
                   { id: 'l4-hourly', name: 'Hourly Ad', icon: <HourlyAdIcon className="w-7 h-7" />, coins: 20, color: 'from-teal-400 to-emerald-500', action: () => openMultiAdView({ key: 'hourly_ad', name: 'Hourly Ad', adType: 'interstitial', coins: 20, logo: 'https://img.icons8.com/color/96/hourglass.png', color: 'from-teal-400 to-emerald-500' }) },
                   { id: 'l4-weekly-refer', name: 'Meta', icon: <MetaIcon className="w-7 h-7" />, coins: 50, color: 'from-purple-400 to-pink-500', action: () => openMultiAdView({ key: 'weekly_refer', name: 'Meta', adType: 'rewarded', coins: 50, logo: 'https://img.icons8.com/color/96/conference-call.png', color: 'from-purple-400 to-pink-500' }) },
