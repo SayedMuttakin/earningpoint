@@ -362,20 +362,10 @@ const RegistrationForm = ({ onToggleForm, onRegisterSuccess }) => {
       </div>
 
       {/* Content */}
-      <div className="flex-1 flex flex-col items-center px-6 pb-10 z-10">
-        {/* Logo — logo.png from assets */}
-        <div className="mb-3 mt-1 flex items-center justify-center animate-pulse" style={{ width: 72, height: 72 }}>
-          <img
-            src="/logo.png"
-            alt="Zenivio"
-            fetchpriority="high"
-            decoding="sync"
-            style={{ width: '100%', height: '100%', objectFit: 'contain' }}
-          />
-        </div>
-        <h1 className="text-2xl font-bold mb-0.5" style={{ color: '#1E1B4B' }}>Zenivio</h1>
+      <div className="flex-1 flex flex-col items-center px-6 pb-10 z-10 pt-4">
+        <h1 className="text-3xl font-black mb-1 bg-gradient-to-r from-brand-600 via-indigo-600 to-purple-600 bg-clip-text text-transparent select-none">Zenivio</h1>
 
-        <div className="text-center mb-6 mt-3">
+        <div className="text-center mb-6 mt-1">
           <p className="text-lg font-bold" style={{ color: '#7C3AED' }}>Create Account</p>
           <p className="text-sm mt-0.5" style={{ color: '#6B7280' }}>Join Zenivio and start your journey</p>
         </div>
