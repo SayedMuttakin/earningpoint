@@ -1,3 +1,4 @@
+import React, { useState, useEffect } from 'react';
 import { Loader2, ArrowLeft, MoreVertical, Newspaper, Bookmark, Share2, Clock, Sparkles, Grid } from 'lucide-react';
 import { API_BASE, getImageUrl } from '../config';
 import VerifiedBadge from './VerifiedBadge';
