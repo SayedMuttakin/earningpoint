@@ -564,6 +564,8 @@ function App() {
               setActiveTab={setActiveTab}
               setSelectedReelId={setSelectedReelId}
               setActiveChatPartner={setActiveChatPartner}
+              onlineUsers={onlineUsers}
+              socket={socket}
             />
           )}
           {activeTab === 'MyProfile' && (
@@ -575,6 +577,8 @@ function App() {
               setActiveTab={setActiveTab}
               setSelectedReelId={setSelectedReelId}
               setActiveChatPartner={setActiveChatPartner}
+              onlineUsers={onlineUsers}
+              socket={socket}
             />
           )}
           {activeTab === 'PaymentSuccess' && <PaymentSuccess paymentMethod={selectedPaymentMethod} onBack={() => showBackAd(() => handleBackNavigation())} />}
@@ -588,6 +592,8 @@ function App() {
               setActiveTab={setActiveTab}
               setSelectedReelId={setSelectedReelId}
               setActiveChatPartner={setActiveChatPartner}
+              onlineUsers={onlineUsers}
+              socket={socket}
             />
           )}
           {activeTab === 'Verify' && <VerificationPage onBack={() => showBackAd(() => handleBackNavigation())} />}

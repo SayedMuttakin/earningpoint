@@ -372,7 +372,28 @@ const FollowListModal = ({ targetUserId, initialTab, onClose, onUserClick, setAc
   );
 };
 
-const PublicProfilePage = ({ userId, onBack, currentUser, isOwnProfile, setActiveTab, setSelectedReelId, setActiveChatPartner, startEditing, onUserClick }) => {
+const PublicProfilePage = ({ userId, onBack, currentUser, isOwnProfile, setActiveTab, setSelectedReelId, setActiveChatPartner, startEditing, onUserClick, onlineUsers = [], socket = null }) => {
+  const [liveOnlineUsers, setLiveOnlineUsers] = useState(onlineUsers || []);
+
+  useEffect(() => {
+    if (Array.isArray(onlineUsers)) {
+      setLiveOnlineUsers(onlineUsers);
+    }
+  }, [onlineUsers]);
+
+  useEffect(() => {
+    if (!socket) return;
+    const handleOnlineUsers = (usersList) => {
+      if (Array.isArray(usersList)) {
+        setLiveOnlineUsers(usersList);
+      }
+    };
+    socket.on('online_users', handleOnlineUsers);
+    return () => {
+      socket.off('online_users', handleOnlineUsers);
+    };
+  }, [socket]);
+
   const [profile, setProfile] = useState(() => {
     if ((isOwnProfile || userId === 'me' || (currentUser && (userId === currentUser._id || userId === currentUser.id))) && currentUser) {
       return currentUser;
@@ -1021,8 +1042,8 @@ const PublicProfilePage = ({ userId, onBack, currentUser, isOwnProfile, setActiv
             </div>
           </div>
           
-          {!isOwn && (
-            <span className="absolute bottom-1 right-1 w-5 h-5 bg-emerald-500 rounded-full border-4 border-white dark:border-slate-950 shadow-md animate-pulse" />
+          {!isOwn && profile?._id && Array.isArray(liveOnlineUsers) && liveOnlineUsers.some(id => id && id.toString() === profile._id.toString()) && (
+            <span className="absolute bottom-1 right-1 w-5 h-5 bg-emerald-500 rounded-full border-4 border-white dark:border-slate-950 shadow-md animate-pulse" title="Active Now" />
           )}
         </div>
 
