@@ -1325,7 +1325,7 @@ const HomePage = ({ setActiveTab, setSelectedNewsId, setActiveChatPartner, setSe
     const nextPage = page + 1;
     try {
       const token = localStorage.getItem('token');
-      const res = await fetch(`${API_BASE}/api/posts/feed?page=${nextPage}&limit=30`, {
+      const res = await fetch(`${API_BASE}/api/posts/feed?page=${nextPage}&limit=15`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       if (res.ok) {
@@ -1338,7 +1338,7 @@ const HomePage = ({ setActiveTab, setSelectedNewsId, setActiveChatPartner, setSe
             return [...prev, ...uniqueNew];
           });
           setPage(nextPage);
-          if (newPosts.length < 30) {
+          if (newPosts.length < 15) {
             setHasMorePosts(false);
           }
         } else {
@@ -1376,7 +1376,7 @@ const HomePage = ({ setActiveTab, setSelectedNewsId, setActiveChatPartner, setSe
 
       // 1-roundtrip unified feed & news fetch + profile fetch in parallel
       const [feedRes, profileRes] = await Promise.all([
-        fetchWithTimeout(`${API_BASE}/api/posts/feed?includeNews=true&page=1&limit=30`, {
+        fetchWithTimeout(`${API_BASE}/api/posts/feed?includeNews=true&page=1&limit=15`, {
           headers: { Authorization: `Bearer ${token}` }
         }, 5000).catch(err => { console.error('Feed fetch failed:', err); return null; }),
         fetchWithTimeout(`${API_BASE}/api/profile`, {

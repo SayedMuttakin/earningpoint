@@ -181,11 +181,11 @@ const Navbar = ({
             onClick={() => setIsSidebarOpen(false)}
           />
           {/* Drawer Panel */}
-          <div className="fixed top-0 left-0 h-fit max-h-[95vh] w-[85%] sm:w-[70%] md:w-[340px] bg-white dark:bg-slate-900 shadow-2xl z-[100000] flex flex-col overflow-hidden rounded-br-[2.5rem] animate-slide-in pt-[max(12px,env(safe-area-inset-top))]">
+          <div className="fixed top-0 left-0 h-fit max-h-[96vh] w-[88%] sm:w-[75%] md:w-[350px] bg-white dark:bg-slate-900 shadow-2xl z-[100000] flex flex-col overflow-hidden rounded-br-[2.5rem] animate-slide-in pt-[max(12px,env(safe-area-inset-top))]">
             {/* Header / Profile Card */}
-            <div className="px-4.5 py-5 border-b border-slate-100 dark:border-slate-800 bg-gradient-to-br from-indigo-500/5 via-purple-500/5 to-transparent dark:from-indigo-950/10 dark:via-purple-950/5">
-              <div className="flex items-center gap-3">
-                <div className="relative w-12 h-12 rounded-full p-0.5 bg-gradient-to-tr from-brand-500 to-indigo-500 flex-shrink-0">
+            <div className="px-5 py-5 border-b border-slate-100 dark:border-slate-800 bg-gradient-to-br from-indigo-500/5 via-purple-500/5 to-transparent dark:from-indigo-950/10 dark:via-purple-950/5">
+              <div className="flex items-center gap-3.5">
+                <div className="relative w-13 h-13 rounded-full p-0.5 bg-gradient-to-tr from-brand-500 to-indigo-500 flex-shrink-0">
                   <img 
                     src={getAvatarUrl(currentUser)} 
                     alt="Profile" 
@@ -193,44 +193,44 @@ const Navbar = ({
                   />
                 </div>
                 <div className="min-w-0 flex-1">
-                  <div className="flex items-center gap-1">
-                    <span className="font-black text-[15px] text-slate-800 dark:text-white block truncate leading-tight">
+                  <div className="flex items-center gap-1.5">
+                    <span className="font-black text-[17px] text-slate-800 dark:text-white block truncate leading-tight">
                       {currentUser?.name || 'User'}
                     </span>
                     {((currentUser?.verificationBadge === 'blue' || currentUser?.verificationBadge === 'golden') || (currentUser?.isEmailVerified && currentUser?.verificationBadge !== 'none')) && (
-                      <VerifiedBadge type={currentUser?.verificationBadge === 'golden' ? 'golden' : 'blue'} iconClassName="w-4 h-4 flex-shrink-0" />
+                      <VerifiedBadge type={currentUser?.verificationBadge === 'golden' ? 'golden' : 'blue'} iconClassName="w-4.5 h-4.5 flex-shrink-0" />
                     )}
                   </div>
-                  <span className="text-[9.5px] text-slate-405 dark:text-slate-500 font-bold block truncate mt-0.5">
+                  <span className="text-[12px] text-slate-500 dark:text-slate-400 font-bold block truncate mt-0.5">
                     {currentUser?.phoneOrEmail || ''}
                   </span>
                 </div>
                 <button 
                   onClick={() => setIsSidebarOpen(false)}
-                  className="p-1 rounded-full bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-400 dark:text-slate-355 transition-colors flex-shrink-0"
+                  className="p-1.5 rounded-full bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-400 dark:text-slate-355 transition-colors flex-shrink-0"
                 >
-                  <X className="w-4 h-4" />
+                  <X className="w-5 h-5" />
                 </button>
               </div>
             </div>
 
             {/* Panel: Categories */}
-            <div className="flex-1 overflow-y-auto no-scrollbar px-2.5 py-4 space-y-1 bg-slate-55/10 dark:bg-slate-955/10">
+            <div className="flex-1 overflow-y-auto no-scrollbar px-3 py-3.5 space-y-1.5 bg-slate-55/10 dark:bg-slate-955/10">
               {allItems.map((item) => (
                 <button
                   key={item.id}
                   onClick={item.action}
-                  className="w-full flex items-center justify-between py-2 px-3 hover:bg-slate-100/50 dark:hover:bg-slate-800/30 rounded-2xl transition-colors text-left"
+                  className="w-full flex items-center justify-between py-2.5 px-3.5 hover:bg-slate-100 dark:hover:bg-slate-800/60 active:scale-[0.98] rounded-2xl transition-all text-left"
                 >
-                  <div className="flex items-center gap-2.5 min-w-0 flex-1 pr-1">
-                    <div className={`w-8 h-8 flex-shrink-0 rounded-full flex items-center justify-center ${item.color} shadow-3xs`}>
-                      <item.icon className="w-4 h-4" strokeWidth={2.4} />
+                  <div className="flex items-center gap-3 min-w-0 flex-1 pr-1">
+                    <div className={`w-9 h-9 flex-shrink-0 rounded-full flex items-center justify-center ${item.color} shadow-3xs`}>
+                      <item.icon className="w-5 h-5" strokeWidth={2.4} />
                     </div>
                     <div className="min-w-0 flex-1">
-                      <span className="font-black text-[13px] text-slate-800 dark:text-slate-200 block truncate leading-none">{item.label}</span>
+                      <span className="font-black text-[15px] text-slate-800 dark:text-slate-100 block truncate leading-snug">{item.label}</span>
                     </div>
                   </div>
-                  <ChevronRight className="w-3.5 h-3.5 text-indigo-500 dark:text-indigo-400 flex-shrink-0 ml-0.5" strokeWidth={3} />
+                  <ChevronRight className="w-4 h-4 text-indigo-500 dark:text-indigo-400 flex-shrink-0 ml-1" strokeWidth={3} />
                 </button>
               ))}
             </div>

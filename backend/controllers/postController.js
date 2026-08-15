@@ -191,10 +191,10 @@ exports.getPostsFeed = async (req, res) => {
     const includeNews = req.query.includeNews === 'true';
 
     const page = Math.max(1, parseInt(req.query.page, 10) || 1);
-    const limit = Math.min(50, Math.max(1, parseInt(req.query.limit, 10) || 30));
+    const limit = Math.min(50, Math.max(1, parseInt(req.query.limit, 10) || 15));
     const skip = (page - 1) * limit;
 
-    // Fetch the 30 most recent community posts with populated likers (paginated)
+    // Fetch the 15 most recent community posts with populated likers (paginated)
     const feedPostsPromise = Post.find({
       authorId: { $ne: null, $nin: blockedUserIds }, // Exclude admin updates and blocked users
       'reports.user': { $ne: currentUserId } // Exclude posts reported by the current user
