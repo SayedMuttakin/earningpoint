@@ -603,7 +603,7 @@ const RelatedNewsSlider = ({ posts, onSelect }) => {
 
             {/* Author & Verification Card (Zenivio News with verified badge, clean time display, NO view count) */}
             <div className="flex items-center gap-3 py-2.5 border-y border-slate-100 dark:border-slate-800">
-              <div className="w-10 h-10 rounded-xl overflow-hidden flex-shrink-0 bg-purple-50 dark:bg-purple-950/40 border border-purple-200/50 dark:border-purple-800/40 shadow-xs p-1 flex items-center justify-center">
+              <div className="w-10 h-10 rounded-xl overflow-hidden flex-shrink-0 bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-xs p-1 flex items-center justify-center">
                 <img src="/zenivio-logo.png" alt="Zenivio News" className="w-full h-full object-contain" />
               </div>
               <div className="min-w-0 flex-1">
