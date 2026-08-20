@@ -3169,18 +3169,15 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
         <div className="bg-[#f5f3ff] dark:bg-slate-900 text-slate-800 dark:text-white px-4 py-4 sm:px-6 flex flex-col items-center gap-4 border-b border-purple-100 dark:border-slate-800">
             {/* Buttons Row */}
             <div className="flex justify-center items-center gap-4 w-full max-w-md">
-              {/* Total Points Card */}
+              {/* Total Points Card - single line */}
               <button
                 onClick={() => setActiveEarningTab('wallet')}
-                className="flex-1 py-3 px-4 rounded-2xl flex items-center justify-center gap-2 border-2 shadow-sm transform-gpu transition-all duration-300 bg-gradient-to-r from-amber-400 to-orange-400 border-amber-400/40 text-white hover:opacity-90 active:scale-95"
+                className="flex-1 py-3 px-3 rounded-2xl flex items-center justify-center gap-1.5 border-2 shadow-sm transform-gpu transition-all duration-300 bg-gradient-to-r from-amber-400 to-orange-400 border-amber-400/40 text-white hover:opacity-90 active:scale-95 whitespace-nowrap min-w-0"
               >
-                <span className="text-xl">🪙</span>
-                <div className="flex flex-col items-start leading-none">
-                  <span className="text-[10px] font-bold uppercase tracking-widest opacity-80">Total Points</span>
-                  <span className="text-base sm:text-lg font-black">{coins.toLocaleString()}</span>
-                </div>
-                {/* Level Badge */}
-                <span className="ml-auto bg-white/20 backdrop-blur-sm text-white text-[10px] font-black px-2 py-0.5 rounded-full border border-white/30">
+                <span className="text-base flex-shrink-0">🪙</span>
+                <span className="text-xs font-bold uppercase tracking-wide opacity-90 flex-shrink-0">Points</span>
+                <span className="text-sm font-black flex-shrink-0">{coins.toLocaleString()}</span>
+                <span className="ml-1 bg-white/25 text-white text-[10px] font-black px-1.5 py-0.5 rounded-full border border-white/30 flex-shrink-0">
                   Lv.{levelInfo.level}
                 </span>
               </button>

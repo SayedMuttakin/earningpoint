@@ -6,8 +6,6 @@ import Users from './pages/Users';
 import Transactions from './pages/Transactions';
 import Support from './pages/Support';
 import Referrals from './pages/Referrals';
-import PremiumOrders from './pages/PremiumOrders';
-import PremiumIpSettings from './pages/PremiumIpSettings';
 import Settings from './pages/Settings';
 import Posts from './pages/Posts';
 import Articles from './pages/Articles';
@@ -53,8 +51,6 @@ const AdminApp = () => {
       {activePage === 'transactions' && <Transactions {...pageProps} />}
       {activePage === 'support' && <Support {...pageProps} />}
       {activePage === 'referrals' && <Referrals {...pageProps} />}
-      {activePage === 'premium' && <PremiumOrders {...pageProps} />}
-      {activePage === 'ip-settings' && <PremiumIpSettings {...pageProps} />}
       {activePage === 'posts' && <Posts {...pageProps} />}
       {activePage === 'articles' && <Articles {...pageProps} />}
       {activePage === 'missions' && <Missions {...pageProps} />}
