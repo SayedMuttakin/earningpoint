@@ -3165,28 +3165,23 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
       {/* Responsive Container */}
       <div className="w-full max-w-4xl mx-auto bg-white dark:bg-slate-900 md:rounded-3xl shadow-xl overflow-hidden border border-slate-200 dark:border-slate-800 mt-2">
 
-        {/* Top Header - GET VPN & MY WALLET buttons */}
+        {/* Top Header - Total Points & MY WALLET buttons */}
         <div className="bg-[#f5f3ff] dark:bg-slate-900 text-slate-800 dark:text-white px-4 py-4 sm:px-6 flex flex-col items-center gap-4 border-b border-purple-100 dark:border-slate-800">
             {/* Buttons Row */}
             <div className="flex justify-center items-center gap-4 w-full max-w-md">
+              {/* Total Points Card */}
               <button
-                onClick={() => {
-                  if (isPremium && !vpnActivatedShown) {
-                    setShowVpnActivated(true);
-                  } else {
-                    setShowPremiumIPView(true);
-                    setIpStep(1);
-                  }
-                }}
-                className={`flex-1 py-3 px-4 rounded-2xl flex items-center justify-center gap-2 border-2 shadow-sm transform-gpu transition-all duration-300 ${
-                  isPremium 
-                    ? "bg-amber-500 border-amber-600 text-white" 
-                    : "bg-white dark:bg-slate-800 border-purple-200 dark:border-slate-700 text-purple-700 dark:text-purple-300 hover:bg-purple-50/50"
-                }`}
+                onClick={() => setActiveEarningTab('wallet')}
+                className="flex-1 py-3 px-4 rounded-2xl flex items-center justify-center gap-2 border-2 shadow-sm transform-gpu transition-all duration-300 bg-gradient-to-r from-amber-400 to-orange-400 border-amber-400/40 text-white hover:opacity-90 active:scale-95"
               >
-                <Shield className={`w-4 h-4 sm:w-5 sm:h-5 ${isPremium ? "text-white" : "text-purple-500"}`} strokeWidth={3} />
-                <span className="text-sm sm:text-base font-black uppercase tracking-tight">
-                  Get VPN
+                <span className="text-xl">🪙</span>
+                <div className="flex flex-col items-start leading-none">
+                  <span className="text-[10px] font-bold uppercase tracking-widest opacity-80">Total Points</span>
+                  <span className="text-base sm:text-lg font-black">{coins.toLocaleString()}</span>
+                </div>
+                {/* Level Badge */}
+                <span className="ml-auto bg-white/20 backdrop-blur-sm text-white text-[10px] font-black px-2 py-0.5 rounded-full border border-white/30">
+                  Lv.{levelInfo.level}
                 </span>
               </button>
               <button

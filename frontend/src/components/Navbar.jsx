@@ -457,12 +457,6 @@ const Navbar = ({
                 className="flex items-center gap-1.5 cursor-pointer hover:opacity-90 transition-opacity select-none"
                 onClick={() => handleTabButtonClick('Home')}
               >
-                <img
-                  src="/logo.png"
-                  alt="Zenivio"
-                  className="w-8 h-8 object-contain"
-                  draggable={false}
-                />
                 <span 
                   className="text-2xl sm:text-3xl font-black bg-gradient-to-r from-brand-500 to-brand-700 bg-clip-text text-transparent transform hover:scale-105 transition-all duration-300"
                 >
