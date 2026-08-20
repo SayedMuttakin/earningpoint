@@ -4,11 +4,14 @@ import tailwindcss from '@tailwindcss/vite'
 
 // https://vite.dev/config/
 export default defineConfig({
+  root: new URL('.', import.meta.url).pathname.replace(/^\/([A-Z]:)/, '$1'),
+  base: '/',
   plugins: [
     tailwindcss(),
     react(),
   ],
   appType: 'spa',
+
 
   build: {
     // Vite 8 uses Rolldown/Oxc — use 'oxc' minifier (default in Vite 8) or omit for default

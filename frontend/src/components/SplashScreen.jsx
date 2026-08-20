@@ -54,16 +54,23 @@ const SplashScreen = ({ onFinish }) => {
         style={{ background: 'radial-gradient(circle, rgba(147,51,234,0.06) 0%, transparent 70%)' }}
       />
 
-      {/* ── Center Text Content (No Logo Image) ── */}
+      {/* ── Center Content: Transparent Logo + Brand Text ── */}
       <div className="relative z-10 flex flex-col items-center">
         <motion.div
-          initial={{ opacity: 0, scale: 0.9, y: 10 }}
+          initial={{ opacity: 0, scale: 0.85, y: 12 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
-          transition={{ duration: 0.4, ease: [0.34, 1.56, 0.64, 1] }}
+          transition={{ duration: 0.45, ease: [0.34, 1.56, 0.64, 1] }}
           className="flex flex-col items-center text-center"
         >
+          <div className="w-20 h-20 sm:w-24 sm:h-24 mb-3 flex items-center justify-center">
+            <img 
+              src="/logo.png" 
+              alt="Zenivio Logo" 
+              className="w-full h-full object-contain drop-shadow-md"
+            />
+          </div>
           <h1
-            className="text-4xl sm:text-5xl font-black tracking-tight mb-2 uppercase"
+            className="text-3xl sm:text-4xl font-black tracking-tight mb-1 uppercase"
             style={{ color: '#7C3AED', letterSpacing: '0.08em' }}
           >
             ZENIVIO

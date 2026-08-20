@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { 
   Home, Bell, ShoppingCart, User, Settings, Menu, X, Video, Newspaper,
-  Lock, Globe, Shield, ShieldCheck, Trash2, ChevronRight, Moon, Sun, 
+  Lock, Globe, Shield, ShieldCheck, Trash2, ChevronRight, ChevronDown, ChevronUp, Moon, Sun, 
   Database, HelpCircle, FileText, LogOut, ArrowLeft, Smartphone, 
-  CheckCircle2, Search, Rocket, Palette, Headphones, MessageCircle, Plus 
+  CheckCircle2, Search, Rocket, Palette, Headphones, MessageCircle, Plus, Check, Users, UserPlus 
 } from 'lucide-react';
 import { API_BASE, getImageUrl } from '../config';
 import VerifiedBadge from './VerifiedBadge';
@@ -19,7 +19,103 @@ const Navbar = ({
   navigateToSettingsSubMenu
 }) => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [showAccountSwitcher, setShowAccountSwitcher] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
+  const [savedAccounts, setSavedAccounts] = useState(() => {
+    try {
+      return JSON.parse(localStorage.getItem('zenivio_saved_accounts') || '[]');
+    } catch {
+      return [];
+    }
+  });
+
+  // Sync current active user account into saved_accounts
+  useEffect(() => {
+    if (currentUser?._id) {
+      const token = localStorage.getItem('token');
+      if (!token) return;
+
+      setSavedAccounts(prev => {
+        const existingIdx = prev.findIndex(a => a._id === currentUser._id || (currentUser.phoneOrEmail && a.phoneOrEmail === currentUser.phoneOrEmail));
+        const accountData = {
+          _id: currentUser._id,
+          name: currentUser.name || 'User',
+          phoneOrEmail: currentUser.phoneOrEmail || '',
+          profilePic: currentUser.profilePic || currentUser.googleAvatar || currentUser.facebookAvatar || '',
+          verificationBadge: currentUser.verificationBadge || 'none',
+          isEmailVerified: !!currentUser.isEmailVerified,
+          token: token,
+          lastActive: Date.now()
+        };
+
+        let updated;
+        if (existingIdx >= 0) {
+          updated = [...prev];
+          updated[existingIdx] = { ...updated[existingIdx], ...accountData };
+        } else {
+          updated = [accountData, ...prev];
+        }
+        localStorage.setItem('zenivio_saved_accounts', JSON.stringify(updated));
+        return updated;
+      });
+    }
+  }, [currentUser]);
+
+  const handleOpenMyProfile = () => {
+    setIsSidebarOpen(false);
+    setShowAccountSwitcher(false);
+    if (setActiveTab) setActiveTab('MyProfile');
+  };
+
+  const handleSwitchAccount = (account) => {
+    if (account._id === currentUser?._id) {
+      setShowAccountSwitcher(false);
+      return;
+    }
+    localStorage.setItem('token', account.token);
+    localStorage.setItem('tokenNormal', account.token);
+    window.dispatchEvent(new CustomEvent('zenivio_account_switched', { detail: { token: account.token } }));
+    setIsSidebarOpen(false);
+    setShowAccountSwitcher(false);
+  };
+
+  const handleAddAccount = () => {
+    // Save current active account first before logging out for addition
+    if (currentUser?._id) {
+      const token = localStorage.getItem('token');
+      if (token) {
+        const prev = JSON.parse(localStorage.getItem('zenivio_saved_accounts') || '[]');
+        const existingIdx = prev.findIndex(a => a._id === currentUser._id);
+        const accountData = {
+          _id: currentUser._id,
+          name: currentUser.name || 'User',
+          phoneOrEmail: currentUser.phoneOrEmail || '',
+          profilePic: currentUser.profilePic || currentUser.googleAvatar || currentUser.facebookAvatar || '',
+          verificationBadge: currentUser.verificationBadge || 'none',
+          isEmailVerified: !!currentUser.isEmailVerified,
+          token: token,
+          lastActive: Date.now()
+        };
+        const updated = existingIdx >= 0 ? prev.map((a, i) => i === existingIdx ? accountData : a) : [accountData, ...prev];
+        localStorage.setItem('zenivio_saved_accounts', JSON.stringify(updated));
+      }
+    }
+    localStorage.removeItem('token');
+    localStorage.removeItem('tokenNormal');
+    setIsSidebarOpen(false);
+    setShowAccountSwitcher(false);
+    if (onLogout) onLogout();
+  };
+
+  const handleRemoveSavedAccount = (e, accountId) => {
+    e.stopPropagation();
+    const updated = savedAccounts.filter(a => a._id !== accountId);
+    setSavedAccounts(updated);
+    localStorage.setItem('zenivio_saved_accounts', JSON.stringify(updated));
+    if (accountId === currentUser?._id) {
+      if (onLogout) onLogout();
+    }
+  };
 
   const handleTabButtonClick = (targetTab) => {
     if (activeTab === targetTab) {
@@ -181,59 +277,166 @@ const Navbar = ({
             onClick={() => setIsSidebarOpen(false)}
           />
           {/* Drawer Panel */}
-          <div className="fixed top-0 left-0 h-fit max-h-[96vh] w-[88%] sm:w-[75%] md:w-[350px] bg-white dark:bg-slate-900 shadow-2xl z-[100000] flex flex-col overflow-hidden rounded-br-[2.5rem] animate-slide-in pt-[max(12px,env(safe-area-inset-top))]">
+          <div className="fixed top-0 left-0 h-fit max-h-[96vh] w-[88%] sm:w-[75%] md:w-[360px] bg-white dark:bg-slate-900 shadow-2xl z-[100000] flex flex-col overflow-hidden rounded-br-[2.5rem] animate-slide-in pt-[max(12px,env(safe-area-inset-top))]">
             {/* Header / Profile Card */}
-            <div className="px-5 py-5 border-b border-slate-100 dark:border-slate-800 bg-gradient-to-br from-indigo-500/5 via-purple-500/5 to-transparent dark:from-indigo-950/10 dark:via-purple-950/5">
-              <div className="flex items-center gap-3.5">
-                <div className="relative w-13 h-13 rounded-full p-0.5 bg-gradient-to-tr from-brand-500 to-indigo-500 flex-shrink-0">
-                  <img 
-                    src={getAvatarUrl(currentUser)} 
-                    alt="Profile" 
-                    className="w-full h-full object-cover rounded-full border-2 border-white dark:border-slate-900"
-                  />
-                </div>
-                <div className="min-w-0 flex-1">
-                  <div className="flex items-center gap-1.5">
-                    <span className="font-black text-[17px] text-slate-800 dark:text-white block truncate leading-tight">
-                      {currentUser?.name || 'User'}
-                    </span>
-                    {((currentUser?.verificationBadge === 'blue' || currentUser?.verificationBadge === 'golden') || (currentUser?.isEmailVerified && currentUser?.verificationBadge !== 'none')) && (
-                      <VerifiedBadge type={currentUser?.verificationBadge === 'golden' ? 'golden' : 'blue'} iconClassName="w-4.5 h-4.5 flex-shrink-0" />
-                    )}
+            <div className="px-4 py-4 border-b border-slate-100 dark:border-slate-800 bg-gradient-to-br from-indigo-500/5 via-purple-500/5 to-transparent dark:from-indigo-950/10 dark:via-purple-950/5">
+              <div className="flex items-center gap-3">
+                {/* Clickable Profile Avatar & Name */}
+                <div 
+                  onClick={handleOpenMyProfile}
+                  className="flex items-center gap-3 min-w-0 flex-1 cursor-pointer group active:opacity-80 transition-opacity"
+                  title="View your profile"
+                >
+                  <div className="relative w-12 h-12 rounded-full p-0.5 bg-gradient-to-tr from-brand-500 to-indigo-500 flex-shrink-0 group-hover:scale-105 transition-transform">
+                    <img 
+                      src={getAvatarUrl(currentUser)} 
+                      alt="Profile" 
+                      className="w-full h-full object-cover rounded-full border-2 border-white dark:border-slate-900"
+                    />
                   </div>
-                  <span className="text-[12px] text-slate-500 dark:text-slate-400 font-bold block truncate mt-0.5">
-                    {currentUser?.phoneOrEmail || ''}
-                  </span>
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center gap-1.5">
+                      <span className="font-black text-[16px] text-slate-800 dark:text-white block truncate leading-tight group-hover:text-brand-600 transition-colors">
+                        {currentUser?.name || 'User'}
+                      </span>
+                      {((currentUser?.verificationBadge === 'blue' || currentUser?.verificationBadge === 'golden') || (currentUser?.isEmailVerified && currentUser?.verificationBadge !== 'none')) && (
+                        <VerifiedBadge type={currentUser?.verificationBadge === 'golden' ? 'golden' : 'blue'} iconClassName="w-4.5 h-4.5 flex-shrink-0" />
+                      )}
+                    </div>
+                    <span className="text-[12px] text-slate-500 dark:text-slate-400 font-bold block truncate mt-0.5">
+                      {currentUser?.phoneOrEmail || ''}
+                    </span>
+                  </div>
                 </div>
+
+                {/* Switch Account Toggle Button (Chevron Down/Up) */}
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setShowAccountSwitcher(!showAccountSwitcher);
+                  }}
+                  className={`p-2 rounded-full transition-all flex-shrink-0 ${
+                    showAccountSwitcher 
+                      ? 'bg-brand-500 text-white shadow-xs' 
+                      : 'bg-slate-100 dark:bg-slate-800 hover:bg-purple-100 dark:hover:bg-purple-900/40 text-slate-600 dark:text-slate-300'
+                  }`}
+                  title="Switch Account"
+                >
+                  {showAccountSwitcher ? <ChevronUp className="w-4 h-4" strokeWidth={2.5} /> : <ChevronDown className="w-4 h-4" strokeWidth={2.5} />}
+                </button>
+
+                {/* Close Drawer Button */}
                 <button 
                   onClick={() => setIsSidebarOpen(false)}
-                  className="p-1.5 rounded-full bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-400 dark:text-slate-355 transition-colors flex-shrink-0"
+                  className="p-2 rounded-full bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-400 dark:text-slate-300 transition-colors flex-shrink-0"
                 >
-                  <X className="w-5 h-5" />
+                  <X className="w-4.5 h-4.5" />
                 </button>
               </div>
             </div>
 
-            {/* Panel: Categories */}
-            <div className="flex-1 overflow-y-auto no-scrollbar px-3 py-3.5 space-y-1.5 bg-slate-55/10 dark:bg-slate-955/10">
-              {allItems.map((item) => (
-                <button
-                  key={item.id}
-                  onClick={item.action}
-                  className="w-full flex items-center justify-between py-2.5 px-3.5 hover:bg-slate-100 dark:hover:bg-slate-800/60 active:scale-[0.98] rounded-2xl transition-all text-left"
-                >
-                  <div className="flex items-center gap-3 min-w-0 flex-1 pr-1">
-                    <div className={`w-9 h-9 flex-shrink-0 rounded-full flex items-center justify-center ${item.color} shadow-3xs`}>
-                      <item.icon className="w-5 h-5" strokeWidth={2.4} />
-                    </div>
-                    <div className="min-w-0 flex-1">
-                      <span className="font-black text-[15px] text-slate-800 dark:text-slate-100 block truncate leading-snug">{item.label}</span>
-                    </div>
+            {/* Account Switcher View (Facebook Style) */}
+            {showAccountSwitcher ? (
+              <div className="flex-1 overflow-y-auto no-scrollbar px-3 py-3 space-y-2 bg-slate-50/70 dark:bg-slate-950/40 animate-fade-in">
+                <div className="flex items-center justify-between px-2 py-1">
+                  <div className="flex items-center gap-1.5 text-xs font-black text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                    <Users className="w-3.5 h-3.5" />
+                    <span>Saved Accounts ({savedAccounts.length || 1})</span>
                   </div>
-                  <ChevronRight className="w-4 h-4 text-indigo-500 dark:text-indigo-400 flex-shrink-0 ml-1" strokeWidth={3} />
+                </div>
+
+                {/* Accounts List */}
+                <div className="space-y-1.5">
+                  {savedAccounts.map((acc) => {
+                    const isActive = acc._id === currentUser?._id;
+                    return (
+                      <div
+                        key={acc._id || acc.token}
+                        onClick={() => handleSwitchAccount(acc)}
+                        className={`w-full flex items-center justify-between p-2.5 rounded-2xl transition-all cursor-pointer border ${
+                          isActive 
+                            ? 'bg-brand-50/80 dark:bg-brand-950/30 border-brand-300 dark:border-brand-800/60 shadow-xs' 
+                            : 'bg-white dark:bg-slate-850 hover:bg-slate-100 dark:hover:bg-slate-800 border-slate-200/70 dark:border-slate-800 shadow-3xs'
+                        }`}
+                      >
+                        <div className="flex items-center gap-3 min-w-0 flex-1">
+                          <div className="relative w-10 h-10 rounded-full p-0.5 bg-gradient-to-tr from-brand-500 to-indigo-500 flex-shrink-0">
+                            <img 
+                              src={getAvatarUrl(acc)} 
+                              alt={acc.name} 
+                              className="w-full h-full object-cover rounded-full border border-white dark:border-slate-900"
+                            />
+                            {isActive && (
+                              <span className="absolute bottom-0 right-0 w-3 h-3 bg-emerald-500 rounded-full border-2 border-white dark:border-slate-900" />
+                            )}
+                          </div>
+                          <div className="min-w-0 flex-1">
+                            <div className="flex items-center gap-1">
+                              <span className={`font-black text-[14px] truncate block ${isActive ? 'text-brand-700 dark:text-brand-300' : 'text-slate-800 dark:text-white'}`}>
+                                {acc.name || 'User'}
+                              </span>
+                              {((acc.verificationBadge === 'blue' || acc.verificationBadge === 'golden') || (acc.isEmailVerified && acc.verificationBadge !== 'none')) && (
+                                <VerifiedBadge type={acc.verificationBadge === 'golden' ? 'golden' : 'blue'} iconClassName="w-3.5 h-3.5 flex-shrink-0" />
+                              )}
+                            </div>
+                            <span className="text-[11px] font-bold text-slate-400 dark:text-slate-500 block truncate">
+                              {acc.phoneOrEmail || ''}
+                            </span>
+                          </div>
+                        </div>
+
+                        {/* Active Badge / Delete Option */}
+                        <div className="flex items-center gap-1.5 flex-shrink-0 ml-2">
+                          {isActive ? (
+                            <span className="flex items-center gap-1 text-[11px] font-black text-emerald-600 dark:text-emerald-400 bg-emerald-100/80 dark:bg-emerald-950/40 px-2 py-0.5 rounded-full">
+                              <Check className="w-3 h-3 stroke-[3]" /> Active
+                            </span>
+                          ) : (
+                            <button
+                              onClick={(e) => handleRemoveSavedAccount(e, acc._id)}
+                              className="p-1.5 rounded-full hover:bg-rose-100 dark:hover:bg-rose-950/50 text-slate-400 hover:text-rose-500 transition-colors"
+                              title="Remove from device"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+
+                {/* Add Another Account Button */}
+                <button
+                  onClick={handleAddAccount}
+                  className="w-full flex items-center justify-center gap-2 py-3 px-4 bg-white dark:bg-slate-850 hover:bg-slate-100 dark:hover:bg-slate-800 border-2 border-dashed border-slate-200 dark:border-slate-700 active:scale-[0.98] rounded-2xl transition-all text-slate-700 dark:text-slate-200 font-black text-sm mt-2 cursor-pointer shadow-3xs"
+                >
+                  <UserPlus className="w-4 h-4 text-brand-600 dark:text-brand-400" />
+                  <span>Log into Another Account</span>
                 </button>
-              ))}
-            </div>
+              </div>
+            ) : (
+              /* Panel: Standard Menu Categories */
+              <div className="flex-1 overflow-y-auto no-scrollbar px-3 py-3.5 space-y-1.5 bg-slate-55/10 dark:bg-slate-955/10">
+                {allItems.map((item) => (
+                  <button
+                    key={item.id}
+                    onClick={item.action}
+                    className="w-full flex items-center justify-between py-2.5 px-3.5 hover:bg-slate-100 dark:hover:bg-slate-800/60 active:scale-[0.98] rounded-2xl transition-all text-left cursor-pointer"
+                  >
+                    <div className="flex items-center gap-3 min-w-0 flex-1 pr-1">
+                      <div className={`w-9 h-9 flex-shrink-0 rounded-full flex items-center justify-center ${item.color} shadow-3xs`}>
+                        <item.icon className="w-5 h-5" strokeWidth={2.4} />
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <span className="font-black text-[15px] text-slate-800 dark:text-slate-100 block truncate leading-snug">{item.label}</span>
+                      </div>
+                    </div>
+                    <ChevronRight className="w-4 h-4 text-indigo-500 dark:text-indigo-400 flex-shrink-0 ml-1" strokeWidth={3} />
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
         </>
       )}
@@ -250,12 +453,22 @@ const Navbar = ({
               >
                 <Menu className="h-7 w-7" />
               </button>
-              <span 
-                className="text-2xl sm:text-3xl font-black bg-gradient-to-r from-brand-500 to-brand-700 bg-clip-text text-transparent cursor-pointer transform hover:scale-105 transition-all duration-300 select-none"
+              <div
+                className="flex items-center gap-1.5 cursor-pointer hover:opacity-90 transition-opacity select-none"
                 onClick={() => handleTabButtonClick('Home')}
               >
-                Zenivio
-              </span>
+                <img
+                  src="/logo.png"
+                  alt="Zenivio"
+                  className="w-8 h-8 object-contain"
+                  draggable={false}
+                />
+                <span 
+                  className="text-2xl sm:text-3xl font-black bg-gradient-to-r from-brand-500 to-brand-700 bg-clip-text text-transparent transform hover:scale-105 transition-all duration-300"
+                >
+                  Zenivio
+                </span>
+              </div>
             </div>
 
             {/* Right Side: Notification & Messenger Icons */}

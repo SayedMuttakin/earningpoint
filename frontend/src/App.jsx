@@ -243,28 +243,42 @@ function App() {
     setActiveTab('Setting');
   };
 
-  useEffect(() => {
-    const fetchUser = async () => {
-      const token = localStorage.getItem('token');
-      if (!token) return;
-      try {
-        const res = await fetch(`${API_BASE}/api/profile`, {
-          headers: { Authorization: `Bearer ${token}` }
-        });
-        if (res.ok) {
-          const data = await res.json();
-          setCurrentUser(data);
-        }
-      } catch (err) {
-        console.error('Failed to fetch profile in App:', err);
+  const fetchCurrentUser = async () => {
+    const token = localStorage.getItem('token');
+    if (!token) {
+      setCurrentUser(null);
+      return;
+    }
+    try {
+      const res = await fetch(`${API_BASE}/api/profile`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setCurrentUser(data);
       }
-    };
+    } catch (err) {
+      console.error('Failed to fetch profile in App:', err);
+    }
+  };
+
+  useEffect(() => {
     if (isAuthenticated) {
-      fetchUser();
+      fetchCurrentUser();
     } else {
       setCurrentUser(null);
     }
   }, [isAuthenticated]);
+
+  useEffect(() => {
+    const handleAccountSwitched = () => {
+      setIsAuthenticated(true);
+      fetchCurrentUser();
+      _setActiveTab('Home');
+    };
+    window.addEventListener('zenivio_account_switched', handleAccountSwitched);
+    return () => window.removeEventListener('zenivio_account_switched', handleAccountSwitched);
+  }, []);
 
   const CURRENT_APP_VERSION = '1.0.8';
   const [appUpdateConfig, setAppUpdateConfig] = useState(null);
