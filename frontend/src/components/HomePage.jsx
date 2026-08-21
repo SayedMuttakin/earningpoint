@@ -1625,6 +1625,9 @@ const HomePage = ({ setActiveTab, setSelectedNewsId, setActiveChatPartner, setSe
         <div className="min-h-screen bg-slate-50 dark:bg-slate-950 pb-24 flex flex-col relative">
         {/* Content Body */}
         <main className="max-w-xl mx-auto px-4 pt-3 pb-8 w-full flex-1 space-y-6">
+          {/* SEO H1 Heading (Screen Reader & Search Engine Optimized) */}
+          <h1 className="sr-only">Zenivio – More Than a Social Network</h1>
+
           {/* Banner */}
           <BannerSection onStartEarning={() => setActiveTab && setActiveTab('Earning')} />
 
