@@ -6,12 +6,12 @@
   <!-- Homepage — highest priority, check daily -->
   <url>
     <loc>https://zenivio.it.com/</loc>
-    <lastmod>2026-06-15</lastmod>
+    <lastmod>2026-08-22</lastmod>
     <changefreq>daily</changefreq>
     <priority>1.0</priority>
     <image:image>
       <image:loc>https://zenivio.it.com/logo.png</image:loc>
-      <image:title>Zenivio - Earn Money, Refer Friends &amp; Engage in Community</image:title>
+      <image:title>Zenivio - Connect, Share &amp; Be Part of the Community</image:title>
     </image:image>
   </url>
 

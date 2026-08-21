@@ -1,7 +1,7 @@
 {
   "name": "Zenivio",
   "short_name": "Zenivio",
-  "description": "Zenivio — Earn money, refer friends, and engage in community. Read articles, watch ads, and complete tasks to earn real rewards!",
+  "description": "Zenivio — Connect, share thoughts, discover latest news, explore reels, chat with friends, and engage in a vibrant global community.",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#0f172a",
@@ -9,8 +9,8 @@
   "orientation": "portrait-primary",
   "lang": "en",
   "dir": "ltr",
-  "categories": ["finance", "social", "entertainment"],
-  "keywords": "Zenivio, Zenvio, earn money, referral, social community, earning app",
+  "categories": ["social", "entertainment", "news", "communication"],
+  "keywords": "Zenivio, Zenivio App, Zenivio Official, Zenivio Social, social media platform, global community, connect share",
   "scope": "/",
   "id": "zenivio-app",
   "icons": [
