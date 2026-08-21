@@ -11,28 +11,66 @@ import { updatePageSEO } from '../utils/seo';
 
 const aboutSections = [
   {
-    id: 'about-zenivio',
+    id: 'what-is-zenivio',
     number: 1,
-    title: 'About Zenivio',
+    title: 'What is Zenivio?',
     icon: Info,
-    description: 'Learn about Zenivio, a social networking platform built to help people connect, share text-based posts and interact in a simple digital community.',
+    description: 'Zenivio is a next-generation social networking platform created to bring people together through authentic conversations, creative text posts, and meaningful community engagement.',
     bullets: [
-      'Zenivio is more than a social network — it is a friendly, vibrant digital space designed for meaningful human connection.',
-      'Share your thoughts, daily updates, stories, and text-based posts effortlessly.',
-      'Connect with friends, follow inspiring individuals, and engage in open discussions.',
-      'Simple, modern, and privacy-conscious design with zero clutter.'
+      'More Than a Social Network: A clutter-free space focused on real interactions rather than distracting algorithms.',
+      'Text-First Social Expression: Share your thoughts, life updates, stories, and ideas with rich gradient cards.',
+      'Worldwide Connections: Follow friends, creators, and interesting individuals across the globe.',
+      'Complete Privacy Control: You own your content, manage your visibility, and control your digital presence.'
     ]
   },
   {
-    id: 'our-vision',
+    id: 'how-zenivio-works',
     number: 2,
-    title: 'Our Vision & Community Values',
-    icon: Users,
-    description: 'We believe that social networking should be authentic, simple, and accessible to everyone around the globe without barriers.',
+    title: 'How Zenivio Works',
+    icon: Cpu,
+    description: 'Getting started on Zenivio is seamless, intuitive, and designed for instant community participation.',
     bullets: [
-      'Authenticity First: A welcoming community where genuine expression is celebrated.',
-      'User Privacy: Comprehensive control over your profile, posts, and data.',
-      'Global Connection: Bringing people together across countries and cultures.'
+      '1. Create Your Profile: Sign up in seconds, customize your avatar, bio, and verification badge.',
+      '2. Share Your World: Write expressive text posts with color gradients, attach photos or videos, and express your mood with emoji feelings.',
+      '3. Discover & Interact: Browse the global community feed, follow intriguing voices, like, and join real-time discussions.',
+      '4. Connect Privately: Direct message friends with fast, secure, real-time messaging.',
+      '5. Multi-Account Flexibility: Switch between personal and project profiles effortlessly on the same device.'
+    ]
+  },
+  {
+    id: 'text-based-networking',
+    number: 3,
+    title: 'Text-Based Social Networking & Digital Communication',
+    icon: FileText,
+    description: 'In an era overwhelmed by short attention spans, Zenivio celebrates the clarity, depth, and impact of text-based communication.',
+    bullets: [
+      'Thoughtful Conversations: Words allow for deeper expression, storytelling, and mutual understanding.',
+      'Visual Emphasis: Beautiful gradient backgrounds turn simple thoughts into eye-catching social cards.',
+      'Inclusive & Accessible: Text-based posts load instantly on any network speed and device.'
+    ]
+  },
+  {
+    id: 'online-communities',
+    number: 4,
+    title: 'Building Positive Online Communities',
+    icon: Users,
+    description: 'Zenivio provides the foundation for interest-driven social circles where members support, inspire, and learn from one another.',
+    bullets: [
+      'Shared Interests: Connect with people who share your passions, hobbies, and creative goals.',
+      'Constructive Engagement: Our community guidelines encourage respectful, uplifting, and safe interactions.',
+      'Global Reach: Discover international perspectives and broaden your worldview.'
+    ]
+  },
+  {
+    id: 'social-media-safety',
+    number: 5,
+    title: 'Social Media Safety & User Protection',
+    icon: Shield,
+    description: 'Your safety, security, and mental well-being are paramount at Zenivio.',
+    bullets: [
+      'Zero Tolerance for Harassment: Strong automated and community-led moderation protects against abuse and spam.',
+      'Granular Privacy Controls: Choose who can see your posts (Public, Friends, or Private).',
+      'Data Integrity: We do not sell your personal information to third-party data brokers.'
     ]
   }
 ];
