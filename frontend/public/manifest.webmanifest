@@ -1,7 +1,7 @@
 {
   "name": "Zenivio",
   "short_name": "Zenivio",
-  "description": "Zenivio — Connect, share thoughts, discover latest news, explore reels, chat with friends, and engage in a vibrant global community.",
+  "description": "Zenivio — Connect, share thoughts, discover curated news, chat with friends, and engage in a vibrant global social community.",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#0f172a",

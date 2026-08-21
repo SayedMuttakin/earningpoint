@@ -79,12 +79,12 @@ const featuresSections = [
   {
     id: 'text-posts-feature',
     number: 1,
-    title: 'Text-Based Posts & Creative Sharing',
+    title: 'Text-Based Posts & Custom Gradient Cards',
     icon: FileText,
     description: 'Create and share text-based posts on Zenivio with custom color gradients, photos, and expressive formatting.',
     bullets: [
       'Gradient Cards: Choose vibrant backgrounds to make your text posts stand out.',
-      'Media Attachments: Add photos and short clips to accompany your posts.',
+      'Photo Attachments: Add high-resolution photos to accompany your thoughts.',
       'Interactive Reactions: Like, react, and comment in real-time.'
     ]
   },
@@ -105,19 +105,22 @@ const featuresSections = [
     number: 3,
     title: 'Direct Messaging & Real-Time Chat',
     icon: MessageSquare,
-    description: 'Chat directly with friends, share media, and communicate in real time with high reliability.',
+    description: 'Chat directly with friends, share thoughts, and communicate in real time with high reliability.',
     bullets: [
-      'Real-time delivery with online presence indicators.',
+      'Real-time text delivery with online presence indicators.',
       'Secure direct 1-on-1 conversations.'
     ]
   },
   {
     id: 'news-feature',
     number: 4,
-    title: 'Curated News & Video Reels',
+    title: 'Curated News & Daily Headlines',
     icon: Newspaper,
-    description: 'Stay updated with global headlines and enjoy trending video reels directly from your home feed.',
-    bullets: []
+    description: 'Stay updated with curated international news stories and global headlines directly from your home feed.',
+    bullets: [
+      'Top Stories: Curated headlines updated daily.',
+      'Direct Read: Clean, readable layout for discovering current events.'
+    ]
   }
 ];
 
