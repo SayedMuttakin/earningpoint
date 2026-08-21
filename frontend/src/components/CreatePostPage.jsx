@@ -4,6 +4,7 @@ import {
   UserPlus, Smile, MapPin, X, Loader2, Check 
 } from 'lucide-react';
 import { API_BASE, getImageUrl } from '../config';
+import { updatePageSEO } from '../utils/seo';
 
 // Define gradients options
 const GRADIENTS = [
@@ -58,6 +59,10 @@ const CreatePostPage = ({ currentUser, onBack, setActiveTab, postToEdit = null, 
     return null;
   });
   const [selectedFileType, setSelectedFileType] = useState(postToEdit && postToEdit.video ? 'video' : 'image'); // image, video
+
+  React.useEffect(() => {
+    updatePageSEO('posts');
+  }, []);
   const [postingLoading, setPostingLoading] = useState(false);
   const [clearImage, setClearImage] = useState(false);
   const [clearVideo, setClearVideo] = useState(false);
@@ -288,7 +293,10 @@ const CreatePostPage = ({ currentUser, onBack, setActiveTab, postToEdit = null, 
             >
               <ArrowLeft className="w-6 h-6" />
             </button>
-            <h1 className="text-lg font-black text-slate-800 dark:text-white">{postToEdit ? 'Edit Post' : 'Create Post'}</h1>
+            <h1 className="text-lg font-black text-slate-800 dark:text-white">
+              {postToEdit ? 'Edit Post' : 'Create Post'}
+              <span className="sr-only"> – Share Your Thoughts on Zenivio</span>
+            </h1>
           </div>
           
           <button

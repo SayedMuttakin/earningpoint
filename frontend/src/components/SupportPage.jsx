@@ -3,9 +3,13 @@ import { Send, ArrowLeft, Loader2, User as UserIcon, WifiOff, Phone, Video, Phon
 import VerifiedBadge from './VerifiedBadge';
 import { io } from 'socket.io-client';
 import { API_BASE } from '../config';
+import { updatePageSEO } from '../utils/seo';
 import PullToRefresh from './PullToRefresh';
 
 const SupportPage = ({ onBack }) => {
+  useEffect(() => {
+    updatePageSEO('support');
+  }, []);
   const [userName, setUserName] = useState('');
   const [userEmail, setUserEmail] = useState('');
   const [userId, setUserId] = useState(null);
@@ -328,7 +332,7 @@ const SupportPage = ({ onBack }) => {
 
           <div>
             <h1 className="text-sm sm:text-base font-black text-slate-800 dark:text-white flex items-center gap-1.5 leading-tight">
-              Zenivio Support Team
+              Zenivio Help &amp; Support
               <VerifiedBadge iconClassName="w-[16px] h-[16px] fill-blue-500 text-white flex-shrink-0" />
             </h1>
             <p className="text-[11px] font-bold text-emerald-500 flex items-center gap-1 mt-0.5">

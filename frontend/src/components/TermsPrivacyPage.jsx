@@ -7,6 +7,96 @@ import {
   Truck, RotateCcw, DollarSign, Phone
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { updatePageSEO } from '../utils/seo';
+
+const aboutSections = [
+  {
+    id: 'about-zenivio',
+    number: 1,
+    title: 'About Zenivio',
+    icon: Info,
+    description: 'Learn about Zenivio, a social networking platform built to help people connect, share text-based posts and interact in a simple digital community.',
+    bullets: [
+      'Zenivio is more than a social network — it is a friendly, vibrant digital space designed for meaningful human connection.',
+      'Share your thoughts, daily updates, stories, and text-based posts effortlessly.',
+      'Connect with friends, follow inspiring individuals, and engage in open discussions.',
+      'Simple, modern, and privacy-conscious design with zero clutter.'
+    ]
+  },
+  {
+    id: 'our-vision',
+    number: 2,
+    title: 'Our Vision & Community Values',
+    icon: Users,
+    description: 'We believe that social networking should be authentic, simple, and accessible to everyone around the globe without barriers.',
+    bullets: [
+      'Authenticity First: A welcoming community where genuine expression is celebrated.',
+      'User Privacy: Comprehensive control over your profile, posts, and data.',
+      'Global Connection: Bringing people together across countries and cultures.'
+    ]
+  }
+];
+
+const featuresSections = [
+  {
+    id: 'text-posts-feature',
+    number: 1,
+    title: 'Text-Based Posts & Creative Sharing',
+    icon: FileText,
+    description: 'Create and share text-based posts on Zenivio with custom color gradients, photos, and expressive formatting.',
+    bullets: [
+      'Gradient Cards: Choose vibrant backgrounds to make your text posts stand out.',
+      'Media Attachments: Add photos and short clips to accompany your posts.',
+      'Interactive Reactions: Like, react, and comment in real-time.'
+    ]
+  },
+  {
+    id: 'social-network-feature',
+    number: 2,
+    title: 'Global Social Network & Community Feed',
+    icon: Users,
+    description: 'Explore the global community feed, discover trending discussions, and follow users worldwide.',
+    bullets: [
+      'Community Feed: Real-time public timeline featuring posts from across the platform.',
+      'Profile Customization: Display verified badges, biography, and personalized avatar.',
+      'Multi-Account Switcher: Instantly switch between accounts on the same device.'
+    ]
+  },
+  {
+    id: 'messaging-feature',
+    number: 3,
+    title: 'Direct Messaging & Real-Time Chat',
+    icon: MessageSquare,
+    description: 'Chat directly with friends, share media, and communicate in real time with high reliability.',
+    bullets: [
+      'Real-time delivery with online presence indicators.',
+      'Secure direct 1-on-1 conversations.'
+    ]
+  },
+  {
+    id: 'news-feature',
+    number: 4,
+    title: 'Curated News & Video Reels',
+    icon: Newspaper,
+    description: 'Stay updated with global headlines and enjoy trending video reels directly from your home feed.',
+    bullets: []
+  }
+];
+
+const contactSections = [
+  {
+    id: 'official-contact',
+    number: 1,
+    title: 'Official Support & Inquiries',
+    icon: Phone,
+    description: 'Contact Zenivio for questions, support, feedback and information about the platform.',
+    bullets: [
+      'Official Email: support@zenivio.com',
+      'Help Desk: Open a real-time ticket via the in-app Help & Support desk.',
+      'Feedback: We welcome user feedback to continually improve your social networking experience.'
+    ]
+  }
+];
 
 const privacySections = [
   {
@@ -297,7 +387,17 @@ const TermsPrivacyPage = ({ onBack, initialTab = 'terms', standalone = false, da
   }, [initialTab]);
 
   const sections = useMemo(() => {
-    return activeTab === 'privacy' ? privacySections : termsSections;
+    if (activeTab === 'about') return aboutSections;
+    if (activeTab === 'features') return featuresSections;
+    if (activeTab === 'contact') return contactSections;
+    if (activeTab === 'privacy') return privacySections;
+    return termsSections;
+  }, [activeTab]);
+
+  useEffect(() => {
+    if (['about', 'features', 'contact'].includes(activeTab)) {
+      updatePageSEO(activeTab);
+    }
   }, [activeTab]);
 
   // Search logic
@@ -382,18 +482,36 @@ const TermsPrivacyPage = ({ onBack, initialTab = 'terms', standalone = false, da
           </div>
 
           {/* Center Tabs */}
-          <div className="hidden md:flex items-center bg-slate-100 dark:bg-slate-800 p-1.5 rounded-2xl relative">
+          <div className="hidden md:flex items-center bg-slate-100 dark:bg-slate-800 p-1.5 rounded-2xl relative gap-1">
+            <button 
+              onClick={() => { setActiveTab('about'); setSearchQuery(''); }}
+              className={`px-4 py-2 rounded-xl text-sm font-bold transition-all duration-300 cursor-pointer ${activeTab === 'about' ? 'bg-white dark:bg-slate-700 text-indigo-600 dark:text-violet-400 shadow-sm scale-100' : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'}`}
+            >
+              About
+            </button>
+            <button 
+              onClick={() => { setActiveTab('features'); setSearchQuery(''); }}
+              className={`px-4 py-2 rounded-xl text-sm font-bold transition-all duration-300 cursor-pointer ${activeTab === 'features' ? 'bg-white dark:bg-slate-700 text-indigo-600 dark:text-violet-400 shadow-sm scale-100' : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'}`}
+            >
+              Features
+            </button>
             <button 
               onClick={() => { setActiveTab('terms'); setSearchQuery(''); }}
-              className={`px-6 py-2 rounded-xl text-sm font-bold transition-all duration-300 cursor-pointer ${activeTab === 'terms' ? 'bg-white dark:bg-slate-800 text-indigo-650 dark:text-violet-400 shadow-sm scale-100' : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'}`}
+              className={`px-4 py-2 rounded-xl text-sm font-bold transition-all duration-300 cursor-pointer ${activeTab === 'terms' ? 'bg-white dark:bg-slate-700 text-indigo-600 dark:text-violet-400 shadow-sm scale-100' : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'}`}
             >
-              Terms & Conditions
+              Terms
             </button>
             <button 
               onClick={() => { setActiveTab('privacy'); setSearchQuery(''); }}
-              className={`px-6 py-2 rounded-xl text-sm font-bold transition-all duration-300 cursor-pointer ${activeTab === 'privacy' ? 'bg-white dark:bg-slate-800 text-indigo-650 dark:text-violet-400 shadow-sm scale-100' : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'}`}
+              className={`px-4 py-2 rounded-xl text-sm font-bold transition-all duration-300 cursor-pointer ${activeTab === 'privacy' ? 'bg-white dark:bg-slate-700 text-indigo-600 dark:text-violet-400 shadow-sm scale-100' : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'}`}
             >
-              Privacy Policy
+              Privacy
+            </button>
+            <button 
+              onClick={() => { setActiveTab('contact'); setSearchQuery(''); }}
+              className={`px-4 py-2 rounded-xl text-sm font-bold transition-all duration-300 cursor-pointer ${activeTab === 'contact' ? 'bg-white dark:bg-slate-700 text-indigo-600 dark:text-violet-400 shadow-sm scale-100' : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'}`}
+            >
+              Contact
             </button>
           </div>
 
@@ -423,18 +541,36 @@ const TermsPrivacyPage = ({ onBack, initialTab = 'terms', standalone = false, da
       </header>
 
       {/* Mobile Tab Selector */}
-      <div className="md:hidden px-4 py-3 bg-white dark:bg-slate-900 border-b border-slate-200/50 dark:border-slate-800/60 no-print flex gap-2">
+      <div className="md:hidden px-3 py-2 bg-white dark:bg-slate-900 border-b border-slate-200/50 dark:border-slate-800/60 no-print flex gap-1.5 overflow-x-auto">
+        <button 
+          onClick={() => { setActiveTab('about'); setSearchQuery(''); }}
+          className={`px-3 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition-all cursor-pointer ${activeTab === 'about' ? 'bg-indigo-600 text-white shadow-sm' : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400'}`}
+        >
+          About
+        </button>
+        <button 
+          onClick={() => { setActiveTab('features'); setSearchQuery(''); }}
+          className={`px-3 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition-all cursor-pointer ${activeTab === 'features' ? 'bg-indigo-600 text-white shadow-sm' : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400'}`}
+        >
+          Features
+        </button>
         <button 
           onClick={() => { setActiveTab('terms'); setSearchQuery(''); }}
-          className={`flex-1 py-2.5 rounded-xl text-sm font-bold text-center transition-all duration-200 cursor-pointer ${activeTab === 'terms' ? 'bg-indigo-600 dark:bg-indigo-650 text-white shadow-sm' : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400'}`}
+          className={`px-3 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition-all cursor-pointer ${activeTab === 'terms' ? 'bg-indigo-600 text-white shadow-sm' : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400'}`}
         >
-          Terms & Conditions
+          Terms
         </button>
         <button 
           onClick={() => { setActiveTab('privacy'); setSearchQuery(''); }}
-          className={`flex-1 py-2.5 rounded-xl text-sm font-bold text-center transition-all duration-200 cursor-pointer ${activeTab === 'privacy' ? 'bg-indigo-600 dark:bg-indigo-650 text-white shadow-sm' : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400'}`}
+          className={`px-3 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition-all cursor-pointer ${activeTab === 'privacy' ? 'bg-indigo-600 text-white shadow-sm' : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400'}`}
         >
-          Privacy Policy
+          Privacy
+        </button>
+        <button 
+          onClick={() => { setActiveTab('contact'); setSearchQuery(''); }}
+          className={`px-3 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition-all cursor-pointer ${activeTab === 'contact' ? 'bg-indigo-600 text-white shadow-sm' : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400'}`}
+        >
+          Contact
         </button>
       </div>
 
@@ -451,17 +587,21 @@ const TermsPrivacyPage = ({ onBack, initialTab = 'terms', standalone = false, da
             className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-indigo-50 dark:bg-indigo-950/45 border border-indigo-100/60 dark:border-indigo-900/40 text-indigo-700 dark:text-indigo-300 text-xs font-black tracking-wide uppercase mb-6"
           >
             <Shield className="w-3.5 h-3.5" />
-            Legal Documentation
+            {activeTab === 'about' ? 'Platform Overview' : (activeTab === 'features' ? 'Feature Showcase' : (activeTab === 'contact' ? 'Support Desk' : 'Legal Documentation'))}
           </motion.div>
 
-          <motion.h2 
+          <motion.h1 
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.1 }}
             className="text-3xl sm:text-4xl md:text-5xl font-black text-slate-900 dark:text-white tracking-tight leading-none mb-4"
           >
-            {activeTab === 'privacy' ? 'Zenivio Privacy Policy' : 'Zenivio Terms & Conditions'}
-          </motion.h2>
+            {activeTab === 'about' && 'About Zenivio'}
+            {activeTab === 'features' && 'Explore Zenivio Features'}
+            {activeTab === 'contact' && 'Contact Zenivio'}
+            {activeTab === 'privacy' && 'Zenivio Privacy Policy'}
+            {activeTab === 'terms' && 'Zenivio Terms & Conditions'}
+          </motion.h1>
 
           <motion.p 
             initial={{ opacity: 0 }}
@@ -469,7 +609,11 @@ const TermsPrivacyPage = ({ onBack, initialTab = 'terms', standalone = false, da
             transition={{ duration: 0.5, delay: 0.2 }}
             className="text-sm sm:text-base font-semibold text-slate-500 dark:text-slate-400"
           >
-            Effective Date: <span className="text-slate-800 dark:text-slate-200 font-bold">July 2026</span>
+            {activeTab === 'about' && 'More Than a Social Network — Built to Bring People Together'}
+            {activeTab === 'features' && 'Social Networking, Creative Text Posts & Community Connection'}
+            {activeTab === 'contact' && 'We are here to answer your questions and provide official assistance'}
+            {activeTab === 'privacy' && 'Effective Date: July 2026'}
+            {activeTab === 'terms' && 'Effective Date: July 2026'}
           </motion.p>
 
           {/* Quick Search */}

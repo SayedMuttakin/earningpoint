@@ -41,6 +41,7 @@ const ResetPasswordPage = lazy(() => import('./components/ResetPasswordPage'));
 const VideoReelsPage = lazy(() => import('./components/VideoReelsPage'));
 const PublicProfilePage = lazy(() => import('./components/PublicProfilePage'));
 const CreatePostPage = lazy(() => import('./components/CreatePostPage'));
+import { updatePageSEO } from './utils/seo';
 
 // Ultra-fast loader fallback — uses inline styles so it renders before CSS parses
 const PageLoader = () => (
@@ -58,8 +59,16 @@ function App() {
   const reelIdFromUrl = urlParams.get('reelId');
   const profileIdFromUrl = urlParams.get('profileId');
   const postIdFromUrl = urlParams.get('post');
+  const pageFromUrl = urlParams.get('page');
   const [resetPasswordToken, setResetPasswordToken] = useState(resetToken || null);
   const [postUploadState, setPostUploadState] = useState(null);
+
+  const [termsPrivacyInitialTab, setTermsPrivacyInitialTab] = useState(() => {
+    if (pageFromUrl && ['about', 'features', 'contact', 'terms', 'privacy'].includes(pageFromUrl)) {
+      return pageFromUrl;
+    }
+    return 'terms';
+  });
 
   const [showSplash, setShowSplash] = useState(true);
   const [showOnboarding, setShowOnboarding] = useState(false);
@@ -68,11 +77,29 @@ function App() {
   const [activeTab, _setActiveTab] = useState(() => {
     if (reelIdFromUrl) return 'Video';
     if (profileIdFromUrl) return 'PublicProfile';
+    if (pageFromUrl) {
+      if (['about', 'features', 'contact', 'terms', 'privacy'].includes(pageFromUrl)) return 'TermsPrivacy';
+      if (['support', 'help'].includes(pageFromUrl)) return 'Support';
+      if (['posts', 'create-post'].includes(pageFromUrl)) return 'CreatePost';
+      if (pageFromUrl === 'social-network') return 'Home';
+    }
     return localStorage.getItem('active_tab') || 'Home';
   });
   const [navigationHistory, setNavigationHistory] = useState([
     reelIdFromUrl ? 'Video' : (profileIdFromUrl ? 'PublicProfile' : (localStorage.getItem('active_tab') || 'Home'))
   ]);
+
+  useEffect(() => {
+    if (activeTab === 'Home') updatePageSEO('home');
+    else if (activeTab === 'CreatePost') updatePageSEO('posts');
+    else if (activeTab === 'Support') updatePageSEO('support');
+    else if (activeTab === 'TermsPrivacy') {
+      if (termsPrivacyInitialTab === 'about') updatePageSEO('about');
+      else if (termsPrivacyInitialTab === 'features') updatePageSEO('features');
+      else if (termsPrivacyInitialTab === 'contact') updatePageSEO('contact');
+      else updatePageSEO('home');
+    }
+  }, [activeTab, termsPrivacyInitialTab]);
 
   const setActiveTab = (tab) => {
     localStorage.setItem('active_tab', tab);
@@ -619,6 +646,7 @@ function App() {
           {activeTab === 'TermsPrivacy' && (
             <TermsPrivacyPage 
               onBack={() => showBackAd(() => handleBackNavigation())} 
+              initialTab={termsPrivacyInitialTab}
               darkMode={darkMode}
               onToggleDarkMode={handleToggleDarkMode}
             />
