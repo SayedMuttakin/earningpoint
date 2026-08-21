@@ -182,6 +182,100 @@
     }
     </script>
 
+    <!-- 4. BreadcrumbList Schema — search navigation hierarchy -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://zenivio.it.com/"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "Features",
+          "item": "https://zenivio.it.com/?page=features"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "Posts",
+          "item": "https://zenivio.it.com/?page=posts"
+        },
+        {
+          "@type": "ListItem",
+          "position": 4,
+          "name": "Social Network",
+          "item": "https://zenivio.it.com/?page=social-network"
+        },
+        {
+          "@type": "ListItem",
+          "position": 5,
+          "name": "About",
+          "item": "https://zenivio.it.com/?page=about"
+        },
+        {
+          "@type": "ListItem",
+          "position": 6,
+          "name": "Contact",
+          "item": "https://zenivio.it.com/?page=contact"
+        },
+        {
+          "@type": "ListItem",
+          "position": 7,
+          "name": "Help & Support",
+          "item": "https://zenivio.it.com/?page=support"
+        }
+      ]
+    }
+    </script>
+
+    <!-- 5. FAQPage Schema — genuine FAQs for rich snippets in Google Search -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "FAQPage",
+      "mainEntity": [
+        {
+          "@type": "Question",
+          "name": "What is Zenivio?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Zenivio is a next-generation social networking platform designed to help people connect, share text-based posts, discover trending news, watch video reels, and engage in a vibrant global digital community."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "How do I create and share posts on Zenivio?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "You can create and share text-based posts with custom colorful gradient cards, attach photos or videos, add feelings, and interact with other community members through instant likes and comments."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Is Zenivio available as a mobile app?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Yes, Zenivio is available for Android on the Google Play Store and as a fast Progressive Web App (PWA) accessible across all mobile and desktop browsers worldwide."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "How can I contact Zenivio official support?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "You can reach the official Zenivio support desk by emailing support@zenivio.com or by using the real-time Help & Support chat within the application."
+          }
+        }
+      ]
+    }
+    </script>
+
     <!-- ============================= -->
     <!-- CRITICAL STYLES (FOUC GUARD)  -->
     <!-- ============================= -->
@@ -198,6 +292,19 @@
       html, body { margin: 0; padding: 0; }
       #root { min-height: 100vh; }
 
+      /* Semantic crawler container — accessible to crawlers, unobtrusive to users */
+      .seo-crawler-content {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        padding: 0;
+        margin: -1px;
+        overflow: hidden;
+        clip: rect(0, 0, 0, 0);
+        white-space: nowrap;
+        border: 0;
+      }
+
       /* Apply saved dark mode synchronously before React hydrates */
       html.dark { background-color: #0f172a; color: #f1f5f9; }
     </style>
@@ -212,12 +319,76 @@
     </script>
   </head>
   <body>
-    <!-- Semantic hidden brand description for crawlers -->
-    <div style="display:none;" aria-hidden="true">
-      Zenivio (Official App & Platform) is a global social media and community network. 
-      Connect with friends worldwide, share thoughts and stories, explore trending global news, 
-      watch video reels, chat in real-time, and engage with vibrant communities across Bangladesh, India, USA, UK, UAE, Malaysia, and worldwide.
-    </div>
+    <!-- Complete Semantic Pre-Rendered Content & Internal Linking Graph for Search Engine Crawlers -->
+    <header class="seo-crawler-content">
+      <nav aria-label="Main Navigation">
+        <a href="https://zenivio.it.com/">Zenivio Home</a>
+        <a href="https://zenivio.it.com/?page=features">Zenivio Features</a>
+        <a href="https://zenivio.it.com/?page=posts">Zenivio Posts &amp; Sharing</a>
+        <a href="https://zenivio.it.com/?page=social-network">Zenivio Social Network Feed</a>
+        <a href="https://zenivio.it.com/?page=about">About Zenivio Platform</a>
+        <a href="https://zenivio.it.com/?page=contact">Contact Zenivio Support</a>
+        <a href="https://zenivio.it.com/?page=support">Zenivio Help &amp; Support</a>
+        <a href="https://play.google.com/store/apps/details?id=com.zenivio.app" rel="noopener">Download Zenivio Android App</a>
+      </nav>
+    </header>
+
+    <main class="seo-crawler-content">
+      <article>
+        <h1>Zenivio – More Than a Social Network</h1>
+        <p>Zenivio is more than a social network. Connect with people, share text-based posts and discover a simple social networking experience.</p>
+        
+        <section>
+          <h2>Explore Zenivio Features</h2>
+          <p>Explore Zenivio features designed for connecting with people, sharing text-based posts and enjoying a simple social networking experience.</p>
+          <a href="https://zenivio.it.com/?page=features">Learn more about Zenivio Features</a>
+        </section>
+
+        <section>
+          <h2>Share Your Thoughts on Zenivio</h2>
+          <p>Create and share text-based posts on Zenivio and connect with people through a simple social networking experience.</p>
+          <a href="https://zenivio.it.com/?page=posts">Create a Post on Zenivio</a>
+        </section>
+
+        <section>
+          <h2>Zenivio Social Network Community</h2>
+          <p>Connect with people and share text-based posts on Zenivio, a social networking platform built for a connected community.</p>
+          <a href="https://zenivio.it.com/?page=social-network">Join Zenivio Social Network</a>
+        </section>
+
+        <section>
+          <h2>About Zenivio</h2>
+          <p>Learn about Zenivio, a social networking platform built to help people connect, share text-based posts and interact in a simple digital community.</p>
+          <a href="https://zenivio.it.com/?page=about">Read About Zenivio</a>
+        </section>
+
+        <section>
+          <h2>Contact &amp; Support</h2>
+          <p>Contact Zenivio for questions, support, feedback and information about the platform.</p>
+          <a href="https://zenivio.it.com/?page=contact">Contact Support</a>
+          <a href="https://zenivio.it.com/?page=support">Help Desk</a>
+        </section>
+      </article>
+    </main>
+
+    <!-- Noscript Fallback for Search Engines and Non-JS Clients -->
+    <noscript>
+      <div style="padding: 24px; font-family: sans-serif; max-width: 800px; margin: 0 auto; line-height: 1.6;">
+        <h1>Zenivio – More Than a Social Network</h1>
+        <p>Zenivio is more than a social network. Connect with people, share text-based posts and discover a simple social networking experience.</p>
+        <hr/>
+        <nav>
+          <ul>
+            <li><a href="/?page=features">Zenivio Features</a></li>
+            <li><a href="/?page=posts">Share Posts &amp; Thoughts</a></li>
+            <li><a href="/?page=social-network">Community Social Network</a></li>
+            <li><a href="/?page=about">About Zenivio</a></li>
+            <li><a href="/?page=contact">Contact Support</a></li>
+            <li><a href="/?page=support">Help &amp; FAQ</a></li>
+          </ul>
+        </nav>
+      </div>
+    </noscript>
 
     <!-- Google Translate injection target -->
     <div id="google_translate_element" style="display:none;"></div>
