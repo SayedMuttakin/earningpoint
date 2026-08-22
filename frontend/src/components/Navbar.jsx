@@ -118,15 +118,29 @@ const Navbar = ({
   };
 
   const handleTabButtonClick = (targetTab) => {
-    if (activeTab === targetTab) {
-      const mainEl = document.querySelector('main');
-      if (mainEl) {
-        mainEl.scrollTo({ top: 0, behavior: 'smooth' });
-      }
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-      window.dispatchEvent(new CustomEvent('tabReclickRefresh', { detail: { tab: targetTab } }));
-    } else {
-      if (setActiveTab) setActiveTab(targetTab);
+    // 1. Immediately scroll all potential scroll containers to top
+    const mainEl = document.querySelector('main');
+    if (mainEl) {
+      mainEl.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+    const rootEl = document.getElementById('root');
+    if (rootEl) {
+      rootEl.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+    if (document.documentElement) {
+      document.documentElement.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+    if (document.body) {
+      document.body.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+
+    // 2. Dispatch refresh event for current page listeners
+    window.dispatchEvent(new CustomEvent('tabReclickRefresh', { detail: { tab: targetTab } }));
+
+    // 3. Switch tab
+    if (setActiveTab) {
+      setActiveTab(targetTab);
     }
   };
 
