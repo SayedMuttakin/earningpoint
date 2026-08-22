@@ -119,25 +119,35 @@ const Navbar = ({
 
   const handleTabButtonClick = (targetTab) => {
     const scrollToTopAll = () => {
+      // Primary scroll container: main
       const mainEl = document.querySelector('main');
       if (mainEl) {
         mainEl.scrollTop = 0;
-        mainEl.scrollTo({ top: 0, behavior: 'smooth' });
+        if (typeof mainEl.scrollTo === 'function') {
+          mainEl.scrollTo({ top: 0, behavior: 'smooth' });
+        }
       }
+      
       const rootEl = document.getElementById('root');
       if (rootEl) {
         rootEl.scrollTop = 0;
-        rootEl.scrollTo({ top: 0, behavior: 'smooth' });
       }
+      
       if (document.documentElement) {
         document.documentElement.scrollTop = 0;
-        document.documentElement.scrollTo({ top: 0, behavior: 'smooth' });
       }
       if (document.body) {
         document.body.scrollTop = 0;
-        document.body.scrollTo({ top: 0, behavior: 'smooth' });
       }
       window.scrollTo({ top: 0, behavior: 'smooth' });
+
+      // Scan all scrollable elements in DOM tree
+      const scrollables = document.querySelectorAll('*');
+      scrollables.forEach(el => {
+        if (el && el.scrollTop > 0) {
+          el.scrollTop = 0;
+        }
+      });
     };
 
     // 1. Immediate scroll to top
@@ -151,9 +161,11 @@ const Navbar = ({
       setActiveTab(targetTab);
     }
 
-    // 4. Multi-pass scroll after layout update
+    // 4. Multi-pass scroll after layout updates & re-renders
     requestAnimationFrame(scrollToTopAll);
-    setTimeout(scrollToTopAll, 60);
+    setTimeout(scrollToTopAll, 40);
+    setTimeout(scrollToTopAll, 120);
+    setTimeout(scrollToTopAll, 250);
   };
 
   useEffect(() => {

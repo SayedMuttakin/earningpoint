@@ -1624,7 +1624,7 @@ const HomePage = ({ setActiveTab, setSelectedNewsId, setActiveChatPartner, setSe
       <PullToRefresh onRefresh={handleRefresh} refreshing={refreshing}>
         <div className="min-h-screen bg-slate-50 dark:bg-slate-950 pb-24 flex flex-col relative">
         {/* Content Body */}
-        <main className="max-w-xl mx-auto px-4 pt-3 pb-8 w-full flex-1 space-y-6">
+        <div className="max-w-xl mx-auto px-4 pt-3 pb-8 w-full flex-1 space-y-6">
           {/* SEO H1 Heading (Screen Reader & Search Engine Optimized) */}
           <h1 className="sr-only">Zenivio – More Than a Social Network</h1>
 
@@ -1786,7 +1786,7 @@ const HomePage = ({ setActiveTab, setSelectedNewsId, setActiveChatPartner, setSe
               </div>
             )}
           </div>
-        </main>
+        </div>
 
         {/* Floating Plus FAB to Create Post (Matches screenshot bottom right button) */}
         <button
