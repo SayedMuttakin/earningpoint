@@ -37,13 +37,11 @@ const BannerAd = ({ globalSettings, size = 'banner', onAdClick }) => {
   const [sponsorAd] = useState(() => SPONSOR_ADS[Math.floor(Math.random() * SPONSOR_ADS.length)]);
 
   useEffect(() => {
+    // Ensure no intrusive floating native banner overlays the screen
     if (Capacitor.isNativePlatform()) {
-      AdMobService.showBanner(size);
-      return () => {
-        AdMobService.hideBanner();
-      };
+      AdMobService.hideBanner();
     }
-  }, [size]);
+  }, []);
 
   const handleAdCardClick = () => {
     if (Capacitor.isNativePlatform()) {

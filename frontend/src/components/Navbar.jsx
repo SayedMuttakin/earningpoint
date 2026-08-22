@@ -118,22 +118,30 @@ const Navbar = ({
   };
 
   const handleTabButtonClick = (targetTab) => {
-    // 1. Immediately scroll all potential scroll containers to top
-    const mainEl = document.querySelector('main');
-    if (mainEl) {
-      mainEl.scrollTo({ top: 0, behavior: 'smooth' });
-    }
-    const rootEl = document.getElementById('root');
-    if (rootEl) {
-      rootEl.scrollTo({ top: 0, behavior: 'smooth' });
-    }
-    if (document.documentElement) {
-      document.documentElement.scrollTo({ top: 0, behavior: 'smooth' });
-    }
-    if (document.body) {
-      document.body.scrollTo({ top: 0, behavior: 'smooth' });
-    }
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    const scrollToTopAll = () => {
+      const mainEl = document.querySelector('main');
+      if (mainEl) {
+        mainEl.scrollTop = 0;
+        mainEl.scrollTo({ top: 0, behavior: 'smooth' });
+      }
+      const rootEl = document.getElementById('root');
+      if (rootEl) {
+        rootEl.scrollTop = 0;
+        rootEl.scrollTo({ top: 0, behavior: 'smooth' });
+      }
+      if (document.documentElement) {
+        document.documentElement.scrollTop = 0;
+        document.documentElement.scrollTo({ top: 0, behavior: 'smooth' });
+      }
+      if (document.body) {
+        document.body.scrollTop = 0;
+        document.body.scrollTo({ top: 0, behavior: 'smooth' });
+      }
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    };
+
+    // 1. Immediate scroll to top
+    scrollToTopAll();
 
     // 2. Dispatch refresh event for current page listeners
     window.dispatchEvent(new CustomEvent('tabReclickRefresh', { detail: { tab: targetTab } }));
@@ -142,6 +150,10 @@ const Navbar = ({
     if (setActiveTab) {
       setActiveTab(targetTab);
     }
+
+    // 4. Multi-pass scroll after layout update
+    requestAnimationFrame(scrollToTopAll);
+    setTimeout(scrollToTopAll, 60);
   };
 
   useEffect(() => {

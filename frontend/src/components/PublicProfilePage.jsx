@@ -487,6 +487,22 @@ const PublicProfilePage = ({ userId, onBack, currentUser, isOwnProfile, setActiv
   };
 
   useEffect(() => {
+    const handleReclick = (e) => {
+      if (e.detail && (e.detail.tab === 'MyProfile' || e.detail.tab === 'Profile')) {
+        const mainEl = document.querySelector('main');
+        if (mainEl) {
+          mainEl.scrollTop = 0;
+          mainEl.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+        if (typeof fetchProfileData === 'function') fetchProfileData();
+      }
+    };
+    window.addEventListener('tabReclickRefresh', handleReclick);
+    return () => window.removeEventListener('tabReclickRefresh', handleReclick);
+  }, []);
+
+  useEffect(() => {
     if (activeSubTab === 'saved' && isOwn) {
       const fetchSavedPosts = async () => {
         try {
