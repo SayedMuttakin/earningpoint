@@ -125,14 +125,6 @@ const CartPage = ({ onBuyNow }) => {
               Stay tuned for the latest update!
             </p>
           </div>
-
-          {/* Badge */}
-          <div className="w-full bg-indigo-50/70 dark:bg-indigo-950/40 rounded-2xl p-3.5 border border-indigo-100 dark:border-indigo-900/50 flex items-center justify-center gap-2">
-            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-ping" />
-            <span className="text-xs font-black text-indigo-900 dark:text-indigo-200">
-              Next-Gen Store in Development
-            </span>
-          </div>
         </div>
       </div>
     </PullToRefresh>

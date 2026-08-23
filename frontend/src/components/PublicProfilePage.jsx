@@ -1037,35 +1037,6 @@ const PublicProfilePage = ({ userId, onBack, currentUser, isOwnProfile, setActiv
             @{profile.username}
           </p>
 
-          {/* Interactive Level Badge */}
-          <div className="flex items-center justify-center gap-2 pt-1">
-            <button
-              onClick={() => isOwn && setShowLevelUpgradeModal(true)}
-              className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-black shadow-xs transition-all ${
-                (profile.level || 1) === 5 
-                  ? 'bg-gradient-to-r from-amber-400 via-pink-500 to-purple-600 text-white animate-pulse'
-                  : (profile.level || 1) === 4
-                  ? 'bg-gradient-to-r from-cyan-500 to-blue-600 text-white'
-                  : (profile.level || 1) === 3
-                  ? 'bg-gradient-to-r from-amber-400 to-yellow-600 text-slate-900'
-                  : (profile.level || 1) === 2
-                  ? 'bg-gradient-to-r from-slate-200 to-slate-400 text-slate-800 dark:text-slate-900'
-                  : 'bg-gradient-to-r from-amber-700 to-amber-900 text-amber-100'
-              } ${isOwn ? 'hover:scale-105 active:scale-95 cursor-pointer' : 'cursor-default'}`}
-              title={isOwn ? 'Click to upgrade Level with Coins' : `Level ${profile.level || 1} Member`}
-            >
-              <span>
-                {(profile.level || 1) === 5 ? '👑' : (profile.level || 1) === 4 ? '💎' : (profile.level || 1) === 3 ? '🥇' : (profile.level || 1) === 2 ? '🥈' : '🥉'}
-              </span>
-              <span>Level {profile.level || 1} • {profile.levelName || 'Bronze'}</span>
-              {isOwn && (profile.level || 1) < 5 && (
-                <span className="text-[9px] bg-white/30 text-white dark:text-slate-900 px-1.5 py-0.5 rounded-full uppercase tracking-wider font-extrabold ml-0.5">
-                  Upgrade
-                </span>
-              )}
-            </button>
-          </div>
-
           {profile.bio && (
             <p className="text-xs font-semibold text-slate-655 dark:text-slate-350 leading-relaxed px-4 pt-1 max-w-sm mx-auto whitespace-pre-wrap select-text">
               {profile.bio}
