@@ -607,6 +607,10 @@ function App() {
               setActiveChatPartner={setActiveChatPartner}
               onlineUsers={onlineUsers}
               socket={socket}
+              onUserClick={(uid) => {
+                setActivePublicProfileUserId(uid);
+                setActiveTab('PublicProfile');
+              }}
             />
           )}
           {activeTab === 'MyProfile' && (
@@ -620,6 +624,10 @@ function App() {
               setActiveChatPartner={setActiveChatPartner}
               onlineUsers={onlineUsers}
               socket={socket}
+              onUserClick={(uid) => {
+                setActivePublicProfileUserId(uid);
+                setActiveTab('PublicProfile');
+              }}
             />
           )}
           {activeTab === 'PaymentSuccess' && <PaymentSuccess paymentMethod={selectedPaymentMethod} onBack={() => showBackAd(() => handleBackNavigation())} />}
@@ -635,6 +643,10 @@ function App() {
               setActiveChatPartner={setActiveChatPartner}
               onlineUsers={onlineUsers}
               socket={socket}
+              onUserClick={(uid) => {
+                setActivePublicProfileUserId(uid);
+                setActiveTab('PublicProfile');
+              }}
             />
           )}
           {activeTab === 'Verify' && <VerificationPage onBack={() => showBackAd(() => handleBackNavigation())} />}

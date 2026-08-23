@@ -78,9 +78,11 @@ const NewsSlider = ({ posts, onSeeAll, onCardClick }) => {
                 <div className="h-28 w-full rounded-xl overflow-hidden bg-slate-100 dark:bg-slate-800/50 flex-shrink-0">
                   {post.image ? (
                     <img 
-                      src={getImageUrl(post.image)} 
+                      src={getImageUrl(post.image, 360)} 
                       alt="News" 
                       className="w-full h-full object-cover"
+                      loading="lazy"
+                      decoding="async"
                     />
                   ) : (
                     <div className="w-full h-full bg-[#7C3AED]/10 flex items-center justify-center text-[#7C3AED] font-black text-lg">

@@ -79,10 +79,11 @@ const CompactNewsCard = ({ post, onClick }) => {
       <div className="w-24 h-24 sm:w-28 sm:h-28 rounded-2xl overflow-hidden bg-slate-100 dark:bg-slate-800 flex-shrink-0">
         {post.image ? (
           <img
-            src={getImageUrl(post.image)}
+            src={getImageUrl(post.image, 320)}
             alt={post.title || 'News'}
             className="w-full h-full object-cover"
             loading="lazy"
+            decoding="async"
           />
         ) : (
           <div className="w-full h-full bg-gradient-to-br from-indigo-500/20 to-purple-500/20 flex items-center justify-center text-[#7C3AED] font-black text-2xl">
@@ -136,10 +137,11 @@ const RecentGridNewsCard = ({ post, onClick }) => {
         <div className="w-full h-28 sm:h-32 rounded-xl overflow-hidden bg-slate-100 dark:bg-slate-800 relative">
           {post.image ? (
             <img
-              src={getImageUrl(post.image)}
+              src={getImageUrl(post.image, 360)}
               alt={post.title || 'News'}
               className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
               loading="lazy"
+              decoding="async"
             />
           ) : (
             <div className="w-full h-full bg-gradient-to-br from-indigo-500/20 to-purple-500/20 flex items-center justify-center text-[#7C3AED] font-black text-2xl">
@@ -260,7 +262,13 @@ const RelatedNewsSlider = ({ posts, onSelect }) => {
           <div className="space-y-2">
             <div className="w-full h-24 rounded-xl overflow-hidden bg-slate-100 dark:bg-slate-800">
               {rel.image ? (
-                <img src={getImageUrl(rel.image)} alt={rel.title} className="w-full h-full object-cover" />
+                <img 
+                  src={getImageUrl(rel.image, 320)} 
+                  alt={rel.title} 
+                  className="w-full h-full object-cover"
+                  loading="lazy"
+                  decoding="async"
+                />
               ) : (
                 <div className="w-full h-full bg-indigo-500/10 flex items-center justify-center text-[#7C3AED] font-black text-lg">Z</div>
               )}
@@ -511,7 +519,13 @@ const RelatedNewsSlider = ({ posts, onSelect }) => {
           <div className="space-y-2">
             <div className="w-full h-24 rounded-xl overflow-hidden bg-slate-100 dark:bg-slate-800 flex-shrink-0">
               {rel.image ? (
-                <img src={getImageUrl(rel.image)} alt={rel.title} className="w-full h-full object-cover" />
+                <img 
+                  src={getImageUrl(rel.image, 320)} 
+                  alt={rel.title} 
+                  className="w-full h-full object-cover" 
+                  loading="lazy"
+                  decoding="async"
+                />
               ) : (
                 <div className="w-full h-full bg-indigo-500/10 flex items-center justify-center text-[#7C3AED] font-black text-lg">Z</div>
               )}
@@ -621,9 +635,11 @@ const RelatedNewsSlider = ({ posts, onSelect }) => {
             {detailPost.image && (
               <div className="rounded-2xl overflow-hidden border border-slate-100 dark:border-slate-800 bg-slate-100 dark:bg-slate-900 max-h-[300px]">
                 <img 
-                  src={getImageUrl(detailPost.image)} 
+                  src={getImageUrl(detailPost.image, 900)} 
                   alt={detailPost.title} 
                   className="w-full h-full object-cover"
+                  decoding="async"
+                  fetchPriority="high"
                 />
               </div>
             )}

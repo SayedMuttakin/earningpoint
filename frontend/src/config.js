@@ -19,14 +19,15 @@ const getApiBase = () => {
 
 export const API_BASE = getApiBase();
 
-export const getImageUrl = (url) => {
+export const getImageUrl = (url, width) => {
   if (!url) return '';
   if (url.startsWith('http://') || url.startsWith('https://') || url.startsWith('data:')) {
     return url;
   }
+  const widthParam = width ? `&w=${width}` : '';
   if (url.startsWith('/')) {
-    return `${API_BASE}${url}`;
+    return `${API_BASE}${url}${widthParam}`;
   }
-  return `${API_BASE}/api/image?file=${encodeURIComponent(url)}`;
+  return `${API_BASE}/api/image?file=${encodeURIComponent(url)}${widthParam}`;
 };
 

@@ -37,19 +37,64 @@ if (process.env.NODE_ENV !== 'production') {
 app.use(express.json({ limit: '100mb' }));
 app.use(express.urlencoded({ limit: '100mb', extended: true }));
 
-// Serve uploaded images via API route using query param to avoid Nginx static file interception
-app.get('/api/image', (req, res) => {
+let sharp = null;
+try {
+  sharp = require('sharp');
+} catch (e) {
+  console.log('Sharp image optimization module not loaded, fallback to static file');
+}
+
+const cacheDir = path.join(__dirname, 'uploads', 'cache');
+if (!fs.existsSync(cacheDir)) {
+  try { fs.mkdirSync(cacheDir, { recursive: true }); } catch (e) {}
+}
+
+// Serve uploaded images via high-performance WebP compression & caching
+app.get('/api/image', async (req, res) => {
   const filename = req.query.file;
   if (!filename) return res.status(400).json({ message: 'Missing file parameter' });
-  // Sanitize filename to prevent directory traversal
+  
   const safeName = path.basename(filename);
   const filePath = path.join(__dirname, 'uploads', safeName);
-  if (fs.existsSync(filePath)) {
-    // Cache statically uploaded media (images and videos) permanently on user devices to make load speeds instant
-    res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
+  
+  if (!fs.existsSync(filePath)) {
+    return res.status(404).json({ message: 'Image not found', requested: safeName });
+  }
+
+  // Videos or non-images bypass image compression
+  const ext = path.extname(safeName).toLowerCase();
+  const isImage = ['.jpg', '.jpeg', '.png', '.webp', '.gif', '.bmp'].includes(ext);
+
+  res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
+
+  if (!isImage || !sharp) {
     return res.sendFile(filePath);
   }
-  res.status(404).json({ message: 'Image not found', requested: safeName });
+
+  const reqWidth = parseInt(req.query.w, 10);
+  const targetWidth = !isNaN(reqWidth) && reqWidth > 0 && reqWidth <= 1920 ? reqWidth : 800;
+  const quality = 78;
+  const cacheKey = `${safeName}_w${targetWidth}_q${quality}.webp`;
+  const cachedFilePath = path.join(cacheDir, cacheKey);
+
+  if (fs.existsSync(cachedFilePath)) {
+    res.setHeader('Content-Type', 'image/webp');
+    return res.sendFile(cachedFilePath);
+  }
+
+  try {
+    await sharp(filePath)
+      .rotate()
+      .resize({ width: targetWidth, withoutEnlargement: true })
+      .webp({ quality })
+      .toFile(cachedFilePath);
+
+    res.setHeader('Content-Type', 'image/webp');
+    return res.sendFile(cachedFilePath);
+  } catch (err) {
+    console.error('Image compression error:', err.message);
+    return res.sendFile(filePath);
+  }
 });
 
 // Database Connection
