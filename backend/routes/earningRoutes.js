@@ -31,6 +31,7 @@ router.get('/articles', protect, earningController.getArticles);
 router.post('/article-claim', protect, earningController.claimArticleReward);
 
 router.post('/convert-coins', protect, earningController.convertCoins);
+router.post('/upgrade-level', protect, earningController.upgradeLevel);
 router.post('/withdraw', protect, earningController.submitWithdrawal);
 router.get('/withdrawals', protect, earningController.getWithdrawals);
 router.get('/all-withdrawals', protect, earningController.getAllWithdrawals);

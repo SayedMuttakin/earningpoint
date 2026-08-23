@@ -29,6 +29,8 @@ import {
 import { API_BASE, getImageUrl } from '../config';
 import VerifiedBadge from './VerifiedBadge';
 import ShareModal from './ShareModal';
+import ImagePreviewModal from './ImagePreviewModal';
+import ImageCropModal from './ImageCropModal';
 
 const formatCount = (num) => {
   if (!num) return '0';
@@ -95,80 +97,6 @@ const compressImage = (base64Str, maxWidth = 1024, maxHeight = 1024, quality = 0
       resolve(base64Str); // Fallback to original
     };
   });
-};
-
-// Full Screen Image Preview Modal Component
-const ImagePreviewModal = ({ imageUrl, onClose }) => {
-  const [downloading, setDownloading] = useState(false);
-
-  const handleDownload = async (e) => {
-    e.stopPropagation();
-    setDownloading(true);
-    try {
-      const response = await fetch(imageUrl);
-      const blob = await response.blob();
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `zenivio_image_${Date.now()}.jpg`;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      window.URL.revokeObjectURL(url);
-    } catch (err) {
-      console.error('Download error:', err);
-      window.open(imageUrl, '_blank');
-    } finally {
-      setDownloading(false);
-    }
-  };
-
-  return (
-    <div 
-      className="fixed inset-0 z-[10005] flex flex-col items-center justify-center bg-black/95 backdrop-blur-md animate-fade-in"
-      onClick={onClose}
-    >
-      {/* Top action bar with safe-area top padding */}
-      <div className="absolute top-[max(16px,env(safe-area-inset-top))] left-0 right-0 flex items-center justify-between px-5 z-50">
-        <button
-          onClick={handleDownload}
-          disabled={downloading}
-          className="flex items-center gap-2 bg-white/15 hover:bg-white/25 active:scale-95 text-white text-xs font-black px-4 py-2.5 rounded-full backdrop-blur-md transition-all border border-white/20 shadow-lg cursor-pointer"
-        >
-          {downloading ? (
-            <>
-              <Loader2 className="w-4 h-4 animate-spin" />
-              <span>Downloading...</span>
-            </>
-          ) : (
-            <>
-              <Download className="w-4 h-4 stroke-[2.5]" />
-              <span>Download</span>
-            </>
-          )}
-        </button>
-
-        {/* High visibility Close Button */}
-        <button
-          onClick={onClose}
-          className="flex items-center gap-1.5 bg-rose-600 hover:bg-rose-700 active:scale-90 text-white text-xs font-black px-4 py-2.5 rounded-full shadow-2xl backdrop-blur-md transition-all border border-rose-400/40 cursor-pointer"
-          title="Close Preview"
-        >
-          <X className="w-5 h-5 stroke-[2.5]" />
-          <span>Close</span>
-        </button>
-      </div>
-
-      {/* Image Container — click image or background to close */}
-      <div className="w-full max-w-4xl max-h-[85vh] p-4 flex items-center justify-center select-none" onClick={onClose}>
-        <img
-          src={imageUrl}
-          alt="Preview"
-          className="w-auto h-auto max-w-full max-h-[85vh] object-contain rounded-xl shadow-2xl animate-scale-up border border-white/10"
-        />
-      </div>
-    </div>
-  );
 };
 
 const FollowListModal = ({ targetUserId, initialTab, onClose, onUserClick, setActiveChatPartner, setActiveTab }) => {
@@ -668,71 +596,99 @@ const PublicProfilePage = ({ userId, onBack, currentUser, isOwnProfile, setActiv
     setStoryProgress(0);
   };
 
-  // Upload/Change Cover photo with compression
+  // Image Framing & Crop State
+  const [cropModalData, setCropModalData] = useState({ isOpen: false, imageSrc: '', type: 'avatar' });
+  const [showLevelUpgradeModal, setShowLevelUpgradeModal] = useState(false);
+  const [levelUpgradeLoading, setLevelUpgradeLoading] = useState(false);
+
+  // Upload/Change Cover photo with interactive crop & framing
   const handleCoverUpload = (e) => {
     const file = e.target.files[0];
     if (file) {
-      setImageCompressing(true);
       const reader = new FileReader();
-      reader.onloadend = async () => {
-        try {
-          const originalBase64 = reader.result;
-          const base64 = await compressImage(originalBase64, 1200, 600, 0.7);
-          setProfile(prev => ({ ...prev, coverPic: base64 }));
-          
-          const token = localStorage.getItem('token');
-          const res = await fetch(`${API_BASE}/api/profile/update`, {
-            method: 'PUT',
-            headers: {
-              'Content-Type': 'application/json',
-              Authorization: `Bearer ${token}`
-            },
-            body: JSON.stringify({ coverPic: base64 })
-          });
-          if (res.ok) {
-            fetchPublicProfile();
-          }
-        } catch (err) {
-          console.error('Failed to save cover photo:', err);
-        } finally {
-          setImageCompressing(false);
-        }
+      reader.onloadend = () => {
+        setCropModalData({ isOpen: true, imageSrc: reader.result, type: 'cover' });
       };
       reader.readAsDataURL(file);
+      e.target.value = '';
     }
   };
 
-  // Upload/Change Profile photo with compression
+  // Upload/Change Profile photo with interactive crop & framing
   const handleAvatarUpload = (e) => {
     const file = e.target.files[0];
     if (file) {
-      setImageCompressing(true);
       const reader = new FileReader();
-      reader.onloadend = async () => {
-        try {
-          const originalBase64 = reader.result;
-          const base64 = await compressImage(originalBase64, 500, 500, 0.75);
-          setProfile(prev => ({ ...prev, profilePic: base64 }));
-          
-          const token = localStorage.getItem('token');
-          const res = await fetch(`${API_BASE}/api/profile/update`, {
-            method: 'PUT',
-            headers: {
-              'Content-Type': 'application/json',
-              Authorization: `Bearer ${token}`
-            },
-            body: JSON.stringify({ profilePic: base64 })
-          });
-          if (res.ok) {
-            fetchPublicProfile();
-          }
-        } catch (err) {
-          console.error('Failed to save profile picture:', err);
-        } finally {
-          setImageCompressing(false);
-        }
+      reader.onloadend = () => {
+        setCropModalData({ isOpen: true, imageSrc: reader.result, type: 'avatar' });
       };
       reader.readAsDataURL(file);
+      e.target.value = '';
+    }
+  };
+
+  // Handle completed crop from ImageCropModal
+  const handleCropComplete = async (croppedBase64) => {
+    const isAvatar = cropModalData.type === 'avatar';
+    setCropModalData({ isOpen: false, imageSrc: '', type: 'avatar' });
+    setImageCompressing(true);
+
+    try {
+      if (isAvatar) {
+        setProfile(prev => ({ ...prev, profilePic: croppedBase64 }));
+      } else {
+        setProfile(prev => ({ ...prev, coverPic: croppedBase64 }));
+      }
+
+      const token = localStorage.getItem('token');
+      const res = await fetch(`${API_BASE}/api/profile/update`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify(isAvatar ? { profilePic: croppedBase64 } : { coverPic: croppedBase64 })
+      });
+
+      if (res.ok) {
+        showToastNotification(isAvatar ? 'Profile picture updated! ✨' : 'Cover photo updated! ✨');
+        fetchPublicProfile();
+      }
+    } catch (err) {
+      console.error('Failed to save cropped photo:', err);
+    } finally {
+      setImageCompressing(false);
+    }
+  };
+
+  // Handle Level Upgrade with Coins
+  const handleUpgradeLevel = async () => {
+    setLevelUpgradeLoading(true);
+    try {
+      const token = localStorage.getItem('token');
+      const res = await fetch(`${API_BASE}/api/earning/upgrade-level`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setProfile(prev => ({
+          ...prev,
+          level: data.level,
+          levelName: data.levelName,
+          points: data.points
+        }));
+        showToastNotification(data.message || 'Level upgraded successfully! 🎉');
+        setShowLevelUpgradeModal(false);
+        fetchPublicProfile();
+      } else {
+        showToastNotification(data.message || 'Failed to upgrade level');
+      }
+    } catch (err) {
+      console.error('Level upgrade failed:', err);
+      showToastNotification('Network error during level upgrade');
+    } finally {
+      setLevelUpgradeLoading(false);
     }
   };
 
@@ -1028,14 +984,19 @@ const PublicProfilePage = ({ userId, onBack, currentUser, isOwnProfile, setActiv
           </div>
         )}
 
-        {!isOwn && (
-          <button
-            onClick={onBack}
-            className="absolute top-[max(16px,env(safe-area-inset-top))] left-4 p-2.5 bg-black/40 hover:bg-black/60 backdrop-blur-md text-white rounded-full z-50 transition-all active:scale-90 shadow-md border border-white/10 flex items-center justify-center cursor-pointer"
-          >
-            <ArrowLeft className="w-5 h-5" strokeWidth={2.5} />
-          </button>
-        )}
+        <button
+          onClick={() => {
+            if (onBack) {
+              onBack();
+            } else if (setActiveTab) {
+              setActiveTab('Home');
+            }
+          }}
+          className="absolute top-[max(16px,env(safe-area-inset-top))] left-4 p-2.5 bg-black/40 hover:bg-black/60 backdrop-blur-md text-white rounded-full z-50 transition-all active:scale-90 shadow-md border border-white/10 flex items-center justify-center cursor-pointer"
+          title="Go Back"
+        >
+          <ArrowLeft className="w-5 h-5" strokeWidth={2.5} />
+        </button>
       </div>
 
       {/* Centered Avatar and Info Overlap */}
@@ -1075,6 +1036,35 @@ const PublicProfilePage = ({ userId, onBack, currentUser, isOwnProfile, setActiv
           <p className="text-xs font-black text-slate-500 dark:text-slate-400 tracking-wide font-mono">
             @{profile.username}
           </p>
+
+          {/* Interactive Level Badge */}
+          <div className="flex items-center justify-center gap-2 pt-1">
+            <button
+              onClick={() => isOwn && setShowLevelUpgradeModal(true)}
+              className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-black shadow-xs transition-all ${
+                (profile.level || 1) === 5 
+                  ? 'bg-gradient-to-r from-amber-400 via-pink-500 to-purple-600 text-white animate-pulse'
+                  : (profile.level || 1) === 4
+                  ? 'bg-gradient-to-r from-cyan-500 to-blue-600 text-white'
+                  : (profile.level || 1) === 3
+                  ? 'bg-gradient-to-r from-amber-400 to-yellow-600 text-slate-900'
+                  : (profile.level || 1) === 2
+                  ? 'bg-gradient-to-r from-slate-200 to-slate-400 text-slate-800 dark:text-slate-900'
+                  : 'bg-gradient-to-r from-amber-700 to-amber-900 text-amber-100'
+              } ${isOwn ? 'hover:scale-105 active:scale-95 cursor-pointer' : 'cursor-default'}`}
+              title={isOwn ? 'Click to upgrade Level with Coins' : `Level ${profile.level || 1} Member`}
+            >
+              <span>
+                {(profile.level || 1) === 5 ? '👑' : (profile.level || 1) === 4 ? '💎' : (profile.level || 1) === 3 ? '🥇' : (profile.level || 1) === 2 ? '🥈' : '🥉'}
+              </span>
+              <span>Level {profile.level || 1} • {profile.levelName || 'Bronze'}</span>
+              {isOwn && (profile.level || 1) < 5 && (
+                <span className="text-[9px] bg-white/30 text-white dark:text-slate-900 px-1.5 py-0.5 rounded-full uppercase tracking-wider font-extrabold ml-0.5">
+                  Upgrade
+                </span>
+              )}
+            </button>
+          </div>
 
           {profile.bio && (
             <p className="text-xs font-semibold text-slate-655 dark:text-slate-350 leading-relaxed px-4 pt-1 max-w-sm mx-auto whitespace-pre-wrap select-text">
@@ -2215,6 +2205,145 @@ const PublicProfilePage = ({ userId, onBack, currentUser, isOwnProfile, setActiv
           setActiveChatPartner={setActiveChatPartner}
           setActiveTab={setActiveTab}
         />
+      )}
+
+      {/* Image Framing & Crop Modal */}
+      {cropModalData.isOpen && (
+        <ImageCropModal
+          imageSrc={cropModalData.imageSrc}
+          type={cropModalData.type}
+          onCrop={handleCropComplete}
+          onCancel={() => setCropModalData({ isOpen: false, imageSrc: '', type: 'avatar' })}
+        />
+      )}
+
+      {/* Fullscreen Photo Lightbox with Zoom Controls */}
+      {previewImageUrl && (
+        <ImagePreviewModal
+          imageUrl={previewImageUrl}
+          onClose={() => setPreviewImageUrl(null)}
+        />
+      )}
+
+      {/* Level Upgrade Modal using Coins */}
+      {showLevelUpgradeModal && (
+        <div className="fixed inset-0 z-[10020] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-fade-in">
+          <div className="bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-3xl p-5 sm:p-6 max-w-md w-full relative shadow-2xl animate-fade-in-up text-left max-h-[90vh] overflow-y-auto">
+            {/* Modal Header */}
+            <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800">
+              <div className="flex items-center gap-2">
+                <span className="text-2xl">👑</span>
+                <div>
+                  <h3 className="font-black text-base text-slate-900 dark:text-white">VIP Level Upgrades</h3>
+                  <p className="text-[11px] text-slate-400 font-bold">Upgrade your status using your Coins</p>
+                </div>
+              </div>
+              <button
+                onClick={() => setShowLevelUpgradeModal(false)}
+                className="p-1.5 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400 active:scale-90"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Current Status Box */}
+            <div className="my-4 p-3.5 bg-indigo-50 dark:bg-indigo-950/40 border border-indigo-100 dark:border-indigo-900/50 rounded-2xl flex items-center justify-between">
+              <div>
+                <span className="text-[10px] text-indigo-500 font-black uppercase tracking-wider block">Your Level</span>
+                <span className="text-sm font-black text-slate-900 dark:text-white">
+                  Level {profile.level || 1} • {profile.levelName || 'Bronze'}
+                </span>
+              </div>
+              <div className="text-right">
+                <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider block">Your Coins</span>
+                <span className="text-sm font-black text-amber-500 flex items-center gap-1 justify-end">
+                  🪙 {(profile.points || 0).toLocaleString()}
+                </span>
+              </div>
+            </div>
+
+            {/* Tiers List */}
+            <div className="space-y-2.5 mb-5">
+              {[
+                { lvl: 1, name: 'Bronze Member', cost: 0, icon: '🥉', perk: 'Standard membership perks' },
+                { lvl: 2, name: 'Silver VIP', cost: 500, icon: '🥈', perk: 'Silver badge + 10% daily coin boost' },
+                { lvl: 3, name: 'Gold VIP', cost: 1500, icon: '🥇', perk: 'Gold badge + 25% coin boost & profile frame' },
+                { lvl: 4, name: 'Platinum Elite', cost: 3500, icon: '💎', perk: 'Platinum badge + 50% coin boost & custom glow' },
+                { lvl: 5, name: 'Diamond Legend', cost: 7500, icon: '👑', perk: 'Diamond Legend crown + 2x multiplier & priority perks' }
+              ].map(tier => {
+                const isCurrent = (profile.level || 1) === tier.lvl;
+                const isUnlocked = (profile.level || 1) >= tier.lvl;
+                const isNext = (profile.level || 1) + 1 === tier.lvl;
+
+                return (
+                  <div
+                    key={tier.lvl}
+                    className={`p-3 rounded-2xl border transition-all flex items-center justify-between gap-3 ${
+                      isCurrent
+                        ? 'border-[#7C3AED] bg-indigo-500/10'
+                        : isUnlocked
+                        ? 'border-slate-200 dark:border-slate-800 opacity-60'
+                        : isNext
+                        ? 'border-indigo-300 dark:border-indigo-700 bg-white dark:bg-slate-850 shadow-xs'
+                        : 'border-slate-100 dark:border-slate-800/60 opacity-40'
+                    }`}
+                  >
+                    <div className="flex items-center gap-3 min-w-0">
+                      <span className="text-2xl flex-shrink-0">{tier.icon}</span>
+                      <div className="min-w-0">
+                        <div className="flex items-center gap-2">
+                          <h4 className="text-xs font-black text-slate-900 dark:text-white truncate">
+                            {tier.name}
+                          </h4>
+                          {isCurrent && (
+                            <span className="text-[9px] bg-[#7C3AED] text-white px-1.5 py-0.2 rounded-full font-black uppercase">
+                              Current
+                            </span>
+                          )}
+                        </div>
+                        <p className="text-[10px] text-slate-500 dark:text-slate-400 truncate">{tier.perk}</p>
+                      </div>
+                    </div>
+
+                    <div className="flex-shrink-0 text-right">
+                      {isUnlocked ? (
+                        <span className="text-[11px] font-bold text-emerald-500">Unlocked ✓</span>
+                      ) : (
+                        <span className="text-xs font-black text-amber-500 flex items-center gap-0.5">
+                          🪙 {tier.cost.toLocaleString()}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* Action Upgrade Button */}
+            {(profile.level || 1) < 5 ? (
+              <button
+                onClick={handleUpgradeLevel}
+                disabled={levelUpgradeLoading}
+                className="w-full py-3 rounded-2xl bg-gradient-to-r from-[#7C3AED] to-pink-500 hover:from-indigo-700 hover:to-pink-600 text-white text-xs font-black shadow-lg shadow-indigo-500/25 active:scale-95 transition-all flex items-center justify-center gap-2 cursor-pointer"
+              >
+                {levelUpgradeLoading ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    <span>Upgrading Level...</span>
+                  </>
+                ) : (
+                  <>
+                    <span>👑 Upgrade to Next Level</span>
+                  </>
+                )}
+              </button>
+            ) : (
+              <div className="text-center py-2 text-xs font-black text-emerald-500 bg-emerald-50 dark:bg-emerald-950/40 rounded-2xl border border-emerald-200 dark:border-emerald-800">
+                👑 Maximum Diamond Legend Tier Reached!
+              </div>
+            )}
+          </div>
+        </div>
       )}
     </div>
   );

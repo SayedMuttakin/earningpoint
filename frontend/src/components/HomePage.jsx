@@ -6,6 +6,7 @@ import PullToRefresh from './PullToRefresh';
 import BannerAd from './BannerAd';
 import NewsSlider from './NewsSlider';
 import ShareModal from './ShareModal';
+import ImagePreviewModal from './ImagePreviewModal';
 
 const GRADIENTS_MAP = {
   aurora: 'bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 text-white',
@@ -103,80 +104,6 @@ const BannerSection = ({ onStartEarning }) => {
           <polygon points="70,60 90,60 85,72 75,72" fill="#EAB308" />
           <path d="M80 42l3 6 6 1-4 4 1 6-6-3-6 3 1-6-4-4 6-1z" fill="#FACC15" />
         </svg>
-      </div>
-    </div>
-  );
-};
-
-// Full Screen Image Preview Modal Component
-const ImagePreviewModal = ({ imageUrl, onClose }) => {
-  const [downloading, setDownloading] = useState(false);
-
-  const handleDownload = async (e) => {
-    e.stopPropagation();
-    setDownloading(true);
-    try {
-      const response = await fetch(imageUrl);
-      const blob = await response.blob();
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `zenivio_image_${Date.now()}.jpg`;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      window.URL.revokeObjectURL(url);
-    } catch (err) {
-      console.error('Download error:', err);
-      window.open(imageUrl, '_blank');
-    } finally {
-      setDownloading(false);
-    }
-  };
-
-  return (
-    <div 
-      className="fixed inset-0 z-[10005] flex flex-col items-center justify-center bg-black/95 backdrop-blur-md animate-fade-in"
-      onClick={onClose}
-    >
-      {/* Top action bar with safe-area top padding */}
-      <div className="absolute top-[max(16px,env(safe-area-inset-top))] left-0 right-0 flex items-center justify-between px-5 z-50">
-        <button
-          onClick={handleDownload}
-          disabled={downloading}
-          className="flex items-center gap-2 bg-white/15 hover:bg-white/25 active:scale-95 text-white text-xs font-black px-4 py-2.5 rounded-full backdrop-blur-md transition-all border border-white/20 shadow-lg cursor-pointer"
-        >
-          {downloading ? (
-            <>
-              <Loader2 className="w-4 h-4 animate-spin" />
-              <span>Downloading...</span>
-            </>
-          ) : (
-            <>
-              <Download className="w-4 h-4 stroke-[2.5]" />
-              <span>Download</span>
-            </>
-          )}
-        </button>
-
-        {/* High visibility Close Button */}
-        <button
-          onClick={onClose}
-          className="flex items-center gap-1.5 bg-rose-600 hover:bg-rose-700 active:scale-90 text-white text-xs font-black px-4 py-2.5 rounded-full shadow-2xl backdrop-blur-md transition-all border border-rose-400/40 cursor-pointer"
-          title="Close Preview"
-        >
-          <X className="w-5 h-5 stroke-[2.5]" />
-          <span>Close</span>
-        </button>
-      </div>
-
-      {/* Image Container — click image or background to close */}
-      <div className="w-full max-w-4xl max-h-[85vh] p-4 flex items-center justify-center select-none" onClick={onClose}>
-        <img
-          src={imageUrl}
-          alt="Preview"
-          className="w-auto h-auto max-w-full max-h-[85vh] object-contain rounded-xl shadow-2xl animate-scale-up border border-white/10"
-        />
       </div>
     </div>
   );
@@ -1142,6 +1069,22 @@ const HomePage = ({ setActiveTab, setSelectedNewsId, setActiveChatPartner, setSe
   const [userSearchQuery, setUserSearchQuery] = useState('');
   const [userSearchResults, setUserSearchResults] = useState([]);
   const [searchingUsers, setSearchingUsers] = useState(false);
+  const [suggestedUsers, setSuggestedUsers] = useState(() => {
+    try {
+      const c = localStorage.getItem('cached_suggested_users');
+      return c ? JSON.parse(c) : [];
+    } catch (e) {
+      return [];
+    }
+  });
+  const communityFeedRef = useRef(null);
+
+  const handleSeeAllCommunityPosts = () => {
+    if (communityFeedRef.current) {
+      communityFeedRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+    handleRefresh();
+  };
 
   // Silent Infinite Scroll Pagination States (30 posts batch, hidden page numbers)
   const [page, setPage] = useState(1);
@@ -1374,14 +1317,17 @@ const HomePage = ({ setActiveTab, setSelectedNewsId, setActiveChatPartner, setSe
       const token = localStorage.getItem('token');
       if (!token) return;
 
-      // 1-roundtrip unified feed & news fetch + profile fetch in parallel
-      const [feedRes, profileRes] = await Promise.all([
+      // 1-roundtrip unified feed & news fetch + profile fetch + suggested users in parallel
+      const [feedRes, profileRes, suggestionsRes] = await Promise.all([
         fetchWithTimeout(`${API_BASE}/api/posts/feed?includeNews=true&page=1&limit=15`, {
           headers: { Authorization: `Bearer ${token}` }
         }, 5000).catch(err => { console.error('Feed fetch failed:', err); return null; }),
         fetchWithTimeout(`${API_BASE}/api/profile`, {
           headers: { Authorization: `Bearer ${token}` }
-        }, 5000).catch(err => { console.error('Profile fetch failed:', err); return null; })
+        }, 5000).catch(err => { console.error('Profile fetch failed:', err); return null; }),
+        fetchWithTimeout(`${API_BASE}/api/profile/suggestions`, {
+          headers: { Authorization: `Bearer ${token}` }
+        }, 5000).catch(err => { console.error('Suggestions fetch failed:', err); return null; })
       ]);
 
       if (feedRes && feedRes.ok) {
@@ -1406,6 +1352,14 @@ const HomePage = ({ setActiveTab, setSelectedNewsId, setActiveChatPartner, setSe
         const userData = await profileRes.json();
         setCurrentUser(userData);
         safeLocalStorageSet('cached_current_user', JSON.stringify(userData));
+      }
+
+      if (suggestionsRes && suggestionsRes.ok) {
+        const suggData = await suggestionsRes.json();
+        if (Array.isArray(suggData)) {
+          setSuggestedUsers(suggData);
+          safeLocalStorageSet('cached_suggested_users', JSON.stringify(suggData));
+        }
       }
     } catch (err) {
       console.error('Failed to fetch home page feed:', err);
@@ -1632,10 +1586,15 @@ const HomePage = ({ setActiveTab, setSelectedNewsId, setActiveChatPartner, setSe
           <BannerSection onStartEarning={() => setActiveTab && setActiveTab('Earning')} />
 
           {/* Community Feed Section */}
-          <div className="space-y-4 pt-1">
+          <div ref={communityFeedRef} className="space-y-4 pt-1">
             <div className="flex items-center justify-between">
               <h2 className="text-lg font-black text-slate-850 dark:text-white">Community Posts</h2>
-              <button className="text-xs font-black text-[#7C3AED] hover:underline">See All</button>
+              <button 
+                onClick={handleSeeAllCommunityPosts} 
+                className="text-xs font-black text-[#7C3AED] hover:underline cursor-pointer active:scale-95 transition-all"
+              >
+                See All
+              </button>
             </div>
 
             {/* Search Users to Follow or Chat */}
@@ -1746,26 +1705,101 @@ const HomePage = ({ setActiveTab, setSelectedNewsId, setActiveChatPartner, setSe
               </div>
             ) : feedPosts.length > 0 ? (
               <div className="space-y-4 pb-12">
-                {feedPosts.map(post => (
-                  <CommunityPostCard 
-                    key={post._id} 
-                    post={post} 
-                    onFollowToggle={handleFollowToggle} 
-                    onLikeToggle={handleLikeToggle}
-                    onCommentClick={() => setActiveCommentPost(post)}
-                    currentUserId={currentUser?._id}
-                    setSelectedReelId={setSelectedReelId}
-                    setActiveTab={setActiveTab}
-                    onUserClick={onUserClick}
-                    onImageClick={setPreviewImageUrl}
-                    showToast={showToastNotification}
-                    onActionTrigger={handleActionTrigger}
-                    onShareClick={(url, title, text) => {
-                      setShareData({ url, title, text });
-                      setShareModalOpen(true);
-                    }}
-                    onOpenReactionsModal={(id) => setShowReactionsPostId(id)}
-                  />
+                {feedPosts.map((post, index) => (
+                  <React.Fragment key={post._id}>
+                    <CommunityPostCard 
+                      post={post} 
+                      onFollowToggle={handleFollowToggle} 
+                      onLikeToggle={handleLikeToggle}
+                      onCommentClick={() => setActiveCommentPost(post)}
+                      currentUserId={currentUser?._id}
+                      setSelectedReelId={setSelectedReelId}
+                      setActiveTab={setActiveTab}
+                      onUserClick={onUserClick}
+                      onImageClick={setPreviewImageUrl}
+                      showToast={showToastNotification}
+                      onActionTrigger={handleActionTrigger}
+                      onShareClick={(url, title, text) => {
+                        setShareData({ url, title, text });
+                        setShareModalOpen(true);
+                      }}
+                      onOpenReactionsModal={(id) => setShowReactionsPostId(id)}
+                    />
+
+                    {/* Suggested People to Follow Section (Every 7 posts) */}
+                    {(index + 1) % 7 === 0 && suggestedUsers && suggestedUsers.length > 0 && (
+                      <div className="bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-3xl p-4 sm:p-5 shadow-xs my-4 animate-fade-in">
+                        <div className="flex items-center justify-between mb-3 px-1">
+                          <div className="flex items-center gap-2">
+                            <div className="w-7 h-7 rounded-full bg-indigo-50 dark:bg-indigo-950/50 text-[#7C3AED] flex items-center justify-center font-bold">
+                              <Users className="w-4 h-4" />
+                            </div>
+                            <div>
+                              <h3 className="text-xs sm:text-sm font-black text-slate-900 dark:text-white leading-tight">
+                                Suggested for You
+                              </h3>
+                              <p className="text-[10px] text-slate-400 font-bold">People you may want to connect with</p>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Horizontal scrollable user cards */}
+                        <div className="flex gap-3 overflow-x-auto no-scrollbar pb-1 pt-1 -mx-1 px-1">
+                          {suggestedUsers.slice(0, 8).map(sUser => (
+                            <div 
+                              key={sUser._id} 
+                              className="flex-shrink-0 w-36 bg-slate-50 dark:bg-slate-850/60 border border-slate-100 dark:border-slate-800/80 rounded-2xl p-3 flex flex-col items-center text-center justify-between relative shadow-2xs hover:shadow-sm transition-all"
+                            >
+                              <div 
+                                onClick={() => onUserClick && onUserClick(sUser._id)}
+                                className="cursor-pointer flex flex-col items-center w-full"
+                              >
+                                <div className="relative mb-2">
+                                  {sUser.profilePic ? (
+                                    <img 
+                                      src={getImageUrl(sUser.profilePic)} 
+                                      alt={sUser.name}
+                                      className="w-12 h-12 rounded-full object-cover border-2 border-white dark:border-slate-800 shadow-sm"
+                                    />
+                                  ) : (
+                                    <div className="w-12 h-12 rounded-full bg-gradient-to-tr from-[#7C3AED] to-pink-500 text-white font-black text-sm flex items-center justify-center shadow-sm">
+                                      {sUser.name ? sUser.name.charAt(0).toUpperCase() : 'U'}
+                                    </div>
+                                  )}
+                                  {sUser.verificationBadge && sUser.verificationBadge !== 'none' && (
+                                    <div className="absolute -bottom-1 -right-1">
+                                      <VerifiedBadge type={sUser.verificationBadge === 'golden' ? 'golden' : 'blue'} iconClassName="w-3.5 h-3.5" />
+                                    </div>
+                                  )}
+                                </div>
+
+                                <h4 className="text-xs font-black text-slate-900 dark:text-white truncate w-full">
+                                  {sUser.name}
+                                </h4>
+                                <p className="text-[10px] text-slate-400 font-bold truncate w-full mb-2">
+                                  @{sUser.username || 'user'}
+                                </p>
+                              </div>
+
+                              <button
+                                onClick={async () => {
+                                  await handleFollowToggle(sUser._id);
+                                  setSuggestedUsers(prev => prev.map(u => u._id === sUser._id ? { ...u, isFollowing: !u.isFollowing } : u));
+                                }}
+                                className={`w-full py-1.5 rounded-xl text-[11px] font-black transition-all active:scale-95 ${
+                                  sUser.isFollowing
+                                    ? 'bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-200'
+                                    : 'bg-[#7C3AED] hover:bg-indigo-700 text-white shadow-xs'
+                                }`}
+                              >
+                                {sUser.isFollowing ? 'Following' : '+ Follow'}
+                              </button>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </React.Fragment>
                 ))}
 
                 {/* Silent Bottom Infinite Scroll Sentinel (No Page Numbers Displayed) */}

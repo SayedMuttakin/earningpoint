@@ -274,12 +274,12 @@ exports.createUserPost = async (req, res) => {
     let videoUrl = null;
 
     if (req.file) {
-      const fileUrl = `/api/image?file=${req.file.filename}`;
       if (req.file.mimetype.startsWith('video/')) {
-        videoUrl = fileUrl;
-      } else {
-        imageUrl = fileUrl;
+        return res.status(400).json({ 
+          message: 'The video option is currently unavailable. However, it will be available very soon.' 
+        });
       }
+      imageUrl = `/api/image?file=${req.file.filename}`;
     }
 
     if (!content && !imageUrl && !videoUrl) {

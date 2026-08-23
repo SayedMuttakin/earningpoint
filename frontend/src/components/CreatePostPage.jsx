@@ -89,14 +89,28 @@ const CreatePostPage = ({ currentUser, onBack, setActiveTab, postToEdit = null, 
     return getImageUrl(pic);
   };
 
+  // Toast notification state
+  const [toastMessage, setToastMessage] = useState('');
+  const toastTimerRef = useRef(null);
+  const showToastNotification = (msg) => {
+    setToastMessage(msg);
+    if (toastTimerRef.current) clearTimeout(toastTimerRef.current);
+    toastTimerRef.current = setTimeout(() => setToastMessage(''), 3500);
+  };
+
   const handleImageChange = (e) => {
     const file = e.target.files[0];
     if (file) {
+      if (file.type.startsWith('video/')) {
+        showToastNotification("The video option is currently unavailable. However, it will be available very soon.");
+        e.target.value = '';
+        return;
+      }
       setSelectedImage(file);
-      setSelectedGradient('none'); // Gradients are incompatible with images/videos
+      setSelectedGradient('none'); // Gradients are incompatible with images
       const fileUrl = URL.createObjectURL(file);
       setImagePreview(fileUrl);
-      setSelectedFileType(file.type.startsWith('video/') ? 'video' : 'image');
+      setSelectedFileType('image');
     }
   };
 
@@ -420,7 +434,7 @@ const CreatePostPage = ({ currentUser, onBack, setActiveTab, postToEdit = null, 
             className="flex-1 py-2 flex items-center justify-center gap-1.5 text-xs font-black text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/20 hover:bg-emerald-100/70 rounded-xl transition-colors"
           >
             <ImageIcon className="w-4 h-4" />
-            Photo/Video
+            Photo
           </button>
           <button
             onClick={() => setActiveModal('feeling')}
@@ -444,7 +458,7 @@ const CreatePostPage = ({ currentUser, onBack, setActiveTab, postToEdit = null, 
             Add to your post
           </div>
           
-          {/* Photo/Video upload trigger */}
+          {/* Photo upload trigger */}
           <button
             onClick={() => fileInputRef.current?.click()}
             className="w-full flex items-center justify-between p-3 rounded-2xl hover:bg-slate-50 dark:hover:bg-slate-850/50 transition-colors text-left"
@@ -453,13 +467,13 @@ const CreatePostPage = ({ currentUser, onBack, setActiveTab, postToEdit = null, 
               <div className="w-8 h-8 rounded-full bg-emerald-100 dark:bg-emerald-950/50 text-emerald-600 dark:text-emerald-400 flex items-center justify-center">
                 <ImageIcon className="w-4.5 h-4.5" />
               </div>
-              <span className="font-bold text-sm text-slate-700 dark:text-slate-200">Photo/Video</span>
+              <span className="font-bold text-sm text-slate-700 dark:text-slate-200">Photo</span>
             </div>
             <ChevronRight className="w-4 h-4 text-slate-400" />
             <input 
               ref={fileInputRef}
               type="file" 
-              accept="image/*,video/*" 
+              accept="image/*" 
               onChange={handleImageChange} 
               className="hidden" 
             />
@@ -770,6 +784,13 @@ const CreatePostPage = ({ currentUser, onBack, setActiveTab, postToEdit = null, 
               </button>
             </div>
           </div>
+        </div>
+      )}
+
+      {/* Toast Notification Banner */}
+      {toastMessage && (
+        <div className="fixed bottom-10 left-1/2 -translate-x-1/2 z-[1000] bg-slate-900/95 text-white text-xs font-black px-5 py-3 rounded-2xl shadow-2xl border border-indigo-500/40 backdrop-blur-md animate-fade-in text-center max-w-[90vw] sm:max-w-md">
+          <span>{toastMessage}</span>
         </div>
       )}
     </div>

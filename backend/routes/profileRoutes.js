@@ -14,10 +14,12 @@ const {
   reportUser,
   getBlockedUsers,
   getFollowersList,
-  getFollowingList
+  getFollowingList,
+  getSuggestedUsers
 } = require('../controllers/profileController');
 
 router.get('/', protect, getProfile);
+router.get('/suggestions', protect, getSuggestedUsers);
 router.get('/search', protect, searchUsers);
 router.put('/update', protect, updateProfile);
 router.put('/password', protect, changePassword);

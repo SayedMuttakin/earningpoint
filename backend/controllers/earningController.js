@@ -1048,3 +1048,69 @@ exports.completeWeeklyMission = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
+
+// Level tiers for coin-based level upgrades
+const LEVEL_TIERS = [
+  { level: 1, name: 'Bronze', cost: 0, icon: '🥉', title: 'Bronze Member' },
+  { level: 2, name: 'Silver', cost: 500, icon: '🥈', title: 'Silver VIP' },
+  { level: 3, name: 'Gold', cost: 1500, icon: '🥇', title: 'Gold VIP' },
+  { level: 4, name: 'Platinum', cost: 3500, icon: '💎', title: 'Platinum Elite' },
+  { level: 5, name: 'Diamond', cost: 7500, icon: '👑', title: 'Diamond Legend' }
+];
+
+// @desc    Upgrade user level using Coins
+// @route   POST /api/earning/upgrade-level
+// @access  Private
+exports.upgradeLevel = async (req, res) => {
+  try {
+    const user = await User.findById(req.user._id);
+    if (!user) return res.status(404).json({ message: 'User not found' });
+
+    const currentLevel = user.level || 1;
+    if (currentLevel >= 5) {
+      return res.status(400).json({ message: 'You have already reached the maximum Level 5 (Diamond Legend)!' });
+    }
+
+    const nextTier = LEVEL_TIERS.find(t => t.level === currentLevel + 1);
+    if (!nextTier) {
+      return res.status(400).json({ message: 'Invalid next level tier' });
+    }
+
+    const currentPoints = user.points || 0;
+    if (currentPoints < nextTier.cost) {
+      return res.status(400).json({
+        message: `Insufficient Coins! You need ${nextTier.cost} Coins to upgrade to Level ${nextTier.level} (${nextTier.name}). You currently have ${currentPoints} Coins.`
+      });
+    }
+
+    user.points -= nextTier.cost;
+    user.level = nextTier.level;
+    user.levelName = nextTier.name;
+    await user.save();
+
+    await Transaction.create({
+      userId: user._id,
+      type: 'spending',
+      amount: nextTier.cost,
+      description: `Level Upgrade: Upgraded to Level ${nextTier.level} (${nextTier.name})`,
+      status: 'completed'
+    });
+
+    createNotification(
+      user._id,
+      `Level Upgraded! ${nextTier.icon}`,
+      `Congratulations! You have successfully upgraded to Level ${nextTier.level} (${nextTier.name}). Enjoy your exclusive VIP perks!`,
+      'level_up'
+    );
+
+    res.json({
+      message: `Congratulations! Upgraded to Level ${nextTier.level} (${nextTier.name})!`,
+      level: user.level,
+      levelName: user.levelName,
+      points: user.points
+    });
+  } catch (error) {
+    console.error('Level upgrade error:', error);
+    res.status(500).json({ message: error.message || 'Server Error' });
+  }
+};

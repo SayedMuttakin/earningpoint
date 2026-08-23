@@ -565,4 +565,40 @@ exports.getFollowingList = async (req, res) => {
   }
 };
 
+// GET /api/profile/suggestions — Get personalized suggested users to follow
+exports.getSuggestedUsers = async (req, res) => {
+  try {
+    const currentUserId = req.user._id;
+    const currentUser = await User.findById(currentUserId).select('following blockedUsers location');
+    const followingIds = (currentUser?.following || []).map(id => id.toString());
+    const blockedIds = (currentUser?.blockedUsers || []).map(id => id.toString());
+    const excludeIds = [currentUserId.toString(), ...followingIds, ...blockedIds];
+
+    const suggested = await User.find({
+      _id: { $nin: excludeIds },
+      isBanned: false
+    })
+    .select('name username profilePic googleAvatar facebookAvatar verificationBadge isEmailVerified location bio')
+    .limit(12)
+    .lean();
+
+    const formatted = suggested.map(u => ({
+      _id: u._id,
+      name: u.name || 'Zenivio Member',
+      username: u.username || 'user',
+      profilePic: u.profilePic || u.googleAvatar || u.facebookAvatar || '',
+      verificationBadge: u.verificationBadge || 'none',
+      isEmailVerified: !!u.isEmailVerified,
+      location: u.location || '',
+      bio: u.bio || '',
+      isFollowing: false
+    }));
+
+    res.json(formatted);
+  } catch (error) {
+    console.error('Error fetching suggested users:', error);
+    res.status(500).json({ message: 'Server Error' });
+  }
+};
+
 

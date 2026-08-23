@@ -205,6 +205,14 @@ const UserSchema = new mongoose.Schema({
     enum: ['none', 'blue', 'golden'],
     default: 'none',
   },
+  level: {
+    type: Number,
+    default: 1,
+  },
+  levelName: {
+    type: String,
+    default: 'Bronze',
+  },
   emailVerificationCode: {
     type: String,
     default: null,
