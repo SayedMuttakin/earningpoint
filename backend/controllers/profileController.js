@@ -376,9 +376,20 @@ exports.getPublicProfile = async (req, res) => {
         image: v.image,
         title: v.title,
         content: v.content,
+        createdAt: v.createdAt,
         views: v.likes ? v.likes.length * 2 + 5 : 365,
         likesCount: v.likes?.length || 0,
-        commentsCount: v.comments?.length || 0
+        commentsCount: v.comments?.length || 0,
+        likes: (v.likes || []).map(id => id.toString()),
+        comments: v.comments || [],
+        authorId: user._id,
+        authorDetails: {
+          name: user.name,
+          profilePic: user.profilePic,
+          isEmailVerified: user.isEmailVerified,
+          verificationBadge: user.verificationBadge || 'none'
+        },
+        isLiked: (v.likes || []).some(id => id.toString() === currentUserId.toString())
       })),
       posts: communityPosts.map(p => ({
         _id: p._id,
@@ -387,7 +398,17 @@ exports.getPublicProfile = async (req, res) => {
         title: p.title,
         createdAt: p.createdAt,
         likesCount: p.likes?.length || 0,
-        commentsCount: p.comments?.length || 0
+        commentsCount: p.comments?.length || 0,
+        likes: (p.likes || []).map(id => id.toString()),
+        comments: p.comments || [],
+        authorId: user._id,
+        authorDetails: {
+          name: user.name,
+          profilePic: user.profilePic,
+          isEmailVerified: user.isEmailVerified,
+          verificationBadge: user.verificationBadge || 'none'
+        },
+        isLiked: (p.likes || []).some(id => id.toString() === currentUserId.toString())
       }))
     });
   } catch (error) {

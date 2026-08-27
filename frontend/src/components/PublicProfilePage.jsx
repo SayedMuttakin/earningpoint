@@ -24,13 +24,265 @@ import {
   VolumeX,
   Calendar,
   Download,
-  Search
+  Search,
+  Send,
+  Trash2
 } from 'lucide-react';
 import { API_BASE, getImageUrl } from '../config';
 import VerifiedBadge from './VerifiedBadge';
 import ShareModal from './ShareModal';
 import ImagePreviewModal from './ImagePreviewModal';
 import ImageCropModal from './ImageCropModal';
+
+// Reactions List Modal (Who Reacted / Liked on Profile Posts)
+const ProfileReactionsModal = ({ postId, onClose, onUserClick }) => {
+  const [reactions, setReactions] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchReactions = async () => {
+      try {
+        const res = await fetch(`${API_BASE}/api/posts/${postId}/reactions`);
+        if (res.ok) {
+          const data = await res.json();
+          setReactions(data);
+        }
+      } catch (err) {
+        console.error('Failed to fetch reactions:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    if (postId) fetchReactions();
+  }, [postId]);
+
+  return (
+    <div className="fixed inset-0 z-[120] flex items-center justify-center p-4">
+      <div className="absolute inset-0 bg-slate-950/60 backdrop-blur-xs" onClick={onClose} />
+      <div className="relative z-10 w-full max-w-sm bg-white dark:bg-slate-900 rounded-3xl shadow-2xl p-5 border border-slate-100 dark:border-slate-800 animate-scale-pulse-glow max-h-[80vh] flex flex-col">
+        <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800">
+          <h3 className="font-extrabold text-slate-900 dark:text-white text-sm flex items-center gap-1.5">
+            <span className="text-rose-500">❤️</span> Reactions ({reactions.length})
+          </h3>
+          <button onClick={onClose} className="p-1 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400">
+            <X className="w-4 h-4" />
+          </button>
+        </div>
+
+        <div className="flex-1 overflow-y-auto py-3 space-y-3 divide-y divide-slate-100 dark:divide-slate-800/40">
+          {loading ? (
+            <div className="flex justify-center py-6">
+              <Loader2 className="w-5 h-5 animate-spin text-[#7C3AED]" />
+            </div>
+          ) : reactions.length === 0 ? (
+            <p className="text-center text-xs text-slate-400 py-6 font-bold">No reactions yet</p>
+          ) : (
+            reactions.map((user) => (
+              <div 
+                key={user._id} 
+                onClick={() => { onClose(); onUserClick && onUserClick(user._id); }}
+                className="flex items-center justify-between pt-2.5 first:pt-0 cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800/50 p-2 rounded-2xl transition-colors"
+              >
+                <div className="flex items-center gap-3 min-w-0">
+                  {user.profilePic ? (
+                    <img src={getImageUrl(user.profilePic)} alt={user.name} className="w-10 h-10 rounded-full object-cover shrink-0" />
+                  ) : (
+                    <div className="w-10 h-10 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 flex items-center justify-center font-black text-xs shrink-0">
+                      {user.name ? user.name[0].toUpperCase() : 'U'}
+                    </div>
+                  )}
+                  <div className="min-w-0">
+                    <p className="text-xs font-bold text-slate-900 dark:text-white truncate flex items-center gap-1">
+                      {user.name}
+                      {user.verificationBadge && user.verificationBadge !== 'none' && <VerifiedBadge size="sm" type={user.verificationBadge} />}
+                    </p>
+                    <p className="text-[10px] text-slate-400 font-semibold truncate">@{user.username || 'user'}</p>
+                  </div>
+                </div>
+                <div className="w-7 h-7 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-sm shrink-0 shadow-xs border border-slate-200 dark:border-slate-700">
+                  {user.emoji || '❤️'}
+                </div>
+              </div>
+            ))
+          )}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// Comments Drawer Slide-up Component for Profile Posts
+const ProfileCommentsDrawer = ({ post, onClose, onCommentSubmit, currentUserId, onUserClick }) => {
+  const [commentText, setCommentText] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [replyingTo, setReplyingTo] = useState(null);
+  const listRef = React.useRef(null);
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (!commentText.trim() || isSubmitting) return;
+    setIsSubmitting(true);
+    
+    if (replyingTo) {
+      await onCommentSubmit(post._id, commentText.trim(), replyingTo.commentId, replyingTo.userName, replyingTo.userId);
+      setReplyingTo(null);
+    } else {
+      await onCommentSubmit(post._id, commentText.trim());
+    }
+    setCommentText('');
+    setIsSubmitting(false);
+
+    setTimeout(() => {
+      if (listRef.current) {
+        listRef.current.scrollTop = listRef.current.scrollHeight;
+      }
+    }, 100);
+  };
+
+  const handleReplyClick = (commentId, userName, userId) => {
+    setReplyingTo({ commentId, userName, userId });
+    setCommentText(`@${userName} `);
+  };
+
+  return (
+    <div className="fixed inset-0 z-[120] flex items-center justify-center p-3 sm:p-4">
+      <div className="absolute inset-0 bg-slate-950/60 backdrop-blur-xs" onClick={onClose} />
+      
+      <div className="relative z-10 w-full max-w-md max-h-[85vh] sm:max-h-[520px] bg-white dark:bg-slate-900 rounded-3xl shadow-2xl flex flex-col animate-fade-in-up border border-slate-100 dark:border-slate-800 overflow-hidden">
+        <div className="w-12 h-1 bg-slate-250 dark:bg-slate-750 rounded-full mx-auto my-3 flex-shrink-0" />
+
+        <div className="flex items-center justify-between px-5 pb-3 border-b border-slate-100 dark:border-slate-850 flex-shrink-0">
+          <h3 className="font-extrabold text-slate-850 dark:text-slate-200 text-sm">
+            Comments ({post.comments?.length || post.commentsCount || 0})
+          </h3>
+          <button
+            onClick={onClose}
+            className="p-1.5 rounded-full hover:bg-slate-100 dark:hover:bg-slate-850 text-slate-500 dark:text-slate-400 active:scale-90 transition-transform"
+          >
+            <X className="w-5 h-5" />
+          </button>
+        </div>
+
+        <div ref={listRef} className="flex-1 overflow-y-auto px-5 py-4 space-y-4">
+          {post.comments && post.comments.length > 0 ? (
+            post.comments.map((comment, i) => (
+              <div key={i} className="space-y-2">
+                <div className="flex gap-3 items-start">
+                  <button
+                    onClick={() => comment.user && onUserClick && onUserClick(comment.user)}
+                    className="w-8 h-8 rounded-full bg-slate-200 dark:bg-slate-800 flex items-center justify-center font-bold text-xs shrink-0 overflow-hidden active:scale-90 transition-transform"
+                  >
+                    {comment.userAvatar ? (
+                      <img
+                        src={getImageUrl(comment.userAvatar)}
+                        alt={comment.userName}
+                        className="w-full h-full rounded-full object-cover"
+                        onError={(e) => { e.target.style.display = 'none'; }}
+                      />
+                    ) : (
+                      <span>{comment.userName ? comment.userName.charAt(0).toUpperCase() : 'U'}</span>
+                    )}
+                  </button>
+                  <div className="flex-1 bg-slate-50 dark:bg-slate-850 rounded-2xl px-4 py-2.5 relative">
+                    <div className="flex items-center justify-between">
+                      <button
+                        onClick={() => comment.user && onUserClick && onUserClick(comment.user)}
+                        className="block font-black text-xs text-slate-750 dark:text-slate-350 hover:underline text-left"
+                      >
+                        {comment.userName || 'User'}
+                      </button>
+                      <button
+                        onClick={() => handleReplyClick(comment._id, comment.userName, comment.user)}
+                        className="text-[10px] font-black text-[#7C3AED] hover:underline"
+                      >
+                        Reply
+                      </button>
+                    </div>
+                    <p className="text-xs text-slate-650 dark:text-slate-300 mt-1 leading-relaxed">
+                      {comment.text}
+                    </p>
+                  </div>
+                </div>
+
+                {comment.replies && comment.replies.length > 0 && (
+                  <div className="ml-10 space-y-2 border-l-2 border-slate-100 dark:border-slate-800 pl-3">
+                    {comment.replies.map((reply, rIdx) => (
+                      <div key={rIdx} className="flex gap-2.5 items-start">
+                        <button
+                          onClick={() => reply.user && onUserClick && onUserClick(reply.user)}
+                          className="w-6.5 h-6.5 rounded-full bg-slate-200 dark:bg-slate-800 flex items-center justify-center font-bold text-[10px] shrink-0 overflow-hidden"
+                        >
+                          {reply.userAvatar ? (
+                            <img src={getImageUrl(reply.userAvatar)} alt={reply.userName} className="w-full h-full rounded-full object-cover" />
+                          ) : (
+                            <span>{reply.userName ? reply.userName.charAt(0).toUpperCase() : 'U'}</span>
+                          )}
+                        </button>
+                        <div className="flex-1 bg-slate-100/70 dark:bg-slate-800/60 rounded-2xl px-3 py-2 text-xs relative">
+                          <div className="flex items-center justify-between">
+                            <button
+                              onClick={() => reply.user && onUserClick && onUserClick(reply.user)}
+                              className="font-black text-[11px] text-slate-800 dark:text-slate-200 hover:underline"
+                            >
+                              {reply.userName}
+                            </button>
+                            <button
+                              onClick={() => handleReplyClick(comment._id, reply.userName, reply.user)}
+                              className="text-[10px] font-black text-[#7C3AED] hover:underline"
+                            >
+                              Reply
+                            </button>
+                          </div>
+                          <p className="mt-0.5 text-slate-700 dark:text-slate-300 leading-normal">
+                            {reply.replyToUser && (
+                              <span className="font-extrabold text-[#7C3AED] mr-1">@{reply.replyToUser}</span>
+                            )}
+                            {reply.text.replace(new RegExp(`^@${reply.replyToUser}\\s*`), '')}
+                          </p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            ))
+          ) : (
+            <div className="h-full flex flex-col items-center justify-center text-slate-400 py-12 space-y-2">
+              <MessageCircle className="w-10 h-10 opacity-30 animate-bounce" />
+              <p className="text-xs font-bold">No comments yet. Share your thoughts!</p>
+            </div>
+          )}
+        </div>
+
+        {replyingTo && (
+          <div className="px-4 py-1.5 bg-indigo-50 dark:bg-indigo-950/40 border-t border-indigo-100 dark:border-indigo-900/50 flex items-center justify-between text-xs text-[#7C3AED] font-bold flex-shrink-0">
+            <span>Replying to <span className="underline">@{replyingTo.userName}</span></span>
+            <button onClick={() => { setReplyingTo(null); setCommentText(''); }} className="p-0.5 hover:bg-indigo-100 dark:hover:bg-indigo-900 rounded-full">
+              <X className="w-3.5 h-3.5" />
+            </button>
+          </div>
+        )}
+
+        <form onSubmit={handleSubmit} className="p-4 border-t border-slate-100 dark:border-slate-850 flex items-center gap-2 bg-slate-50 dark:bg-slate-900/60 pb-safe flex-shrink-0">
+          <input
+            type="text"
+            value={commentText}
+            onChange={(e) => setCommentText(e.target.value)}
+            placeholder={replyingTo ? `Reply to @${replyingTo.userName}...` : "Add a comment..."}
+            className="flex-1 bg-white dark:bg-slate-800 border border-slate-250 dark:border-slate-700 rounded-full px-4 py-2 text-xs text-slate-800 dark:text-white focus:outline-none focus:ring-1 focus:ring-[#7C3AED] font-semibold"
+          />
+          <button
+            type="submit"
+            disabled={!commentText.trim() || isSubmitting}
+            className="p-2.5 rounded-full bg-[#7C3AED] text-white hover:bg-[#6D28D9] disabled:opacity-40 transition-opacity active:scale-95 flex items-center justify-center"
+          >
+            {isSubmitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
+          </button>
+        </form>
+      </div>
+    </div>
+  );
+};
 
 const formatCount = (num) => {
   if (!num) return '0';
@@ -403,6 +655,8 @@ const PublicProfilePage = ({ userId, onBack, currentUser, isOwnProfile, setActiv
   const [selectedDetailPost, setSelectedDetailPost] = useState(null);
   const [savedPosts, setSavedPosts] = useState([]);
   const [previewImageUrl, setPreviewImageUrl] = useState(null);
+  const [showReactionsPostId, setShowReactionsPostId] = useState(null);
+  const [activeCommentPost, setActiveCommentPost] = useState(null);
 
   // Edit Profile Modal State
   const [showEditProfileModal, setShowEditProfileModal] = useState(false);
@@ -610,6 +864,117 @@ const PublicProfilePage = ({ userId, onBack, currentUser, isOwnProfile, setActiv
     setActiveHighlight(hl);
     setHlActiveIndex(0);
     setStoryProgress(0);
+  };
+
+  // Open post modal with real-time comments & like status
+  const handleOpenPostDetail = async (post) => {
+    const userIdStr = currentUser?._id ? currentUser._id.toString() : '';
+    const isLiked = (post.likes || []).some(id => (typeof id === 'object' && id?._id ? id._id.toString() : id.toString()) === userIdStr);
+    setSelectedDetailPost({ ...post, isLiked });
+
+    try {
+      const res = await fetch(`${API_BASE}/api/posts/${post._id}`);
+      if (res.ok) {
+        const fullPost = await res.json();
+        const isLikedFresh = (fullPost.likes || []).some(id => (typeof id === 'object' && id?._id ? id._id.toString() : id.toString()) === userIdStr);
+        setSelectedDetailPost(prev => prev && prev._id === post._id ? {
+          ...prev,
+          ...fullPost,
+          isLiked: isLikedFresh,
+          likesCount: fullPost.likes?.length || 0,
+          commentsCount: fullPost.comments?.length || 0
+        } : prev);
+      }
+    } catch (e) {
+      console.error('Failed to fetch full post detail:', e);
+    }
+  };
+
+  // Like / Unlike post directly from profile
+  const handleLikeToggleDetail = async (postId) => {
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) return;
+      const res = await fetch(`${API_BASE}/api/posts/${postId}/like`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      if (res.ok) {
+        const data = await res.json(); // { likesCount, isLiked }
+        const userIdStr = currentUser?._id ? currentUser._id.toString() : '';
+        
+        setSelectedDetailPost(prev => {
+          if (!prev || prev._id !== postId) return prev;
+          let newLikes = (prev.likes || []).map(id => typeof id === 'object' && id?._id ? id._id.toString() : id.toString());
+          if (data.isLiked) {
+            if (userIdStr && !newLikes.includes(userIdStr)) newLikes.push(userIdStr);
+          } else {
+            newLikes = newLikes.filter(id => id !== userIdStr);
+          }
+          return { ...prev, likesCount: data.likesCount, isLiked: data.isLiked, likes: newLikes };
+        });
+
+        setPosts(prev => prev.map(p => {
+          if (p._id === postId) {
+            let newLikes = (p.likes || []).map(id => typeof id === 'object' && id?._id ? id._id.toString() : id.toString());
+            if (data.isLiked) {
+              if (userIdStr && !newLikes.includes(userIdStr)) newLikes.push(userIdStr);
+            } else {
+              newLikes = newLikes.filter(id => id !== userIdStr);
+            }
+            return { ...p, likesCount: data.likesCount, isLiked: data.isLiked, likes: newLikes };
+          }
+          return p;
+        }));
+
+        setSavedPosts(prev => prev.map(p => {
+          if (p._id === postId) {
+            return { ...p, likesCount: data.likesCount, isLiked: data.isLiked };
+          }
+          return p;
+        }));
+      }
+    } catch (err) {
+      console.error('Failed to toggle like on profile post:', err);
+    }
+  };
+
+  // Submit comment / nested reply directly from profile
+  const handleCommentSubmitDetail = async (postId, text, commentId = null, replyToUser = '', replyToUserId = null) => {
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) return;
+      let url = `${API_BASE}/api/posts/${postId}/comment`;
+      let body = { text };
+
+      if (commentId) {
+        url = `${API_BASE}/api/posts/${postId}/comment/${commentId}/reply`;
+        body = { text, replyToUser, replyToUserId };
+      }
+
+      const res = await fetch(url, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify(body)
+      });
+
+      if (res.ok) {
+        const postRes = await fetch(`${API_BASE}/api/posts/${postId}`);
+        if (postRes.ok) {
+          const freshPost = await postRes.json();
+          const count = freshPost.comments?.length || 0;
+          setSelectedDetailPost(prev => prev && prev._id === postId ? { ...prev, comments: freshPost.comments, commentsCount: count } : prev);
+          setActiveCommentPost(prev => prev && prev._id === postId ? { ...prev, comments: freshPost.comments, commentsCount: count } : prev);
+          setPosts(prev => prev.map(p => p._id === postId ? { ...p, commentsCount: count, comments: freshPost.comments } : p));
+          setSavedPosts(prev => prev.map(p => p._id === postId ? { ...p, commentsCount: count, comments: freshPost.comments } : p));
+        }
+      }
+    } catch (err) {
+      console.error('Failed to submit comment in profile:', err);
+    }
   };
 
   // Image Framing & Crop State
@@ -1383,7 +1748,7 @@ const PublicProfilePage = ({ userId, onBack, currentUser, isOwnProfile, setActiv
                 {posts.map(post => (
                   <div
                     key={post._id}
-                    onClick={() => setSelectedDetailPost(post)}
+                    onClick={() => handleOpenPostDetail(post)}
                     className="relative aspect-square overflow-hidden bg-slate-100 dark:bg-slate-900 border border-slate-200/20 shadow-xs cursor-pointer group hover:opacity-95 active:scale-98 transition-all"
                   >
                     {post.image ? (
@@ -1480,7 +1845,7 @@ const PublicProfilePage = ({ userId, onBack, currentUser, isOwnProfile, setActiv
                   {savedPosts.map(post => (
                     <div
                       key={post._id}
-                      onClick={() => setSelectedDetailPost(post)}
+                      onClick={() => handleOpenPostDetail(post)}
                       className="relative aspect-square overflow-hidden bg-slate-100 dark:bg-slate-900 border border-slate-200/20 shadow-xs cursor-pointer group hover:opacity-95 active:scale-98 transition-all"
                     >
                       {post.image ? (
@@ -1881,16 +2246,58 @@ const PublicProfilePage = ({ userId, onBack, currentUser, isOwnProfile, setActiv
               )}
             </div>
 
-            {/* Footer */}
-            <div className="flex items-center gap-4 pt-3 border-t border-slate-100 dark:border-slate-850 text-xs font-black text-slate-500 dark:text-slate-400">
-              <span className="flex items-center gap-1">
-                <Heart className="w-4.5 h-4.5 text-red-500 fill-red-500" />
-                {selectedDetailPost.likesCount} Likes
-              </span>
-              <span className="flex items-center gap-1">
-                <MessageCircle className="w-4.5 h-4.5 text-indigo-500" />
-                {selectedDetailPost.commentsCount} Comments
-              </span>
+            {/* Footer with interactive Like, Who Liked, Comments and Share */}
+            <div className="flex items-center justify-between pt-3 border-t border-slate-100 dark:border-slate-850">
+              <div className="flex items-center gap-3 text-xs font-black">
+                {/* Heart / Love Interactive Toggle */}
+                <button
+                  onClick={() => handleLikeToggleDetail(selectedDetailPost._id)}
+                  className="flex items-center gap-1.5 py-1 px-2 rounded-full hover:bg-rose-50 dark:hover:bg-rose-950/30 transition-all active:scale-90"
+                  title="Like post"
+                >
+                  <Heart className={`w-5 h-5 transition-all ${selectedDetailPost.isLiked ? 'text-red-500 fill-red-500 scale-110' : 'text-slate-500 hover:text-red-500'}`} />
+                  <span className={selectedDetailPost.isLiked ? 'text-red-500' : 'text-slate-600 dark:text-slate-350'}>
+                    {selectedDetailPost.isLiked ? 'Liked' : 'Like'}
+                  </span>
+                </button>
+
+                {/* Who Liked Button (Opens Reactions Modal) */}
+                <button
+                  onClick={() => setShowReactionsPostId(selectedDetailPost._id)}
+                  className="flex items-center gap-1 py-1 px-2.5 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-350 hover:text-slate-900 dark:hover:text-white transition-all cursor-pointer border border-slate-200/60 dark:border-slate-800"
+                  title="View who liked this post"
+                >
+                  <Heart className="w-3.5 h-3.5 text-red-500 fill-red-500" />
+                  <span>{selectedDetailPost.likesCount || (selectedDetailPost.likes ? selectedDetailPost.likes.length : 0)} Likes</span>
+                </button>
+
+                {/* Comments Button (Opens Comments Drawer) */}
+                <button
+                  onClick={() => setActiveCommentPost(selectedDetailPost)}
+                  className="flex items-center gap-1.5 py-1 px-2.5 rounded-full hover:bg-indigo-50 dark:hover:bg-indigo-950/30 text-slate-600 dark:text-slate-350 hover:text-[#7C3AED] transition-all active:scale-95 cursor-pointer border border-slate-200/60 dark:border-slate-800"
+                  title="View and write comments"
+                >
+                  <MessageCircle className="w-4 h-4 text-[#7C3AED]" />
+                  <span>{selectedDetailPost.commentsCount || (selectedDetailPost.comments ? selectedDetailPost.comments.length : 0)} Comments</span>
+                </button>
+              </div>
+
+              {/* Share */}
+              <button
+                onClick={() => {
+                  const shareUrl = `${window.location.origin}?post=${selectedDetailPost._id}`;
+                  if (navigator.share) {
+                    navigator.share({ title: 'Zenivio Post', url: shareUrl }).catch(() => {});
+                  } else {
+                    navigator.clipboard.writeText(shareUrl);
+                    showToastNotification('Link copied to clipboard!');
+                  }
+                }}
+                className="p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 transition-all active:scale-90"
+                title="Share post"
+              >
+                <Send className="w-4 h-4 -rotate-12" />
+              </button>
             </div>
           </div>
         </div>
@@ -2332,6 +2739,26 @@ const PublicProfilePage = ({ userId, onBack, currentUser, isOwnProfile, setActiv
             )}
           </div>
         </div>
+      )}
+
+      {/* Reactions / Who Liked Modal for Profile Post */}
+      {showReactionsPostId && (
+        <ProfileReactionsModal
+          postId={showReactionsPostId}
+          onClose={() => setShowReactionsPostId(null)}
+          onUserClick={onUserClick}
+        />
+      )}
+
+      {/* Interactive Comments Drawer for Profile Post */}
+      {activeCommentPost && (
+        <ProfileCommentsDrawer
+          post={activeCommentPost}
+          onClose={() => setActiveCommentPost(null)}
+          onCommentSubmit={handleCommentSubmitDetail}
+          currentUserId={currentUser?._id}
+          onUserClick={onUserClick}
+        />
       )}
     </div>
   );
