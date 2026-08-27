@@ -602,7 +602,12 @@ const RelatedNewsSlider = ({ posts, onSelect }) => {
             <div className="w-10" /> {/* Spacer */}
           </div>
 
-          <div className="max-w-xl mx-auto px-4 w-full pt-2 space-y-3">
+          <div className="max-w-xl mx-auto px-4 w-full pt-1 space-y-3">
+            {/* Top Billboard Display Ad (Matching BD-Pratidin newspaper top banner format) */}
+            <div className="w-full">
+              <BannerAd size="leaderboard" />
+            </div>
+
             {/* Category Tag */}
             <div>
               <span className="inline-block px-3 py-1 bg-indigo-500/10 text-[#7C3AED] dark:text-indigo-400 rounded-lg text-xs font-black tracking-wide">
