@@ -256,13 +256,16 @@ exports.createUserPost = async (req, res) => {
     let imageUrl = null;
     let videoUrl = null;
 
+    const { optimizeUploadedFileToWebp } = require('../utils/imageOptimizer');
+
     if (req.file) {
       if (req.file.mimetype.startsWith('video/')) {
         return res.status(400).json({ 
           message: 'The video option is currently unavailable. However, it will be available very soon.' 
         });
       }
-      imageUrl = `/api/image?file=${req.file.filename}`;
+      const webpFilename = await optimizeUploadedFileToWebp(req.file.path, 2048, 2048, 92);
+      imageUrl = `/api/image?file=${webpFilename || req.file.filename}`;
     }
 
     if (!content && !imageUrl && !videoUrl) {
@@ -869,12 +872,13 @@ exports.updateUserPost = async (req, res) => {
     let videoUrl = post.video;
 
     if (req.file) {
-      const fileUrl = `/api/image?file=${req.file.filename}`;
       if (req.file.mimetype.startsWith('video/')) {
-        videoUrl = fileUrl;
+        videoUrl = `/api/image?file=${req.file.filename}`;
         imageUrl = null; // Clear image if new video uploaded
       } else {
-        imageUrl = fileUrl;
+        const { optimizeUploadedFileToWebp } = require('../utils/imageOptimizer');
+        const webpFilename = await optimizeUploadedFileToWebp(req.file.path, 2048, 2048, 92);
+        imageUrl = `/api/image?file=${webpFilename || req.file.filename}`;
         videoUrl = null; // Clear video if new image uploaded
       }
     }

@@ -63,17 +63,26 @@ app.get('/api/image', async (req, res) => {
 
   // Videos or non-images bypass image compression
   const ext = path.extname(safeName).toLowerCase();
-  const isImage = ['.jpg', '.jpeg', '.png', '.webp', '.gif', '.bmp'].includes(ext);
+  const isImage = ['.jpg', '.jpeg', '.png', '.webp', '.gif', '.bmp', '.heic', '.tiff'].includes(ext);
 
   res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
 
   if (!isImage || !sharp) {
+    if (ext === '.webp') res.setHeader('Content-Type', 'image/webp');
     return res.sendFile(filePath);
   }
 
   const reqWidth = parseInt(req.query.w, 10);
-  const targetWidth = !isNaN(reqWidth) && reqWidth > 0 && reqWidth <= 1920 ? reqWidth : 800;
-  const quality = 78;
+  const hasCustomWidth = !isNaN(reqWidth) && reqWidth > 0 && reqWidth <= 2560;
+
+  // If already WebP and no custom width requested, serve directly at full native resolution
+  if (ext === '.webp' && !hasCustomWidth) {
+    res.setHeader('Content-Type', 'image/webp');
+    return res.sendFile(filePath);
+  }
+
+  const targetWidth = hasCustomWidth ? reqWidth : 1920;
+  const quality = 92;
   const cacheKey = `${safeName}_w${targetWidth}_q${quality}.webp`;
   const cachedFilePath = path.join(cacheDir, cacheKey);
 
@@ -83,10 +92,14 @@ app.get('/api/image', async (req, res) => {
   }
 
   try {
-    await sharp(filePath)
-      .rotate()
-      .resize({ width: targetWidth, withoutEnlargement: true })
-      .webp({ quality })
+    const pipeline = sharp(filePath).rotate();
+    
+    if (hasCustomWidth) {
+      pipeline.resize({ width: targetWidth, withoutEnlargement: true });
+    }
+
+    await pipeline
+      .webp({ quality, effort: 6, smartSubsample: true })
       .toFile(cachedFilePath);
 
     res.setHeader('Content-Type', 'image/webp');

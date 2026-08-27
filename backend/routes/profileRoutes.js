@@ -21,6 +21,7 @@ const {
 router.get('/', protect, getProfile);
 router.get('/suggestions', protect, getSuggestedUsers);
 router.get('/search', protect, searchUsers);
+router.put('/', protect, updateProfile);
 router.put('/update', protect, updateProfile);
 router.put('/password', protect, changePassword);
 router.delete('/', protect, deleteAccount);

@@ -53,12 +53,19 @@ exports.updateProfile = async (req, res) => {
     if (genderPrivacy !== undefined) user.genderPrivacy = genderPrivacy;
     if (req.body.hideFollowersList !== undefined) user.hideFollowersList = req.body.hideFollowersList;
 
+    const { saveBase64AsWebp } = require('../utils/imageOptimizer');
+
     if (profilePic !== undefined && profilePic !== user.profilePic) {
-      user.profilePic = profilePic;
+      let savedProfilePic = profilePic;
+      if (typeof profilePic === 'string' && profilePic.startsWith('data:image/')) {
+        savedProfilePic = await saveBase64AsWebp(profilePic, `avatar-${user._id}`, 1080, 1080, 92);
+      }
+      user.profilePic = savedProfilePic;
+
       // Automatically generate a timeline post
       const newPost = new Post({
         content: `updated their profile picture.`,
-        image: profilePic,
+        image: savedProfilePic,
         authorId: user._id,
         authorName: user.name || 'User',
         isVerified: user.isEmailVerified || false
@@ -67,11 +74,16 @@ exports.updateProfile = async (req, res) => {
     }
 
     if (coverPic !== undefined && coverPic !== user.coverPic) {
-      user.coverPic = coverPic;
+      let savedCoverPic = coverPic;
+      if (typeof coverPic === 'string' && coverPic.startsWith('data:image/')) {
+        savedCoverPic = await saveBase64AsWebp(coverPic, `cover-${user._id}`, 1920, 1080, 92);
+      }
+      user.coverPic = savedCoverPic;
+
       // Automatically generate a timeline post
       const newPost = new Post({
         content: `updated their cover photo.`,
-        image: coverPic,
+        image: savedCoverPic,
         authorId: user._id,
         authorName: user.name || 'User',
         isVerified: user.isEmailVerified || false

@@ -239,8 +239,10 @@ exports.uploadFile = async (req, res) => {
     if (!req.file) {
       return res.status(400).json({ message: 'No file uploaded' });
     }
+    const { optimizeUploadedFileToWebp } = require('../utils/imageOptimizer');
+    const webpFilename = await optimizeUploadedFileToWebp(req.file.path, 2048, 2048, 92);
     // Return the filename so the frontend can save it and access via /api/image?file=filename
-    res.json({ filename: req.file.filename });
+    res.json({ filename: webpFilename || req.file.filename });
   } catch (error) {
     console.error('Error uploading file:', error);
     res.status(500).json({ message: 'Internal server error' });
@@ -254,7 +256,12 @@ exports.addStory = async (req, res) => {
   try {
     const userId = req.user._id;
     const { text, emoji, bgGradient, textColor, fontStyle } = req.body;
-    const imageFilename = req.file ? req.file.filename : '';
+    let imageFilename = '';
+    if (req.file) {
+      const { optimizeUploadedFileToWebp } = require('../utils/imageOptimizer');
+      const webpFilename = await optimizeUploadedFileToWebp(req.file.path, 1920, 1920, 92);
+      imageFilename = webpFilename || req.file.filename;
+    }
 
     const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
 

@@ -73,15 +73,15 @@ const formatDob = (dobStr) => {
   }
 };
 
-// Client-side image compression helper
-const compressImage = (base64Str, maxWidth = 1024, maxHeight = 1024, quality = 0.7) => {
+// Client-side image compression helper (WebP HD)
+const compressImage = (base64Str, maxWidth = 1920, maxHeight = 1920, quality = 0.92) => {
   return new Promise((resolve) => {
     const img = new Image();
     img.src = base64Str;
     img.onload = () => {
       const canvas = document.createElement('canvas');
-      let width = img.width;
-      let height = img.height;
+      let width = img.naturalWidth || img.width;
+      let height = img.naturalHeight || img.height;
 
       if (width > height) {
         if (width > maxWidth) {
@@ -99,9 +99,14 @@ const compressImage = (base64Str, maxWidth = 1024, maxHeight = 1024, quality = 0
       canvas.height = height;
 
       const ctx = canvas.getContext('2d');
+      ctx.imageSmoothingEnabled = true;
+      ctx.imageSmoothingQuality = 'high';
       ctx.drawImage(img, 0, 0, width, height);
 
-      const compressedBase64 = canvas.toDataURL('image/jpeg', quality);
+      let compressedBase64 = canvas.toDataURL('image/webp', quality);
+      if (!compressedBase64.startsWith('data:image/webp')) {
+        compressedBase64 = canvas.toDataURL('image/jpeg', quality);
+      }
       resolve(compressedBase64);
     };
     img.onerror = () => {
@@ -711,7 +716,7 @@ const PublicProfilePage = ({ userId, onBack, currentUser, isOwnProfile, setActiv
       reader.onloadend = async () => {
         try {
           const originalBase64 = reader.result;
-          const base64 = await compressImage(originalBase64, 400, 400, 0.75);
+          const base64 = await compressImage(originalBase64, 1080, 1080, 0.92);
           setHlCover(base64);
         } catch (err) {
           console.error('Failed to compress highlight cover:', err);

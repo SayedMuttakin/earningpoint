@@ -24,10 +24,14 @@ export const getImageUrl = (url, width) => {
   if (url.startsWith('http://') || url.startsWith('https://') || url.startsWith('data:')) {
     return url;
   }
-  const widthParam = width ? `&w=${width}` : '';
   if (url.startsWith('/')) {
-    return `${API_BASE}${url}${widthParam}`;
+    if (width) {
+      const sep = url.includes('?') ? '&' : '?';
+      return `${API_BASE}${url}${sep}w=${width}`;
+    }
+    return `${API_BASE}${url}`;
   }
+  const widthParam = width ? `&w=${width}` : '';
   return `${API_BASE}/api/image?file=${encodeURIComponent(url)}${widthParam}`;
 };
 
