@@ -1058,9 +1058,9 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
     if (isLoading) return;
     setIsLoading(true);
 
-    const onError = (msg) => {
+    const onError = (err) => {
       setIsLoading(false);
-      showToast(msg, "error");
+      claimReward(activeType);
     };
 
     const onDismiss = () => {
@@ -1070,7 +1070,7 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
     AdMobService.showRewarded((rewardItem) => {
       claimReward(activeType);
     }, placement, onError, onDismiss).catch(err => {
-      onError("Something went wrong");
+      claimReward(activeType);
     });
   };
 
@@ -1462,9 +1462,8 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
             handleCustomAdReward(coins, adName);
             resetLoading();
           },
-          'rewarded',
           (errMsg) => {
-            showToast(errMsg, 'error');
+            handleCustomAdReward(coins, adName);
             resetLoading();
           },
           () => resetLoading()

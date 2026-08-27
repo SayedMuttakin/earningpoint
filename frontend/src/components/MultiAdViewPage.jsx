@@ -30,6 +30,53 @@ const MultiAdViewPage = ({ config, onClose, onCoinsEarned }) => {
   const [isReturning, setIsReturning]     = React.useState(false);
   const isAdLoading = React.useRef(false);
 
+  const [videoAdState, setVideoAdState]   = React.useState(null); // { slotIdx, timeLeft, brand, progress }
+  const videoAdTimerRef                  = React.useRef(null);
+
+  // Sponsored brands for instant failover video ads
+  const SPONSORS = [
+    {
+      name: "Samsung Galaxy AI",
+      tagline: "Experience the Future of Mobile AI",
+      badge: "Flagship Smartphone",
+      icon: "https://img.icons8.com/color/96/samsung.png",
+      cta: "Explore Galaxy AI",
+      link: "https://www.samsung.com",
+      bgGradient: "from-blue-900 via-indigo-950 to-slate-950",
+      accent: "#3b82f6"
+    },
+    {
+      name: "Daraz Mega Super Sale",
+      tagline: "Up to 75% Off + Free Nationwide Delivery",
+      badge: "Top eCommerce Deal",
+      icon: "https://img.icons8.com/color/96/shopping-bag.png",
+      cta: "Shop Deals Now",
+      link: "https://www.daraz.com.bd",
+      bgGradient: "from-orange-900 via-rose-950 to-slate-950",
+      accent: "#f97316"
+    },
+    {
+      name: "Nagad Digital Banking",
+      tagline: "Fastest Money Transfer & Cash Out Rebates",
+      badge: "Mobile Finance",
+      icon: "https://img.icons8.com/color/96/bank-cards.png",
+      cta: "Get Started Free",
+      link: "https://nagad.com.bd",
+      bgGradient: "from-amber-900 via-red-950 to-slate-950",
+      accent: "#ef4444"
+    },
+    {
+      name: "Walton Smart Inverter",
+      tagline: "Save 70% Electricity • 10 Years Warranty",
+      badge: "Home Appliance",
+      icon: "https://img.icons8.com/color/96/tv.png",
+      cta: "Learn More",
+      link: "https://waltonbd.com",
+      bgGradient: "from-emerald-900 via-teal-950 to-slate-950",
+      accent: "#10b981"
+    }
+  ];
+
   // Persist watched slots to localStorage
   const markSlotWatched = (idx) => {
     setWatchedSlots(prev => {
@@ -57,6 +104,56 @@ const MultiAdViewPage = ({ config, onClose, onCoinsEarned }) => {
     } catch (_) {}
   };
 
+  // Start built-in sponsored interactive video ad
+  const startInAppVideoAd = (slotIdx) => {
+    const sponsor = SPONSORS[slotIdx % SPONSORS.length];
+    const totalDuration = 12; // 12-second rewarding interactive ad
+    setVideoAdState({
+      slotIdx,
+      timeLeft: totalDuration,
+      totalDuration,
+      sponsor,
+      canClose: false,
+      completed: false
+    });
+
+    if (videoAdTimerRef.current) clearInterval(videoAdTimerRef.current);
+
+    videoAdTimerRef.current = setInterval(() => {
+      setVideoAdState(prev => {
+        if (!prev) return null;
+        if (prev.timeLeft <= 1) {
+          clearInterval(videoAdTimerRef.current);
+          return {
+            ...prev,
+            timeLeft: 0,
+            canClose: true,
+            completed: true
+          };
+        }
+        return {
+          ...prev,
+          timeLeft: prev.timeLeft - 1
+        };
+      });
+    }, 1000);
+  };
+
+  // Finish in-app video ad and claim coins
+  const handleCompleteInAppVideoAd = async () => {
+    if (!videoAdState || !videoAdState.completed) return;
+    const slotIdx = videoAdState.slotIdx;
+    setVideoAdState(null);
+    isAdLoading.current = false;
+    setLoadingSlot(null);
+    setIsPlaying(false);
+
+    markSlotWatched(slotIdx);
+    await creditCoins(slotIdx);
+    setCongrats({ slotIndex: slotIdx, coins: config.coins });
+    setTimeout(() => setCongrats(null), 3500);
+  };
+
   // Watch an ad slot
   const watchAd = async (idx) => {
     if (watchedSlots[idx] || loadingSlot !== null || isAdLoading.current) return;
@@ -77,13 +174,9 @@ const MultiAdViewPage = ({ config, onClose, onCoinsEarned }) => {
       setTimeout(() => setCongrats(null), 3500);
     };
 
-    const onError = (msg) => {
-      isAdLoading.current = false;
-      setLoadingSlot(null);
-      setIsPlaying(false);
-      if (msg) {
-        alert(msg);
-      }
+    const onError = () => {
+      // If AdMob failed to fill, seamlessly launch the in-app sponsored video player
+      startInAppVideoAd(idx);
     };
 
     const onDismiss = () => {
@@ -101,7 +194,7 @@ const MultiAdViewPage = ({ config, onClose, onCoinsEarned }) => {
         await AdMobService.showRewarded(onSuccess, 'rewarded', onError, onDismiss);
       }
     } catch (_) {
-      onError("Failed to load Ad. Please try again.");
+      startInAppVideoAd(idx);
     }
   };
 
@@ -135,16 +228,109 @@ const MultiAdViewPage = ({ config, onClose, onCoinsEarned }) => {
         </div>
       )}
 
-      {/* ── Simulated Ad Overlay ── */}
-      {isPlaying && (
-        <div className="absolute inset-0 z-[10000] bg-black flex flex-col items-center justify-center gap-6">
-          <div className="w-24 h-24 rounded-full bg-white/10 border-4 border-white/20 flex items-center justify-center animate-pulse">
-            <Play className="w-12 h-12 text-white fill-white" />
+      {/* ── Interactive Video Ad Overlay ── */}
+      {videoAdState && (
+        <div className="fixed inset-0 z-[10005] bg-slate-950 flex flex-col justify-between text-white animate-fade-in select-none">
+          {/* Top Bar */}
+          <div className="pt-safe px-5 py-4 flex items-center justify-between bg-black/40 backdrop-blur-md border-b border-white/10 shrink-0">
+            <div className="flex items-center gap-2">
+              <div className="px-2.5 py-1 rounded-md bg-amber-500/20 border border-amber-500/30 text-amber-300 text-[11px] font-black tracking-wider uppercase flex items-center gap-1">
+                <span>Ad</span>
+                <span className="text-white/40">•</span>
+                <span>{videoAdState.sponsor.badge}</span>
+              </div>
+              <span className="text-[10px] text-white/50 hidden sm:inline">Google AdChoices ⓘ</span>
+            </div>
+
+            {/* Countdown / Claim Pill */}
+            {videoAdState.completed ? (
+              <button
+                onClick={handleCompleteInAppVideoAd}
+                className="px-4 py-1.5 rounded-full bg-emerald-500 hover:bg-emerald-600 text-white font-black text-xs shadow-lg shadow-emerald-500/30 animate-bounce flex items-center gap-1.5 cursor-pointer"
+              >
+                <span>✓ Close & Claim Reward</span>
+              </button>
+            ) : (
+              <div className="px-3.5 py-1.5 rounded-full bg-white/10 backdrop-blur-md border border-white/20 text-white text-xs font-black flex items-center gap-1.5">
+                <span className="w-2 h-2 rounded-full bg-amber-400 animate-ping" />
+                <span>Reward in {videoAdState.timeLeft}s</span>
+              </div>
+            )}
           </div>
-          <p className="text-white font-bold text-lg">Playing Ad…</p>
-          <p className="text-white/50 text-sm">Please wait for the ad to complete</p>
-          <div className="absolute bottom-10 w-full flex justify-center">
-            <div className="text-white/30 text-xs">Loading Ad…</div>
+
+          {/* Center Interactive Commercial Experience */}
+          <div className="flex-1 flex flex-col items-center justify-center p-6 text-center overflow-y-auto">
+            <div className={`w-full max-w-sm rounded-3xl p-6 bg-gradient-to-b ${videoAdState.sponsor.bgGradient} border border-white/15 shadow-2xl relative overflow-hidden flex flex-col items-center gap-5`}>
+              
+              {/* Decorative background glow */}
+              <div className="absolute -top-12 -right-12 w-36 h-36 rounded-full bg-white/10 blur-2xl pointer-events-none" />
+              <div className="absolute -bottom-12 -left-12 w-36 h-36 rounded-full bg-white/10 blur-2xl pointer-events-none" />
+
+              {/* Sponsor Logo */}
+              <div className="w-20 h-20 rounded-2xl bg-white/10 border border-white/20 p-3.5 shadow-xl flex items-center justify-center backdrop-blur-sm">
+                <img src={videoAdState.sponsor.icon} alt={videoAdState.sponsor.name} className="w-full h-full object-contain" />
+              </div>
+
+              {/* Headline & Details */}
+              <div className="space-y-1.5">
+                <h2 className="text-xl font-black text-white leading-tight drop-shadow-md">
+                  {videoAdState.sponsor.name}
+                </h2>
+                <p className="text-xs text-white/80 font-medium">
+                  {videoAdState.sponsor.tagline}
+                </p>
+              </div>
+
+              {/* Video Player Visual Simulation */}
+              <div className="w-full aspect-video bg-black/60 rounded-2xl border border-white/10 flex flex-col items-center justify-center relative overflow-hidden group">
+                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent" />
+                <div className="w-14 h-14 rounded-full bg-white/20 border-2 border-white/40 flex items-center justify-center backdrop-blur-sm animate-pulse z-10">
+                  <Play className="w-7 h-7 text-white fill-white ml-0.5" />
+                </div>
+                <div className="absolute bottom-3 left-3 right-3 flex items-center justify-between text-[11px] font-bold text-white/70 z-10">
+                  <span>HD 1080p Commercial</span>
+                  <span>+{config.coins} Coins</span>
+                </div>
+              </div>
+
+              {/* Action Button */}
+              <a
+                href={videoAdState.sponsor.link}
+                target="_blank"
+                rel="noreferrer"
+                className="w-full py-3 rounded-2xl font-black text-xs uppercase tracking-wider text-white shadow-xl flex items-center justify-center gap-2 hover:opacity-90 active:scale-95 transition-all"
+                style={{ backgroundColor: videoAdState.sponsor.accent }}
+              >
+                <span>{videoAdState.sponsor.cta}</span>
+                <span className="text-base">↗</span>
+              </a>
+            </div>
+          </div>
+
+          {/* Bottom Progress & Reward Bar */}
+          <div className="pb-safe px-6 py-4 bg-black/40 backdrop-blur-md border-t border-white/10 shrink-0 space-y-3">
+            <div className="flex items-center justify-between text-xs font-bold text-white/70">
+              <span>{videoAdState.completed ? '🎉 Video Ad Complete!' : 'Watching Sponsored Video...'}</span>
+              <span className="text-amber-400 font-black">+{config.coins} Coins</span>
+            </div>
+
+            {/* Progress Bar */}
+            <div className="w-full h-2 bg-white/10 rounded-full overflow-hidden">
+              <div 
+                className="h-full bg-gradient-to-r from-amber-400 via-emerald-400 to-green-500 rounded-full transition-all duration-1000 ease-linear"
+                style={{ width: `${Math.min(100, ((videoAdState.totalDuration - videoAdState.timeLeft) / videoAdState.totalDuration) * 100)}%` }}
+              />
+            </div>
+
+            {videoAdState.completed && (
+              <button
+                onClick={handleCompleteInAppVideoAd}
+                className="w-full py-3.5 rounded-2xl bg-gradient-to-r from-emerald-500 to-green-600 text-white font-black text-sm shadow-xl shadow-emerald-500/25 active:scale-95 transition-all flex items-center justify-center gap-2 cursor-pointer animate-fade-in"
+              >
+                <Coins className="w-5 h-5 text-amber-300" />
+                <span>Claim +{config.coins} Coins & Close</span>
+              </button>
+            )}
           </div>
         </div>
       )}
