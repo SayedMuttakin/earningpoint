@@ -251,10 +251,13 @@ module.exports = {
             messageType: messageType || 'text'
           });
 
+          const populatedMessage = await Message.findById(savedMessage._id)
+            .populate('sender', 'name profilePic username');
+
           // Broadcast to receiver
-          io.to(receiverId.toString()).emit('receive_direct_message', savedMessage);
+          io.to(receiverId.toString()).emit('receive_direct_message', populatedMessage);
           // Emit back to sender
-          socket.emit('receive_direct_message', savedMessage);
+          socket.emit('receive_direct_message', populatedMessage);
         } catch (err) {
           console.error('Socket send_direct_message error:', err);
         }

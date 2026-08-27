@@ -13,9 +13,10 @@ import { Check, Loader2, X } from 'lucide-react';
 import { AdMob } from '@capacitor-community/admob';
 import { App as CapacitorApp } from '@capacitor/app';
 import { Capacitor } from '@capacitor/core';
+import { LocalNotifications } from '@capacitor/local-notifications';
 import { AdMobService } from './utils/admob';
 import AppUpdateModal from './components/AppUpdateModal';
-import { playNotificationSound, triggerSystemNotification } from './utils/sound';
+import { playNotificationSound, triggerSystemNotification, triggerMessageNotification } from './utils/sound';
 
 // Lazy load other sub-pages/components to split bundle size and make initial load super fast
 const CartPage = lazy(() => import('./components/CartPage'));
@@ -192,6 +193,45 @@ function App() {
   const [initialSettingsSubMenu, setInitialSettingsSubMenu] = useState(null);
   const [postToEdit, setPostToEdit] = useState(null);
 
+  const activeTabRef = React.useRef(activeTab);
+  activeTabRef.current = activeTab;
+
+  const activeChatPartnerRef = React.useRef(activeChatPartner);
+  activeChatPartnerRef.current = activeChatPartner;
+
+  // Listen for native notification clicks from phone status bar
+  useEffect(() => {
+    let actionSub = null;
+    if (Capacitor.isNativePlatform()) {
+      LocalNotifications.addListener('localNotificationActionPerformed', (notification) => {
+        const extra = notification.notification?.extra;
+        if (extra?.senderId) {
+          const partner = {
+            _id: extra.senderId,
+            name: (notification.notification.title || '').replace(' 💬', ''),
+            isGroup: false,
+            profilePic: ''
+          };
+          setActiveChatPartner(partner);
+          setActiveTab('Messenger');
+        } else if (extra?.groupId) {
+          const partner = {
+            _id: extra.groupId,
+            name: (notification.notification.title || '').replace(' 💬', ''),
+            isGroup: true,
+            profilePic: ''
+          };
+          setActiveChatPartner(partner);
+          setActiveTab('Messenger');
+        }
+      }).then(sub => { actionSub = sub; }).catch(() => {});
+    }
+
+    return () => {
+      if (actionSub && actionSub.remove) actionSub.remove();
+    };
+  }, []);
+
   useEffect(() => {
     // Clean up URL query parameters so they don't persist on page reload/navigation
     if (window.location.search) {
@@ -219,6 +259,57 @@ function App() {
           data?.message || 'You have a new update on Zenivio',
           data
         );
+      });
+
+      // Handle direct chat messages
+      newSocket.on('receive_direct_message', (message) => {
+        const msgSenderId = message.sender?._id ? message.sender._id.toString() : (message.sender ? message.sender.toString() : '');
+        const currentUserId = currentUser._id.toString();
+        const isFromOther = msgSenderId && msgSenderId !== currentUserId;
+
+        if (isFromOther) {
+          const curTab = activeTabRef.current;
+          const curPartner = activeChatPartnerRef.current;
+          const curPartnerId = curPartner?._id ? curPartner._id.toString() : '';
+          const isCurrentlyInChat = curTab === 'Messenger' && curPartnerId === msgSenderId;
+
+          if (!isCurrentlyInChat) {
+            const senderName = (message.sender && typeof message.sender === 'object') ? (message.sender.name || 'Friend') : 'Friend';
+            triggerMessageNotification(
+              senderName,
+              message.content,
+              { senderId: msgSenderId, type: 'direct_message' }
+            );
+
+            window.dispatchEvent(new CustomEvent('new_unread_message', { detail: message }));
+          }
+        }
+      });
+
+      // Handle group chat messages
+      newSocket.on('receive_group_message', (message) => {
+        const msgSenderId = message.sender?._id ? message.sender._id.toString() : (message.sender ? message.sender.toString() : '');
+        const currentUserId = currentUser._id.toString();
+        const isFromOther = msgSenderId && msgSenderId !== currentUserId;
+
+        if (isFromOther) {
+          const curTab = activeTabRef.current;
+          const curPartner = activeChatPartnerRef.current;
+          const curGroupId = curPartner?._id ? curPartner._id.toString() : '';
+          const msgGroupId = message.group?._id ? message.group._id.toString() : (message.group ? message.group.toString() : '');
+          const isCurrentlyInChat = curTab === 'Messenger' && curGroupId === msgGroupId;
+
+          if (!isCurrentlyInChat) {
+            const senderName = (message.sender && typeof message.sender === 'object') ? (message.sender.name || 'Group Member') : 'Group Member';
+            triggerMessageNotification(
+              `Group: ${senderName}`,
+              message.content,
+              { groupId: msgGroupId, type: 'group_message' }
+            );
+
+            window.dispatchEvent(new CustomEvent('new_unread_message', { detail: message }));
+          }
+        }
       });
 
       newSocket.on('receive_message', (data) => {

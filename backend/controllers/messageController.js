@@ -422,20 +422,52 @@ exports.sendMessage = async (req, res) => {
       messageType: messageType || 'text'
     });
 
+    const populatedMessage = await Message.findById(savedMessage._id)
+      .populate('sender', 'name profilePic username');
+
     // Broadcast via socket
     try {
       const io = require('../socket').getIO();
       if (io) {
-        io.to(receiverId.toString()).emit('receive_direct_message', savedMessage);
-        io.to(senderId.toString()).emit('receive_direct_message', savedMessage);
+        io.to(receiverId.toString()).emit('receive_direct_message', populatedMessage);
+        io.to(senderId.toString()).emit('receive_direct_message', populatedMessage);
       }
     } catch (socketErr) {
       console.error('Failed to broadcast via socket:', socketErr);
     }
 
-    res.status(201).json(savedMessage);
+    res.status(201).json(populatedMessage);
   } catch (error) {
     console.error('Error sending message:', error);
-    res.status(555).json({ message: 'Internal server error' });
+    res.status(500).json({ message: 'Internal server error' });
+  }
+};
+
+// GET /api/messages/unread-count — Get total unread message count
+exports.getUnreadCount = async (req, res) => {
+  try {
+    const currentUserId = req.user._id;
+
+    // Direct unread messages received from others
+    const directUnread = await Message.countDocuments({
+      receiver: currentUserId,
+      isRead: false,
+      group: { $exists: false }
+    });
+
+    // Group unread messages where user is a member
+    const userGroups = await Group.find({ members: currentUserId }, '_id');
+    const groupIds = userGroups.map(g => g._id);
+    const groupUnread = await Message.countDocuments({
+      group: { $in: groupIds },
+      sender: { $ne: currentUserId },
+      isRead: false
+    });
+
+    const totalUnread = directUnread + groupUnread;
+    res.json({ unreadCount: totalUnread, directUnread, groupUnread });
+  } catch (error) {
+    console.error('Error fetching unread message count:', error);
+    res.status(500).json({ message: 'Internal server error' });
   }
 };

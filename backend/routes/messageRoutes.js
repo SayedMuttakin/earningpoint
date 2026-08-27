@@ -15,9 +15,11 @@ const {
   getStories,
   deleteChatHistory,
   reportMessage,
-  sendMessage
+  sendMessage,
+  getUnreadCount
 } = require('../controllers/messageController');
 
+router.get('/unread-count', protect, getUnreadCount);
 router.get('/users', protect, getUsers);
 router.get('/history/:otherUserId', protect, getChatHistory);
 router.post('/groups', protect, createGroup);

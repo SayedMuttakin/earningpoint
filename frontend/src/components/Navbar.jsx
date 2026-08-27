@@ -21,6 +21,7 @@ const Navbar = ({
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [showAccountSwitcher, setShowAccountSwitcher] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
+  const [unreadMessagesCount, setUnreadMessagesCount] = useState(0);
   const [savedAccounts, setSavedAccounts] = useState(() => {
     try {
       return JSON.parse(localStorage.getItem('zenivio_saved_accounts') || '[]');
@@ -170,8 +171,27 @@ const Navbar = ({
 
   useEffect(() => {
     fetchUnreadCount();
-    const interval = setInterval(fetchUnreadCount, 30000); // Polling every 30 seconds
-    return () => clearInterval(interval);
+    fetchUnreadMessagesCount();
+    const interval = setInterval(() => {
+      fetchUnreadCount();
+      fetchUnreadMessagesCount();
+    }, 20000);
+
+    const handleNewUnreadMsg = () => {
+      setUnreadMessagesCount(prev => prev + 1);
+    };
+    const handleReadMsgUpdate = () => {
+      fetchUnreadMessagesCount();
+    };
+
+    window.addEventListener('new_unread_message', handleNewUnreadMsg);
+    window.addEventListener('messages_read_update', handleReadMsgUpdate);
+
+    return () => {
+      clearInterval(interval);
+      window.removeEventListener('new_unread_message', handleNewUnreadMsg);
+      window.removeEventListener('messages_read_update', handleReadMsgUpdate);
+    };
   }, []);
 
   const fetchUnreadCount = async () => {
@@ -187,6 +207,22 @@ const Navbar = ({
       }
     } catch (err) {
       console.error('Failed to fetch unread count:', err);
+    }
+  };
+
+  const fetchUnreadMessagesCount = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) return;
+      const res = await fetch(`${API_BASE}/api/messages/unread-count`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      const data = await res.json();
+      if (res.ok && typeof data.unreadCount === 'number') {
+        setUnreadMessagesCount(data.unreadCount);
+      }
+    } catch (err) {
+      console.error('Failed to fetch unread messages count:', err);
     }
   };
 
@@ -521,13 +557,20 @@ const Navbar = ({
 
               {/* Messenger Button */}
               <button 
-                onClick={() => handleTabButtonClick('Messenger')}
+                onClick={() => {
+                  handleTabButtonClick('Messenger');
+                  setUnreadMessagesCount(0);
+                }}
                 className="relative p-2 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 hover:scale-105 active:scale-95 transition-all duration-300 flex items-center justify-center border border-transparent hover:border-slate-150/40 dark:hover:border-slate-750/30 cursor-pointer"
                 title="Messenger Chat"
               >
                 <div className="relative">
                   <MessageCircle className="w-6.5 h-6.5 text-slate-700 dark:text-slate-200 transform active:scale-90 transition-transform duration-300" strokeWidth={2} />
-                  <span className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 bg-emerald-500 rounded-full border-2 border-white dark:border-slate-900 animate-pulse" />
+                  {unreadMessagesCount > 0 ? (
+                    <span className="absolute -top-1.5 -right-2 min-w-[18px] h-[18px] bg-rose-500 text-white text-[10px] font-black rounded-full flex items-center justify-center px-1 shadow-md border-2 border-white dark:border-slate-900 animate-pulse">
+                      {unreadMessagesCount > 99 ? '99+' : unreadMessagesCount}
+                    </span>
+                  ) : null}
                 </div>
               </button>
             </div>

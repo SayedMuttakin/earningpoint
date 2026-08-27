@@ -109,23 +109,6 @@ exports.createPost = async (req, res) => {
 
     const post = await Post.create(postData);
 
-    // Notify all users about the new post
-    try {
-      const users = await User.find({}, '_id');
-      const notificationPromises = users.map(user => 
-        createNotification(
-          user._id, 
-          'New Post Updated! 📢', 
-          `${authorName || 'Zenivio'} has shared a new update. Check it out now!`, 
-          'post',
-          post._id
-        )
-      );
-      await Promise.all(notificationPromises);
-    } catch (notifyError) {
-      console.error('Error sending post notifications:', notifyError);
-    }
-
     res.status(201).json(post);
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -313,6 +296,55 @@ exports.createUserPost = async (req, res) => {
     const populatedPost = await Post.findById(post._id).populate('authorId', 'name profilePic googleAvatar facebookAvatar isEmailVerified verificationBadge');
     const postObj = populatedPost.toObject();
     const authorObj = postObj.authorId;
+
+    // Send notifications to followers and @mentioned users
+    try {
+      const followers = await User.find({ following: req.user._id }, '_id');
+      const notifiedUserIds = new Set();
+      const authorNameStr = req.user.name || 'A user';
+      const snippet = content ? (content.length > 40 ? `${content.substring(0, 40)}...` : content) : 'a new photo';
+
+      // 1. Notify followers
+      for (const f of followers) {
+        if (f._id.toString() !== req.user._id.toString()) {
+          notifiedUserIds.add(f._id.toString());
+          createNotification(
+            f._id,
+            `${authorNameStr} shared a new post 📸`,
+            `${authorNameStr} posted: "${snippet}"`,
+            'post',
+            post._id,
+            req.user._id
+          ).catch(e => console.error('Follower notification failed:', e));
+        }
+      }
+
+      // 2. Notify @mentioned users in post content
+      const mentionMatches = (content || '').match(/@([a-zA-Z0-9_]+)/g);
+      if (mentionMatches) {
+        const usernames = [...new Set(mentionMatches.map(m => m.substring(1).toLowerCase()))];
+        const mentionedUsers = await User.find({
+          username: { $in: usernames },
+          _id: { $ne: req.user._id }
+        }, '_id');
+
+        for (const mu of mentionedUsers) {
+          if (!notifiedUserIds.has(mu._id.toString())) {
+            notifiedUserIds.add(mu._id.toString());
+            createNotification(
+              mu._id,
+              'You were mentioned! 💬',
+              `${authorNameStr} mentioned you in a post.`,
+              'mention',
+              post._id,
+              req.user._id
+            ).catch(e => console.error('Mention notification failed:', e));
+          }
+        }
+      }
+    } catch (notifyErr) {
+      console.error('Error dispatching post notifications:', notifyErr);
+    }
  
     res.status(201).json({
       ...postObj,
@@ -477,6 +509,32 @@ exports.commentPost = async (req, res) => {
       }
     }
 
+    // Check for @mentions in comment text
+    const commentMentions = text.match(/@([a-zA-Z0-9_]+)/g);
+    if (commentMentions) {
+      try {
+        const usernames = [...new Set(commentMentions.map(m => m.substring(1).toLowerCase()))];
+        const mentionedUsers = await User.find({
+          username: { $in: usernames },
+          _id: { $ne: req.user._id }
+        }, '_id');
+        for (const mu of mentionedUsers) {
+          if (!post.authorId || post.authorId.toString() !== mu._id.toString()) {
+            createNotification(
+              mu._id,
+              'Mentioned in Comment! 💬',
+              `@${req.user.username || req.user.name} mentioned you in a comment.`,
+              'mention',
+              post._id,
+              req.user._id
+            ).catch(e => console.error('Comment mention notification failed:', e));
+          }
+        }
+      } catch (mErr) {
+        console.error('Mention comment notification error:', mErr);
+      }
+    }
+
     res.status(201).json(newComment);
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -527,11 +585,38 @@ exports.replyComment = async (req, res) => {
           notifyUserId,
           'New Comment Reply! 💬',
           `${req.user.name || 'A user'} replied to your comment: "${text.substring(0, 30)}${text.length > 30 ? '...' : ''}"`,
-          'post',
-          post._id
+          'comment',
+          post._id,
+          req.user._id
         );
       } catch (err) {
         console.error('Failed to create reply notification:', err);
+      }
+    }
+
+    // Check for @mentions in reply text
+    const replyMentions = text.match(/@([a-zA-Z0-9_]+)/g);
+    if (replyMentions) {
+      try {
+        const usernames = [...new Set(replyMentions.map(m => m.substring(1).toLowerCase()))];
+        const mentionedUsers = await User.find({
+          username: { $in: usernames },
+          _id: { $ne: req.user._id }
+        }, '_id');
+        for (const mu of mentionedUsers) {
+          if (!notifyUserId || notifyUserId.toString() !== mu._id.toString()) {
+            createNotification(
+              mu._id,
+              'Mentioned in Reply! 💬',
+              `@${req.user.username || req.user.name} mentioned you in a comment reply.`,
+              'mention',
+              post._id,
+              req.user._id
+            ).catch(e => console.error('Reply mention notification failed:', e));
+          }
+        }
+      } catch (mErr) {
+        console.error('Mention reply notification error:', mErr);
       }
     }
 

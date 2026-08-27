@@ -9,7 +9,11 @@ import {
   Clock,
   ArrowLeft,
   Info,
-  Megaphone
+  Megaphone,
+  Heart,
+  MessageSquare,
+  AtSign,
+  UserPlus
 } from 'lucide-react';
 import { API_BASE } from '../config';
 import PullToRefresh from './PullToRefresh';
@@ -117,14 +121,18 @@ const NotificationPage = ({ onBack, setActiveTab, setSelectedNotificationPostId,
 
   const getIcon = (type) => {
     switch (type) {
-      case 'earning': return <DollarSign className="w-4 h-4 sm:w-5 sm:h-5 " />;
-      case 'withdrawal': return <TrendingUp className="w-4 h-4 sm:w-5 sm:h-5" />;
-      case 'premium': return <Star className="w-4 h-4 sm:w-5 sm:h-5" />;
-      case 'post': return <Bell className="w-4 h-4 sm:w-5 sm:h-5" />;
-      case 'conversion': return <DollarSign className="w-4 h-4 sm:w-5 sm:h-5" />;
-      case 'announcement': return <Megaphone className="w-4 h-4 sm:w-5 sm:h-5" />;
+      case 'follow': return <UserPlus className="w-4 h-4 sm:w-5 sm:h-5 text-indigo-500" />;
+      case 'like': return <Heart className="w-4 h-4 sm:w-5 sm:h-5 text-rose-500 fill-rose-500" />;
+      case 'comment': return <MessageSquare className="w-4 h-4 sm:w-5 sm:h-5 text-indigo-500" />;
+      case 'mention': return <AtSign className="w-4 h-4 sm:w-5 sm:h-5 text-purple-500" />;
+      case 'earning': return <DollarSign className="w-4 h-4 sm:w-5 sm:h-5 text-emerald-500" />;
+      case 'withdrawal': return <TrendingUp className="w-4 h-4 sm:w-5 sm:h-5 text-blue-500" />;
+      case 'premium': return <Star className="w-4 h-4 sm:w-5 sm:h-5 text-amber-500" />;
+      case 'post': return <Bell className="w-4 h-4 sm:w-5 sm:h-5 text-indigo-500" />;
+      case 'conversion': return <DollarSign className="w-4 h-4 sm:w-5 sm:h-5 text-emerald-500" />;
+      case 'announcement': return <Megaphone className="w-4 h-4 sm:w-5 sm:h-5 text-orange-500" />;
       case 'badge': return <CheckCircle2 className="w-4 h-4 sm:w-5 sm:h-5 text-indigo-500" />;
-      default: return <Bell className="w-4 h-4 sm:w-5 sm:h-5" />;
+      default: return <Bell className="w-4 h-4 sm:w-5 sm:h-5 text-indigo-500" />;
     }
   };
 

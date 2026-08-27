@@ -675,20 +675,28 @@ const MessengerPage = ({
     if (!socket) return;
 
     socket.on('receive_direct_message', (message) => {
+      const msgSenderId = message.sender?._id ? message.sender._id.toString() : (message.sender ? message.sender.toString() : '');
+      const msgReceiverId = message.receiver?._id ? message.receiver._id.toString() : (message.receiver ? message.receiver.toString() : '');
+      const myId = currentUser?._id ? currentUser._id.toString() : '';
+      const partnerId = activePartner?._id ? activePartner._id.toString() : '';
+
       if (activePartner && !activePartner.isGroup && (
-        (message.sender === activePartner._id && message.receiver === currentUser?._id) ||
-        (message.sender === currentUser?._id && message.receiver === activePartner._id)
+        (msgSenderId === partnerId && msgReceiverId === myId) ||
+        (msgSenderId === myId && msgReceiverId === partnerId)
       )) {
         setMessages((prev) => [...prev, message]);
-        if (message.receiver === currentUser?._id && message.sender === activePartner._id) {
-          socket.emit('read_messages', { senderId: activePartner._id, receiverId: currentUser._id });
+        if (msgReceiverId === myId && msgSenderId === partnerId) {
+          socket.emit('read_messages', { senderId: partnerId, receiverId: myId });
+          window.dispatchEvent(new CustomEvent('messages_read_update'));
         }
       }
       fetchUsers();
     });
 
     socket.on('receive_group_message', (message) => {
-      if (activePartner && activePartner.isGroup && message.group === activePartner._id) {
+      const activeGroupId = activePartner?._id ? activePartner._id.toString() : '';
+      const msgGroupId = message.group?._id ? message.group._id.toString() : (message.group ? message.group.toString() : '');
+      if (activePartner && activePartner.isGroup && msgGroupId === activeGroupId) {
         setMessages((prev) => [...prev, message]);
       }
       fetchUsers();
@@ -860,6 +868,7 @@ const MessengerPage = ({
         if (!partner.isGroup && socket) {
           socket.emit('read_messages', { senderId: partner._id, receiverId: currentUser?._id });
         }
+        window.dispatchEvent(new CustomEvent('messages_read_update'));
       }
     } catch (err) {
       console.error('Failed to load chat history:', err);
