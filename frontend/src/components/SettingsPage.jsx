@@ -927,7 +927,7 @@ const SettingsPage = ({
                             )}
                             <div>
                               <span className="font-bold text-xs text-slate-800 dark:text-white block">{u.name}</span>
-                              <span className="text-[9px] text-slate-400 dark:text-slate-500 block">{u.phoneOrEmail}</span>
+                              <span className="text-[9px] text-slate-400 dark:text-slate-500 block">@{u.username || 'user'}</span>
                             </div>
                           </div>
                           <button
@@ -964,7 +964,7 @@ const SettingsPage = ({
                           )}
                           <div>
                             <span className="font-bold text-xs text-slate-800 dark:text-white block">{u.name}</span>
-                            <span className="text-[9px] text-slate-400 dark:text-slate-500 block">{u.phoneOrEmail}</span>
+                            <span className="text-[9px] text-slate-400 dark:text-slate-500 block">@{u.username || 'user'}</span>
                           </div>
                         </div>
                         <button

@@ -436,19 +436,32 @@ exports.toggleLikePost = async (req, res) => {
     }
 
     const userId = req.user._id;
-    const isLiked = post.likes.includes(userId);
+    if (!post.likes) post.likes = [];
+    if (!post.reactions) post.reactions = [];
+
+    const isLiked = post.likes.some(id => id.toString() === userId.toString());
 
     if (isLiked) {
+      // Remove like
       post.likes = post.likes.filter(id => id.toString() !== userId.toString());
+      post.reactions = post.reactions.filter(r => r.user.toString() !== userId.toString());
     } else {
+      // Add like
       post.likes.push(userId);
+      const existingReaction = post.reactions.find(r => r.user.toString() === userId.toString());
+      if (existingReaction) {
+        existingReaction.type = 'love';
+      } else {
+        post.reactions.push({ user: userId, type: 'love' });
+      }
+
       // Trigger notification for post author (if not own post)
       if (post.authorId && post.authorId.toString() !== userId.toString()) {
         try {
           await createNotification(
             post.authorId,
             'New Like! ❤️',
-            `${req.user.name || 'A user'} liked your post: "${post.content ? post.content.substring(0, 30) : 'post'}${post.content && post.content.length > 30 ? '...' : ''}"`,
+            `${req.user.name || 'A user'} reacted ❤️ to your post: "${post.content ? post.content.substring(0, 30) : 'post'}${post.content && post.content.length > 30 ? '...' : ''}"`,
             'like',
             post._id,
             userId

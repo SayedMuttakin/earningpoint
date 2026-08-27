@@ -2932,7 +2932,7 @@ const MessengerPage = ({
                           )}
                           <div>
                             <p className="font-bold text-sm leading-tight">{user.name}</p>
-                            <p className="text-[10px] text-slate-400 truncate max-w-[150px] mt-0.5">{user.phoneOrEmail}</p>
+                            <p className="text-[10px] text-slate-400 truncate max-w-[150px] mt-0.5">@{user.username || 'user'}</p>
                           </div>
                         </div>
 

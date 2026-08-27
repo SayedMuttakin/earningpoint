@@ -276,19 +276,20 @@ exports.searchUsers = async (req, res) => {
       _id: { $ne: currentUserId },
       $or: orConditions
     })
-    .select('name username referralCode phoneOrEmail profilePic isPremium')
+    .select('name username referralCode profilePic isPremium isEmailVerified verificationBadge')
     .limit(20);
 
     const mappedUsers = users.map(u => {
       const isFollowing = followingIds.includes(u._id.toString());
-      const displayUsername = u.username || (u.referralCode ? u.referralCode.toLowerCase() : (u.phoneOrEmail ? (u.phoneOrEmail.includes('@') ? u.phoneOrEmail.split('@')[0] : u.phoneOrEmail) : 'user'));
+      const displayUsername = u.username || (u.referralCode ? u.referralCode.toLowerCase() : 'user');
       return {
         _id: u._id,
         name: u.name || displayUsername || 'User',
         username: displayUsername,
-        phoneOrEmail: u.phoneOrEmail || '',
         profilePic: u.profilePic || '',
         isPremium: u.isPremium || false,
+        isEmailVerified: u.isEmailVerified || false,
+        verificationBadge: u.verificationBadge || (u.isEmailVerified ? 'blue' : 'none'),
         isFollowing
       };
     });

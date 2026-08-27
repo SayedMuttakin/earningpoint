@@ -99,7 +99,10 @@ const ReelCard = ({ video, isActive, isMuted, toggleMute, currentUserId, onLikeT
     setTimeout(() => setShowHeartPop(false), 800);
     
     // Toggle like if not already liked
-    const userHasLiked = video.likes?.includes(currentUserId);
+    const userHasLiked = (video.likes || []).some(id => {
+      const idStr = typeof id === 'object' && id?._id ? id._id.toString() : id.toString();
+      return currentUserId && idStr === currentUserId.toString();
+    });
     if (!userHasLiked) {
       triggerLike();
     }
@@ -112,7 +115,10 @@ const ReelCard = ({ video, isActive, isMuted, toggleMute, currentUserId, onLikeT
     setIsLiking(false);
   };
 
-  const hasLiked = video.likes?.includes(currentUserId);
+  const hasLiked = (video.likes || []).some(id => {
+    const idStr = typeof id === 'object' && id?._id ? id._id.toString() : id.toString();
+    return currentUserId && idStr === currentUserId.toString();
+  });
   const creatorId = video.authorId?._id ? String(video.authorId._id) : String(video.authorId);
   const isCreatorFollowing = currentUser?.following?.some(id => String(id) === creatorId);
   const isSelf = creatorId === String(currentUserId);
@@ -509,15 +515,17 @@ const VideoReelsPage = ({ selectedReelId, onBack }) => {
       });
       const data = await res.json();
       if (res.ok) {
+        const userIdStr = currentUser?._id ? currentUser._id.toString() : '';
         setVideos(prev =>
           prev.map(v => {
             if (v._id === postId) {
-              const userLiked = v.likes?.includes(currentUser?._id);
-              let newLikes = v.likes || [];
-              if (userLiked) {
-                newLikes = newLikes.filter(id => id !== currentUser?._id);
+              let newLikes = (v.likes || []).map(id => typeof id === 'object' && id?._id ? id._id.toString() : id.toString());
+              if (data.isLiked) {
+                if (userIdStr && !newLikes.includes(userIdStr)) {
+                  newLikes.push(userIdStr);
+                }
               } else {
-                newLikes = [...newLikes, currentUser?._id];
+                newLikes = newLikes.filter(id => id !== userIdStr);
               }
               return { ...v, likes: newLikes };
             }

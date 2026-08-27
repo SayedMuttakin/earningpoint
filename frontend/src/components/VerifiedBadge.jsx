@@ -76,12 +76,10 @@ const VerifiedBadge = ({ className = "", size, iconClassName, type = "blue" }) =
                 )}
 
                 <h3 className="text-xl font-bold text-slate-900 dark:text-white text-center mb-2">
-                  {isGolden ? 'Golden Verified Account' : 'Verified Account'}
+                  Verified Account
                 </h3>
                 <p className="text-[#536471] dark:text-slate-400 text-[15px] text-center mb-8 leading-relaxed">
-                  {isGolden
-                    ? 'This account has been awarded a Golden Verified Badge by Zenivio in recognition of its premium status and elite standing.'
-                    : `This account has been verified by Zenivio. The badge confirms the authenticity and trustworthiness of this ${isSvgBadge ? 'user' : 'official entity'}.`}
+                  This account has been verified by Zenivio in recognition of its authentic, trustworthy, and verified status.
                 </p>
                 <button
                   onClick={() => setShowPopup(false)}

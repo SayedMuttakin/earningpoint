@@ -467,9 +467,23 @@ const CommunityPostCard = ({ post, onFollowToggle, onLikeToggle, onCommentClick,
   const [isPlaying, setIsPlaying] = useState(false);
   const [showMenu, setShowMenu] = useState(false);
   const [isSaved, setIsSaved] = useState(post.isSaved || false);
-  const [isLiked, setIsLiked] = useState(() => (post.likes || []).some(id => id.toString() === currentUserId));
+
+  const userHasLiked = React.useMemo(() => {
+    if (!currentUserId || !post?.likes) return false;
+    return (post.likes || []).some(id => {
+      const idStr = typeof id === 'object' && id?._id ? id._id.toString() : id.toString();
+      return idStr === currentUserId.toString();
+    });
+  }, [post?.likes, currentUserId]);
+
+  const [isLiked, setIsLiked] = useState(userHasLiked);
+
+  React.useEffect(() => {
+    setIsLiked(userHasLiked);
+  }, [userHasLiked]);
+
   const [showReactionPicker, setShowReactionPicker] = useState(false);
-  const [currentReaction, setCurrentReaction] = useState(post.userReaction || (isLiked ? 'love' : null));
+  const [currentReaction, setCurrentReaction] = useState(post.userReaction || (userHasLiked ? 'love' : null));
   const videoRef = useRef(null);
 
   const handleReactSelect = async (type) => {
@@ -504,6 +518,7 @@ const CommunityPostCard = ({ post, onFollowToggle, onLikeToggle, onCommentClick,
       }
     } catch (err) {
       console.error('Failed to toggle like:', err);
+      setIsLiked(userHasLiked);
     } finally {
       setIsLiking(false);
     }
@@ -1510,18 +1525,18 @@ const HomePage = ({ setActiveTab, setSelectedNewsId, setActiveChatPartner, setSe
       });
       if (res.ok) {
         const data = await res.json(); // { likesCount, isLiked }
+        const userIdStr = currentUser?._id ? currentUser._id.toString() : '';
         
         setFeedPosts(prev => {
           const updated = prev.map(p => {
             if (p._id === postId) {
-              const userId = currentUser?._id;
-              let newLikes = p.likes || [];
+              let newLikes = (p.likes || []).map(id => typeof id === 'object' && id?._id ? id._id.toString() : id.toString());
               if (data.isLiked) {
-                if (userId && !newLikes.includes(userId)) {
-                  newLikes = [...newLikes, userId];
+                if (userIdStr && !newLikes.includes(userIdStr)) {
+                  newLikes = [...newLikes, userIdStr];
                 }
               } else {
-                newLikes = newLikes.filter(id => id.toString() !== userId?.toString());
+                newLikes = newLikes.filter(id => id !== userIdStr);
               }
               return { ...p, likes: newLikes };
             }
@@ -1648,8 +1663,13 @@ const HomePage = ({ setActiveTab, setSelectedNewsId, setActiveChatPartner, setSe
                             </div>
                           )}
                           <div className="min-w-0">
-                            <span className="text-xs font-black text-slate-850 dark:text-slate-200 block truncate leading-tight">{user.name}</span>
-                            <span className="text-[10px] text-slate-400 font-bold block truncate">{user.phoneOrEmail}</span>
+                            <div className="flex items-center gap-1">
+                              <span className="text-xs font-black text-slate-850 dark:text-slate-200 truncate leading-tight">{user.name}</span>
+                              {(user.verificationBadge === 'golden' || user.verificationBadge === 'blue' || user.isEmailVerified) && (
+                                <VerifiedBadge size="w-3.5 h-3.5" type={user.verificationBadge === 'golden' ? 'golden' : 'blue'} />
+                              )}
+                            </div>
+                            <span className="text-[10px] text-slate-400 font-bold block truncate">@{user.username || 'user'}</span>
                           </div>
                         </button>
 
