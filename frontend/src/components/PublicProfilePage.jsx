@@ -62,6 +62,17 @@ const formatRelativeTime = (dateStr) => {
   }
 };
 
+const formatDob = (dobStr) => {
+  if (!dobStr) return '';
+  try {
+    const d = new Date(dobStr);
+    if (isNaN(d.getTime())) return dobStr;
+    return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+  } catch (e) {
+    return dobStr;
+  }
+};
+
 // Client-side image compression helper
 const compressImage = (base64Str, maxWidth = 1024, maxHeight = 1024, quality = 0.7) => {
   return new Promise((resolve) => {
