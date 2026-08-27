@@ -7,6 +7,7 @@ import {
 import { io } from 'socket.io-client';
 import { API_BASE, getImageUrl } from '../config';
 import PullToRefresh from './PullToRefresh';
+import VerifiedBadge from './VerifiedBadge';
 
 const EMOJIS = [
   '😀', '😃', '😄', '😁', '😆', '😅', '😂', '🤣', '😊', '😇',
@@ -852,6 +853,29 @@ const MessengerPage = ({
     setIsPartnerTyping(false);
     setTypingGroupMembers([]);
     if (setActiveChatPartner) setActiveChatPartner(partner);
+
+    // Fetch fresh profile details for direct partner to ensure verified badge is up-to-date
+    if (!partner.isGroup && partner._id) {
+      try {
+        const token = localStorage.getItem('token');
+        fetch(`${API_BASE}/api/profile/${partner._id}`, {
+          headers: { Authorization: `Bearer ${token}` }
+        })
+          .then(r => r.ok ? r.json() : null)
+          .then(d => {
+            if (d?.user) {
+              setActivePartner(prev => (prev && prev._id === partner._id) ? {
+                ...prev,
+                verificationBadge: d.user.verificationBadge || (d.user.isEmailVerified ? 'blue' : 'none'),
+                isEmailVerified: d.user.isEmailVerified,
+                profilePic: d.user.profilePic || prev.profilePic,
+                name: d.user.name || prev.name
+              } : prev);
+            }
+          })
+          .catch(() => {});
+      } catch (e) {}
+    }
 
     try {
       const token = localStorage.getItem('token');
@@ -1778,8 +1802,11 @@ const MessengerPage = ({
                             
                             {/* Chat Detail text */}
                             <div className="min-w-0 flex-1">
-                              <h3 className="font-black text-slate-800 dark:text-slate-100 text-[15px] truncate leading-tight">
-                                {chat.name}
+                              <h3 className="font-black text-slate-800 dark:text-slate-100 text-[15px] truncate leading-tight flex items-center gap-1">
+                                <span className="truncate">{chat.name}</span>
+                                {((chat.verificationBadge === 'blue' || chat.verificationBadge === 'golden') || (chat.isEmailVerified && chat.verificationBadge !== 'none')) && (
+                                  <VerifiedBadge type={chat.verificationBadge === 'golden' ? 'golden' : 'blue'} iconClassName="w-3.5 h-3.5 text-blue-500 fill-blue-500 flex-shrink-0" />
+                                )}
                               </h3>
                               <p className="text-xs text-slate-400 dark:text-slate-500 truncate mt-1 leading-none">
                                 {chat.lastMessage || 'No messages yet'}
@@ -1829,9 +1856,12 @@ const MessengerPage = ({
                                 <div className="min-w-0 flex-1">
                                   <div className="flex items-center justify-between">
                                     <h2 className="text-[14px] font-extrabold text-slate-900 dark:text-white truncate flex items-center gap-1">
-                                      {user.name}
+                                      <span className="truncate">{user.name}</span>
+                                      {((user.verificationBadge === 'blue' || user.verificationBadge === 'golden') || (user.isEmailVerified && user.verificationBadge !== 'none')) && (
+                                        <VerifiedBadge type={user.verificationBadge === 'golden' ? 'golden' : 'blue'} iconClassName="w-3.5 h-3.5 text-blue-500 fill-blue-500 flex-shrink-0" />
+                                      )}
                                       {user.username && (
-                                        <span className="text-[11px] font-mono text-slate-400 font-normal">
+                                        <span className="text-[11px] font-mono text-slate-400 font-normal shrink-0">
                                           @{user.username}
                                         </span>
                                       )}
@@ -1902,7 +1932,10 @@ const MessengerPage = ({
 
                 <div>
                   <h1 className="text-base sm:text-lg font-black text-slate-855 dark:text-white flex items-center gap-1.5 leading-tight">
-                    {activePartner.name}
+                    <span>{activePartner.name}</span>
+                    {((activePartner.verificationBadge === 'blue' || activePartner.verificationBadge === 'golden') || (activePartner.isEmailVerified && activePartner.verificationBadge !== 'none')) && (
+                      <VerifiedBadge type={activePartner.verificationBadge === 'golden' ? 'golden' : 'blue'} iconClassName="w-4 h-4 text-blue-500 fill-blue-500 flex-shrink-0" />
+                    )}
                   </h1>
                   {activePartner.isGroup || onlineUsers.includes(activePartner._id?.toString()) ? (
                     <p className="text-[10.5px] font-bold text-emerald-500 flex items-center gap-1 mt-0.5 animate-pulse">
@@ -1989,7 +2022,12 @@ const MessengerPage = ({
                   <div className="w-16 h-16 rounded-full bg-slate-100 dark:bg-slate-900 flex items-center justify-center mb-2 shadow-xs">
                     {activePartner.name.charAt(0).toUpperCase()}
                   </div>
-                  <h3 className="font-black text-slate-800 dark:text-white">{activePartner.name}</h3>
+                  <h3 className="font-black text-slate-800 dark:text-white flex items-center justify-center gap-1">
+                    <span>{activePartner.name}</span>
+                    {((activePartner.verificationBadge === 'blue' || activePartner.verificationBadge === 'golden') || (activePartner.isEmailVerified && activePartner.verificationBadge !== 'none')) && (
+                      <VerifiedBadge type={activePartner.verificationBadge === 'golden' ? 'golden' : 'blue'} iconClassName="w-4 h-4 text-blue-500 fill-blue-500 flex-shrink-0" />
+                    )}
+                  </h3>
                   <p className="text-xs text-slate-400 mt-1">Start your conversation with {activePartner.name} now.</p>
                 </div>
               ) : (
@@ -2931,7 +2969,12 @@ const MessengerPage = ({
                             </div>
                           )}
                           <div>
-                            <p className="font-bold text-sm leading-tight">{user.name}</p>
+                            <p className="font-bold text-sm leading-tight flex items-center gap-1">
+                              <span>{user.name}</span>
+                              {((user.verificationBadge === 'blue' || user.verificationBadge === 'golden') || (user.isEmailVerified && user.verificationBadge !== 'none')) && (
+                                <VerifiedBadge type={user.verificationBadge === 'golden' ? 'golden' : 'blue'} iconClassName="w-3.5 h-3.5 text-blue-500 fill-blue-500 flex-shrink-0" />
+                              )}
+                            </p>
                             <p className="text-[10px] text-slate-400 truncate max-w-[150px] mt-0.5">@{user.username || 'user'}</p>
                           </div>
                         </div>

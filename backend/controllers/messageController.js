@@ -26,7 +26,7 @@ exports.getUsers = async (req, res) => {
 
     const users = await User.find({ 
       _id: { $in: relatedUserIds, $ne: currentUserId, $nin: excludeIds } 
-    }).select('name phoneOrEmail profilePic isPremium');
+    }).select('name phoneOrEmail profilePic isPremium isEmailVerified verificationBadge username');
 
     const directChats = await Promise.all(users.map(async (u) => {
       const lastMsg = await Message.findOne({
@@ -45,9 +45,12 @@ exports.getUsers = async (req, res) => {
         _id: u._id,
         isGroup: false,
         name: u.name || u.phoneOrEmail || 'User',
-        phoneOrEmail: u.phoneOrEmail || '',
+        username: u.username || '',
+        phoneOrEmail: '',
         profilePic: u.profilePic || '',
         isPremium: u.isPremium || false,
+        isEmailVerified: u.isEmailVerified || false,
+        verificationBadge: u.verificationBadge || (u.isEmailVerified ? 'blue' : 'none'),
         lastMessage: lastMsg ? lastMsg.content : '',
         lastMessageTime: lastMsg ? lastMsg.createdAt : null,
         lastMessageSender: lastMsg ? lastMsg.sender : null,
@@ -166,7 +169,7 @@ exports.getGroupHistory = async (req, res) => {
 
     const messages = await Message.find({ group: groupId })
       .sort({ createdAt: 1 })
-      .populate('sender', 'name profilePic');
+      .populate('sender', 'name profilePic username isEmailVerified verificationBadge');
 
     // Mark group messages as read for this user
     await Message.updateMany(
@@ -430,7 +433,7 @@ exports.sendMessage = async (req, res) => {
     });
 
     const populatedMessage = await Message.findById(savedMessage._id)
-      .populate('sender', 'name profilePic username');
+      .populate('sender', 'name profilePic username isEmailVerified verificationBadge');
 
     // Broadcast via socket
     try {
