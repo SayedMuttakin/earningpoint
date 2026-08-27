@@ -1,4 +1,4 @@
-﻿import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { Download, X, Loader2, ZoomIn, ZoomOut, RotateCcw } from 'lucide-react';
 
 const ImagePreviewModal = ({ imageUrl, onClose }) => {
@@ -9,6 +9,25 @@ const ImagePreviewModal = ({ imageUrl, onClose }) => {
   const dragStartRef = useRef({ x: 0, y: 0 });
   const initialTouchDistanceRef = useRef(null);
   const initialTouchScaleRef = useRef(1);
+
+  // Close on Android native back button or Desktop Escape key
+  useEffect(() => {
+    const handleAppBackButton = (e) => {
+      e.preventDefault();
+      onClose();
+    };
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape') onClose();
+    };
+
+    window.addEventListener('appBackButton', handleAppBackButton);
+    window.addEventListener('keydown', handleKeyDown);
+
+    return () => {
+      window.removeEventListener('appBackButton', handleAppBackButton);
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [onClose]);
 
   const handleDownload = async (e) => {
     e.stopPropagation();

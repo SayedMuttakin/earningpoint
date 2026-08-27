@@ -971,12 +971,16 @@ const PublicProfilePage = ({ userId, onBack, currentUser, isOwnProfile, setActiv
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 pb-24 text-slate-850 dark:text-slate-100 flex flex-col no-scrollbar">
       {/* Main Cover Banner */}
-      <div className="relative w-full h-44 sm:h-52 bg-slate-200 dark:bg-slate-800 overflow-hidden group">
+      <div 
+        onClick={() => profile.coverPic && setPreviewImageUrl(getImageUrl(profile.coverPic))}
+        className={`relative w-full h-44 sm:h-52 bg-slate-200 dark:bg-slate-800 overflow-hidden group ${profile.coverPic ? 'cursor-pointer' : ''}`}
+        title={profile.coverPic ? "Click to view and zoom cover banner" : ""}
+      >
         {profile.coverPic ? (
           <img
             src={getImageUrl(profile.coverPic)}
             alt="Cover banner"
-            className="w-full h-full object-cover"
+            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
           />
         ) : (
           <div className="w-full h-full bg-gradient-to-r from-violet-600 via-indigo-600 to-purple-700 flex items-center justify-center opacity-90">
@@ -985,7 +989,8 @@ const PublicProfilePage = ({ userId, onBack, currentUser, isOwnProfile, setActiv
         )}
 
         <button
-          onClick={() => {
+          onClick={(e) => {
+            e.stopPropagation();
             if (onBack) {
               onBack();
             } else if (setActiveTab) {
@@ -1001,10 +1006,14 @@ const PublicProfilePage = ({ userId, onBack, currentUser, isOwnProfile, setActiv
 
       {/* Centered Avatar and Info Overlap */}
       <div className="relative flex flex-col items-center px-4 -mt-14 sm:-mt-16">
-        <div className="relative group">
+        <div 
+          onClick={() => profile.profilePic && setPreviewImageUrl(getImageUrl(profile.profilePic))}
+          className={`relative group ${profile.profilePic ? 'cursor-pointer' : ''}`}
+          title={profile.profilePic ? "Click to view and zoom profile photo" : ""}
+        >
           {/* Glowing ring/border */}
           <div className="p-1 bg-gradient-to-tr from-[#00ffff] via-[#818cf8] to-[#c084fc] rounded-full shadow-xl">
-            <div className="w-28 h-28 sm:w-32 sm:h-32 rounded-full overflow-hidden border-4 border-white dark:border-slate-950 bg-slate-100 flex items-center justify-center relative">
+            <div className="w-28 h-28 sm:w-32 sm:h-32 rounded-full overflow-hidden border-4 border-white dark:border-slate-950 bg-slate-100 flex items-center justify-center relative hover:scale-105 active:scale-95 transition-transform duration-200">
               {profile.profilePic ? (
                 <img
                   src={getImageUrl(profile.profilePic)}
@@ -1059,14 +1068,14 @@ const PublicProfilePage = ({ userId, onBack, currentUser, isOwnProfile, setActiv
                   rel="noopener noreferrer"
                   className="flex items-center gap-1 text-indigo-600 dark:text-indigo-400 hover:underline"
                 >
-                  <LinkIcon className="w-3.5 h-3.5" />
-                  <span className="truncate max-w-[150px]">{profile.website.replace(/(^\w+:|^)\/\//, '')}</span>
+                  <Globe className="w-3.5 h-3.5" />
+                  <span className="truncate max-w-[150px]">{profile.website.replace(/^https?:\/\//, '')}</span>
                 </a>
               )}
               {profile.dob && (
                 <span className="flex items-center gap-1">
-                  <Calendar className="w-3.5 h-3.5 text-pink-500 animate-pulse" />
-                  <span>{new Date(profile.dob).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</span>
+                  <Calendar className="w-3.5 h-3.5 text-indigo-500" />
+                  <span>{formatDob(profile.dob)}</span>
                 </span>
               )}
               {profile.gender && (
@@ -1083,9 +1092,13 @@ const PublicProfilePage = ({ userId, onBack, currentUser, isOwnProfile, setActiv
       {/* Profile Statistics counts card */}
       <div className="max-w-md mx-auto w-full px-4 mt-5">
         <div className="bg-white dark:bg-slate-900/60 backdrop-blur-md rounded-3xl p-4 flex justify-around text-center shadow-xs border border-slate-100 dark:border-slate-800/50">
-          <div className="flex-1">
-            <span className="text-base font-black text-slate-900 dark:text-white block">{totalPosts}</span>
-            <span className="text-[10px] text-slate-400 font-bold block mt-0.5 uppercase tracking-wider">Posts</span>
+          <div 
+            onClick={() => setFollowListModal('following')}
+            className="flex-1 cursor-pointer hover:opacity-80 transition-opacity"
+            title="View Following"
+          >
+            <span className="text-base font-black text-slate-900 dark:text-white block">{formatCount(profile.followingCount)}</span>
+            <span className="text-[10px] text-slate-400 font-bold block mt-0.5 uppercase tracking-wider">Following</span>
           </div>
           <div 
             onClick={() => setFollowListModal('followers')}
@@ -1095,13 +1108,9 @@ const PublicProfilePage = ({ userId, onBack, currentUser, isOwnProfile, setActiv
             <span className="text-base font-black text-slate-900 dark:text-white block">{formatCount(profile.followersCount)}</span>
             <span className="text-[10px] text-slate-400 font-bold block mt-0.5 uppercase tracking-wider">Followers</span>
           </div>
-          <div 
-            onClick={() => setFollowListModal('following')}
-            className="flex-1 cursor-pointer hover:opacity-80 transition-opacity"
-            title="View Following"
-          >
-            <span className="text-base font-black text-slate-900 dark:text-white block">{formatCount(profile.followingCount)}</span>
-            <span className="text-[10px] text-slate-400 font-bold block mt-0.5 uppercase tracking-wider">Following</span>
+          <div className="flex-1">
+            <span className="text-base font-black text-slate-900 dark:text-white block">{totalPosts}</span>
+            <span className="text-[10px] text-slate-400 font-bold block mt-0.5 uppercase tracking-wider">Posts</span>
           </div>
         </div>
       </div>
@@ -2064,14 +2073,6 @@ const PublicProfilePage = ({ userId, onBack, currentUser, isOwnProfile, setActiv
         accept="image/*"
         onChange={handleCoverUpload}
       />
-
-      {/* Full Screen Image Preview Modal */}
-      {previewImageUrl && (
-        <ImagePreviewModal 
-          imageUrl={previewImageUrl} 
-          onClose={() => setPreviewImageUrl(null)} 
-        />
-      )}
 
       {/* Toast Notification */}
       {showToast && (
