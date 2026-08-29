@@ -1,15 +1,46 @@
 const Notification = require('../models/Notification');
+const User = require('../models/User');
 
 // @desc    Get all notifications for a user
 // @route   GET /api/notifications
 // @access  Private
 exports.getNotifications = async (req, res) => {
   try {
-    const notifications = await Notification.find({ userId: req.user._id })
+    const currentUserId = req.user._id;
+    const currentUser = await User.findById(currentUserId).select('following');
+    const followingIds = (currentUser?.following || []).map(id => id.toString());
+
+    const notifications = await Notification.find({ userId: currentUserId })
+      .populate('senderId', 'name username profilePic googleAvatar facebookAvatar isEmailVerified verificationBadge')
+      .populate('postId', 'content image')
       .sort({ createdAt: -1 })
       .limit(50)
       .lean();
-    res.json(notifications);
+
+    const mappedNotifications = notifications.map(n => {
+      const s = n.senderId;
+      let senderObj = null;
+      if (s && typeof s === 'object') {
+        const sId = s._id ? s._id.toString() : '';
+        const isFollowing = followingIds.includes(sId);
+        senderObj = {
+          _id: sId,
+          name: s.name,
+          username: s.username || '',
+          profilePic: s.profilePic || s.googleAvatar || s.facebookAvatar || '',
+          isEmailVerified: Boolean(s.isEmailVerified),
+          verificationBadge: s.verificationBadge || (s.isEmailVerified ? 'blue' : 'none'),
+          isFollowing
+        };
+      }
+      return {
+        ...n,
+        senderId: s && typeof s === 'object' ? s._id.toString() : (s ? s.toString() : null),
+        sender: senderObj
+      };
+    });
+
+    res.json(mappedNotifications);
   } catch (error) {
     res.status(500).json({ message: error.message });
   }

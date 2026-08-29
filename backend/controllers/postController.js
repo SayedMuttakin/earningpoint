@@ -2,6 +2,38 @@ const Post = require('../models/Post');
 const User = require('../models/User');
 const { createNotification } = require('./notificationController');
 
+const enrichComments = (comments = []) => {
+  return comments.map(c => {
+    const u = c.user;
+    const isUserPopulated = u && typeof u === 'object';
+    const verificationBadge = (isUserPopulated && u.verificationBadge && u.verificationBadge !== 'none') 
+      ? u.verificationBadge 
+      : (c.verificationBadge && c.verificationBadge !== 'none' ? c.verificationBadge : (isUserPopulated && u.isEmailVerified ? 'blue' : (c.isEmailVerified ? 'blue' : 'none')));
+    const isEmailVerified = Boolean(isUserPopulated ? u.isEmailVerified : c.isEmailVerified);
+
+    const replies = (c.replies || []).map(r => {
+      const ru = r.user;
+      const isRuPopulated = ru && typeof ru === 'object';
+      const rBadge = (isRuPopulated && ru.verificationBadge && ru.verificationBadge !== 'none')
+        ? ru.verificationBadge
+        : (r.verificationBadge && r.verificationBadge !== 'none' ? r.verificationBadge : (isRuPopulated && ru.isEmailVerified ? 'blue' : (r.isEmailVerified ? 'blue' : 'none')));
+      const rVerified = Boolean(isRuPopulated ? ru.isEmailVerified : r.isEmailVerified);
+      return {
+        ...r,
+        verificationBadge: rBadge,
+        isEmailVerified: rVerified
+      };
+    });
+
+    return {
+      ...c,
+      verificationBadge,
+      isEmailVerified,
+      replies
+    };
+  });
+};
+
 // @desc    Get all posts (Public)
 // @route   GET /api/posts
 // @access  Public
@@ -17,7 +49,10 @@ exports.getPosts = async (req, res) => {
     if (isAdminOnly) {
       postQuery = postQuery.select('_id title content image video category customTime authorName isVerified createdAt');
     } else {
-      postQuery = postQuery.populate('authorId', 'name profilePic googleAvatar facebookAvatar isEmailVerified verificationBadge');
+      postQuery = postQuery
+        .populate('authorId', 'name profilePic googleAvatar facebookAvatar isEmailVerified verificationBadge')
+        .populate('comments.user', 'name username profilePic isEmailVerified verificationBadge')
+        .populate('comments.replies.user', 'name username profilePic isEmailVerified verificationBadge');
     }
 
     const posts = await postQuery.sort({ createdAt: -1 }).limit(30).lean();
@@ -25,6 +60,7 @@ exports.getPosts = async (req, res) => {
       const authorObj = post.authorId;
       return {
         ...post,
+        comments: enrichComments(post.comments || []),
         authorId: authorObj ? (typeof authorObj === 'object' ? authorObj._id.toString() : authorObj.toString()) : null,
         authorDetails: (authorObj && typeof authorObj === 'object') ? {
           name: authorObj.name,
@@ -47,7 +83,10 @@ exports.getPosts = async (req, res) => {
 // @access  Public
 exports.getPostById = async (req, res) => {
   try {
-    const post = await Post.findById(req.params.id).populate('authorId', 'name profilePic googleAvatar facebookAvatar isEmailVerified verificationBadge');
+    const post = await Post.findById(req.params.id)
+      .populate('authorId', 'name profilePic googleAvatar facebookAvatar isEmailVerified verificationBadge')
+      .populate('comments.user', 'name username profilePic isEmailVerified verificationBadge')
+      .populate('comments.replies.user', 'name username profilePic isEmailVerified verificationBadge');
     if (!post) {
       return res.status(404).json({ message: 'Post not found' });
     }
@@ -55,6 +94,7 @@ exports.getPostById = async (req, res) => {
     const authorObj = postObj.authorId;
     res.json({
       ...postObj,
+      comments: enrichComments(postObj.comments || []),
       authorId: authorObj ? authorObj._id.toString() : null,
       authorDetails: authorObj ? {
         name: authorObj.name,
@@ -184,6 +224,8 @@ exports.getPostsFeed = async (req, res) => {
     })
       .populate('authorId', 'name profilePic googleAvatar facebookAvatar isEmailVerified verificationBadge')
       .populate('likes', 'name profilePic googleAvatar facebookAvatar')
+      .populate('comments.user', 'name username profilePic isEmailVerified verificationBadge')
+      .populate('comments.replies.user', 'name username profilePic isEmailVerified verificationBadge')
       .sort({ createdAt: -1 })
       .skip(skip)
       .limit(limit)
@@ -217,6 +259,7 @@ exports.getPostsFeed = async (req, res) => {
 
       return {
         ...post,
+        comments: enrichComments(post.comments || []),
         authorId: authorIdStr,
         authorDetails: authorObj ? {
           name: authorObj.name,
@@ -502,6 +545,8 @@ exports.commentPost = async (req, res) => {
       user: req.user._id,
       userName: req.user.name || 'User',
       userAvatar: req.user.profilePic || req.user.googleAvatar || req.user.facebookAvatar || '',
+      verificationBadge: req.user.verificationBadge || (req.user.isEmailVerified ? 'blue' : 'none'),
+      isEmailVerified: Boolean(req.user.isEmailVerified),
       text,
       createdAt: new Date()
     };
@@ -585,6 +630,8 @@ exports.replyComment = async (req, res) => {
       user: req.user._id,
       userName: req.user.name || 'User',
       userAvatar: req.user.profilePic || req.user.googleAvatar || req.user.facebookAvatar || '',
+      verificationBadge: req.user.verificationBadge || (req.user.isEmailVerified ? 'blue' : 'none'),
+      isEmailVerified: Boolean(req.user.isEmailVerified),
       text,
       replyToUser: replyToUser || comment.userName || '',
       createdAt: new Date()

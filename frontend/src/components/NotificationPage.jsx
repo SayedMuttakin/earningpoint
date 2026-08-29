@@ -15,7 +15,8 @@ import {
   AtSign,
   UserPlus
 } from 'lucide-react';
-import { API_BASE } from '../config';
+import { API_BASE, getImageUrl } from '../config';
+import VerifiedBadge from './VerifiedBadge';
 import PullToRefresh from './PullToRefresh';
 import { playNotificationSound } from '../utils/sound';
 
@@ -38,6 +39,34 @@ const NotificationPage = ({ onBack, setActiveTab, setSelectedNotificationPostId,
   });
   const [refreshing, setRefreshing] = useState(false);
   const [selectedNotification, setSelectedNotification] = useState(null);
+
+  const handleFollowToggle = async (e, senderId) => {
+    e.stopPropagation();
+    if (!senderId) return;
+    try {
+      const token = localStorage.getItem('token');
+      const res = await fetch(`${API_BASE}/api/profile/follow/${senderId}`, {
+        method: 'POST',
+        headers: { 
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}` 
+        }
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setNotifications(prev => prev.map(n => {
+          const sId = n.sender?._id || n.senderId;
+          if (sId === senderId) {
+            const currentSender = n.sender || {};
+            return { ...n, sender: { ...currentSender, _id: senderId, isFollowing: data.isFollowing } };
+          }
+          return n;
+        }));
+      }
+    } catch (err) {
+      console.error('Failed to toggle follow in notification:', err);
+    }
+  };
 
   // Fetch notifications from the backend
   useEffect(() => {
@@ -230,83 +259,147 @@ const NotificationPage = ({ onBack, setActiveTab, setSelectedNotificationPostId,
                 </div>
               ) : (
                 <div className="space-y-3 sm:space-y-4">
-                  {notifications.map((n, idx) => (
-                    <div
-                      key={n._id}
-                      className={`group relative p-4 sm:p-5 rounded-3xl border transition-all flex gap-3 sm:gap-4 animate-fade-in ${
-                        n.isRead 
-                          ? 'bg-white/50 dark:bg-slate-800/50 border-slate-100 dark:border-slate-700 opacity-80' 
-                          : n.type === 'announcement'
-                            ? 'bg-[#FFF7ED] dark:bg-amber-900/20 border-orange-200 dark:border-amber-500/50 shadow-[0_4px_20px_rgba(251,146,60,0.15)] ring-1 ring-orange-400/30'
-                            : 'bg-white dark:bg-slate-800 border-indigo-600/10 dark:border-indigo-600/20 shadow-lg shadow-indigo-600/5 ring-1 ring-indigo-600/5'
-                      }`}
-                      style={{ animationDelay: `${idx * 0.05}s` }}
-                    >
-                      {!n.isRead && (
-                        <div className={`absolute top-4 right-4 sm:top-5 sm:right-5 w-2 h-2 sm:w-2.5 sm:h-2.5 rounded-full ${n.type === 'announcement' ? 'bg-amber-500 shadow-[0_0_15px_rgba(245,158,11,0.5)]' : 'bg-indigo-600 shadow-[0_0_15px_rgba(79,70,229,0.5)]'}`}>
+                  {notifications.map((n, idx) => {
+                    const sender = n.sender;
+                    const senderId = sender?._id || n.senderId;
+                    const hasVerifiedBadge = sender && ((sender.verificationBadge === 'golden' || sender.verificationBadge === 'blue') || (sender.isEmailVerified && sender.verificationBadge !== 'none'));
+                    const isFollowNotif = n.type === 'follow' || (n.title && n.title.toLowerCase().includes('follow'));
+
+                    return (
+                      <div
+                        key={n._id}
+                        className={`group relative p-3.5 sm:p-5 rounded-3xl border transition-all flex items-center gap-3 sm:gap-4 animate-fade-in ${
+                          n.isRead 
+                            ? 'bg-white/50 dark:bg-slate-800/50 border-slate-100 dark:border-slate-700 opacity-80' 
+                            : n.type === 'announcement'
+                              ? 'bg-[#FFF7ED] dark:bg-amber-900/20 border-orange-200 dark:border-amber-500/50 shadow-[0_4px_20px_rgba(251,146,60,0.15)] ring-1 ring-orange-400/30'
+                              : 'bg-white dark:bg-slate-800 border-indigo-600/10 dark:border-indigo-600/20 shadow-lg shadow-indigo-600/5 ring-1 ring-indigo-600/5'
+                        }`}
+                        style={{ animationDelay: `${idx * 0.05}s` }}
+                      >
+                        {!n.isRead && (
+                          <div className={`absolute top-4 right-4 sm:top-5 sm:right-5 w-2 h-2 sm:w-2.5 sm:h-2.5 rounded-full ${n.type === 'announcement' ? 'bg-amber-500 shadow-[0_0_15px_rgba(245,158,11,0.5)]' : 'bg-indigo-600 shadow-[0_0_15px_rgba(79,70,229,0.5)]'}`}>
+                            <div 
+                              className={`absolute inset-0 rounded-full animate-pulse ${n.type === 'announcement' ? 'bg-amber-500' : 'bg-indigo-600'}`}
+                            />
+                          </div>
+                        )}
+                        
+                        {/* Avatar or Notification Icon */}
+                        {sender && sender.profilePic ? (
                           <div 
-                            className={`absolute inset-0 rounded-full animate-pulse ${n.type === 'announcement' ? 'bg-amber-500' : 'bg-indigo-600'}`}
-                          />
-                        </div>
-                      )}
-                      
-                      <div className={`w-12 h-12 sm:w-14 sm:h-14 rounded-2xl flex items-center justify-center shrink-0 transition-all duration-300 ${
-                        n.isRead 
-                          ? 'bg-slate-50 dark:bg-slate-900 text-slate-400' 
-                          : n.type === 'announcement'
-                            ? 'bg-gradient-to-br from-amber-400 to-orange-500 text-white shadow-inner shadow-white/20'
-                            : 'bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 shadow-inner'
-                      }`}>
-                        {getIcon(n.type)}
-                      </div>
-
-                      <div 
-                        className="flex-1 min-w-0 py-0.5 sm:py-1 cursor-pointer" 
-                        onClick={() => {
-                          if (!n.isRead) markAsRead(n._id);
-                          if (n.postId && setSelectedNotificationPostId && setActiveTab) {
-                            const isCommentNotif = n.type === 'comment' || (n.title && n.title.toLowerCase().includes('comment')) || (n.message && n.message.toLowerCase().includes('commented'));
-                            setSelectedNotificationPostId({
-                              postId: n.postId,
-                              openComment: isCommentNotif
-                            });
-                            setActiveTab('Home');
-                            onBack();
-                          } else if ((n.type === 'follow' || n.senderId) && setActivePublicProfileUserId && setActiveTab) {
-                            setActivePublicProfileUserId(n.senderId);
-                            setActiveTab('PublicProfile');
-                            onBack();
-                          } else {
-                            setSelectedNotification(n);
-                          }
-                        }}
-                      >
-                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1.5 sm:gap-2 mb-1 sm:mb-1.5">
-                          <h4 className={`text-[15px] sm:text-base font-black tracking-tight truncate pr-6 sm:pr-8 ${
-                            n.isRead ? 'text-slate-600 dark:text-slate-400' : 'text-slate-900 dark:text-white'
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              if (senderId && setActivePublicProfileUserId && setActiveTab) {
+                                setActivePublicProfileUserId(senderId);
+                                setActiveTab('PublicProfile');
+                                onBack();
+                              }
+                            }}
+                            className="relative w-12 h-12 sm:w-14 sm:h-14 rounded-2xl overflow-hidden shrink-0 shadow-inner cursor-pointer active:scale-95 transition-transform"
+                          >
+                            <img 
+                              src={getImageUrl(sender.profilePic)} 
+                              alt={sender.name || 'User'} 
+                              className="w-full h-full object-cover"
+                              onError={(e) => { e.target.style.display = 'none'; }}
+                            />
+                            <div className={`absolute bottom-0 right-0 p-1 rounded-tl-xl ${
+                              n.type === 'follow' ? 'bg-indigo-600 text-white' :
+                              n.type === 'like' ? 'bg-rose-500 text-white' :
+                              n.type === 'comment' ? 'bg-purple-600 text-white' : 'bg-slate-800 text-white'
+                            }`}>
+                              {getIcon(n.type)}
+                            </div>
+                          </div>
+                        ) : (
+                          <div className={`w-12 h-12 sm:w-14 sm:h-14 rounded-2xl flex items-center justify-center shrink-0 transition-all duration-300 ${
+                            n.isRead 
+                              ? 'bg-slate-50 dark:bg-slate-900 text-slate-400' 
+                              : n.type === 'announcement'
+                                ? 'bg-gradient-to-br from-amber-400 to-orange-500 text-white shadow-inner shadow-white/20'
+                                : 'bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 shadow-inner'
                           }`}>
-                            {n.title}
-                          </h4>
-                          <span className="text-[9px] sm:text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest flex items-center gap-1.5 bg-slate-50 dark:bg-slate-900 px-2 sm:px-2.5 py-0.5 sm:py-1 rounded-full self-start">
-                            <Clock size={10} className="sm:w-3 sm:h-3" /> {formatTime(n.createdAt)}
-                          </span>
-                        </div>
-                        <p className={`text-[13px] sm:text-sm leading-relaxed ${
-                          n.isRead ? 'text-slate-400 dark:text-slate-500' : 'text-slate-500 dark:text-slate-300 font-medium'
-                        }`}>
-                          {n.message}
-                        </p>
-                      </div>
+                            {getIcon(n.type)}
+                          </div>
+                        )}
 
-                      <button 
-                        onClick={() => deleteNotification(n._id)}
-                        className="p-2 sm:p-2.5 text-slate-200 hover:text-rose-500 transition-all rounded-xl hover:bg-rose-50 dark:hover:bg-rose-900/20 flex items-center justify-center self-center"
-                        title="Delete notification"
-                      >
-                        <Trash2 size={16} className="sm:w-5 sm:h-5" />
-                      </button>
-                    </div>
-                  ))}
+                        {/* Text / Message Content */}
+                        <div 
+                          className="flex-1 min-w-0 py-0.5 sm:py-1 cursor-pointer" 
+                          onClick={() => {
+                            if (!n.isRead) markAsRead(n._id);
+                            if (n.postId && setSelectedNotificationPostId && setActiveTab) {
+                              const isCommentNotif = n.type === 'comment' || (n.title && n.title.toLowerCase().includes('comment')) || (n.message && n.message.toLowerCase().includes('commented'));
+                              setSelectedNotificationPostId({
+                                postId: n.postId,
+                                openComment: isCommentNotif
+                              });
+                              setActiveTab('Home');
+                              onBack();
+                            } else if ((isFollowNotif || senderId) && setActivePublicProfileUserId && setActiveTab) {
+                              setActivePublicProfileUserId(senderId);
+                              setActiveTab('PublicProfile');
+                              onBack();
+                            } else {
+                              setSelectedNotification(n);
+                            }
+                          }}
+                        >
+                          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1 sm:gap-2 mb-1">
+                            <h4 className={`text-[14px] sm:text-base font-black tracking-tight truncate pr-4 flex items-center gap-1.5 ${
+                              n.isRead ? 'text-slate-600 dark:text-slate-400' : 'text-slate-900 dark:text-white'
+                            }`}>
+                              <span>{n.title}</span>
+                              {hasVerifiedBadge && (
+                                <VerifiedBadge type={sender.verificationBadge === 'golden' ? 'golden' : 'blue'} iconClassName="w-3.5 h-3.5 flex-shrink-0" />
+                              )}
+                            </h4>
+                            <span className="text-[9px] sm:text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest flex items-center gap-1 bg-slate-50 dark:bg-slate-900 px-2 py-0.5 rounded-full self-start">
+                              <Clock size={10} className="sm:w-3 sm:h-3" /> {formatTime(n.createdAt)}
+                            </span>
+                          </div>
+
+                          <p className={`text-[12px] sm:text-sm leading-relaxed flex flex-wrap items-center gap-1 ${
+                            n.isRead ? 'text-slate-400 dark:text-slate-500' : 'text-slate-600 dark:text-slate-300 font-medium'
+                          }`}>
+                            <span>{n.message}</span>
+                            {hasVerifiedBadge && (
+                              <VerifiedBadge type={sender.verificationBadge === 'golden' ? 'golden' : 'blue'} iconClassName="w-3.5 h-3.5 flex-shrink-0" />
+                            )}
+                          </p>
+                        </div>
+
+                        {/* Action buttons (Follow Back & Delete) */}
+                        <div className="flex items-center gap-1.5 shrink-0 self-center">
+                          {isFollowNotif && senderId && (
+                            <button
+                              onClick={(e) => handleFollowToggle(e, senderId)}
+                              className={`px-3 py-1.5 rounded-full text-xs font-black transition-all flex items-center gap-1 active:scale-95 shadow-sm ${
+                                sender?.isFollowing
+                                  ? 'bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-600 hover:bg-slate-200'
+                                  : 'bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white shadow-indigo-500/20'
+                              }`}
+                            >
+                              <UserPlus size={12} />
+                              <span>{sender?.isFollowing ? 'Following' : 'Follow Back'}</span>
+                            </button>
+                          )}
+
+                          <button 
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              deleteNotification(n._id);
+                            }}
+                            className="p-2 sm:p-2.5 text-slate-300 hover:text-rose-500 transition-all rounded-xl hover:bg-rose-50 dark:hover:bg-rose-900/20 flex items-center justify-center"
+                            title="Delete notification"
+                          >
+                            <Trash2 size={16} className="sm:w-5 sm:h-5" />
+                          </button>
+                        </div>
+                      </div>
+                    );
+                  })}
                 </div>
               )}
             </div>

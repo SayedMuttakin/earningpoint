@@ -93,10 +93,12 @@ const GlobalSettingSchema = new mongoose.Schema({
     ]
   },
   admobConfig: {
+    appId: { type: String, default: 'ca-app-pub-2974645883080760~7728677397' },
     bannerAdUnitId: { type: String, default: '' },
     interstitialAdUnitId: { type: String, default: '' },
     rewardedAdUnitId: { type: String, default: '' },
     appOpenAdUnitId: { type: String, default: '' },
+    nativeAdUnitId: { type: String, default: '' },
     showAds: { type: Boolean, default: true },
     useTestAds: { type: Boolean, default: true }
   },

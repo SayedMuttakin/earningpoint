@@ -186,10 +186,13 @@ const ProfileCommentsDrawer = ({ post, onClose, onCommentSubmit, currentUserId, 
                   <div className="flex-1 bg-slate-50 dark:bg-slate-850 rounded-2xl px-4 py-2.5 relative">
                     <div className="flex items-center justify-between">
                       <button
-                        onClick={() => comment.user && onUserClick && onUserClick(comment.user)}
-                        className="block font-black text-xs text-slate-750 dark:text-slate-350 hover:underline text-left"
+                        onClick={() => comment.user && onUserClick && onUserClick(typeof comment.user === 'object' ? comment.user._id : comment.user)}
+                        className="font-black text-xs text-slate-750 dark:text-slate-350 hover:underline text-left flex items-center gap-1"
                       >
-                        {comment.userName || 'User'}
+                        <span>{comment.userName || 'User'}</span>
+                        {((comment.verificationBadge === 'blue' || comment.verificationBadge === 'golden' || comment.user?.verificationBadge === 'blue' || comment.user?.verificationBadge === 'golden') || ((comment.isEmailVerified || comment.user?.isEmailVerified) && (comment.verificationBadge !== 'none' || comment.user?.verificationBadge !== 'none'))) && (
+                          <VerifiedBadge type={(comment.verificationBadge === 'golden' || comment.user?.verificationBadge === 'golden') ? 'golden' : 'blue'} iconClassName="w-3.5 h-3.5 flex-shrink-0" />
+                        )}
                       </button>
                       <button
                         onClick={() => handleReplyClick(comment._id, comment.userName, comment.user)}
@@ -221,10 +224,13 @@ const ProfileCommentsDrawer = ({ post, onClose, onCommentSubmit, currentUserId, 
                         <div className="flex-1 bg-slate-100/70 dark:bg-slate-800/60 rounded-2xl px-3 py-2 text-xs relative">
                           <div className="flex items-center justify-between">
                             <button
-                              onClick={() => reply.user && onUserClick && onUserClick(reply.user)}
-                              className="font-black text-[11px] text-slate-800 dark:text-slate-200 hover:underline"
+                              onClick={() => reply.user && onUserClick && onUserClick(typeof reply.user === 'object' ? reply.user._id : reply.user)}
+                              className="font-black text-[11px] text-slate-800 dark:text-slate-200 hover:underline flex items-center gap-1"
                             >
-                              {reply.userName}
+                              <span>{reply.userName}</span>
+                              {((reply.verificationBadge === 'blue' || reply.verificationBadge === 'golden' || reply.user?.verificationBadge === 'blue' || reply.user?.verificationBadge === 'golden') || ((reply.isEmailVerified || reply.user?.isEmailVerified) && (reply.verificationBadge !== 'none' || reply.user?.verificationBadge !== 'none'))) && (
+                                <VerifiedBadge type={(reply.verificationBadge === 'golden' || reply.user?.verificationBadge === 'golden') ? 'golden' : 'blue'} iconClassName="w-3 h-3 flex-shrink-0" />
+                              )}
                             </button>
                             <button
                               onClick={() => handleReplyClick(comment._id, reply.userName, reply.user)}

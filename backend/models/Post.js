@@ -90,6 +90,15 @@ const PostSchema = new mongoose.Schema({
       type: String,
       default: ''
     },
+    verificationBadge: {
+      type: String,
+      enum: ['none', 'blue', 'golden'],
+      default: 'none'
+    },
+    isEmailVerified: {
+      type: Boolean,
+      default: false
+    },
     text: {
       type: String,
       required: true
@@ -111,6 +120,15 @@ const PostSchema = new mongoose.Schema({
       userAvatar: {
         type: String,
         default: ''
+      },
+      verificationBadge: {
+        type: String,
+        enum: ['none', 'blue', 'golden'],
+        default: 'none'
+      },
+      isEmailVerified: {
+        type: Boolean,
+        default: false
       },
       text: {
         type: String,

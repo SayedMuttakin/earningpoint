@@ -272,6 +272,26 @@ const Settings = ({ ADMIN_API, authHeaders, onLogout }) => {
             </div>
           </div>
 
+          {/* AdMob App ID Field */}
+          <div className="p-4 bg-indigo-950/20 rounded-xl border border-indigo-500/20">
+            <div className="flex items-center justify-between mb-2">
+              <label className="text-indigo-300 text-xs font-black uppercase tracking-wider flex items-center gap-1.5">
+                <span>📱</span> AdMob App ID (Application ID)
+              </label>
+              <span className="text-[10px] text-slate-400 font-mono">Format: ca-app-pub-xxxxx~xxxxx</span>
+            </div>
+            <input 
+              type="text" 
+              value={globalSettings.admobConfig?.appId || ''} 
+              onChange={(e) => setGlobalSettings({...globalSettings, admobConfig: {...globalSettings.admobConfig, appId: e.target.value}})}
+              placeholder="ca-app-pub-2974645883080760~7728677397"
+              className="w-full bg-slate-800/90 border border-indigo-500/30 focus:border-indigo-500 rounded-xl px-4 py-3 text-white text-sm outline-none font-mono" 
+            />
+            <p className="text-[11px] text-slate-400 mt-1.5 leading-relaxed">
+              Your Google AdMob App ID contains a tilde (<code className="text-amber-400">~</code>). Ad Unit IDs contain a slash (<code className="text-amber-400">/</code>).
+            </p>
+          </div>
+
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <label className="text-slate-400 text-xs font-bold uppercase tracking-wider block mb-2">Banner Ad Unit ID</label>
@@ -280,7 +300,7 @@ const Settings = ({ ADMIN_API, authHeaders, onLogout }) => {
                 value={globalSettings.admobConfig?.bannerAdUnitId || ''} 
                 onChange={(e) => setGlobalSettings({...globalSettings, admobConfig: {...globalSettings.admobConfig, bannerAdUnitId: e.target.value}})}
                 placeholder="ca-app-pub-xxxxx/xxxxx"
-                className="w-full bg-slate-800 border border-slate-700 focus:border-indigo-500 rounded-xl px-4 py-3 text-white text-sm outline-none" 
+                className="w-full bg-slate-800 border border-slate-700 focus:border-indigo-500 rounded-xl px-4 py-3 text-white text-sm outline-none font-mono" 
               />
             </div>
             <div>
@@ -290,7 +310,7 @@ const Settings = ({ ADMIN_API, authHeaders, onLogout }) => {
                 value={globalSettings.admobConfig?.interstitialAdUnitId || ''} 
                 onChange={(e) => setGlobalSettings({...globalSettings, admobConfig: {...globalSettings.admobConfig, interstitialAdUnitId: e.target.value}})}
                 placeholder="ca-app-pub-xxxxx/xxxxx"
-                className="w-full bg-slate-800 border border-slate-700 focus:border-indigo-500 rounded-xl px-4 py-3 text-white text-sm outline-none" 
+                className="w-full bg-slate-800 border border-slate-700 focus:border-indigo-500 rounded-xl px-4 py-3 text-white text-sm outline-none font-mono" 
               />
             </div>
             <div>
@@ -300,7 +320,7 @@ const Settings = ({ ADMIN_API, authHeaders, onLogout }) => {
                 value={globalSettings.admobConfig?.rewardedAdUnitId || ''} 
                 onChange={(e) => setGlobalSettings({...globalSettings, admobConfig: {...globalSettings.admobConfig, rewardedAdUnitId: e.target.value}})}
                 placeholder="ca-app-pub-xxxxx/xxxxx"
-                className="w-full bg-slate-800 border border-slate-700 focus:border-indigo-500 rounded-xl px-4 py-3 text-white text-sm outline-none" 
+                className="w-full bg-slate-800 border border-slate-700 focus:border-indigo-500 rounded-xl px-4 py-3 text-white text-sm outline-none font-mono" 
               />
             </div>
             <div>
@@ -310,7 +330,17 @@ const Settings = ({ ADMIN_API, authHeaders, onLogout }) => {
                 value={globalSettings.admobConfig?.appOpenAdUnitId || ''} 
                 onChange={(e) => setGlobalSettings({...globalSettings, admobConfig: {...globalSettings.admobConfig, appOpenAdUnitId: e.target.value}})}
                 placeholder="ca-app-pub-xxxxx/xxxxx"
-                className="w-full bg-slate-800 border border-slate-700 focus:border-indigo-500 rounded-xl px-4 py-3 text-white text-sm outline-none" 
+                className="w-full bg-slate-800 border border-slate-700 focus:border-indigo-500 rounded-xl px-4 py-3 text-white text-sm outline-none font-mono" 
+              />
+            </div>
+            <div className="md:col-span-2">
+              <label className="text-slate-400 text-xs font-bold uppercase tracking-wider block mb-2">Native Ad Unit ID</label>
+              <input 
+                type="text" 
+                value={globalSettings.admobConfig?.nativeAdUnitId || ''} 
+                onChange={(e) => setGlobalSettings({...globalSettings, admobConfig: {...globalSettings.admobConfig, nativeAdUnitId: e.target.value}})}
+                placeholder="ca-app-pub-xxxxx/xxxxx"
+                className="w-full bg-slate-800 border border-slate-700 focus:border-indigo-500 rounded-xl px-4 py-3 text-white text-sm outline-none font-mono" 
               />
             </div>
           </div>
