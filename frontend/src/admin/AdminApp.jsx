@@ -42,7 +42,7 @@ const AdminApp = () => {
     return <AdminLogin onLogin={handleLogin} />;
   }
 
-  const pageProps = { authHeaders, ADMIN_API };
+  const pageProps = { authHeaders, ADMIN_API, setActivePage };
 
   return (
     <AdminLayout activePage={activePage} setActivePage={setActivePage} onLogout={handleLogout} ADMIN_API={ADMIN_API} authHeaders={authHeaders}>

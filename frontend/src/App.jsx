@@ -405,21 +405,21 @@ function App() {
   // Initialize AdMob & check for Play Store App updates (Native Android Only)
   useEffect(() => {
     const initAdMob = async () => {
-      try {
-        await AdMob.initialize({
-          testingDevices: ['2077ef9a63d2b398840261c8221a0c9b'],
-        });
-        console.log('AdMob Initialized');
-      } catch (err) {
-        console.error('AdMob initialization failed:', err);
-      }
-
       // Fetch global settings dynamically
       try {
         const res = await fetch(`${API_BASE}/api/earning/settings`);
         const settings = await res.json();
         if (settings && settings.admobConfig) {
           AdMobService.setConfig(settings.admobConfig);
+        } else if (Capacitor.isNativePlatform()) {
+          try {
+            await AdMob.initialize({
+              initializeForTesting: false
+            });
+            console.log('AdMob Initialized');
+          } catch (err) {
+            console.error('AdMob initialization failed:', err);
+          }
         }
         
         // Play Store App Updates: ONLY check on Native Mobile App (never on Web Browser)

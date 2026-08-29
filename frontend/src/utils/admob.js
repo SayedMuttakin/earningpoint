@@ -15,39 +15,49 @@ const TEST_ADMOB_IDS = {
 
 // Real Production Ad Unit IDs
 const REAL_ADMOB_IDS = {
-  banner: 'ca-app-pub-2974645883080760/8899354808',
-  interstitial: 'ca-app-pub-2974645883080760/5216094812',
+  banner: 'ca-app-pub-2974645883080760/3706818395',
+  interstitial: 'ca-app-pub-2974645883080760/1057357952',
   rewardedInterstitial: 'ca-app-pub-2974645883080760/1057357952',
-  rewarded: 'ca-app-pub-2974645883080760/6644726557',
-  rewarded_daily: 'ca-app-pub-2974645883080760/6644726557',
-  rewarded_videos: 'ca-app-pub-2974645883080760/6644726557',
-  rewarded_view_ads: 'ca-app-pub-2974645883080760/6644726557',
-  appOpen: 'ca-app-pub-2974645883080760/5123193103'
+  rewarded: 'ca-app-pub-2974645883080760/6932632014',
+  rewarded_daily: 'ca-app-pub-2974645883080760/6932632014',
+  rewarded_videos: 'ca-app-pub-2974645883080760/6932632014',
+  rewarded_view_ads: 'ca-app-pub-2974645883080760/6932632014',
+  appOpen: 'ca-app-pub-2974645883080760/5445501972'
 };
 
 const USE_TEST_ADS = false;
 let dynamicConfig = null;
 let isInitialized = false;
 
+const isTestingMode = () => {
+  if (dynamicConfig && typeof dynamicConfig.useTestAds === 'boolean') {
+    return dynamicConfig.useTestAds;
+  }
+  return USE_TEST_ADS;
+};
+
 const ensureInitialized = async () => {
-  if (isInitialized || !Capacitor.isNativePlatform()) return;
+  if (!Capacitor.isNativePlatform()) return;
+  const testing = isTestingMode();
   try {
     await AdMob.initialize({
-      testingDevices: ['2077ef9a63d2b398840261c8221a0c9b'],
-      initializeForTesting: dynamicConfig?.useTestAds === true || USE_TEST_ADS
+      testingDevices: testing ? ['2077ef9a63d2b398840261c8221a0c9b'] : [],
+      initializeForTesting: testing
     });
     isInitialized = true;
-    console.log('[AdMob] AdMob initialized successfully');
+    console.log('[AdMob] AdMob initialized successfully, isTesting:', testing);
   } catch (e) {
     console.warn('[AdMob] Initialization warning:', e);
   }
 };
 
 const getAdId = (type) => {
+  const testing = isTestingMode();
+  if (testing) {
+    return TEST_ADMOB_IDS[type] || TEST_ADMOB_IDS.banner;
+  }
+
   if (dynamicConfig) {
-    if (dynamicConfig.useTestAds === true) {
-      return TEST_ADMOB_IDS[type] || TEST_ADMOB_IDS.banner;
-    }
     const keyMap = {
       banner: 'bannerAdUnitId',
       interstitial: 'interstitialAdUnitId',
@@ -55,26 +65,27 @@ const getAdId = (type) => {
       rewarded_daily: 'rewardedAdUnitId',
       rewarded_videos: 'rewardedAdUnitId',
       rewarded_view_ads: 'rewardedAdUnitId',
-      appOpen: 'appOpenAdUnitId'
+      appOpen: 'appOpenAdUnitId',
+      native: 'nativeAdUnitId'
     };
-    const configKey = keyMap[type];
+    const configKey = keyMap[type] || 'rewardedAdUnitId';
     const dynamicId = dynamicConfig[configKey];
-    if (dynamicId && dynamicId.trim() !== '') {
+    if (dynamicId && typeof dynamicId === 'string' && dynamicId.trim() !== '') {
       return dynamicId.trim();
     }
   }
 
-  if (USE_TEST_ADS) {
-    return TEST_ADMOB_IDS[type] || TEST_ADMOB_IDS.banner;
-  }
-  
-  return REAL_ADMOB_IDS[type] || TEST_ADMOB_IDS[type] || TEST_ADMOB_IDS.banner;
+  return REAL_ADMOB_IDS[type] || REAL_ADMOB_IDS.rewarded || TEST_ADMOB_IDS[type] || TEST_ADMOB_IDS.banner;
 };
 
 export const AdMobService = {
   setConfig(config) {
     dynamicConfig = config;
-    console.log('[AdMob] Dynamic config loaded:', config);
+    isInitialized = false; // re-init with new config mode
+    console.log('[AdMob] Dynamic config updated in AdMobService:', config);
+    if (Capacitor.isNativePlatform()) {
+      ensureInitialized();
+    }
   },
 
   async showBanner(size = 'banner') {
@@ -82,6 +93,7 @@ export const AdMobService = {
     if (!Capacitor.isNativePlatform()) return;
 
     await ensureInitialized();
+    const testing = isTestingMode();
 
     try {
       const adId = getAdId('banner');
@@ -92,21 +104,23 @@ export const AdMobService = {
         adSize: adSize,
         position: BannerAdPosition.BOTTOM_CENTER,
         margin: 76,
-        isTesting: dynamicConfig?.useTestAds === true || USE_TEST_ADS
+        isTesting: testing
       });
       console.log('[AdMob] Banner shown successfully');
     } catch (err) {
-      console.warn('[AdMob] Primary banner failed, retrying with test banner:', err);
-      try {
-        await AdMob.showBanner({
-          adId: TEST_ADMOB_IDS.banner,
-          adSize: size === 'big' ? BannerAdSize.MEDIUM_RECTANGLE : BannerAdSize.BANNER,
-          position: BannerAdPosition.BOTTOM_CENTER,
-          margin: 76,
-          isTesting: true
-        });
-      } catch (testErr) {
-        console.error('[AdMob] All banner attempts failed:', testErr);
+      console.warn('[AdMob] Banner failed to display:', err);
+      if (testing) {
+        try {
+          await AdMob.showBanner({
+            adId: TEST_ADMOB_IDS.banner,
+            adSize: size === 'big' ? BannerAdSize.MEDIUM_RECTANGLE : BannerAdSize.BANNER,
+            position: BannerAdPosition.BOTTOM_CENTER,
+            margin: 76,
+            isTesting: true
+          });
+        } catch (testErr) {
+          console.error('[AdMob] Test banner failed:', testErr);
+        }
       }
     }
   },
@@ -142,10 +156,9 @@ export const AdMobService = {
     this.isShowingInterstitial = true;
 
     await ensureInitialized();
-
+    const testing = isTestingMode();
     const primaryAdId = getAdId('interstitial');
     const testAdId = TEST_ADMOB_IDS.interstitial;
-    const isTestExplicit = dynamicConfig?.useTestAds === true || USE_TEST_ADS;
 
     const tryShowInterstitialUnit = async (adUnitId, isTesting) => {
       return new Promise(async (resolve, reject) => {
@@ -208,17 +221,17 @@ export const AdMobService = {
     };
 
     try {
-      // 1. Try Primary Unit
+      // 1. Try Configured Unit
       try {
-        await tryShowInterstitialUnit(primaryAdId, isTestExplicit);
+        await tryShowInterstitialUnit(primaryAdId, testing);
         this.isShowingInterstitial = false;
         return;
       } catch (err1) {
-        console.warn('[AdMob] Primary interstitial failed, trying fallback test unit...', err1);
+        console.warn('[AdMob] Primary interstitial failed to load:', err1);
       }
 
-      // 2. Try Fallback Test Unit
-      if (primaryAdId !== testAdId) {
+      // 2. Only use Google Test fallback if test mode is explicitly ON
+      if (testing && primaryAdId !== testAdId) {
         try {
           await tryShowInterstitialUnit(testAdId, true);
           this.isShowingInterstitial = false;
@@ -242,7 +255,21 @@ export const AdMobService = {
 
   // Rewarded Video Ad with Multi-tier Failover
   isShowingRewarded: false,
-  async showRewarded(onReward, placement = 'rewarded', onError = null, onDismiss = null) {
+  async showRewarded(onReward, placementOrOnError = 'rewarded', onErrorOrDismiss = null, onDismissArg = null) {
+    let placement = 'rewarded';
+    let onError = null;
+    let onDismiss = null;
+
+    if (typeof placementOrOnError === 'function') {
+      placement = 'rewarded';
+      onError = placementOrOnError;
+      onDismiss = onErrorOrDismiss;
+    } else if (typeof placementOrOnError === 'string') {
+      placement = placementOrOnError;
+      onError = onErrorOrDismiss;
+      onDismiss = onDismissArg;
+    }
+
     if (dynamicConfig && dynamicConfig.showAds === false) {
       if (onError) onError({ isFallback: true, message: "Ads disabled" });
       if (onDismiss) onDismiss();
@@ -263,10 +290,10 @@ export const AdMobService = {
 
     this.isShowingRewarded = true;
     await ensureInitialized();
+    const testing = isTestingMode();
 
     const primaryAdId = getAdId(placement);
     const testAdId = TEST_ADMOB_IDS.rewarded;
-    const isTestExplicit = dynamicConfig?.useTestAds === true || USE_TEST_ADS;
 
     const tryShowRewardedUnit = async (adUnitId, isTesting) => {
       return new Promise(async (resolve, reject) => {
@@ -343,16 +370,16 @@ export const AdMobService = {
     try {
       // Attempt 1: Configured Primary Ad Unit
       try {
-        console.log(`[AdMob] Requesting primary rewarded ad unit: ${primaryAdId}`);
-        await tryShowRewardedUnit(primaryAdId, isTestExplicit);
+        console.log(`[AdMob] Requesting real rewarded ad unit: ${primaryAdId}, isTesting: ${testing}`);
+        await tryShowRewardedUnit(primaryAdId, testing);
         this.isShowingRewarded = false;
         return;
       } catch (err1) {
-        console.warn('[AdMob] Primary ad unit returned No-Fill/Failed to load. Retrying with Google Verified Test Unit...', err1);
+        console.warn('[AdMob] Primary ad unit returned No-Fill/Failed to load:', err1);
       }
 
-      // Attempt 2: Google Verified Test Rewarded Unit (100% Fill Rate Guaranteed)
-      if (primaryAdId !== testAdId) {
+      // Attempt 2: Only use Google Test fallback if test mode is explicitly ON
+      if (testing && primaryAdId !== testAdId) {
         try {
           console.log(`[AdMob] Requesting Google verified test rewarded ad: ${testAdId}`);
           await tryShowRewardedUnit(testAdId, true);
@@ -396,27 +423,30 @@ export const AdMobService = {
     }
     
     await ensureInitialized();
+    const testing = isTestingMode();
     const primaryAdId = getAdId('appOpen');
     const testAdId = TEST_ADMOB_IDS.appOpen;
 
     try {
       await AdMob.prepareInterstitial({
         adId: primaryAdId,
-        isTesting: dynamicConfig?.useTestAds === true || USE_TEST_ADS
+        isTesting: testing
       });
       await AdMob.showInterstitial();
       if (onSuccess) onSuccess();
       if (onDismiss) onDismiss();
     } catch (err) {
-      console.warn('[AdMob] App open ad fallback to test unit:', err);
-      try {
-        await AdMob.prepareInterstitial({
-          adId: testAdId,
-          isTesting: true
-        });
-        await AdMob.showInterstitial();
-      } catch (e) {
-        console.error('[AdMob] App open ad failed:', e);
+      console.warn('[AdMob] App open ad primary failed:', err);
+      if (testing) {
+        try {
+          await AdMob.prepareInterstitial({
+            adId: testAdId,
+            isTesting: true
+          });
+          await AdMob.showInterstitial();
+        } catch (e) {
+          console.error('[AdMob] App open ad failed:', e);
+        }
       }
       if (onSuccess) onSuccess();
       if (onDismiss) onDismiss();

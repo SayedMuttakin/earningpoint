@@ -421,6 +421,9 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
       const res = await fetch(`${API_BASE}/api/earning/settings`);
       const data = await res.json();
       if (res.ok && data) {
+        if (data.admobConfig) {
+          AdMobService.setConfig(data.admobConfig);
+        }
         setGlobalSettings(prev => ({
           ...prev,
           premiumIpPrice: data.premiumIpPrice || 600,

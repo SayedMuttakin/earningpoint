@@ -1,19 +1,31 @@
 import React, { useState, useEffect } from 'react';
 
-const StatCard = ({ label, value, sub, color, icon }) => (
-  <div className="bg-[#111827] border border-slate-800 rounded-2xl p-5 flex items-start gap-4">
-    <div className={`w-12 h-12 rounded-xl ${color} flex items-center justify-center flex-shrink-0 shadow-lg`}>
+const StatCard = ({ label, value, sub, color, icon, onClick }) => (
+  <div 
+    onClick={onClick}
+    className={`bg-[#111827] border border-slate-800 rounded-2xl p-5 flex items-start gap-4 transition-all duration-200 ${
+      onClick 
+        ? 'cursor-pointer hover:border-indigo-500/60 hover:bg-slate-900/90 active:scale-[0.98] shadow-lg shadow-black/20 group hover:shadow-indigo-500/10' 
+        : ''
+    }`}
+  >
+    <div className={`w-12 h-12 rounded-xl ${color} flex items-center justify-center flex-shrink-0 shadow-lg group-hover:scale-110 transition-transform`}>
       {icon}
     </div>
-    <div className="min-w-0">
-      <div className="text-slate-400 text-xs font-bold uppercase tracking-widest mb-0.5">{label}</div>
+    <div className="min-w-0 flex-1">
+      <div className="flex items-center justify-between">
+        <div className="text-slate-400 text-xs font-bold uppercase tracking-widest mb-0.5 group-hover:text-indigo-400 transition-colors">{label}</div>
+        {onClick && (
+          <span className="text-slate-600 group-hover:text-indigo-400 group-hover:translate-x-0.5 text-xs font-bold transition-all">→</span>
+        )}
+      </div>
       <div className="text-white font-black text-2xl leading-none">{value}</div>
-      {sub && <div className="text-slate-500 text-xs mt-1 font-medium">{sub}</div>}
+      {sub && <div className="text-slate-500 text-xs mt-1 font-medium group-hover:text-slate-400 transition-colors">{sub}</div>}
     </div>
   </div>
 );
 
-const Dashboard = ({ ADMIN_API, authHeaders }) => {
+const Dashboard = ({ ADMIN_API, authHeaders, setActivePage }) => {
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
 
@@ -51,8 +63,8 @@ const Dashboard = ({ ADMIN_API, authHeaders }) => {
     <div className="space-y-6">
       {/* Refresh */}
       <div className="flex items-center justify-between">
-        <p className="text-slate-500 text-sm">Overview of your platform</p>
-        <button onClick={fetchStats} className="flex items-center gap-2 text-xs font-bold text-indigo-400 hover:text-indigo-300 transition-colors">
+        <p className="text-slate-500 text-sm">Overview of your platform • Click any card to manage</p>
+        <button onClick={fetchStats} className="flex items-center gap-2 text-xs font-bold text-indigo-400 hover:text-indigo-300 transition-colors bg-indigo-950/40 px-3 py-1.5 rounded-xl border border-indigo-500/20 active:scale-95">
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>
           Refresh
         </button>
@@ -60,26 +72,74 @@ const Dashboard = ({ ADMIN_API, authHeaders }) => {
 
       {/* Stat Cards */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <StatCard label="Total Users" value={stats.totalUsers?.toLocaleString()} sub={`+${stats.todayUsers} today`}
-          color="bg-indigo-600/20" icon={<svg className="w-6 h-6 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" /></svg>} />
-        <StatCard label="Total Transactions" value={stats.totalTransactions?.toLocaleString()} sub={`${stats.pendingWithdrawals} pending withdrawal`}
-          color="bg-emerald-600/20" icon={<svg className="w-6 h-6 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" /></svg>} />
-        <StatCard label="Support Tickets" value={stats.openTickets?.toLocaleString()} sub="Open / In Progress"
-          color="bg-amber-600/20" icon={<svg className="w-6 h-6 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18.364 5.636l-3.536 3.536m0 5.656l3.536 3.536M9.172 9.172L5.636 5.636m3.536 9.192l-3.536 3.536M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-5 0a4 4 0 11-8 0 4 4 0 018 0z" /></svg>} />
-        <StatCard label="Premium Orders" value={stats.pendingPremiumOrders?.toLocaleString()} sub="Pending activation"
-          color="bg-purple-600/20" icon={<svg className="w-6 h-6 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z" /></svg>} />
+        <StatCard 
+          label="Total Users" 
+          value={stats.totalUsers?.toLocaleString()} 
+          sub={`+${stats.todayUsers} today`}
+          color="bg-indigo-600/20" 
+          onClick={setActivePage ? () => setActivePage('users') : null}
+          icon={<svg className="w-6 h-6 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" /></svg>} 
+        />
+        <StatCard 
+          label="Total Transactions" 
+          value={stats.totalTransactions?.toLocaleString()} 
+          sub={`${stats.pendingWithdrawals} pending withdrawal`}
+          color="bg-emerald-600/20" 
+          onClick={setActivePage ? () => setActivePage('transactions') : null}
+          icon={<svg className="w-6 h-6 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" /></svg>} 
+        />
+        <StatCard 
+          label="Support Tickets" 
+          value={stats.openTickets?.toLocaleString()} 
+          sub="Open / In Progress"
+          color="bg-amber-600/20" 
+          onClick={setActivePage ? () => setActivePage('support') : null}
+          icon={<svg className="w-6 h-6 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18.364 5.636l-3.536 3.536m0 5.656l3.536 3.536M9.172 9.172L5.636 5.636m3.536 9.192l-3.536 3.536M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-5 0a4 4 0 11-8 0 4 4 0 018 0z" /></svg>} 
+        />
+        <StatCard 
+          label="Premium Orders" 
+          value={stats.pendingPremiumOrders?.toLocaleString()} 
+          sub="Pending activation"
+          color="bg-purple-600/20" 
+          onClick={setActivePage ? () => setActivePage('products') : null}
+          icon={<svg className="w-6 h-6 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z" /></svg>} 
+        />
       </div>
 
       {/* Second Row */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <StatCard label="Total Balance" value={`৳${(stats.totalBalance || 0).toLocaleString()}`} sub="All users combined"
-          color="bg-teal-600/20" icon={<svg className="w-6 h-6 text-teal-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>} />
-        <StatCard label="Total Revenue" value={`৳${(stats.revenue || 0).toLocaleString()}`} sub="Points + bonuses"
-          color="bg-rose-600/20" icon={<svg className="w-6 h-6 text-rose-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" /></svg>} />
-        <StatCard label="Referrals" value={stats.totalReferrals?.toLocaleString()} sub="Total referral chains"
-          color="bg-cyan-600/20" icon={<svg className="w-6 h-6 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" /></svg>} />
-        <StatCard label="Premium Users" value={stats.premiumUsers?.toLocaleString()} sub={`${stats.bannedUsers} banned`}
-          color="bg-violet-600/20" icon={<svg className="w-6 h-6 text-violet-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" /></svg>} />
+        <StatCard 
+          label="Total Balance" 
+          value={`৳${(stats.totalBalance || 0).toLocaleString()}`} 
+          sub="All users combined"
+          color="bg-teal-600/20" 
+          onClick={setActivePage ? () => setActivePage('users') : null}
+          icon={<svg className="w-6 h-6 text-teal-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>} 
+        />
+        <StatCard 
+          label="Total Revenue" 
+          value={`৳${(stats.revenue || 0).toLocaleString()}`} 
+          sub="Points + bonuses"
+          color="bg-rose-600/20" 
+          onClick={setActivePage ? () => setActivePage('transactions') : null}
+          icon={<svg className="w-6 h-6 text-rose-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" /></svg>} 
+        />
+        <StatCard 
+          label="Referrals" 
+          value={stats.totalReferrals?.toLocaleString()} 
+          sub="Total referral chains"
+          color="bg-cyan-600/20" 
+          onClick={setActivePage ? () => setActivePage('referrals') : null}
+          icon={<svg className="w-6 h-6 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" /></svg>} 
+        />
+        <StatCard 
+          label="Premium Users" 
+          value={stats.premiumUsers?.toLocaleString()} 
+          sub={`${stats.bannedUsers} banned`}
+          color="bg-violet-600/20" 
+          onClick={setActivePage ? () => setActivePage('users') : null}
+          icon={<svg className="w-6 h-6 text-violet-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" /></svg>} 
+        />
       </div>
 
       {/* Chart + Recents */}
@@ -103,10 +163,24 @@ const Dashboard = ({ ADMIN_API, authHeaders }) => {
 
         {/* Recent Users */}
         <div className="bg-[#111827] border border-slate-800 rounded-2xl p-4 sm:p-5">
-          <h3 className="text-white font-bold text-base mb-4">Recent Sign-ups</h3>
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-white font-bold text-base">Recent Sign-ups</h3>
+            {setActivePage && (
+              <button 
+                onClick={() => setActivePage('users')}
+                className="text-xs font-bold text-indigo-400 hover:text-indigo-300 transition-colors"
+              >
+                View All →
+              </button>
+            )}
+          </div>
           <div className="space-y-3">
             {stats.recentUsers?.map((u, i) => (
-              <div key={i} className="flex items-center gap-3">
+              <div 
+                key={i} 
+                onClick={setActivePage ? () => setActivePage('users') : null}
+                className="flex items-center gap-3 p-1.5 rounded-xl hover:bg-slate-800/40 transition-colors cursor-pointer"
+              >
                 <div className="w-8 h-8 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white font-bold text-xs flex-shrink-0">
                   {(u.name || u.phoneOrEmail || '?')[0].toUpperCase()}
                 </div>
@@ -125,7 +199,17 @@ const Dashboard = ({ ADMIN_API, authHeaders }) => {
 
       {/* Recent Transactions */}
       <div className="bg-[#111827] border border-slate-800 rounded-2xl p-4 sm:p-5">
-        <h3 className="text-white font-bold text-base mb-4">Recent Transactions</h3>
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-white font-bold text-base">Recent Transactions</h3>
+          {setActivePage && (
+            <button 
+              onClick={() => setActivePage('transactions')}
+              className="text-xs font-bold text-indigo-400 hover:text-indigo-300 transition-colors"
+            >
+              View All →
+            </button>
+          )}
+        </div>
         <div className="overflow-x-auto -mx-4 sm:mx-0 px-4 sm:px-0">
           <table className="w-full text-sm min-w-[550px]">
             <thead>
@@ -139,7 +223,11 @@ const Dashboard = ({ ADMIN_API, authHeaders }) => {
             </thead>
             <tbody className="divide-y divide-slate-800">
               {stats.recentTransactions?.map((t, i) => (
-                <tr key={i} className="hover:bg-slate-800/30 transition-colors">
+                <tr 
+                  key={i} 
+                  onClick={setActivePage ? () => setActivePage('transactions') : null}
+                  className="hover:bg-slate-800/40 transition-colors cursor-pointer"
+                >
                   <td className="py-2.5 text-white font-medium text-xs max-w-[140px] truncate">
                     {t.userId?.name || t.userId?.phoneOrEmail || '—'}
                   </td>
