@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Send, ArrowLeft, Loader2, User as UserIcon, WifiOff, Phone, Video, PhoneOff, Image, Mic, Smile } from 'lucide-react';
+import { Send, ArrowLeft, Loader2, User as UserIcon, WifiOff, Image, Mic, Smile } from 'lucide-react';
 import VerifiedBadge from './VerifiedBadge';
 import { io } from 'socket.io-client';
 import { API_BASE } from '../config';
@@ -24,13 +24,8 @@ const SupportPage = ({ onBack }) => {
   const [socketConnected, setSocketConnected] = useState(false);
   const [connectionError, setConnectionError] = useState(false);
   
-  // Call States
-  const [activeCall, setActiveCall] = useState(null); // 'audio' | 'video' | null
-  
   const messagesEndRef = useRef(null);
   const typingTimeoutRef = useRef(null);
-  const audioContextRef = useRef(null);
-  const ringIntervalRef = useRef(null);
 
   // Auto-scroll to bottom of chat
   const scrollToBottom = () => {
@@ -153,114 +148,6 @@ const SupportPage = ({ onBack }) => {
     }
   }, [socketConnected, socket, userId, userName, userEmail]);
 
-  // Call Simulators
-  const startRingtone = () => {
-    try {
-      const AudioContext = window.AudioContext || window.webkitAudioContext;
-      if (!AudioContext) return;
-      const ctx = new AudioContext();
-      audioContextRef.current = ctx;
-
-      const playRing = () => {
-        const osc1 = ctx.createOscillator();
-        const osc2 = ctx.createOscillator();
-        const gainNode = ctx.createGain();
-
-        osc1.frequency.value = 440;
-        osc2.frequency.value = 480;
-
-        osc1.connect(gainNode);
-        osc2.connect(gainNode);
-        gainNode.connect(ctx.destination);
-
-        gainNode.gain.setValueAtTime(0, ctx.currentTime);
-        gainNode.gain.linearRampToValueAtTime(0.15, ctx.currentTime + 0.1);
-        gainNode.gain.setValueAtTime(0.15, ctx.currentTime + 1.8);
-        gainNode.gain.linearRampToValueAtTime(0, ctx.currentTime + 2.0);
-
-        osc1.start();
-        osc2.start();
-
-        setTimeout(() => {
-          try {
-            osc1.stop();
-            osc2.stop();
-          } catch (e) {}
-        }, 2200);
-      };
-
-      playRing();
-      ringIntervalRef.current = setInterval(playRing, 3000);
-    } catch (e) {
-      console.error('Failed to play synthetic ringtone:', e);
-    }
-  };
-
-  const stopRingtone = () => {
-    if (ringIntervalRef.current) {
-      clearInterval(ringIntervalRef.current);
-      ringIntervalRef.current = null;
-    }
-    if (audioContextRef.current) {
-      try {
-        audioContextRef.current.close();
-      } catch (e) {}
-      audioContextRef.current = null;
-    }
-  };
-
-  const playBusyTone = () => {
-    try {
-      const AudioContext = window.AudioContext || window.webkitAudioContext;
-      if (!AudioContext) return;
-      const ctx = new AudioContext();
-      
-      const playBeep = (delay) => {
-        const osc = ctx.createOscillator();
-        const gain = ctx.createGain();
-        osc.frequency.value = 480;
-        osc.connect(gain);
-        gain.connect(ctx.destination);
-        gain.gain.setValueAtTime(0, ctx.currentTime + delay);
-        gain.gain.linearRampToValueAtTime(0.12, ctx.currentTime + delay + 0.05);
-        gain.gain.setValueAtTime(0.12, ctx.currentTime + delay + 0.35);
-        gain.gain.linearRampToValueAtTime(0, ctx.currentTime + delay + 0.4);
-        osc.start();
-        setTimeout(() => {
-          try { osc.stop(); } catch(e) {}
-        }, (delay + 0.5) * 1000);
-      };
-
-      playBeep(0);
-      playBeep(0.5);
-      playBeep(1.0);
-      
-      setTimeout(() => {
-        try { ctx.close(); } catch(e) {}
-      }, 2000);
-    } catch (e) {
-      console.error('Failed to play busy tone:', e);
-    }
-  };
-
-  const handleStartCall = (type) => {
-    setActiveCall(type);
-    startRingtone();
-    
-    // Auto-timeout call after 8 seconds of ringing
-    setTimeout(() => {
-      setActiveCall((currentCall) => {
-        if (currentCall) {
-          stopRingtone();
-          playBusyTone();
-          alert('Support Agent is currently busy. Please leave a text message.');
-          return null;
-        }
-        return null;
-      });
-    }, 8000);
-  };
-
   const handleSendMessage = (e) => {
     e.preventDefault();
     if (!messageInput.trim() || !sessionId) return;
@@ -339,24 +226,6 @@ const SupportPage = ({ onBack }) => {
               Active Now
             </p>
           </div>
-        </div>
-
-        {/* Calling action buttons */}
-        <div className="flex items-center gap-1">
-          <button 
-            onClick={() => handleStartCall('audio')}
-            className="p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 text-indigo-600 dark:text-indigo-400 active:scale-95 transition-all cursor-pointer"
-            title="Start Audio Call"
-          >
-            <Phone className="w-5 h-5" strokeWidth={2.2} />
-          </button>
-          <button 
-            onClick={() => handleStartCall('video')}
-            className="p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 text-indigo-600 dark:text-indigo-400 active:scale-95 transition-all cursor-pointer"
-            title="Start Video Call"
-          >
-            <Video className="w-5.5 h-5.5" strokeWidth={2.2} />
-          </button>
         </div>
       </div>
 
@@ -470,47 +339,6 @@ const SupportPage = ({ onBack }) => {
           </button>
         </form>
       </div>
-
-      {/* Calling Screen Overlay */}
-      {activeCall && (
-        <div className="fixed inset-0 z-[110] bg-slate-950/95 backdrop-blur-lg flex flex-col items-center justify-between py-20 px-6 text-white animate-fade-in">
-          <div className="flex flex-col items-center gap-2 mt-12">
-            <span className="text-emerald-500 font-black tracking-widest text-xs uppercase animate-pulse">
-              Zenivio Secure Call
-            </span>
-            <h2 className="text-3xl font-black mt-4">Zenivio Support</h2>
-            <p className="text-slate-400 text-sm font-medium animate-pulse mt-1">
-              Ringing...
-            </p>
-          </div>
-
-          <div className="relative">
-            <div className="absolute inset-0 bg-indigo-500/20 rounded-full scale-125 animate-ping" style={{ animationDuration: '2s' }} />
-            <div className="absolute inset-0 bg-indigo-500/30 rounded-full scale-150 animate-pulse" />
-            <div className="w-32 h-32 rounded-3xl overflow-hidden relative border-4 border-indigo-500/50 shadow-2xl">
-              <img src="/zenivio-logo.png" alt="Zenivio" className="w-full h-full object-cover" />
-            </div>
-          </div>
-
-          <div className="flex flex-col items-center gap-6 mb-8 w-full max-w-xs">
-            {activeCall === 'video' && (
-              <div className="w-full bg-slate-900/60 border border-slate-800 rounded-2xl p-3 flex items-center justify-center gap-3">
-                <span className="w-2.5 h-2.5 rounded-full bg-red-500 animate-pulse" />
-                <span className="text-xs font-bold text-slate-300">Front Camera Activated</span>
-              </div>
-            )}
-            <button 
-              onClick={() => {
-                stopRingtone();
-                setActiveCall(null);
-              }}
-              className="w-16 h-16 bg-rose-500 hover:bg-rose-600 active:scale-95 transition-all rounded-full flex items-center justify-center shadow-lg shadow-rose-500/40 cursor-pointer"
-            >
-              <PhoneOff className="w-7 h-7 text-white" />
-            </button>
-          </div>
-        </div>
-      )}
     </div>
   );
 };

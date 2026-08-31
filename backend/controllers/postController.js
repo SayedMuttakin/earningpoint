@@ -761,8 +761,8 @@ exports.toggleReactionPost = async (req, res) => {
 exports.getPostReactions = async (req, res) => {
   try {
     const post = await Post.findById(req.params.id)
-      .populate('likes', 'name username profilePic googleAvatar facebookAvatar verificationBadge')
-      .populate('reactions.user', 'name username profilePic googleAvatar facebookAvatar verificationBadge');
+      .populate('likes', 'name username profilePic googleAvatar facebookAvatar verificationBadge isEmailVerified')
+      .populate('reactions.user', 'name username profilePic googleAvatar facebookAvatar verificationBadge isEmailVerified');
 
     if (!post) {
       return res.status(404).json({ message: 'Post not found' });
@@ -783,26 +783,33 @@ exports.getPostReactions = async (req, res) => {
       reactionsList = post.reactions.map(r => {
         const u = r.user;
         if (!u) return null;
+        const badge = (u.verificationBadge && u.verificationBadge !== 'none') ? u.verificationBadge : (u.isEmailVerified ? 'blue' : 'none');
         return {
           _id: u._id,
           name: u.name,
           username: u.username,
           profilePic: u.profilePic || u.googleAvatar || u.facebookAvatar || '',
-          verificationBadge: u.verificationBadge || 'none',
+          verificationBadge: badge,
+          isEmailVerified: !!u.isEmailVerified,
           reactionType: r.type || 'love',
           emoji: emojiMap[r.type] || '❤️'
         };
       }).filter(Boolean);
     } else {
-      reactionsList = (post.likes || []).map(u => ({
-        _id: u._id,
-        name: u.name,
-        username: u.username,
-        profilePic: u.profilePic || u.googleAvatar || u.facebookAvatar || '',
-        verificationBadge: u.verificationBadge || 'none',
-        reactionType: 'love',
-        emoji: '❤️'
-      }));
+      reactionsList = (post.likes || []).map(u => {
+        if (!u) return null;
+        const badge = (u.verificationBadge && u.verificationBadge !== 'none') ? u.verificationBadge : (u.isEmailVerified ? 'blue' : 'none');
+        return {
+          _id: u._id,
+          name: u.name,
+          username: u.username,
+          profilePic: u.profilePic || u.googleAvatar || u.facebookAvatar || '',
+          verificationBadge: badge,
+          isEmailVerified: !!u.isEmailVerified,
+          reactionType: 'love',
+          emoji: '❤️'
+        };
+      }).filter(Boolean);
     }
 
     res.json(reactionsList);

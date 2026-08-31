@@ -1,8 +1,12 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Download, X, Loader2, ZoomIn, ZoomOut, RotateCcw } from 'lucide-react';
+import { Download, X, Loader2, ZoomIn, ZoomOut, RotateCcw, Check } from 'lucide-react';
+import { Capacitor } from '@capacitor/core';
+import { Share } from '@capacitor/share';
+import { getImageUrl } from '../config';
 
 const ImagePreviewModal = ({ imageUrl, onClose }) => {
   const [downloading, setDownloading] = useState(false);
+  const [downloadSuccess, setDownloadSuccess] = useState(false);
   const [scale, setScale] = useState(1);
   const [position, setPosition] = useState({ x: 0, y: 0 });
   const [isDragging, setIsDragging] = useState(false);
@@ -31,9 +35,31 @@ const ImagePreviewModal = ({ imageUrl, onClose }) => {
 
   const handleDownload = async (e) => {
     e.stopPropagation();
+    if (downloading) return;
     setDownloading(true);
+    const fullUrl = getImageUrl(imageUrl);
+
     try {
-      const response = await fetch(imageUrl);
+      if (Capacitor.isNativePlatform()) {
+        try {
+          const canShare = await Share.canShare();
+          if (canShare.value) {
+            await Share.share({
+              title: 'Zenivio Image',
+              url: fullUrl,
+              dialogTitle: 'Save / Download Image'
+            });
+            setDownloadSuccess(true);
+            setTimeout(() => setDownloadSuccess(false), 2500);
+            return;
+          }
+        } catch (shareErr) {
+          if (shareErr.name === 'AbortError') return;
+        }
+      }
+
+      // Web / Blob download
+      const response = await fetch(fullUrl, { mode: 'cors' });
       const blob = await response.blob();
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
@@ -43,9 +69,36 @@ const ImagePreviewModal = ({ imageUrl, onClose }) => {
       a.click();
       document.body.removeChild(a);
       window.URL.revokeObjectURL(url);
+      setDownloadSuccess(true);
+      setTimeout(() => setDownloadSuccess(false), 2500);
     } catch (err) {
-      console.error('Download error:', err);
-      window.open(imageUrl, '_blank');
+      console.warn('Direct blob download failed, attempting Canvas data-url / browser fallback:', err);
+      try {
+        const img = new Image();
+        img.crossOrigin = 'anonymous';
+        img.onload = () => {
+          const canvas = document.createElement('canvas');
+          canvas.width = img.naturalWidth || img.width;
+          canvas.height = img.naturalHeight || img.height;
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(img, 0, 0);
+          const dataUrl = canvas.toDataURL('image/jpeg', 0.95);
+          const a = document.createElement('a');
+          a.href = dataUrl;
+          a.download = `zenivio_image_${Date.now()}.jpg`;
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+          setDownloadSuccess(true);
+          setTimeout(() => setDownloadSuccess(false), 2500);
+        };
+        img.onerror = () => {
+          window.open(fullUrl, '_system');
+        };
+        img.src = fullUrl;
+      } catch (canvasErr) {
+        window.open(fullUrl, '_system');
+      }
     } finally {
       setDownloading(false);
     }
@@ -156,12 +209,21 @@ const ImagePreviewModal = ({ imageUrl, onClose }) => {
           <button
             onClick={handleDownload}
             disabled={downloading}
-            className="flex items-center gap-2 bg-white/15 hover:bg-white/25 active:scale-95 text-white text-xs font-black px-4 py-2.5 rounded-full backdrop-blur-md transition-all border border-white/20 shadow-lg cursor-pointer"
+            className={`flex items-center gap-2 text-white text-xs font-black px-4 py-2.5 rounded-full backdrop-blur-md transition-all border shadow-lg cursor-pointer active:scale-95 ${
+              downloadSuccess 
+                ? 'bg-emerald-600 border-emerald-400/50' 
+                : 'bg-white/15 hover:bg-white/25 border-white/20'
+            }`}
           >
             {downloading ? (
               <>
                 <Loader2 className="w-4 h-4 animate-spin" />
                 <span>Downloading...</span>
+              </>
+            ) : downloadSuccess ? (
+              <>
+                <Check className="w-4 h-4 text-emerald-300 stroke-[3]" />
+                <span>Saved / Shared!</span>
               </>
             ) : (
               <>

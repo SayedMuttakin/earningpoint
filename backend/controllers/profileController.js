@@ -616,17 +616,20 @@ exports.getSuggestedUsers = async (req, res) => {
     .limit(12)
     .lean();
 
-    const formatted = suggested.map(u => ({
-      _id: u._id,
-      name: u.name || 'Zenivio Member',
-      username: u.username || 'user',
-      profilePic: u.profilePic || u.googleAvatar || u.facebookAvatar || '',
-      verificationBadge: u.verificationBadge || 'none',
-      isEmailVerified: !!u.isEmailVerified,
-      location: u.location || '',
-      bio: u.bio || '',
-      isFollowing: false
-    }));
+    const formatted = suggested.map(u => {
+      const badge = (u.verificationBadge && u.verificationBadge !== 'none') ? u.verificationBadge : (u.isEmailVerified ? 'blue' : 'none');
+      return {
+        _id: u._id,
+        name: u.name || 'Zenivio Member',
+        username: u.username || 'user',
+        profilePic: u.profilePic || u.googleAvatar || u.facebookAvatar || '',
+        verificationBadge: badge,
+        isEmailVerified: !!u.isEmailVerified,
+        location: u.location || '',
+        bio: u.bio || '',
+        isFollowing: false
+      };
+    });
 
     res.json(formatted);
   } catch (error) {

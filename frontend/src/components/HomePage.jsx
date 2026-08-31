@@ -449,8 +449,10 @@ const ReactionsModal = ({ postId, onClose, onUserClick }) => {
                   )}
                   <div className="min-w-0">
                     <p className="text-xs font-bold text-slate-900 dark:text-white truncate flex items-center gap-1">
-                      {user.name}
-                      {user.verificationBadge && user.verificationBadge !== 'none' && <VerifiedBadge size="sm" type={user.verificationBadge} />}
+                      <span className="truncate">{user.name}</span>
+                      {((user.verificationBadge && user.verificationBadge !== 'none') || user.isEmailVerified) && (
+                        <VerifiedBadge size="sm" type={user.verificationBadge || 'blue'} />
+                      )}
                     </p>
                     <p className="text-[10px] text-slate-400 font-semibold truncate">@{user.username || 'user'}</p>
                   </div>
@@ -761,6 +763,20 @@ const CommunityPostCard = ({ post, onFollowToggle, onLikeToggle, onCommentClick,
                   <Bookmark className={`w-5 h-5 ${isSaved ? 'fill-yellow-500 text-yellow-500' : 'text-slate-500'}`} />
                   <span>{isSaved ? 'Unsave Post' : 'Save Post'}</span>
                 </button>
+
+                {post.image && (
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setShowMenu(false);
+                      if (onPreviewImage) onPreviewImage(post.image);
+                    }}
+                    className="w-full flex items-center gap-3 px-4 py-3 text-sm font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
+                  >
+                    <Download className="w-5 h-5 text-emerald-500" />
+                    <span>Download Image</span>
+                  </button>
+                )}
 
                 {post.authorId === currentUserId || post.isOwnPost ? (
                   <>
@@ -1797,15 +1813,18 @@ const HomePage = ({ setActiveTab, setSelectedNewsId, setActiveChatPartner, setSe
                                       {sUser.name ? sUser.name.charAt(0).toUpperCase() : 'U'}
                                     </div>
                                   )}
-                                  {sUser.verificationBadge && sUser.verificationBadge !== 'none' && (
+                                  {((sUser.verificationBadge && sUser.verificationBadge !== 'none') || sUser.isEmailVerified) && (
                                     <div className="absolute -bottom-1 -right-1">
                                       <VerifiedBadge type={sUser.verificationBadge === 'golden' ? 'golden' : 'blue'} iconClassName="w-3.5 h-3.5" />
                                     </div>
                                   )}
                                 </div>
 
-                                <h4 className="text-xs font-black text-slate-900 dark:text-white truncate w-full">
-                                  {sUser.name}
+                                <h4 className="text-xs font-black text-slate-900 dark:text-white truncate w-full flex items-center justify-center gap-1">
+                                  <span className="truncate">{sUser.name}</span>
+                                  {((sUser.verificationBadge && sUser.verificationBadge !== 'none') || sUser.isEmailVerified) && (
+                                    <VerifiedBadge size="sm" type={sUser.verificationBadge || 'blue'} />
+                                  )}
                                 </h4>
                                 <p className="text-[10px] text-slate-400 font-bold truncate w-full mb-2">
                                   @{sUser.username || 'user'}

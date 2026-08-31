@@ -93,8 +93,10 @@ const ProfileReactionsModal = ({ postId, onClose, onUserClick }) => {
                   )}
                   <div className="min-w-0">
                     <p className="text-xs font-bold text-slate-900 dark:text-white truncate flex items-center gap-1">
-                      {user.name}
-                      {user.verificationBadge && user.verificationBadge !== 'none' && <VerifiedBadge size="sm" type={user.verificationBadge} />}
+                      <span className="truncate">{user.name}</span>
+                      {((user.verificationBadge && user.verificationBadge !== 'none') || user.isEmailVerified) && (
+                        <VerifiedBadge size="sm" type={user.verificationBadge || 'blue'} />
+                      )}
                     </p>
                     <p className="text-[10px] text-slate-400 font-semibold truncate">@{user.username || 'user'}</p>
                   </div>

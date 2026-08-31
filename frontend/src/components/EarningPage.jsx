@@ -3171,10 +3171,9 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
         <div className="bg-[#f5f3ff] dark:bg-slate-900 text-slate-800 dark:text-white px-4 py-4 sm:px-6 flex flex-col items-center gap-4 border-b border-purple-100 dark:border-slate-800">
             {/* Buttons Row */}
             <div className="flex justify-center items-center gap-4 w-full max-w-md">
-              {/* Total Points Card - single line */}
-              <button
-                onClick={() => setActiveEarningTab('wallet')}
-                className="flex-1 py-3 px-3 rounded-2xl flex items-center justify-center gap-1.5 border-2 shadow-sm transform-gpu transition-all duration-300 bg-gradient-to-r from-amber-400 to-orange-400 border-amber-400/40 text-white hover:opacity-90 active:scale-95 whitespace-nowrap min-w-0"
+              {/* Total Points Card - static info badge, does not navigate */}
+              <div
+                className="flex-1 py-3 px-3 rounded-2xl flex items-center justify-center gap-1.5 border-2 shadow-sm bg-gradient-to-r from-amber-400 to-orange-400 border-amber-400/40 text-white whitespace-nowrap min-w-0 select-none cursor-default"
               >
                 <span className="text-base flex-shrink-0">🪙</span>
                 <span className="text-xs font-bold uppercase tracking-wide opacity-90 flex-shrink-0">Points</span>
@@ -3182,7 +3181,7 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
                 <span className="ml-1 bg-white/25 text-white text-[10px] font-black px-1.5 py-0.5 rounded-full border border-white/30 flex-shrink-0">
                   Lv.{levelInfo.level}
                 </span>
-              </button>
+              </div>
               <button
                 onClick={() => setActiveEarningTab('wallet')}
                 className="flex-1 flex items-center justify-center gap-2 bg-gradient-to-r from-purple-600 to-indigo-600 py-3 px-4 rounded-2xl border-2 border-purple-500/30 shadow-md shadow-purple-500/20 transform-gpu text-white hover:opacity-90 transition-all duration-300"
