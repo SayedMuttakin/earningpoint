@@ -3,6 +3,16 @@ import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import verifiedBadgeImg from '../assets/user_verified_badge.jpeg';
 
+const resolveBadgeSize = (sz) => {
+  if (!sz) return "w-[18px] h-[18px]";
+  if (sz === 'xs') return "w-3 h-3";
+  if (sz === 'sm') return "w-3.5 h-3.5";
+  if (sz === 'md') return "w-4.5 h-4.5";
+  if (sz === 'lg') return "w-5 h-5";
+  if (sz === 'xl') return "w-6 h-6";
+  return sz;
+};
+
 const VerifiedBadge = ({ className = "", size, iconClassName, type = "blue" }) => {
   const [showPopup, setShowPopup] = useState(false);
 
@@ -14,8 +24,9 @@ const VerifiedBadge = ({ className = "", size, iconClassName, type = "blue" }) =
   const isSvgBadge = type !== 'user';
   const isGolden = type === 'golden';
   const badgeColor = isGolden ? '#EAB308' : '#1d9bf0';
-  const userBadgeSize = size || "w-[18px] h-[18px]";
-  const companyBadgeSize = iconClassName || size || "w-[18px] h-[18px] fill-blue-500 text-white flex-shrink-0";
+  const resolvedSize = resolveBadgeSize(size);
+  const userBadgeSize = resolvedSize;
+  const companyBadgeSize = iconClassName || `${resolvedSize} flex-shrink-0`;
 
   return (
     <>
