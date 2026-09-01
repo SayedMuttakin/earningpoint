@@ -2,7 +2,8 @@ import React, { useState, useEffect, useRef } from 'react';
 import { 
   Search, Send, ArrowLeft, Loader2, User as UserIcon, WifiOff, Phone, 
   Video, PhoneOff, Image, Mic, Smile, ThumbsUp, ChevronRight, UserPlus, 
-  MoreVertical, Star, X, Users, SquarePen, Check, Plus
+  MoreVertical, Star, X, Users, SquarePen, Check, Plus,
+  CornerUpLeft, Edit3, Trash2, Undo, CheckCheck
 } from 'lucide-react';
 import { io } from 'socket.io-client';
 import { API_BASE, getImageUrl } from '../config';
@@ -171,10 +172,15 @@ const MessengerPage = ({
   const [showChatMenu, setShowChatMenu] = useState(false);
   
   // Custom dialog modals
-  const [activeModal, setActiveModal] = useState(null); // 'delete_chat', 'block_user', 'report_user', 'report_message', 'delete_story'
+  const [activeModal, setActiveModal] = useState(null); // 'delete_chat', 'block_user', 'report_user', 'report_message', 'delete_story', 'message_actions'
   const [reportReason, setReportReason] = useState('spam');
   const [targetMessageId, setTargetMessageId] = useState(null);
   const [targetStoryId, setTargetStoryId] = useState(null);
+  
+  // Message Edit, Reply, and Action state
+  const [editingMessage, setEditingMessage] = useState(null); // { _id, content }
+  const [replyingTo, setReplyingTo] = useState(null); // { messageId, content, senderName, messageType }
+  const [messageActionTarget, setMessageActionTarget] = useState(null);
 
   // Prevent background scroll when modal is open
   useEffect(() => {
@@ -729,6 +735,18 @@ const MessengerPage = ({
       }
     });
 
+    socket.on('message_edited', (updatedMessage) => {
+      setMessages((prev) => prev.map((m) => m._id === updatedMessage._id ? updatedMessage : m));
+    });
+
+    socket.on('message_unsent', ({ messageId, updatedMessage }) => {
+      setMessages((prev) => prev.map((m) => m._id === messageId ? (updatedMessage || { ...m, isUnsent: true, content: 'This message was unsent', messageType: 'text' }) : m));
+    });
+
+    socket.on('message_deleted_for_me', ({ messageId }) => {
+      setMessages((prev) => prev.filter((m) => m._id !== messageId));
+    });
+
     socket.on('messages_read', (data) => {
       if (activePartner && !activePartner.isGroup && data.readerId === activePartner._id) {
         setMessages((prev) => prev.map(msg => {
@@ -835,6 +853,9 @@ const MessengerPage = ({
       socket.off('receive_group_message');
       socket.off('direct_typing');
       socket.off('group_typing');
+      socket.off('message_edited');
+      socket.off('message_unsent');
+      socket.off('message_deleted_for_me');
       socket.off('messages_read');
       socket.off('incoming_call');
       socket.off('incoming_group_call');
@@ -934,16 +955,19 @@ const MessengerPage = ({
         senderId: currentUser._id,
         groupId: activePartner._id,
         content: fileUrl,
-        messageType: type
+        messageType: type,
+        replyTo: replyingTo || null
       });
     } else {
       socket.emit('send_direct_message', {
         senderId: currentUser._id,
         receiverId: activePartner._id,
         content: fileUrl,
-        messageType: type
+        messageType: type,
+        replyTo: replyingTo || null
       });
     }
+    setReplyingTo(null);
   };
 
   const handleImageUpload = async (e) => {
@@ -986,7 +1010,26 @@ const MessengerPage = ({
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       audioChunksRef.current = [];
-      const mediaRecorder = new MediaRecorder(stream);
+
+      let mimeType = 'audio/webm';
+      let fileExt = 'webm';
+      if (typeof MediaRecorder.isTypeSupported === 'function') {
+        if (MediaRecorder.isTypeSupported('audio/webm;codecs=opus')) {
+          mimeType = 'audio/webm;codecs=opus';
+          fileExt = 'webm';
+        } else if (MediaRecorder.isTypeSupported('audio/mp4')) {
+          mimeType = 'audio/mp4';
+          fileExt = 'mp4';
+        } else if (MediaRecorder.isTypeSupported('audio/ogg;codecs=opus')) {
+          mimeType = 'audio/ogg;codecs=opus';
+          fileExt = 'ogg';
+        } else if (MediaRecorder.isTypeSupported('audio/wav')) {
+          mimeType = 'audio/wav';
+          fileExt = 'wav';
+        }
+      }
+
+      const mediaRecorder = new MediaRecorder(stream, mimeType ? { mimeType } : undefined);
       mediaRecorderRef.current = mediaRecorder;
 
       mediaRecorder.ondataavailable = (event) => {
@@ -998,13 +1041,13 @@ const MessengerPage = ({
       mediaRecorder.onstop = async () => {
         stream.getTracks().forEach(track => track.stop());
 
-        const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
+        const audioBlob = new Blob(audioChunksRef.current, { type: mimeType || 'audio/webm' });
         if (audioBlob.size === 0) return;
 
         const duration = Math.round((Date.now() - recordingStartTimeRef.current) / 1000);
         if (duration < 1) return;
 
-        const audioFile = new File([audioBlob], `voice_${Date.now()}.webm`, { type: 'audio/webm' });
+        const audioFile = new File([audioBlob], `voice_${Date.now()}.${fileExt}`, { type: mimeType || 'audio/webm' });
         const formData = new FormData();
         formData.append('file', audioFile);
 
@@ -1077,10 +1120,101 @@ const MessengerPage = ({
     setMessageInput(prev => prev + emoji);
   };
 
+  const handleSaveEditedMessage = async () => {
+    if (!editingMessage || !messageInput.trim()) return;
+    const trimmed = messageInput.trim();
+    const msgId = editingMessage._id;
+
+    if (socket) {
+      socket.emit('edit_message', {
+        messageId: msgId,
+        content: trimmed,
+        userId: currentUser._id
+      });
+    }
+
+    try {
+      const token = localStorage.getItem('token');
+      await fetch(`${API_BASE}/api/messages/message/${msgId}/edit`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify({ content: trimmed })
+      });
+    } catch (err) {
+      console.error('Failed to edit message via REST:', err);
+    }
+
+    setMessages(prev => prev.map(m => m._id === msgId ? { ...m, content: trimmed, isEdited: true, editedAt: new Date() } : m));
+    setEditingMessage(null);
+    setMessageInput('');
+  };
+
+  const handleDeleteMessage = async (msgId, type = 'for_me') => {
+    if (!msgId) return;
+
+    if (type === 'for_everyone') {
+      if (socket) {
+        socket.emit('unsend_message', {
+          messageId: msgId,
+          userId: currentUser._id
+        });
+      }
+      try {
+        const token = localStorage.getItem('token');
+        await fetch(`${API_BASE}/api/messages/message/${msgId}?type=for_everyone`, {
+          method: 'DELETE',
+          headers: { Authorization: `Bearer ${token}` }
+        });
+      } catch (e) {
+        console.error('Failed to unsend message:', e);
+      }
+      setMessages(prev => prev.map(m => m._id === msgId ? { ...m, isUnsent: true, content: 'This message was unsent', messageType: 'text' } : m));
+    } else {
+      if (socket) {
+        socket.emit('delete_message_for_me', {
+          messageId: msgId,
+          userId: currentUser._id
+        });
+      }
+      try {
+        const token = localStorage.getItem('token');
+        await fetch(`${API_BASE}/api/messages/message/${msgId}?type=for_me`, {
+          method: 'DELETE',
+          headers: { Authorization: `Bearer ${token}` }
+        });
+      } catch (e) {
+        console.error('Failed to delete message for me:', e);
+      }
+      setMessages(prev => prev.filter(m => m._id !== msgId));
+    }
+    setMessageActionTarget(null);
+  };
+
+  const scrollToMessage = (messageId) => {
+    if (!messageId) return;
+    const el = document.getElementById(`msg-${messageId}`);
+    if (el) {
+      el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      el.classList.add('ring-2', 'ring-[#7C3AED]', 'ring-offset-2');
+      setTimeout(() => {
+        el.classList.remove('ring-2', 'ring-[#7C3AED]', 'ring-offset-2');
+      }, 1500);
+    }
+  };
+
   const handleSendMessage = (e) => {
     e.preventDefault();
     if (!messageInput.trim() || !socket || !activePartner || !currentUser) return;
     
+    // If editing
+    if (editingMessage) {
+      handleSaveEditedMessage();
+      return;
+    }
+
     if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
     if (activePartner.isGroup) {
       socket.emit('group_typing', {
@@ -1092,7 +1226,8 @@ const MessengerPage = ({
       socket.emit('send_group_message', {
         senderId: currentUser._id,
         groupId: activePartner._id,
-        content: messageInput.trim()
+        content: messageInput.trim(),
+        replyTo: replyingTo || null
       });
     } else {
       socket.emit('direct_typing', {
@@ -1103,10 +1238,12 @@ const MessengerPage = ({
       socket.emit('send_direct_message', {
         senderId: currentUser._id,
         receiverId: activePartner._id,
-        content: messageInput.trim()
+        content: messageInput.trim(),
+        replyTo: replyingTo || null
       });
     }
     setMessageInput('');
+    setReplyingTo(null);
   };
 
   const handleInputChange = (e) => {
@@ -2069,28 +2206,59 @@ const MessengerPage = ({
                           </div>
                         )}
                         
-                        <div className="flex flex-col">
+                        <div className="flex flex-col group/msg relative">
                           {/* Display sender name for group chats */}
                           {!isUser && activePartner.isGroup && (
                             <span className="text-[10px] text-indigo-500 dark:text-indigo-400 font-bold block mb-0.5 ml-1 leading-none">{senderName}</span>
                           )}
-                          {/* speech bubble */}
+                          
+                          {/* Speech bubble */}
                           <div 
+                            id={`msg-${msg._id}`}
                             onClick={() => setExpandedMessageId(expandedMessageId === msg._id ? null : msg._id)}
                             className={`rounded-2xl relative shadow-3xs cursor-pointer select-none transition-all active:scale-[0.99] ${
-                              msg.messageType === 'image' || msg.messageType === 'voice'
-                                ? 'bg-transparent overflow-hidden' 
-                                : isUser 
-                                  ? 'py-2 px-3.5 text-white rounded-br-sm' 
-                                  : 'py-2 px-3.5 bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200 rounded-bl-sm border border-slate-200/40 dark:border-slate-800/80 shadow-3xs'
+                              msg.isUnsent
+                                ? 'py-2 px-3.5 bg-slate-100/80 dark:bg-slate-800/60 border border-dashed border-slate-300 dark:border-slate-700 text-slate-400 dark:text-slate-500 rounded-2xl'
+                                : msg.messageType === 'image' || msg.messageType === 'voice'
+                                  ? 'bg-transparent overflow-hidden' 
+                                  : isUser 
+                                    ? 'py-2 px-3.5 text-white rounded-br-sm' 
+                                    : 'py-2 px-3.5 bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200 rounded-bl-sm border border-slate-200/40 dark:border-slate-800/80 shadow-3xs'
                             }`}
                             style={
-                              isUser && msg.messageType !== 'image' && msg.messageType !== 'voice'
+                              !msg.isUnsent && isUser && msg.messageType !== 'image' && msg.messageType !== 'voice'
                                 ? { backgroundColor: localStorage.getItem('chat_theme') || '#7C3AED' }
                                 : {}
                             }
                           >
-                            {msg.messageType === 'image' ? (
+                            {/* Quoted Reply Card on top of message */}
+                            {msg.replyTo && msg.replyTo.content && !msg.isUnsent && (
+                              <div 
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  scrollToMessage(msg.replyTo.messageId);
+                                }}
+                                className={`mb-1.5 px-2.5 py-1 rounded-lg border-l-4 text-left select-none cursor-pointer transition-opacity hover:opacity-85 ${
+                                  isUser 
+                                    ? 'bg-black/20 border-amber-300 text-white' 
+                                    : 'bg-slate-100 dark:bg-slate-800/90 border-[#7C3AED] text-slate-800 dark:text-slate-200'
+                                }`}
+                              >
+                                <p className={`text-[10px] font-black leading-tight ${isUser ? 'text-amber-200' : 'text-[#7C3AED] dark:text-purple-400'}`}>
+                                  {msg.replyTo.senderName || 'User'}
+                                </p>
+                                <p className="text-[11px] truncate opacity-90 leading-tight mt-0.5 font-medium">
+                                  {msg.replyTo.messageType === 'image' ? '📷 Photo' : msg.replyTo.messageType === 'voice' ? '🎤 Voice Message' : msg.replyTo.content}
+                                </p>
+                              </div>
+                            )}
+
+                            {msg.isUnsent ? (
+                              <p className="text-[13px] italic text-slate-400 dark:text-slate-500 py-0.5 select-none flex items-center gap-1.5">
+                                <span className="opacity-75">🚫</span>
+                                <span>This message was unsent</span>
+                              </p>
+                            ) : msg.messageType === 'image' ? (
                               <div className="max-w-xs rounded-2xl overflow-hidden border border-slate-200/40 dark:border-slate-800 shadow-md">
                                 <img 
                                   src={getProfilePicUrl(msg.content)} 
@@ -2105,33 +2273,37 @@ const MessengerPage = ({
                             ) : msg.messageType === 'voice' ? (
                               <AudioPlayer src={getProfilePicUrl(msg.content)} />
                             ) : (
-                              <p className="text-[14px] leading-snug break-words font-medium">{msg.content}</p>
+                              <p className="text-[14px] leading-snug break-words font-medium">
+                                {msg.content}
+                                {msg.isEdited && (
+                                  <span className="text-[10px] opacity-75 italic ml-1 select-none font-normal">(edited)</span>
+                                )}
+                              </p>
                             )}
                           </div>
 
-                          {/* Timestamp show on click */}
-                          {expandedMessageId === msg._id && (
-                            <div className={`flex items-center gap-2 mt-1 px-1 transition-all animate-fade-in ${isUser ? 'justify-end' : 'justify-start'}`}>
-                              <span className="text-[9px] font-bold text-slate-400">
-                                {new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                              </span>
-                              {!isUser && (
-                                <>
-                                  <span className="text-[9px] text-slate-300 dark:text-slate-700 font-bold">•</span>
-                                  <button
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      setTargetMessageId(msg._id);
-                                      setActiveModal('report_message');
-                                    }}
-                                    className="text-[9px] font-bold text-amber-600 dark:text-amber-500 hover:underline cursor-pointer"
-                                  >
-                                    Report Message
-                                  </button>
-                                </>
-                              )}
-                            </div>
-                          )}
+                          {/* Quick Message Actions / Timestamp */}
+                          <div className={`flex items-center gap-2 mt-1 px-1 transition-all ${isUser ? 'justify-end' : 'justify-start'}`}>
+                            <span className="text-[9px] font-bold text-slate-400">
+                              {new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                            </span>
+                            
+                            {!msg.isUnsent && (
+                              <>
+                                <span className="text-[9px] text-slate-300 dark:text-slate-700 font-bold">•</span>
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    setMessageActionTarget(msg);
+                                    setActiveModal('message_actions');
+                                  }}
+                                  className="text-[9px] font-bold text-indigo-500 hover:text-indigo-600 hover:underline cursor-pointer flex items-center gap-0.5"
+                                >
+                                  <span>Options</span>
+                                </button>
+                              </>
+                            )}
+                          </div>
 
                           {/* Status Indicator for user's own last message */}
                           {isUser && isLastMessage && (
@@ -2235,6 +2407,57 @@ const MessengerPage = ({
                 accept="image/*"
                 className="hidden"
               />
+
+              {/* Replying Preview Banner */}
+              {replyingTo && (
+                <div className="max-w-4xl mx-auto mb-2 flex items-center justify-between bg-purple-50 dark:bg-slate-900 border-l-4 border-[#7C3AED] px-3.5 py-2 rounded-r-2xl shadow-xs animate-fade-in select-none">
+                  <div className="min-w-0 flex-1 flex items-center gap-2">
+                    <CornerUpLeft className="w-4 h-4 text-[#7C3AED] flex-shrink-0" />
+                    <div className="min-w-0 flex-1">
+                      <span className="text-[11px] font-black text-[#7C3AED] dark:text-purple-400 block leading-tight">
+                        Replying to {replyingTo.senderName || 'User'}
+                      </span>
+                      <p className="text-xs text-slate-500 dark:text-slate-400 truncate leading-tight mt-0.5">
+                        {replyingTo.messageType === 'image' ? '📷 Photo' : replyingTo.messageType === 'voice' ? '🎤 Voice Note' : replyingTo.content}
+                      </p>
+                    </div>
+                  </div>
+                  <button 
+                    type="button"
+                    onClick={() => setReplyingTo(null)}
+                    className="p-1 hover:bg-purple-100 dark:hover:bg-slate-800 rounded-full text-slate-400 hover:text-slate-600 transition-colors ml-2"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                </div>
+              )}
+
+              {/* Editing Preview Banner */}
+              {editingMessage && (
+                <div className="max-w-4xl mx-auto mb-2 flex items-center justify-between bg-amber-50 dark:bg-amber-950/30 border-l-4 border-amber-500 px-3.5 py-2 rounded-r-2xl shadow-xs animate-fade-in select-none">
+                  <div className="min-w-0 flex-1 flex items-center gap-2">
+                    <Edit3 className="w-4 h-4 text-amber-600 dark:text-amber-400 flex-shrink-0" />
+                    <div className="min-w-0 flex-1">
+                      <span className="text-[11px] font-black text-amber-600 dark:text-amber-400 block leading-tight">
+                        Editing message
+                      </span>
+                      <p className="text-xs text-slate-500 dark:text-slate-400 truncate leading-tight mt-0.5">
+                        {editingMessage.content}
+                      </p>
+                    </div>
+                  </div>
+                  <button 
+                    type="button"
+                    onClick={() => {
+                      setEditingMessage(null);
+                      setMessageInput('');
+                    }}
+                    className="p-1 hover:bg-amber-100 dark:hover:bg-slate-800 rounded-full text-slate-400 hover:text-slate-600 transition-colors ml-2"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                </div>
+              )}
 
               <form onSubmit={handleSendMessage} className="flex items-center gap-2 max-w-4xl mx-auto">
                 {isRecording ? (
@@ -3147,6 +3370,104 @@ const MessengerPage = ({
                     Submit Report
                   </button>
                 </div>
+              </>
+            )}
+
+            {activeModal === 'message_actions' && messageActionTarget && (
+              <>
+                <h3 className="text-base font-black text-slate-900 dark:text-white mb-3">Message Options</h3>
+                
+                <div className="space-y-2 mb-4">
+                  {/* Reply */}
+                  <button
+                    onClick={() => {
+                      const target = messageActionTarget;
+                      const targetSenderId = target.sender?._id ? target.sender._id.toString() : (target.sender ? target.sender.toString() : '');
+                      const isTargetUser = targetSenderId === (currentUser?._id ? currentUser._id.toString() : '');
+                      const targetSenderName = isTargetUser ? 'You' : (target.sender?.name || activePartner?.name || 'User');
+                      setReplyingTo({
+                        messageId: target._id,
+                        content: target.content,
+                        senderName: targetSenderName,
+                        messageType: target.messageType
+                      });
+                      setActiveModal(null);
+                      setMessageActionTarget(null);
+                    }}
+                    className="w-full flex items-center gap-3 px-4 py-3 rounded-2xl hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 font-bold text-sm transition-colors text-left"
+                  >
+                    <CornerUpLeft className="w-5 h-5 text-indigo-500" />
+                    <span>Reply to Message</span>
+                  </button>
+
+                  {/* Edit Message (if sender, unread, not unsent, text only) */}
+                  {((messageActionTarget.sender?._id ? messageActionTarget.sender._id.toString() : (messageActionTarget.sender ? messageActionTarget.sender.toString() : '')) === (currentUser?._id ? currentUser._id.toString() : '')) && 
+                   !messageActionTarget.isRead && !messageActionTarget.isUnsent && messageActionTarget.messageType === 'text' && (
+                    <button
+                      onClick={() => {
+                        setEditingMessage(messageActionTarget);
+                        setMessageInput(messageActionTarget.content);
+                        setActiveModal(null);
+                        setMessageActionTarget(null);
+                      }}
+                      className="w-full flex items-center gap-3 px-4 py-3 rounded-2xl hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 font-bold text-sm transition-colors text-left"
+                    >
+                      <Edit3 className="w-5 h-5 text-amber-500" />
+                      <span>Edit Message (Unseen)</span>
+                    </button>
+                  )}
+
+                  {/* Unsend for Everyone (if sender, not unsent) */}
+                  {((messageActionTarget.sender?._id ? messageActionTarget.sender._id.toString() : (messageActionTarget.sender ? messageActionTarget.sender.toString() : '')) === (currentUser?._id ? currentUser._id.toString() : '')) && 
+                   !messageActionTarget.isUnsent && (
+                    <button
+                      onClick={() => {
+                        handleDeleteMessage(messageActionTarget._id, 'for_everyone');
+                      }}
+                      className="w-full flex items-center gap-3 px-4 py-3 rounded-2xl hover:bg-rose-50 dark:hover:bg-rose-950/20 text-rose-600 font-bold text-sm transition-colors text-left"
+                    >
+                      <Undo className="w-5 h-5 text-rose-500" />
+                      <span>Unsend for Everyone</span>
+                    </button>
+                  )}
+
+                  {/* Delete for You */}
+                  <button
+                    onClick={() => {
+                      handleDeleteMessage(messageActionTarget._id, 'for_me');
+                    }}
+                    className="w-full flex items-center gap-3 px-4 py-3 rounded-2xl hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 font-bold text-sm transition-colors text-left"
+                  >
+                    <Trash2 className="w-5 h-5 text-slate-500" />
+                    <span>Delete for You</span>
+                  </button>
+
+                  {/* Report Message (if not sender and not unsent) */}
+                  {((messageActionTarget.sender?._id ? messageActionTarget.sender._id.toString() : (messageActionTarget.sender ? messageActionTarget.sender.toString() : '')) !== (currentUser?._id ? currentUser._id.toString() : '')) && 
+                   !messageActionTarget.isUnsent && (
+                    <button
+                      onClick={() => {
+                        setTargetMessageId(messageActionTarget._id);
+                        setActiveModal('report_message');
+                        setMessageActionTarget(null);
+                      }}
+                      className="w-full flex items-center gap-3 px-4 py-3 rounded-2xl hover:bg-amber-50 dark:hover:bg-amber-950/20 text-amber-600 font-bold text-sm transition-colors text-left"
+                    >
+                      <Star className="w-5 h-5 text-amber-500" />
+                      <span>Report Message</span>
+                    </button>
+                  )}
+                </div>
+
+                <button
+                  onClick={() => {
+                    setActiveModal(null);
+                    setMessageActionTarget(null);
+                  }}
+                  className="w-full py-2.5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 text-xs font-black rounded-xl cursor-pointer transition-colors"
+                >
+                  Cancel
+                </button>
               </>
             )}
 

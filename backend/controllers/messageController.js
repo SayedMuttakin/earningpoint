@@ -119,8 +119,11 @@ exports.getChatHistory = async (req, res) => {
         { sender: currentUserId, receiver: otherUserId },
         { sender: otherUserId, receiver: currentUserId }
       ],
-      group: { $exists: false }
-    }).sort({ createdAt: 1 });
+      group: { $exists: false },
+      deletedFor: { $ne: currentUserId }
+    })
+      .sort({ createdAt: 1 })
+      .populate('sender', 'name profilePic username isEmailVerified verificationBadge');
 
     // Mark messages received from this user as read
     await Message.updateMany(
@@ -167,7 +170,10 @@ exports.getGroupHistory = async (req, res) => {
     const currentUserId = req.user._id;
     const groupId = req.params.groupId;
 
-    const messages = await Message.find({ group: groupId })
+    const messages = await Message.find({ 
+      group: groupId,
+      deletedFor: { $ne: currentUserId }
+    })
       .sort({ createdAt: 1 })
       .populate('sender', 'name profilePic username isEmailVerified verificationBadge');
 
@@ -242,10 +248,14 @@ exports.uploadFile = async (req, res) => {
     if (!req.file) {
       return res.status(400).json({ message: 'No file uploaded' });
     }
-    const { optimizeUploadedFileToWebp } = require('../utils/imageOptimizer');
-    const webpFilename = await optimizeUploadedFileToWebp(req.file.path, 2048, 2048, 92);
-    // Return the filename so the frontend can save it and access via /api/image?file=filename
-    res.json({ filename: webpFilename || req.file.filename });
+    const isImage = req.file.mimetype && req.file.mimetype.startsWith('image/');
+    if (isImage) {
+      const { optimizeUploadedFileToWebp } = require('../utils/imageOptimizer');
+      const webpFilename = await optimizeUploadedFileToWebp(req.file.path, 2048, 2048, 92);
+      return res.json({ filename: webpFilename || req.file.filename });
+    }
+    // Return audio/video/other file directly without image optimization
+    res.json({ filename: req.file.filename });
   } catch (error) {
     console.error('Error uploading file:', error);
     res.status(500).json({ message: 'Internal server error' });
@@ -406,7 +416,7 @@ exports.reportMessage = async (req, res) => {
 exports.sendMessage = async (req, res) => {
   try {
     const senderId = req.user._id;
-    const { receiverId, content, messageType } = req.body;
+    const { receiverId, content, messageType, replyTo } = req.body;
 
     if (!receiverId || !content) {
       return res.status(400).json({ message: 'Receiver and content are required' });
@@ -429,7 +439,8 @@ exports.sendMessage = async (req, res) => {
       sender: senderId,
       receiver: receiverId,
       content: content,
-      messageType: messageType || 'text'
+      messageType: messageType || 'text',
+      replyTo: replyTo || null
     });
 
     const populatedMessage = await Message.findById(savedMessage._id)
@@ -450,6 +461,118 @@ exports.sendMessage = async (req, res) => {
   } catch (error) {
     console.error('Error sending message:', error);
     res.status(500).json({ message: 'Internal server error' });
+  }
+};
+
+// PUT /api/messages/:messageId/edit — Edit a sent message before seen
+exports.editMessage = async (req, res) => {
+  try {
+    const currentUserId = req.user._id;
+    const { content } = req.body;
+    if (!content || !content.trim()) {
+      return res.status(400).json({ message: 'Message content cannot be empty' });
+    }
+
+    const message = await Message.findById(req.params.messageId);
+    if (!message) {
+      return res.status(404).json({ message: 'Message not found' });
+    }
+
+    if (message.sender.toString() !== currentUserId.toString()) {
+      return res.status(403).json({ message: 'You can only edit your own messages' });
+    }
+
+    if (message.isRead) {
+      return res.status(400).json({ message: 'Cannot edit message after it has been seen' });
+    }
+
+    if (message.isUnsent) {
+      return res.status(400).json({ message: 'Cannot edit an unsent message' });
+    }
+
+    message.content = content.trim();
+    message.isEdited = true;
+    message.editedAt = new Date();
+    await message.save();
+
+    const populatedMessage = await Message.findById(message._id)
+      .populate('sender', 'name profilePic username isEmailVerified verificationBadge');
+
+    // Broadcast update via Socket.io
+    try {
+      const io = require('../socket').getIO();
+      if (io) {
+        if (message.group) {
+          io.to(message.group.toString()).emit('message_edited', populatedMessage);
+        } else {
+          io.to(message.receiver.toString()).emit('message_edited', populatedMessage);
+          io.to(message.sender.toString()).emit('message_edited', populatedMessage);
+        }
+      }
+    } catch (socketErr) {
+      console.error('Failed to broadcast edit via socket:', socketErr);
+    }
+
+    res.json(populatedMessage);
+  } catch (error) {
+    console.error('Error editing message:', error);
+    res.status(500).json({ message: error.message || 'Internal server error' });
+  }
+};
+
+// DELETE /api/messages/message/:messageId — Delete a single message (for_me or for_everyone)
+exports.deleteMessage = async (req, res) => {
+  try {
+    const currentUserId = req.user._id;
+    const messageId = req.params.messageId;
+    const { type } = req.query; // 'for_everyone' | 'for_me'
+
+    const message = await Message.findById(messageId);
+    if (!message) {
+      return res.status(404).json({ message: 'Message not found' });
+    }
+
+    if (type === 'for_everyone') {
+      // Only sender can unsend for everyone
+      if (message.sender.toString() !== currentUserId.toString()) {
+        return res.status(403).json({ message: 'You can only unsend your own messages for everyone' });
+      }
+
+      message.isUnsent = true;
+      message.content = 'This message was unsent';
+      message.messageType = 'text';
+      await message.save();
+
+      const populatedMessage = await Message.findById(message._id)
+        .populate('sender', 'name profilePic username isEmailVerified verificationBadge');
+
+      try {
+        const io = require('../socket').getIO();
+        if (io) {
+          if (message.group) {
+            io.to(message.group.toString()).emit('message_unsent', { messageId: message._id, updatedMessage: populatedMessage });
+          } else {
+            io.to(message.receiver.toString()).emit('message_unsent', { messageId: message._id, updatedMessage: populatedMessage });
+            io.to(message.sender.toString()).emit('message_unsent', { messageId: message._id, updatedMessage: populatedMessage });
+          }
+        }
+      } catch (socketErr) {
+        console.error('Failed to broadcast unsend via socket:', socketErr);
+      }
+
+      return res.json({ message: 'Message unsent for everyone', updatedMessage: populatedMessage });
+    } else {
+      // Delete for Me
+      if (!message.deletedFor.includes(currentUserId)) {
+        message.deletedFor.push(currentUserId);
+        await message.save();
+      }
+
+      return res.json({ message: 'Message deleted for you', messageId: message._id });
+    }
+  } catch (error) {
+    console.error('Error deleting message:', error);
+    res.status(500).json({ message: error.message || 'Internal server error' });
   }
 };
 

@@ -2241,14 +2241,14 @@ const PublicProfilePage = ({ userId, onBack, currentUser, isOwnProfile, setActiv
               {selectedDetailPost.image && (
                 <div 
                   onClick={() => setPreviewImageUrl(selectedDetailPost.image.startsWith('http') || selectedDetailPost.image.startsWith('/api') || selectedDetailPost.image.startsWith('data:') ? selectedDetailPost.image : `${API_BASE}/api/image?file=${encodeURIComponent(selectedDetailPost.image)}`)}
-                  className="rounded-2xl overflow-hidden border border-slate-100 dark:border-slate-850 bg-slate-50 dark:bg-slate-950 flex items-center justify-center w-full max-h-[350px] cursor-pointer hover:opacity-95 transition-opacity"
+                  className="rounded-2xl overflow-hidden border border-slate-100 dark:border-slate-850 bg-slate-50 dark:bg-slate-950 flex items-center justify-center w-full max-h-[580px] cursor-pointer hover:opacity-95 transition-opacity"
                 >
                   <img 
                     src={selectedDetailPost.image.startsWith('http') || selectedDetailPost.image.startsWith('/api') || selectedDetailPost.image.startsWith('data:') 
                       ? selectedDetailPost.image 
                       : `${API_BASE}/api/image?file=${encodeURIComponent(selectedDetailPost.image)}`} 
                     alt="Attachment"
-                    className="w-full h-auto object-contain max-h-[350px]"
+                    className="w-full h-auto object-cover max-h-[580px] rounded-2xl"
                   />
                 </div>
               )}

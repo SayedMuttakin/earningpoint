@@ -229,7 +229,7 @@ module.exports = {
       // Send direct message
       socket.on('send_direct_message', async (data) => {
         try {
-          const { senderId, receiverId, content, messageType } = data;
+          const { senderId, receiverId, content, messageType, replyTo } = data;
           if (!senderId || !receiverId || !content) return;
 
           // Block Check
@@ -248,11 +248,12 @@ module.exports = {
             sender: senderId,
             receiver: receiverId,
             content: content,
-            messageType: messageType || 'text'
+            messageType: messageType || 'text',
+            replyTo: replyTo || null
           });
 
           const populatedMessage = await Message.findById(savedMessage._id)
-            .populate('sender', 'name profilePic username');
+            .populate('sender', 'name profilePic username isEmailVerified verificationBadge');
 
           // Broadcast to receiver
           io.to(receiverId.toString()).emit('receive_direct_message', populatedMessage);
@@ -260,6 +261,83 @@ module.exports = {
           socket.emit('receive_direct_message', populatedMessage);
         } catch (err) {
           console.error('Socket send_direct_message error:', err);
+        }
+      });
+
+      // Edit message
+      socket.on('edit_message', async (data) => {
+        try {
+          const { messageId, content, userId } = data;
+          if (!messageId || !content || !userId) return;
+
+          const message = await Message.findById(messageId);
+          if (!message) return;
+          if (message.sender.toString() !== userId.toString()) return;
+          if (message.isRead || message.isUnsent) return;
+
+          message.content = content.trim();
+          message.isEdited = true;
+          message.editedAt = new Date();
+          await message.save();
+
+          const populatedMessage = await Message.findById(message._id)
+            .populate('sender', 'name profilePic username isEmailVerified verificationBadge');
+
+          if (message.group) {
+            io.to(message.group.toString()).emit('message_edited', populatedMessage);
+          } else {
+            io.to(message.receiver.toString()).emit('message_edited', populatedMessage);
+            io.to(message.sender.toString()).emit('message_edited', populatedMessage);
+          }
+        } catch (err) {
+          console.error('Socket edit_message error:', err);
+        }
+      });
+
+      // Unsend message (for everyone)
+      socket.on('unsend_message', async (data) => {
+        try {
+          const { messageId, userId } = data;
+          if (!messageId || !userId) return;
+
+          const message = await Message.findById(messageId);
+          if (!message) return;
+          if (message.sender.toString() !== userId.toString()) return;
+
+          message.isUnsent = true;
+          message.content = 'This message was unsent';
+          message.messageType = 'text';
+          await message.save();
+
+          const populatedMessage = await Message.findById(message._id)
+            .populate('sender', 'name profilePic username isEmailVerified verificationBadge');
+
+          if (message.group) {
+            io.to(message.group.toString()).emit('message_unsent', { messageId: message._id, updatedMessage: populatedMessage });
+          } else {
+            io.to(message.receiver.toString()).emit('message_unsent', { messageId: message._id, updatedMessage: populatedMessage });
+            io.to(message.sender.toString()).emit('message_unsent', { messageId: message._id, updatedMessage: populatedMessage });
+          }
+        } catch (err) {
+          console.error('Socket unsend_message error:', err);
+        }
+      });
+
+      // Delete message for me
+      socket.on('delete_message_for_me', async (data) => {
+        try {
+          const { messageId, userId } = data;
+          if (!messageId || !userId) return;
+
+          const message = await Message.findById(messageId);
+          if (message && !message.deletedFor.includes(userId)) {
+            message.deletedFor.push(userId);
+            await message.save();
+          }
+
+          socket.emit('message_deleted_for_me', { messageId });
+        } catch (err) {
+          console.error('Socket delete_message_for_me error:', err);
         }
       });
 
@@ -304,18 +382,19 @@ module.exports = {
       // Send group message
       socket.on('send_group_message', async (data) => {
         try {
-          const { senderId, groupId, content, messageType } = data;
+          const { senderId, groupId, content, messageType, replyTo } = data;
           if (!senderId || !groupId || !content) return;
 
           const savedMessage = await Message.create({
             sender: senderId,
             group: groupId,
             content: content,
-            messageType: messageType || 'text'
+            messageType: messageType || 'text',
+            replyTo: replyTo || null
           });
 
           const populatedMessage = await Message.findById(savedMessage._id)
-            .populate('sender', 'name profilePic');
+            .populate('sender', 'name profilePic username isEmailVerified verificationBadge');
 
           // Broadcast to all group members in the room
           io.to(groupId.toString()).emit('receive_group_message', populatedMessage);

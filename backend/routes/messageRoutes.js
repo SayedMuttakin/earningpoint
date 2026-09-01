@@ -16,6 +16,8 @@ const {
   deleteChatHistory,
   reportMessage,
   sendMessage,
+  editMessage,
+  deleteMessage,
   getUnreadCount
 } = require('../controllers/messageController');
 
@@ -28,6 +30,8 @@ router.put('/note', protect, updateNote);
 router.get('/notes', protect, getNotes);
 router.post('/upload', protect, upload.single('file'), uploadFile);
 router.post('/send', protect, sendMessage);
+router.put('/message/:messageId/edit', protect, editMessage);
+router.delete('/message/:messageId', protect, deleteMessage);
 
 // Delete chat history with a user
 router.delete('/chat/:otherUserId', protect, deleteChatHistory);

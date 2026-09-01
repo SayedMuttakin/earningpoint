@@ -28,6 +28,34 @@ const messageSchema = new mongoose.Schema({
   isRead: {
     type: Boolean,
     default: false
+  },
+  isEdited: {
+    type: Boolean,
+    default: false
+  },
+  editedAt: {
+    type: Date,
+    default: null
+  },
+  replyTo: {
+    messageId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Message'
+    },
+    content: String,
+    senderName: String,
+    messageType: {
+      type: String,
+      default: 'text'
+    }
+  },
+  deletedFor: [{
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User'
+  }],
+  isUnsent: {
+    type: Boolean,
+    default: false
   }
 }, { timestamps: true });
 

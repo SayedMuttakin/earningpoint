@@ -850,12 +850,12 @@ const CommunityPostCard = ({ post, onFollowToggle, onLikeToggle, onCommentClick,
       {post.image && (
         <div 
           onClick={() => onImageClick && onImageClick(getImageUrl(post.image))}
-          className="rounded-2xl overflow-hidden bg-slate-100/60 dark:bg-slate-800/50 mt-1 w-full max-h-[450px] select-none cursor-pointer hover:opacity-95 transition-opacity"
+          className="rounded-2xl overflow-hidden bg-slate-100 dark:bg-slate-900 mt-2 w-full flex items-center justify-center select-none cursor-pointer hover:opacity-95 transition-opacity"
         >
           <img 
             src={getImageUrl(post.image)} 
             alt="Post Content"
-            className="w-full h-auto object-contain max-h-[450px]"
+            className="w-full h-auto max-h-[580px] object-cover rounded-2xl"
             loading="lazy"
             decoding="async"
           />
