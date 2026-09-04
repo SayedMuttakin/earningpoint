@@ -1,9 +1,11 @@
-﻿import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { 
   Database, Download, Upload, Copy, Check, RefreshCw, AlertTriangle, 
   Trash2, FileJson, CheckCircle2, AlertCircle, ArrowRight, Layers,
-  HardDrive, ShieldCheck, ChevronDown, ChevronUp, Sparkles, X
+  HardDrive, ShieldCheck, ChevronDown, ChevronUp, Sparkles, X, Eye
 } from 'lucide-react';
+import { Capacitor } from '@capacitor/core';
+import { Share } from '@capacitor/share';
 
 const DatabaseBackup = ({ ADMIN_API, authHeaders }) => {
   const [dbStats, setDbStats] = useState(null);
@@ -15,6 +17,12 @@ const DatabaseBackup = ({ ADMIN_API, authHeaders }) => {
   const [exportingFull, setExportingFull] = useState(false);
   const [exportingCol, setExportingCol] = useState(null);
   const [copiedFull, setCopiedFull] = useState(false);
+
+  // View JSON Modal
+  const [viewJsonModal, setViewJsonModal] = useState(false);
+  const [viewJsonTitle, setViewJsonTitle] = useState('');
+  const [viewJsonData, setViewJsonData] = useState('');
+  const [modalCopied, setModalCopied] = useState(false);
   
   // Import states
   const [importTab, setImportTab] = useState('paste'); // 'paste' | 'upload'
@@ -62,28 +70,83 @@ const DatabaseBackup = ({ ADMIN_API, authHeaders }) => {
     fetchStats();
   }, []);
 
+  // ── Universal Download Helper ──
+  const downloadJsonFile = async (data, filename) => {
+    const jsonStr = typeof data === 'string' ? data : JSON.stringify(data, null, 2);
+
+    // If native mobile app via Capacitor
+    if (Capacitor.isNativePlatform()) {
+      try {
+        await Share.share({
+          title: filename,
+          text: jsonStr,
+          dialogTitle: 'Save Database Backup'
+        });
+        showToast('✅ Share / Save dialog opened!');
+        return true;
+      } catch (e) {
+        console.log('Capacitor share fallback:', e);
+      }
+    }
+
+    // Web Browser Blob download
+    try {
+      const blob = new Blob([jsonStr], { type: 'application/json;charset=utf-8' });
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', filename);
+      document.body.appendChild(link);
+      link.click();
+      
+      setTimeout(() => {
+        document.body.removeChild(link);
+        window.URL.revokeObjectURL(url);
+      }, 500);
+
+      showToast('✅ File download started!');
+      return true;
+    } catch (err) {
+      // Fallback Data URI
+      try {
+        const dataUri = 'data:application/json;charset=utf-8,' + encodeURIComponent(jsonStr);
+        const link = document.createElement('a');
+        link.href = dataUri;
+        link.setAttribute('download', filename);
+        document.body.appendChild(link);
+        link.click();
+        setTimeout(() => {
+          document.body.removeChild(link);
+        }, 500);
+        showToast('✅ File download started!');
+        return true;
+      } catch (err2) {
+        // Fallback: Open Modal to Copy
+        setViewJsonTitle(filename);
+        setViewJsonData(jsonStr);
+        setViewJsonModal(true);
+        showToast('ℹ️ Download blocked by browser, opened in viewer to copy!');
+        return false;
+      }
+    }
+  };
+
   // ── Export Full Database ──
-  const handleDownloadFullExport = () => {
+  const handleDownloadFullExport = async () => {
     setExportingFull(true);
     try {
-      const url = `${ADMIN_API}/database/export?download=true`;
-      
-      const link = document.createElement('a');
-      fetch(url, { headers: authHeaders })
-        .then(res => res.blob())
-        .then(blob => {
-          const blobUrl = window.URL.createObjectURL(blob);
-          link.href = blobUrl;
-          link.download = `database_backup_${new Date().toISOString().slice(0, 10)}.json`;
-          document.body.appendChild(link);
-          link.click();
-          document.body.removeChild(link);
-          window.URL.revokeObjectURL(blobUrl);
-          showToast('✅ Full Database Backup downloaded successfully!');
-        })
-        .catch(() => showToast('❌ Download failed'));
+      const res = await fetch(`${ADMIN_API}/database/export`, { headers: authHeaders });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        showToast('❌ ' + (err.message || 'Failed to export database'));
+        return;
+      }
+      const data = await res.json();
+      const filename = `database_backup_${new Date().toISOString().slice(0, 10)}.json`;
+      await downloadJsonFile(data, filename);
     } catch (err) {
-      showToast('❌ Export error');
+      console.error(err);
+      showToast('❌ Export error: ' + err.message);
     } finally {
       setExportingFull(false);
     }
@@ -111,22 +174,38 @@ const DatabaseBackup = ({ ADMIN_API, authHeaders }) => {
     }
   };
 
+  // ── View Full JSON in Modal ──
+  const handleViewFullJson = async () => {
+    setExportingFull(true);
+    try {
+      const res = await fetch(`${ADMIN_API}/database/export`, { headers: authHeaders });
+      if (res.ok) {
+        const data = await res.json();
+        const jsonStr = JSON.stringify(data, null, 2);
+        setViewJsonTitle(`database_backup_${new Date().toISOString().slice(0, 10)}.json`);
+        setViewJsonData(jsonStr);
+        setViewJsonModal(true);
+      } else {
+        showToast('❌ Failed to load JSON data');
+      }
+    } catch (err) {
+      showToast('❌ Error loading JSON');
+    } finally {
+      setExportingFull(false);
+    }
+  };
+
   // ── Export Single Collection ──
   const handleExportSingleCol = async (colName) => {
     setExportingCol(colName);
     try {
-      const res = await fetch(`${ADMIN_API}/database/export?collection=${colName}&download=true`, { headers: authHeaders });
+      const res = await fetch(`${ADMIN_API}/database/export?collection=${colName}`, { headers: authHeaders });
       if (res.ok) {
-        const blob = await res.blob();
-        const blobUrl = window.URL.createObjectURL(blob);
-        const link = document.createElement('a');
-        link.href = blobUrl;
-        link.download = `${colName}_backup_${new Date().toISOString().slice(0, 10)}.json`;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        window.URL.revokeObjectURL(blobUrl);
-        showToast(`✅ Exported collection '${colName}' successfully!`);
+        const data = await res.json();
+        const filename = `${colName}_backup_${new Date().toISOString().slice(0, 10)}.json`;
+        await downloadJsonFile(data, filename);
+      } else {
+        showToast(`❌ Failed to export '${colName}'`);
       }
     } catch (err) {
       showToast(`❌ Failed to export '${colName}'`);
@@ -343,24 +422,35 @@ const DatabaseBackup = ({ ADMIN_API, authHeaders }) => {
               Download or copy all collections (users, posts, messages, settings, transactions, etc.) into a single structured JSON file.
             </p>
 
-            <div className="flex flex-col sm:flex-row gap-3 pt-1">
+            <div className="flex flex-col gap-2.5 pt-1">
               <button
                 onClick={handleDownloadFullExport}
                 disabled={exportingFull}
-                className="flex-1 flex items-center justify-center gap-2 py-3 px-4 rounded-xl bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white text-xs font-black shadow-lg shadow-indigo-500/25 transition-all active:scale-95 disabled:opacity-50"
+                className="w-full flex items-center justify-center gap-2 py-3.5 px-4 rounded-xl bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white text-xs font-black shadow-lg shadow-indigo-500/25 transition-all active:scale-95 disabled:opacity-50"
               >
                 <Download className={`w-4 h-4 ${exportingFull ? 'animate-bounce' : ''}`} />
-                <span>Download .JSON</span>
+                <span>{exportingFull ? 'Exporting...' : 'Download Full .JSON File'}</span>
               </button>
 
-              <button
-                onClick={handleCopyFullJson}
-                disabled={exportingFull}
-                className="flex items-center justify-center gap-2 py-3 px-4 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-bold border border-slate-700 transition-all active:scale-95 disabled:opacity-50"
-              >
-                {copiedFull ? <Check className="w-4 h-4 text-emerald-400" /> : <Copy className="w-4 h-4" />}
-                <span>{copiedFull ? 'Copied!' : 'Copy JSON'}</span>
-              </button>
+              <div className="grid grid-cols-2 gap-2">
+                <button
+                  onClick={handleCopyFullJson}
+                  disabled={exportingFull}
+                  className="flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-bold border border-slate-700 transition-all active:scale-95 disabled:opacity-50"
+                >
+                  {copiedFull ? <Check className="w-4 h-4 text-emerald-400" /> : <Copy className="w-4 h-4" />}
+                  <span>{copiedFull ? 'Copied!' : 'Copy JSON'}</span>
+                </button>
+
+                <button
+                  onClick={handleViewFullJson}
+                  disabled={exportingFull}
+                  className="flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-bold border border-slate-700 transition-all active:scale-95 disabled:opacity-50"
+                >
+                  <Eye className="w-4 h-4 text-indigo-400" />
+                  <span>View JSON</span>
+                </button>
+              </div>
             </div>
           </div>
 
@@ -704,6 +794,57 @@ const DatabaseBackup = ({ ADMIN_API, authHeaders }) => {
                 className="flex-1 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-500 disabled:opacity-50 text-white text-xs font-black transition-all shadow-lg shadow-rose-600/20"
               >
                 {clearing ? 'Clearing...' : 'Confirm Clear'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ─── VIEW / COPY FULL JSON MODAL ─── */}
+      {viewJsonModal && (
+        <div className="fixed inset-0 z-[120] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 animate-fade-in">
+          <div className="bg-[#0F172A] border border-slate-800 w-full max-w-2xl rounded-3xl p-6 shadow-2xl space-y-4 text-white flex flex-col max-h-[85vh]">
+            <div className="flex items-center justify-between border-b border-slate-800 pb-3 shrink-0">
+              <div className="flex items-center gap-2">
+                <FileJson className="w-5 h-5 text-indigo-400" />
+                <h3 className="text-sm font-black truncate">{viewJsonTitle || 'Database JSON Viewer'}</h3>
+              </div>
+              <button 
+                onClick={() => setViewJsonModal(false)}
+                className="p-1 rounded-full hover:bg-slate-800 text-slate-400 hover:text-white"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="flex-1 min-h-0 bg-[#0B1120] border border-slate-800 rounded-2xl p-4 overflow-y-auto">
+              <pre className="text-xs font-mono text-slate-200 whitespace-pre-wrap break-words leading-relaxed select-all">
+                {viewJsonData}
+              </pre>
+            </div>
+
+            <div className="flex flex-col sm:flex-row gap-3 pt-2 shrink-0">
+              <button
+                onClick={async () => {
+                  await navigator.clipboard.writeText(viewJsonData);
+                  setModalCopied(true);
+                  setTimeout(() => setModalCopied(false), 2500);
+                  showToast('📋 Copied all JSON to clipboard!');
+                }}
+                className="flex-1 py-3 rounded-xl bg-slate-800 hover:bg-slate-700 text-white text-xs font-bold flex items-center justify-center gap-2 border border-slate-700 active:scale-95 transition-all"
+              >
+                {modalCopied ? <Check className="w-4 h-4 text-emerald-400" /> : <Copy className="w-4 h-4" />}
+                <span>{modalCopied ? 'Copied to Clipboard!' : 'Copy All JSON'}</span>
+              </button>
+
+              <button
+                onClick={() => {
+                  downloadJsonFile(viewJsonData, viewJsonTitle || 'database_backup.json');
+                }}
+                className="flex-1 py-3 rounded-xl bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white text-xs font-black flex items-center justify-center gap-2 shadow-lg shadow-indigo-500/25 active:scale-95 transition-all"
+              >
+                <Download className="w-4 h-4" />
+                <span>Save / Download File</span>
               </button>
             </div>
           </div>
