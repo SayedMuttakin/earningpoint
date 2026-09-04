@@ -11,6 +11,7 @@ const ChatSession = require('../models/ChatSession');
 const WeeklyMission = require('../models/WeeklyMission');
 const Notification = require('../models/Notification');
 const AdminNotification = require('../models/AdminNotification');
+const mongoose = require('mongoose');
 const jwt = require('jsonwebtoken');
 const { createNotification } = require('./notificationController');
 const { activateReferralBonus } = require('./referralController');
@@ -917,3 +918,327 @@ exports.deleteAdminNotification = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
+
+// ─── DATABASE BACKUP & RESTORE / MIGRATION CONTROLLER ────────────────────────
+
+// Helper to deserialize MongoDB Extended JSON ($oid, $date, $numberLong, etc.)
+const sanitizeDocForImport = (doc) => {
+  if (!doc || typeof doc !== 'object') return doc;
+  if (Array.isArray(doc)) return doc.map(sanitizeDocForImport);
+  
+  const result = {};
+  for (const [key, value] of Object.entries(doc)) {
+    if (value && typeof value === 'object') {
+      if ('$oid' in value && typeof value.$oid === 'string') {
+        try {
+          result[key] = new mongoose.Types.ObjectId(value.$oid);
+        } catch {
+          result[key] = value.$oid;
+        }
+      } else if ('$date' in value) {
+        if (typeof value.$date === 'object' && value.$date.$numberLong) {
+          result[key] = new Date(Number(value.$date.$numberLong));
+        } else {
+          result[key] = new Date(value.$date);
+        }
+      } else if ('$numberInt' in value) {
+        result[key] = parseInt(value.$numberInt, 10);
+      } else if ('$numberDouble' in value) {
+        result[key] = parseFloat(value.$numberDouble);
+      } else if ('$numberLong' in value) {
+        result[key] = Number(value.$numberLong);
+      } else {
+        result[key] = sanitizeDocForImport(value);
+      }
+    } else if (key === '_id' && typeof value === 'string' && /^[0-9a-fA-F]{24}$/.test(value)) {
+      try {
+        result[key] = new mongoose.Types.ObjectId(value);
+      } catch {
+        result[key] = value;
+      }
+    } else if (
+      (key.toLowerCase().endsWith('id') || key === 'author' || key === 'sender' || key === 'receiver') &&
+      typeof value === 'string' &&
+      /^[0-9a-fA-F]{24}$/.test(value)
+    ) {
+      try {
+        result[key] = new mongoose.Types.ObjectId(value);
+      } catch {
+        result[key] = value;
+      }
+    } else if (
+      (key === 'createdAt' || key === 'updatedAt' || key === 'editedAt' || key === 'expiresAt' || key === 'timestamp') &&
+      typeof value === 'string' &&
+      !isNaN(Date.parse(value))
+    ) {
+      result[key] = new Date(value);
+    } else {
+      result[key] = value;
+    }
+  }
+  return result;
+};
+
+// 1. Get database summary & collection stats
+exports.getDatabaseStats = async (req, res) => {
+  try {
+    const db = mongoose.connection.db;
+    if (!db) {
+      return res.status(500).json({ message: 'Database connection not established' });
+    }
+
+    const collections = await db.listCollections().toArray();
+    const stats = [];
+    let totalDocs = 0;
+
+    for (const col of collections) {
+      const name = col.name;
+      if (name.startsWith('system.')) continue;
+      const count = await db.collection(name).countDocuments();
+      totalDocs += count;
+      stats.push({ name, count });
+    }
+
+    // Sort by count descending
+    stats.sort((a, b) => b.count - a.count);
+
+    res.json({
+      dbName: db.databaseName,
+      totalCollections: stats.length,
+      totalDocuments: totalDocs,
+      collections: stats,
+    });
+  } catch (error) {
+    console.error('getDatabaseStats error:', error);
+    res.status(500).json({ message: 'Failed to fetch database stats', error: error.message });
+  }
+};
+
+// 2. Export full database or specific collection as JSON
+exports.exportDatabase = async (req, res) => {
+  try {
+    const db = mongoose.connection.db;
+    if (!db) {
+      return res.status(500).json({ message: 'Database connection not established' });
+    }
+
+    const { collection, download } = req.query;
+    const collectionsList = await db.listCollections().toArray();
+    
+    const targetCollections = collection 
+      ? collectionsList.filter(c => c.name.toLowerCase() === collection.toLowerCase())
+      : collectionsList.filter(c => !c.name.startsWith('system.'));
+
+    if (collection && targetCollections.length === 0) {
+      return res.status(404).json({ message: `Collection '${collection}' not found` });
+    }
+
+    const exportedData = {};
+    for (const col of targetCollections) {
+      const docs = await db.collection(col.name).find({}).toArray();
+      exportedData[col.name] = docs;
+    }
+
+    const payload = {
+      version: '1.0',
+      exportedAt: new Date().toISOString(),
+      database: db.databaseName,
+      collections: exportedData,
+    };
+
+    if (download === 'true') {
+      const filename = `database_backup_${collection ? collection + '_' : ''}${new Date().toISOString().slice(0, 10)}.json`;
+      res.setHeader('Content-Type', 'application/json');
+      res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+      return res.send(JSON.stringify(payload, null, 2));
+    }
+
+    res.json(payload);
+  } catch (error) {
+    console.error('exportDatabase error:', error);
+    res.status(500).json({ message: 'Failed to export database', error: error.message });
+  }
+};
+
+// 3. Import / Restore / Paste JSON data into MongoDB
+exports.importDatabase = async (req, res) => {
+  try {
+    const db = mongoose.connection.db;
+    if (!db) {
+      return res.status(500).json({ message: 'Database connection not established' });
+    }
+
+    let { data, mode = 'upsert', targetCollection } = req.body;
+    if (!data) {
+      return res.status(400).json({ message: 'No database data provided to import' });
+    }
+
+    // Parse string if user pasted raw JSON
+    let parsedData = data;
+    if (typeof data === 'string') {
+      try {
+        parsedData = JSON.parse(data);
+      } catch (e) {
+        return res.status(400).json({ message: 'Invalid JSON format: ' + e.message });
+      }
+    }
+
+    let collectionsToProcess = {};
+
+    if (parsedData.collections && typeof parsedData.collections === 'object' && !Array.isArray(parsedData.collections)) {
+      collectionsToProcess = parsedData.collections;
+    } else if (Array.isArray(parsedData)) {
+      if (!targetCollection) {
+        return res.status(400).json({ 
+          message: 'Pasted data is an array of documents. Please select which collection this belongs to (e.g., users, posts, transactions, etc.).' 
+        });
+      }
+      collectionsToProcess[targetCollection] = parsedData;
+    } else if (typeof parsedData === 'object') {
+      let hasArrayValues = false;
+      for (const [k, v] of Object.entries(parsedData)) {
+        if (Array.isArray(v)) {
+          collectionsToProcess[k] = v;
+          hasArrayValues = true;
+        }
+      }
+      if (!hasArrayValues) {
+        if (targetCollection) {
+          collectionsToProcess[targetCollection] = [parsedData];
+        } else {
+          return res.status(400).json({ 
+            message: 'Unrecognized JSON structure. Expected a backup object with { collections: { ... } } or an array of documents.' 
+          });
+        }
+      }
+    }
+
+    const summary = {};
+    let totalImported = 0;
+    let totalUpdated = 0;
+    let totalSkipped = 0;
+    let totalErrors = 0;
+
+    for (const [rawColName, docs] of Object.entries(collectionsToProcess)) {
+      if (!Array.isArray(docs)) continue;
+      const colName = rawColName.toLowerCase().trim();
+      const col = db.collection(colName);
+
+      summary[colName] = {
+        total: docs.length,
+        inserted: 0,
+        updated: 0,
+        skipped: 0,
+        errors: [],
+      };
+
+      if (mode === 'replace') {
+        try {
+          await col.deleteMany({});
+        } catch (err) {
+          console.warn(`Could not clear collection ${colName}:`, err.message);
+        }
+      }
+
+      for (let i = 0; i < docs.length; i++) {
+        const rawDoc = docs[i];
+        if (!rawDoc || typeof rawDoc !== 'object') continue;
+
+        const doc = sanitizeDocForImport(rawDoc);
+
+        try {
+          if (mode === 'replace') {
+            await col.insertOne(doc);
+            summary[colName].inserted++;
+            totalImported++;
+          } else {
+            // Upsert mode
+            if (doc._id) {
+              const res = await col.updateOne(
+                { _id: doc._id },
+                { $set: doc },
+                { upsert: true }
+              );
+              if (res.upsertedCount > 0) {
+                summary[colName].inserted++;
+                totalImported++;
+              } else if (res.matchedCount > 0) {
+                summary[colName].updated++;
+                totalUpdated++;
+              } else {
+                summary[colName].inserted++;
+                totalImported++;
+              }
+            } else {
+              await col.insertOne(doc);
+              summary[colName].inserted++;
+              totalImported++;
+            }
+          }
+        } catch (err) {
+          // If duplicate key error on secondary index (e.g. email / phone), skip or update safely
+          if (err.code === 11000) {
+            try {
+              if (doc._id) {
+                await col.updateOne({ _id: doc._id }, { $set: doc });
+                summary[colName].updated++;
+                totalUpdated++;
+              } else {
+                summary[colName].skipped++;
+                totalSkipped++;
+              }
+            } catch (e2) {
+              summary[colName].skipped++;
+              totalSkipped++;
+            }
+          } else {
+            summary[colName].errors.push(`Item #${i + 1}: ${err.message}`);
+            totalErrors++;
+          }
+        }
+      }
+    }
+
+    res.json({
+      success: true,
+      message: `Database import complete! Total ${totalImported} inserted, ${totalUpdated} updated, ${totalSkipped} skipped, ${totalErrors} errors.`,
+      stats: { totalImported, totalUpdated, totalSkipped, totalErrors },
+      summary,
+    });
+  } catch (error) {
+    console.error('importDatabase error:', error);
+    res.status(500).json({ message: 'Failed to import database', error: error.message });
+  }
+};
+
+// 4. Clear/Reset Collection(s)
+exports.clearDatabase = async (req, res) => {
+  try {
+    const { confirmation, collection } = req.body;
+    if (confirmation !== 'CONFIRM_RESET_DATABASE') {
+      return res.status(400).json({ message: 'Please provide the exact confirmation code: CONFIRM_RESET_DATABASE' });
+    }
+
+    const db = mongoose.connection.db;
+    if (!db) {
+      return res.status(500).json({ message: 'Database connection not established' });
+    }
+
+    if (collection && collection !== 'all') {
+      await db.collection(collection).deleteMany({});
+      return res.json({ success: true, message: `Collection '${collection}' cleared successfully` });
+    }
+
+    const collections = await db.listCollections().toArray();
+    for (const col of collections) {
+      if (col.name.startsWith('system.')) continue;
+      await db.collection(col.name).deleteMany({});
+    }
+
+    res.json({ success: true, message: 'All database collections cleared successfully' });
+  } catch (error) {
+    console.error('clearDatabase error:', error);
+    res.status(500).json({ message: 'Failed to clear database', error: error.message });
+  }
+};
+

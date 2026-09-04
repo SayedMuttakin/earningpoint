@@ -97,4 +97,10 @@ router.post('/products', adminProtect, uploadMiddleware, adminController.createP
 router.put('/products/:id', adminProtect, uploadMiddleware, adminController.updateProduct);
 router.delete('/products/:id', adminProtect, adminController.deleteProduct);
 
+// Database Backup & Migration Management
+router.get('/database/stats', adminProtect, adminController.getDatabaseStats);
+router.get('/database/export', adminProtect, adminController.exportDatabase);
+router.post('/database/import', adminProtect, adminController.importDatabase);
+router.post('/database/clear', adminProtect, adminController.clearDatabase);
+
 module.exports = router;
