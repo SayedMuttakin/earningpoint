@@ -11,6 +11,9 @@ project(':capacitor-community-facebook-login').projectDir = new File('F:/Earning
 include ':capacitor-app'
 project(':capacitor-app').projectDir = new File('F:/EarningPoint/frontend/node_modules/@capacitor/app/android')
 
+include ':capacitor-filesystem'
+project(':capacitor-filesystem').projectDir = new File('F:/EarningPoint/frontend/node_modules/@capacitor/filesystem/android')
+
 include ':capacitor-local-notifications'
 project(':capacitor-local-notifications').projectDir = new File('F:/EarningPoint/frontend/node_modules/@capacitor/local-notifications/android')
 

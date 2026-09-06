@@ -363,9 +363,6 @@ const ShareModal = ({ isOpen, onClose, shareUrl, title, text, showToast, post })
                       )}
                       <div className="flex flex-col">
                         <span className="text-sm font-bold text-slate-800 dark:text-slate-200 line-clamp-1">{user.name}</span>
-                        {user.username && (
-                          <span className="text-xs text-slate-400 line-clamp-1">@{user.username}</span>
-                        )}
                       </div>
                     </div>
 

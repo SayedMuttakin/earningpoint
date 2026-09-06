@@ -458,7 +458,6 @@ const ReactionsModal = ({ postId, onClose, onUserClick }) => {
                         <VerifiedBadge size="sm" type={user.verificationBadge || 'blue'} />
                       )}
                     </p>
-                    <p className="text-[10px] text-slate-400 font-semibold truncate">@{user.username || 'user'}</p>
                   </div>
                 </div>
                 <div className="w-7 h-7 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-sm shrink-0 shadow-xs border border-slate-200 dark:border-slate-700">
@@ -1907,7 +1906,6 @@ const HomePage = ({ setActiveTab, setSelectedNewsId, setActiveChatPartner, setSe
                                 <VerifiedBadge size="w-3.5 h-3.5" type={user.verificationBadge === 'golden' ? 'golden' : 'blue'} />
                               )}
                             </div>
-                            <span className="text-[10px] text-slate-400 font-bold block truncate">@{user.username || 'user'}</span>
                           </div>
                         </button>
 
@@ -2031,15 +2029,12 @@ const HomePage = ({ setActiveTab, setSelectedNewsId, setActiveChatPartner, setSe
                                   )}
                                 </div>
 
-                                <h4 className="text-xs font-black text-slate-900 dark:text-white truncate w-full flex items-center justify-center gap-1">
+                                <h4 className="text-xs font-black text-slate-900 dark:text-white truncate w-full flex items-center justify-center gap-1 mb-2">
                                   <span className="truncate">{sUser.name}</span>
                                   {((sUser.verificationBadge && sUser.verificationBadge !== 'none') || sUser.isEmailVerified) && (
                                     <VerifiedBadge size="sm" type={sUser.verificationBadge || 'blue'} />
                                   )}
                                 </h4>
-                                <p className="text-[10px] text-slate-400 font-bold truncate w-full mb-2">
-                                  @{sUser.username || 'user'}
-                                </p>
                               </div>
 
                               <button

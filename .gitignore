@@ -26,6 +26,8 @@ error.log
 # Android build
 frontend/android/.gradle/
 frontend/android/app/build/
+*.aab
+*.apk
 
 # OS files
 Thumbs.db

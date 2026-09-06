@@ -2080,11 +2080,6 @@ const MessengerPage = ({
                                       {((user.verificationBadge === 'blue' || user.verificationBadge === 'purple' || user.verificationBadge === 'golden') || (user.isEmailVerified && user.verificationBadge !== 'none')) && (
                                         <VerifiedBadge type={user.verificationBadge === 'golden' ? 'golden' : 'purple'} iconClassName="w-3.5 h-3.5 flex-shrink-0" />
                                       )}
-                                      {user.username && (
-                                        <span className="text-[11px] font-mono text-slate-400 font-normal shrink-0">
-                                          @{user.username}
-                                        </span>
-                                      )}
                                     </h2>
                                   </div>
                                   <p className="text-[12px] text-slate-500 dark:text-slate-400 truncate mt-0.5">
@@ -2987,7 +2982,6 @@ const MessengerPage = ({
                                 <VerifiedBadge type={user.verificationBadge === 'golden' ? 'golden' : 'purple'} iconClassName="w-3.5 h-3.5 flex-shrink-0" />
                               )}
                             </p>
-                            <p className="text-[10px] text-slate-400 truncate max-w-[150px] mt-0.5">@{user.username || 'user'}</p>
                           </div>
                         </div>
 

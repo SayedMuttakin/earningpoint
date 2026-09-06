@@ -81,7 +81,7 @@ const StoryViewerModal = ({
     if (progressTimerRef.current) clearInterval(progressTimerRef.current);
     setProgress(0);
 
-    const totalDuration = currentStory.music?.url ? 10000 : 5000; // 10s for music stories, 5s normal
+    const totalDuration = 20000; // 20s per story / day
     const interval = 50;
     let elapsed = 0;
 

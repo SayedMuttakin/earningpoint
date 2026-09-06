@@ -106,7 +106,6 @@ const ProfileReactionsModal = ({ postId, onClose, onUserClick }) => {
                         <VerifiedBadge size="sm" type={user.verificationBadge || 'blue'} />
                       )}
                     </p>
-                    <p className="text-[10px] text-slate-400 font-semibold truncate">@{user.username || 'user'}</p>
                   </div>
                 </div>
                 <div className="w-7 h-7 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-sm shrink-0 shadow-xs border border-slate-200 dark:border-slate-700">
@@ -539,7 +538,6 @@ const FollowListModal = ({ targetUserId, initialTab, onClose, onUserClick, setAc
                         <VerifiedBadge type={u.verificationBadge === 'golden' ? 'golden' : 'blue'} iconClassName="w-3.5 h-3.5 flex-shrink-0" />
                       )}
                     </h4>
-                    <span className="text-[10px] font-bold text-slate-400 block truncate">@{u.username || 'user'}</span>
                   </div>
                 </div>
 
@@ -1567,10 +1565,6 @@ const PublicProfilePage = ({ userId, onBack, currentUser, isOwnProfile, setActiv
               <VerifiedBadge type={profile.verificationBadge === 'golden' ? 'golden' : 'blue'} iconClassName="w-5 h-5 flex-shrink-0" />
             )}
           </h2>
-          
-          <p className="text-xs font-black text-slate-500 dark:text-slate-400 tracking-wide font-mono">
-            @{profile.username}
-          </p>
 
           {/* Simple "Verified" text above bio (NOT blue/golden badge) */}
           {Boolean(profile.isAccountVerified || (profile.isPhoneVerified && profile.isEmailVerified)) ? (
