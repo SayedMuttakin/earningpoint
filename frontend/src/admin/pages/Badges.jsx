@@ -165,8 +165,8 @@ const Badges = ({ ADMIN_API, authHeaders }) => {
                       <div className="text-[10px] text-slate-500">{u.phoneOrEmail}</div>
                     </div>
                     {u.verificationBadge && u.verificationBadge !== 'none' && (
-                      <span className={`px-2 py-0.5 rounded-full text-[9px] font-black uppercase ${u.verificationBadge === 'golden' ? 'bg-amber-500/20 text-amber-400' : 'bg-blue-500/20 text-blue-400'}`}>
-                        {u.verificationBadge}
+                      <span className={`px-2 py-0.5 rounded-full text-[9px] font-black uppercase ${u.verificationBadge === 'golden' ? 'bg-amber-500/20 text-amber-400' : 'bg-purple-500/20 text-purple-400'}`}>
+                        {u.verificationBadge === 'blue' ? 'purple' : u.verificationBadge}
                       </span>
                     )}
                   </div>
@@ -206,20 +206,20 @@ const Badges = ({ ADMIN_API, authHeaders }) => {
                     <span>No Badge</span>
                   </button>
 
-                  {/* Blue Option */}
+                  {/* Purple Option */}
                   <button
-                    onClick={() => setSelectedBadge('blue')}
+                    onClick={() => setSelectedBadge('purple')}
                     className={`py-2 px-3 rounded-lg border text-center text-[10px] font-black uppercase tracking-wider transition-all flex flex-col items-center justify-center gap-1.5 ${
-                      selectedBadge === 'blue'
-                        ? 'bg-blue-600/20 border-blue-500 text-blue-400 shadow-lg shadow-blue-500/10'
-                        : 'bg-transparent border-slate-800 text-slate-500 hover:text-blue-400 hover:bg-slate-800/30'
+                      selectedBadge === 'purple' || selectedBadge === 'blue'
+                        ? 'bg-purple-600/20 border-purple-500 text-purple-400 shadow-lg shadow-purple-500/10'
+                        : 'bg-transparent border-slate-800 text-slate-500 hover:text-purple-400 hover:bg-slate-800/30'
                     }`}
                   >
-                    <svg viewBox="0 0 24 24" className="w-5 h-5 fill-blue-500 text-white inline-block flex-shrink-0" fill="currentColor">
-                      <path d="M22.5 12.5c0-1.58-.875-2.95-2.148-3.6.154-.435.238-.905.238-1.4 0-2.21-1.71-3.998-3.918-3.998-.47 0-.92.084-1.336.25C14.818 2.415 13.51 1.5 12 1.5s-2.816.917-3.337 2.25c-.416-.165-.866-.25-1.336-.25-2.21 0-3.918 1.79-3.918 4 0 .495.084.965.238 1.4-1.273.65-2.148 2.02-2.148 3.6 0 1.46.827 2.766 2.057 3.435-.032.227-.057.452-.057.682 0 2.21 1.71 4 3.918 4 .47 0 .92-.086 1.336-.25.52 1.334 1.816 2.25 3.337 2.25s2.816-.916 3.337-2.25c.416.164.866.25 1.336.25 2.21 0 3.918-1.79 3.918-4 0-.23-.025-.455-.057-.682 1.23-.67 2.057-1.976 2.057-3.435z" fill="#1d9bf0"/>
+                    <svg viewBox="0 0 24 24" className="w-5 h-5 fill-purple-500 text-white inline-block flex-shrink-0" fill="currentColor">
+                      <path d="M22.5 12.5c0-1.58-.875-2.95-2.148-3.6.154-.435.238-.905.238-1.4 0-2.21-1.71-3.998-3.918-3.998-.47 0-.92.084-1.336.25C14.818 2.415 13.51 1.5 12 1.5s-2.816.917-3.337 2.25c-.416-.165-.866-.25-1.336-.25-2.21 0-3.918 1.79-3.918 4 0 .495.084.965.238 1.4-1.273.65-2.148 2.02-2.148 3.6 0 1.46.827 2.766 2.057 3.435-.032.227-.057.452-.057.682 0 2.21 1.71 4 3.918 4 .47 0 .92-.086 1.336-.25.52 1.334 1.816 2.25 3.337 2.25s2.816-.916 3.337-2.25c.416.164.866.25 1.336.25 2.21 0 3.918-1.79 3.918-4 0-.23-.025-.455-.057-.682 1.23-.67 2.057-1.976 2.057-3.435z" fill="#7c3aed"/>
                       <path d="M14.496 9.613l-3.393 3.393-1.614-1.615c-.293-.293-.768-.293-1.06 0-.294.293-.294.768 0 1.06l2.144 2.146c.146.146.338.22.53.22s.384-.073.53-.22l3.923-3.924c.294-.293.294-.768 0-1.06-.293-.293-.768-.293-1.06 0z" fill="#fff"/>
                     </svg>
-                    <span>Blue</span>
+                    <span>Purple</span>
                   </button>
 
                   {/* Gold Option */}
@@ -290,8 +290,8 @@ const Badges = ({ ADMIN_API, authHeaders }) => {
                     <div>
                       <div className="text-white text-xs font-extrabold flex items-center gap-1.5">
                         {u.name || 'No Name'}
-                        <span className={`px-2 py-0.5 rounded-full text-[8px] font-black uppercase ${u.verificationBadge === 'golden' ? 'bg-amber-500/20 text-amber-400' : 'bg-blue-500/20 text-blue-400'}`}>
-                          {u.verificationBadge || 'blue'}
+                        <span className={`px-2 py-0.5 rounded-full text-[8px] font-black uppercase ${u.verificationBadge === 'golden' ? 'bg-amber-500/20 text-amber-400' : 'bg-purple-500/20 text-purple-400'}`}>
+                          {u.verificationBadge === 'blue' ? 'purple' : (u.verificationBadge || 'purple')}
                         </span>
                       </div>
                       <div className="text-[10px] text-slate-500 font-semibold truncate max-w-[160px]">{u.phoneOrEmail}</div>

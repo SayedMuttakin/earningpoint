@@ -17,6 +17,20 @@ const PostSchema = new mongoose.Schema({
     type: String,
     default: null,
   },
+  postType: {
+    type: String,
+    enum: ['standard', 'profile_picture', 'cover_photo'],
+    default: 'standard',
+  },
+  sharedPostId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Post',
+    default: null,
+  },
+  shareCount: {
+    type: Number,
+    default: 0,
+  },
   authorId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User',
@@ -157,12 +171,21 @@ const PostSchema = new mongoose.Schema({
       type: Date,
       default: Date.now
     }
-  }]
+  }],
+  isHidden: {
+    type: Boolean,
+    default: false,
+  },
+  hiddenReason: {
+    type: String,
+    default: null,
+  }
 }, { timestamps: true });
 
 // Optimize query performance for loading posts and video reels instantly
 PostSchema.index({ video: 1, createdAt: -1 });
 PostSchema.index({ authorId: 1, createdAt: -1 });
 PostSchema.index({ createdAt: -1 });
+PostSchema.index({ isHidden: 1, createdAt: -1 });
 
 module.exports = mongoose.model('Post', PostSchema);

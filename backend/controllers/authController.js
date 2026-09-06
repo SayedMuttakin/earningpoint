@@ -1,10 +1,13 @@
+const crypto = require('crypto');
 const User = require('../models/User');
+const EmailOtp = require('../models/EmailOtp');
 const Transaction = require('../models/Transaction');
 const Referral = require('../models/Referral');
 const Notification = require('../models/Notification');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const { OAuth2Client } = require('google-auth-library');
+const { sendVerificationEmail } = require('../utils/emailService');
 
 // Get referrer name
 exports.getReferrerName = async (req, res) => {
@@ -55,6 +58,100 @@ exports.checkUsernameAvailability = async (req, res) => {
   }
 };
 
+// Send 6-digit OTP for Registration Email Verification
+exports.sendRegistrationOTP = async (req, res) => {
+  try {
+    const { email } = req.body || {};
+    if (!email || typeof email !== 'string' || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) {
+      return res.status(400).json({ message: 'Valid email address is required.' });
+    }
+
+    const cleanEmail = email.trim().toLowerCase();
+
+    // Check if email already registered (case-insensitive)
+    const existingUser = await User.findOne({
+      $or: [
+        { phoneOrEmail: cleanEmail },
+        { phoneOrEmail: { $regex: new RegExp(`^${cleanEmail.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`, 'i') } },
+        { verifiedEmail: cleanEmail },
+        { verifiedEmail: { $regex: new RegExp(`^${cleanEmail.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`, 'i') } },
+      ]
+    });
+
+    if (existingUser) {
+      return res.status(400).json({
+        message: 'This email is already registered. Please log in.',
+        isRegistered: true,
+      });
+    }
+
+    // Delete any previous OTPs for this email
+    await EmailOtp.deleteMany({ email: cleanEmail });
+
+    // Generate 6-digit OTP
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    const expiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
+
+    await EmailOtp.create({
+      email: cleanEmail,
+      otp,
+      expiresAt,
+    });
+
+    console.log(`[OTP] Generated 6-digit OTP for ${cleanEmail}`);
+
+    // Send verification email
+    await sendVerificationEmail(cleanEmail, otp);
+
+    return res.json({ success: true, message: 'Verification code sent to your email.' });
+  } catch (error) {
+    console.error('Send Registration OTP Error:', error);
+    return res.status(500).json({ message: 'Failed to send verification email. Please try again.' });
+  }
+};
+
+// Verify Registration 6-digit OTP
+exports.verifyRegistrationOTP = async (req, res) => {
+  try {
+    const { email, otp } = req.body || {};
+    if (!email || !otp) {
+      return res.status(400).json({ message: 'Email and verification code are required.' });
+    }
+
+    const cleanEmail = email.trim().toLowerCase();
+    const cleanOtp = otp.toString().trim();
+
+    const otpRecord = await EmailOtp.findOne({ email: cleanEmail }).sort({ createdAt: -1 });
+
+    if (!otpRecord) {
+      return res.status(400).json({ message: 'No verification code found. Please request a new code.' });
+    }
+
+    if (new Date() > otpRecord.expiresAt) {
+      return res.status(400).json({ message: 'Verification code has expired. Please request a new code.' });
+    }
+
+    if (otpRecord.otp !== cleanOtp) {
+      return res.status(400).json({ message: 'Invalid verification code. Please try again.' });
+    }
+
+    const verificationToken = crypto.randomBytes(24).toString('hex');
+    otpRecord.verified = true;
+    otpRecord.verificationToken = verificationToken;
+    await otpRecord.save();
+
+    return res.json({
+      success: true,
+      verified: true,
+      verificationToken,
+      message: 'Email verified successfully!'
+    });
+  } catch (error) {
+    console.error('Verify Registration OTP Error:', error);
+    return res.status(500).json({ message: 'Verification failed. Please try again.' });
+  }
+};
+
 const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID;
 const googleClient = new OAuth2Client(GOOGLE_CLIENT_ID);
 
@@ -67,29 +164,92 @@ const generateToken = (id) => {
 
 // Register User
 exports.registerUser = async (req, res) => {
-  const { name, phoneOrEmail, password, referCode, country, username } = req.body;
+  const { name, phoneOrEmail, email, password, referCode, country, username, verificationToken } = req.body;
 
   try {
-    // Username is required and must be 3-20 alphanumeric/underscore characters
-    if (!username || !username.trim()) {
-      return res.status(400).json({ message: 'Username is required' });
-    }
-    const usernameClean = username.trim();
-    if (!/^[a-zA-Z0-9_]{3,20}$/.test(usernameClean)) {
-      return res.status(400).json({ message: 'Username must be 3-20 characters (letters, numbers, underscore only)' });
+    const effectivePhoneOrEmail = (phoneOrEmail || email || '').trim();
+    const effectiveEmail = (email || (effectivePhoneOrEmail.includes('@') ? effectivePhoneOrEmail : '')).trim().toLowerCase();
+
+    if (!effectivePhoneOrEmail) {
+      return res.status(400).json({ message: 'Mobile number or Email address is required.' });
     }
 
-    const userExists = await User.findOne({ phoneOrEmail });
+    if (!password) {
+      return res.status(400).json({ message: 'Password is required.' });
+    }
+
+    let isEmailVerified = false;
+    let verifiedEmail = '';
+
+    // Verify email token if verificationToken provided
+    if (effectiveEmail && verificationToken) {
+      const otpRecord = await EmailOtp.findOne({
+        email: effectiveEmail,
+        verified: true,
+        verificationToken
+      });
+
+      if (!otpRecord) {
+        return res.status(400).json({ message: 'Email verification expired or invalid. Please verify your email again.' });
+      }
+
+      isEmailVerified = true;
+      verifiedEmail = effectiveEmail;
+      await EmailOtp.deleteMany({ email: effectiveEmail }); // Cleanup after successful verification
+    }
+
+    const userExists = await User.findOne({
+      $or: [
+        { phoneOrEmail: effectivePhoneOrEmail },
+        { phoneOrEmail: effectivePhoneOrEmail.toLowerCase() },
+        ...(effectiveEmail ? [{ verifiedEmail: effectiveEmail }] : [])
+      ]
+    });
+
     if (userExists) {
-      return res.status(400).json({ message: 'User already exists' });
+      return res.status(400).json({ message: 'User already exists with this mobile number or email.' });
+    }
+
+    // Determine or auto-generate clean unique username
+    let usernameClean = username ? username.trim() : '';
+    if (!usernameClean) {
+      let base = '';
+      if (name && name.trim()) {
+        base = name.trim().toLowerCase().replace(/\s+/g, '_').replace(/[^a-zA-Z0-9_]/g, '');
+      } else if (effectiveEmail) {
+        base = effectiveEmail.split('@')[0].replace(/[^a-zA-Z0-9_]/g, '');
+      } else if (effectivePhoneOrEmail) {
+        base = 'user_' + effectivePhoneOrEmail.replace(/[^0-9]/g, '').slice(-4);
+      } else {
+        base = 'user';
+      }
+      if (base.length < 3) base = 'user_' + base;
+      if (base.length > 15) base = base.slice(0, 15);
+
+      usernameClean = base;
+      let counter = 1;
+      while (await User.findOne({ $or: [{ username: usernameClean }, { referralCode: usernameClean.toUpperCase() }] })) {
+        const rand = Math.floor(100 + Math.random() * 9000);
+        usernameClean = `${base}${rand}`.slice(0, 20);
+        counter++;
+        if (counter > 25) {
+          usernameClean = `user_${Date.now().toString().slice(-6)}`;
+          break;
+        }
+      }
+    } else {
+      if (!/^[a-zA-Z0-9_]{3,20}$/.test(usernameClean)) {
+        return res.status(400).json({ message: 'Username must be 3-20 characters (letters, numbers, underscore only)' });
+      }
+      const referralCodeCheck = usernameClean.toUpperCase();
+      const usernameExists = await User.findOne({ $or: [{ username: usernameClean }, { referralCode: referralCodeCheck }] });
+      if (usernameExists) {
+        return res.status(400).json({ message: 'Username is already taken. Please choose another.' });
+      }
     }
 
     // Username becomes the referral code (uppercase)
     const referralCode = usernameClean.toUpperCase();
-    const usernameExists = await User.findOne({ referralCode });
-    if (usernameExists) {
-      return res.status(400).json({ message: 'Username is already taken. Please choose another.' });
-    }
 
     // Hash password
     const salt = await bcrypt.genSalt(10);
@@ -97,8 +257,10 @@ exports.registerUser = async (req, res) => {
 
     // Create User — referralCode = username (uppercase)
     const user = await User.create({
-      name,
-      phoneOrEmail,
+      name: name?.trim() || usernameClean,
+      phoneOrEmail: effectivePhoneOrEmail,
+      verifiedEmail: verifiedEmail || (effectiveEmail || ''),
+      isEmailVerified: isEmailVerified,
       password: hashedPassword,
       country: country || '',
       referralCode,
@@ -165,7 +327,19 @@ exports.loginUser = async (req, res) => {
   const { phoneOrEmail, password } = req.body;
 
   try {
-    const user = await User.findOne({ phoneOrEmail });
+    const cleanIdentifier = phoneOrEmail?.trim();
+    if (!cleanIdentifier || !password) {
+      return res.status(400).json({ message: 'Email/Username and password are required.' });
+    }
+
+    const user = await User.findOne({
+      $or: [
+        { phoneOrEmail: cleanIdentifier },
+        { phoneOrEmail: cleanIdentifier.toLowerCase() },
+        { verifiedEmail: cleanIdentifier.toLowerCase() },
+        { username: cleanIdentifier.toLowerCase() },
+      ]
+    });
 
     if (user && user.password && (await bcrypt.compare(password, user.password))) {
       res.json({
@@ -177,7 +351,7 @@ exports.loginUser = async (req, res) => {
         token: generateToken(user._id),
       });
     } else {
-      res.status(401).json({ message: 'Invalid credentials' });
+      res.status(401).json({ message: 'Invalid credentials. Please check your email/username and password.' });
     }
   } catch (error) {
     console.error(error);

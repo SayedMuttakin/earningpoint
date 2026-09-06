@@ -274,7 +274,7 @@ const ReelCard = ({ video, isActive, isMuted, toggleMute, currentUserId, onLikeT
           <h3 className="font-bold text-sm sm:text-base flex items-center gap-1">
             {creatorName}
             {(video.isVerified || video.authorDetails?.isEmailVerified) && (
-              <VerifiedBadge iconClassName="w-4 h-4 fill-blue-500 text-white flex-shrink-0" />
+              <VerifiedBadge iconClassName="w-4 h-4 flex-shrink-0" />
             )}
           </h3>
           {!isSelf && !isCreatorFollowing && (

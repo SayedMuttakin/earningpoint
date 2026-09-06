@@ -4,7 +4,8 @@ const User = require('../models/User');
 // Fields needed across all controllers — only fetch these to avoid loading the entire document
 const AUTH_SELECT_FIELDS = [
   '_id', 'name', 'phoneOrEmail', 'googleAvatar', 'facebookAvatar', 'profilePic', 'coverPic',
-  'isEmailVerified', 'isBanned', 'isPremium', 'premiumExpiry',
+  'isEmailVerified', 'isPhoneVerified', 'isAccountVerified', 'verifiedPhone', 'verifiedEmail',
+  'isBanned', 'isPremium', 'premiumExpiry',
   'balance', 'points', 'lifetimePoints',
   'referralCode', 'darkMode', 'following', 'followers',
   'role', 'savedPosts'

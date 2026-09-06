@@ -87,7 +87,7 @@ const GoogleIcon = () => (
 );
 
 // ── GoogleButton ───────────────────────────────────────────────────────────────
-const GoogleButton = ({ onSuccess }) => {
+const GoogleButton = ({ onSuccess, text = "Continue with Google" }) => {
   const [loading, setLoading] = useState(false);
   const [googleError, setGoogleError] = useState('');
 
@@ -178,7 +178,7 @@ const GoogleButton = ({ onSuccess }) => {
   };
 
   return (
-    <>
+    <div className="w-full">
       {googleError && (
         <div className="mb-2 bg-red-50 text-red-500 p-2 rounded-xl text-xs text-center border border-red-100 font-semibold w-full">
           {googleError}
@@ -188,22 +188,16 @@ const GoogleButton = ({ onSuccess }) => {
         type="button"
         onClick={handleGoogleLogin}
         disabled={loading}
-        className="w-full flex items-center justify-center gap-3 py-3.5 rounded-2xl font-semibold text-sm transition-all active:scale-[0.97] disabled:opacity-70"
-        style={{
-          background: 'white',
-          border: '1.5px solid #E5E7EB',
-          color: '#374151',
-          boxShadow: '0 2px 8px rgba(0,0,0,0.06)',
-        }}
+        className="w-full flex items-center justify-center gap-3 py-3.5 px-4 rounded-2xl font-bold text-sm text-slate-750 dark:text-slate-200 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-xs hover:bg-slate-50 dark:hover:bg-slate-750 transition-all active:scale-[0.98] disabled:opacity-70 cursor-pointer"
       >
         {loading ? (
-          <div className="w-5 h-5 border-2 border-gray-200 border-t-gray-600 rounded-full animate-spin" />
+          <div className="w-5 h-5 border-2 border-gray-300 border-t-purple-600 rounded-full animate-spin flex-shrink-0" />
         ) : (
           <GoogleIcon />
         )}
-        {loading ? 'Signing in…' : 'Sign up with Google'}
+        <span>{loading ? 'Connecting with Google…' : text}</span>
       </button>
-    </>
+    </div>
   );
 };
 
@@ -239,41 +233,17 @@ const InputField = ({ icon: Icon, type = 'text', placeholder, value, onChange, n
 // ── RegistrationForm ──────────────────────────────────────────────────────────
 const RegistrationForm = ({ onToggleForm, onRegisterSuccess }) => {
   const [formData, setFormData] = useState({
-    username: '',
     name: '',
     phoneOrEmail: '',
-    phone: '',
     password: '',
     confirmPassword: '',
-    country: 'BGD',
   });
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
-  const [isCountryDropdownOpen, setIsCountryDropdownOpen] = useState(false);
-  const [countrySearchQuery, setCountrySearchQuery] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [activeField, setActiveField] = useState('');
   const [agreedTerms, setAgreedTerms] = useState(false);
-
-  const [isCheckingUsername, setIsCheckingUsername] = useState(false);
-  const [usernameStatus, setUsernameStatus] = useState(null);
-
-  useEffect(() => {
-    const checkUsername = async () => {
-      if (!formData.username) { setUsernameStatus(null); return; }
-      if (!/^[a-zA-Z0-9_]{3,20}$/.test(formData.username)) { setUsernameStatus('invalid'); return; }
-      setIsCheckingUsername(true);
-      try {
-        const response = await fetch(`${API_BASE}/api/auth/check-username/${formData.username}`);
-        const data = await response.json();
-        setUsernameStatus(data.available ? 'available' : 'taken');
-      } catch { setUsernameStatus(null); }
-      finally { setIsCheckingUsername(false); }
-    };
-    const timer = setTimeout(checkUsername, 500);
-    return () => clearTimeout(timer);
-  }, [formData.username]);
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -281,46 +251,44 @@ const RegistrationForm = ({ onToggleForm, onRegisterSuccess }) => {
     if (refToken) localStorage.setItem('pending_referral_code', refToken);
   }, []);
 
-  const filteredCountries = countries.filter(c =>
-    c.name.toLowerCase().includes(countrySearchQuery.toLowerCase())
-  );
-  const selectedCountryObj = countries.find(c => c.id === formData.country) || countries[0];
-  const handleChange = (e) => setFormData({ ...formData, [e.target.name]: e.target.value });
-
-  const hasMinLength = formData.password.length >= 8;
-  const hasUppercase = /[A-Z]/.test(formData.password);
-  const hasLowercase = /[a-z]/.test(formData.password);
-  const hasNumber = /\d/.test(formData.password);
-  const hasSpecial = /[@$!%*?&#]/.test(formData.password);
-  const isPasswordValid = hasMinLength && hasUppercase && hasLowercase && hasNumber && hasSpecial;
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData({ ...formData, [name]: value });
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!formData.username?.trim()) { setError('Username is required.'); return; }
-    if (!/^[a-zA-Z0-9_]{3,20}$/.test(formData.username.trim())) { setError('Username must be 3-20 characters (letters, numbers, underscore only).'); return; }
-    if (usernameStatus === 'taken') { setError('Username is already taken.'); return; }
-    if (!/^\d{11}$/.test(formData.phoneOrEmail)) { setError('Phone number must be exactly 11 digits.'); return; }
-    if (!isPasswordValid) { setError('Please fix the password requirements.'); return; }
+    if (!formData.name?.trim()) { setError('Full Name is required.'); return; }
+    if (!formData.phoneOrEmail?.trim()) { setError('Mobile number or Email is required.'); return; }
+    if (!formData.password) { setError('Password is required.'); return; }
+    if (formData.password.length < 4) { setError('Password must be at least 4 characters.'); return; }
     if (formData.password !== formData.confirmPassword) { setError('Passwords do not match.'); return; }
     if (!agreedTerms) { setError('Please agree to the Terms & Conditions.'); return; }
 
     setIsLoading(true);
     setError('');
     try {
+      const cleanIdentifier = formData.phoneOrEmail.trim();
+      const isEmail = cleanIdentifier.includes('@');
+
       const response = await fetch(`${API_BASE}/api/auth/register`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          name: formData.name,
-          username: formData.username,
-          phoneOrEmail: formData.phoneOrEmail,
+          name: formData.name.trim(),
+          phoneOrEmail: cleanIdentifier,
+          email: isEmail ? cleanIdentifier : '',
           password: formData.password,
           country: 'Bangladesh',
+          referCode: localStorage.getItem('pending_referral_code') || '',
         }),
       });
       const data = await response.json();
       if (response.ok) {
         localStorage.setItem('token', data.token);
+        localStorage.setItem('tokenNormal', data.token);
+        if (data.darkMode) localStorage.setItem('darkMode', 'true');
+        localStorage.removeItem('pending_referral_code');
         if (onRegisterSuccess) onRegisterSuccess();
       } else {
         setError(data.message || 'Registration failed');
@@ -334,7 +302,7 @@ const RegistrationForm = ({ onToggleForm, onRegisterSuccess }) => {
 
   return (
     <div
-      className="w-full min-h-screen flex flex-col overflow-y-auto"
+      className="w-full min-h-screen flex flex-col justify-center items-center overflow-y-auto py-8 sm:py-12 px-4"
       style={{ background: 'linear-gradient(160deg, #F5F0FF 0%, #FFFFFF 60%, #EDE9FE 100%)' }}
     >
       {/* Decorative blobs */}
@@ -347,88 +315,73 @@ const RegistrationForm = ({ onToggleForm, onRegisterSuccess }) => {
         style={{ background: 'radial-gradient(circle, rgba(139,92,246,0.2) 0%, transparent 70%)' }}
       />
 
-      {/* Back button */}
-      <div className="flex items-center px-5 pt-12 pb-2 z-10">
-        <button
-          type="button"
-          onClick={onToggleForm}
-          className="w-9 h-9 flex items-center justify-center rounded-full transition-all active:scale-90"
-          style={{ background: 'rgba(124,58,237,0.08)' }}
-        >
-          <svg viewBox="0 0 24 24" fill="none" stroke="#7C3AED" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5">
-            <polyline points="15 18 9 12 15 6"/>
-          </svg>
-        </button>
-      </div>
-
-      {/* Content */}
-      <div className="flex-1 flex flex-col items-center px-6 pb-10 z-10 pt-4">
-        <h1 className="text-3xl font-black mb-1 bg-gradient-to-r from-brand-600 via-indigo-600 to-purple-600 bg-clip-text text-transparent select-none">Zenivio</h1>
-
-        <div className="text-center mb-6 mt-1">
-          <p className="text-lg font-bold" style={{ color: '#7C3AED' }}>Create Account</p>
-          <p className="text-sm mt-0.5" style={{ color: '#6B7280' }}>Join Zenivio and start your journey</p>
+      {/* Main Centered Card on Desktop */}
+      <div className="w-full max-w-[440px] sm:max-w-[460px] mx-auto bg-white/80 dark:bg-slate-900/80 sm:bg-white sm:dark:bg-slate-900 backdrop-blur-md sm:shadow-2xl rounded-[32px] sm:border border-purple-100/80 dark:border-purple-900/30 p-6 sm:p-8 z-10 flex flex-col">
+        {/* Back button */}
+        <div className="flex items-center justify-between pb-3">
+          <button
+            type="button"
+            onClick={onToggleForm}
+            className="w-9 h-9 flex items-center justify-center rounded-full transition-all active:scale-90 cursor-pointer"
+            style={{ background: 'rgba(124,58,237,0.08)' }}
+            title="Back to Login"
+          >
+            <svg viewBox="0 0 24 24" fill="none" stroke="#7C3AED" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5">
+              <polyline points="15 18 9 12 15 6"/>
+            </svg>
+          </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="w-full space-y-3">
-          {/* Full Name */}
-          <InputField
-            icon={UserIcon}
-            name="name"
-            type="text"
-            autoComplete="name"
-            placeholder="Full Name"
-            value={formData.name}
-            onChange={handleChange}
-            onFocus={() => setActiveField('name')}
-            onBlur={() => setActiveField('')}
-            active={activeField === 'name'}
-          />
-
-          {/* Username */}
-          <div>
-            <InputField
-              icon={AtSignIcon}
-              name="username"
-              type="text"
-              autoComplete="username"
-              placeholder="Username"
-              value={formData.username}
-              onChange={handleChange}
-              onFocus={() => setActiveField('username')}
-              onBlur={() => setActiveField('')}
-              active={activeField === 'username'}
+        {/* Content */}
+        <div className="flex flex-col items-center w-full">
+          <div className="flex items-center gap-2 mb-1 select-none">
+            <img 
+              src="/zenivio-logo.png" 
+              alt="Zenivio Logo" 
+              className="w-8 h-8 sm:w-9 sm:h-9 object-contain rounded-xl shadow-xs" 
             />
-            {isCheckingUsername && (
-              <p className="text-xs font-semibold ml-2 mt-1 animate-pulse" style={{ color: '#7C3AED' }}>Checking availability…</p>
-            )}
-            {!isCheckingUsername && formData.username && usernameStatus === 'invalid' && (
-              <p className="text-xs font-semibold ml-2 mt-1 text-red-500">3-20 characters, letters/numbers/underscore only</p>
-            )}
-            {!isCheckingUsername && formData.username && usernameStatus === 'taken' && (
-              <p className="text-xs font-semibold ml-2 mt-1 text-red-500">Username already taken ✗</p>
-            )}
-            {!isCheckingUsername && formData.username && usernameStatus === 'available' && (
-              <p className="text-xs font-semibold ml-2 mt-1" style={{ color: '#059669' }}>✓ Username available!</p>
-            )}
+            <h1 className="text-3xl font-black bg-gradient-to-r from-brand-600 via-indigo-600 to-purple-600 bg-clip-text text-transparent">
+              Zenivio
+            </h1>
           </div>
 
-          {/* Phone Number */}
-          <InputField
-            icon={PhoneIcon}
-            name="phoneOrEmail"
-            type="tel"
-            autoComplete="tel"
-            placeholder="Phone Number (11 digits)"
-            value={formData.phoneOrEmail}
-            onChange={handleChange}
-            onFocus={() => setActiveField('phone')}
-            onBlur={() => setActiveField('')}
-            active={activeField === 'phone'}
-          />
+          <div className="text-center mb-5 mt-1">
+            <p className="text-lg font-bold" style={{ color: '#7C3AED' }}>Create Account</p>
+            <p className="text-sm mt-0.5" style={{ color: '#6B7280' }}>
+              Join the Zenivio community
+            </p>
+          </div>
 
-          {/* Password */}
-          <div>
+          <form onSubmit={handleSubmit} className="w-full space-y-3.5">
+            {/* 1st: Full Name */}
+            <InputField
+              icon={UserIcon}
+              name="name"
+              type="text"
+              autoComplete="name"
+              placeholder="Full Name"
+              value={formData.name}
+              onChange={handleChange}
+              onFocus={() => setActiveField('name')}
+              onBlur={() => setActiveField('')}
+              active={activeField === 'name'}
+            />
+
+            {/* 2nd: Mobile number or Email */}
+            <InputField
+              icon={MailIcon}
+              name="phoneOrEmail"
+              type="text"
+              autoComplete="username"
+              placeholder="Mobile number or Email"
+              value={formData.phoneOrEmail}
+              onChange={handleChange}
+              onFocus={() => setActiveField('phoneOrEmail')}
+              onBlur={() => setActiveField('')}
+              active={activeField === 'phoneOrEmail'}
+            />
+
+            {/* 3rd: Password */}
             <InputField
               icon={LockIcon}
               name="password"
@@ -441,108 +394,109 @@ const RegistrationForm = ({ onToggleForm, onRegisterSuccess }) => {
               onBlur={() => setActiveField('')}
               active={activeField === 'password'}
               rightSlot={
-                <button type="button" onClick={() => setShowPassword(!showPassword)} className="text-gray-400 hover:text-gray-600 flex-shrink-0 focus:outline-none">
+                <button type="button" onClick={() => setShowPassword(!showPassword)} className="text-gray-400 hover:text-gray-600 flex-shrink-0 focus:outline-none cursor-pointer">
                   {showPassword ? <EyeOffIcon /> : <EyeIcon />}
                 </button>
               }
             />
-            {formData.password && !isPasswordValid && (
-              <div className="ml-2 mt-1.5 space-y-0.5">
-                {!hasMinLength && <p className="text-[11px] text-red-500 font-semibold">• At least 8 characters</p>}
-                {!hasUppercase && <p className="text-[11px] text-red-500 font-semibold">• At least 1 uppercase letter</p>}
-                {!hasLowercase && <p className="text-[11px] text-red-500 font-semibold">• At least 1 lowercase letter</p>}
-                {!hasNumber && <p className="text-[11px] text-red-500 font-semibold">• At least 1 number</p>}
-                {!hasSpecial && <p className="text-[11px] text-red-500 font-semibold">• At least 1 special character (@$!%*?&#)</p>}
+
+            {/* 4th: Confirm Password */}
+            <div>
+              <InputField
+                icon={LockIcon}
+                name="confirmPassword"
+                type={showConfirmPassword ? 'text' : 'password'}
+                autoComplete="new-password"
+                placeholder="Confirm Password"
+                value={formData.confirmPassword}
+                onChange={handleChange}
+                onFocus={() => setActiveField('confirmPassword')}
+                onBlur={() => setActiveField('')}
+                active={activeField === 'confirmPassword'}
+                rightSlot={
+                  <button type="button" onClick={() => setShowConfirmPassword(!showConfirmPassword)} className="text-gray-400 hover:text-gray-600 flex-shrink-0 focus:outline-none cursor-pointer">
+                    {showConfirmPassword ? <EyeOffIcon /> : <EyeIcon />}
+                  </button>
+                }
+              />
+              {formData.confirmPassword && formData.password !== formData.confirmPassword && (
+                <p className="text-[11px] text-red-500 font-semibold ml-2 mt-1">• Passwords do not match</p>
+              )}
+            </div>
+
+            {/* Terms checkbox */}
+            <button
+              type="button"
+              onClick={() => setAgreedTerms(!agreedTerms)}
+              className="flex items-start gap-3 w-full text-left active:opacity-80 pt-1 cursor-pointer"
+            >
+              <div
+                className="w-5 h-5 rounded-md flex-shrink-0 flex items-center justify-center mt-0.5 transition-all"
+                style={{
+                  background: agreedTerms ? 'linear-gradient(135deg, #7C3AED, #A855F7)' : 'white',
+                  border: agreedTerms ? 'none' : '1.5px solid #C4B5FD',
+                }}
+              >
+                {agreedTerms && <CheckIcon />}
+              </div>
+              <p className="text-xs leading-relaxed" style={{ color: '#6B7280' }}>
+                I agree to the{' '}
+                <span className="font-bold" style={{ color: '#7C3AED' }}>Terms & Conditions</span>
+                {' '}and{' '}
+                <span className="font-bold" style={{ color: '#7C3AED' }}>Privacy Policy</span>
+              </p>
+            </button>
+
+            {error && (
+              <div className="bg-red-50 text-red-500 p-2.5 rounded-xl text-xs text-center border border-red-100 font-semibold">
+                {error}
               </div>
             )}
-          </div>
 
-          {/* Confirm Password */}
-          <div>
-            <InputField
-              icon={LockIcon}
-              name="confirmPassword"
-              type={showConfirmPassword ? 'text' : 'password'}
-              autoComplete="new-password"
-              placeholder="Confirm Password"
-              value={formData.confirmPassword}
-              onChange={handleChange}
-              onFocus={() => setActiveField('confirmPassword')}
-              onBlur={() => setActiveField('')}
-              active={activeField === 'confirmPassword'}
-              rightSlot={
-                <button type="button" onClick={() => setShowConfirmPassword(!showConfirmPassword)} className="text-gray-400 hover:text-gray-600 flex-shrink-0 focus:outline-none">
-                  {showConfirmPassword ? <EyeOffIcon /> : <EyeIcon />}
-                </button>
-              }
-            />
-            {formData.confirmPassword && formData.password !== formData.confirmPassword && (
-              <p className="text-[11px] text-red-500 font-semibold ml-2 mt-1">• Passwords do not match</p>
-            )}
-          </div>
-
-
-
-          {/* Terms checkbox */}
-          <button
-            type="button"
-            onClick={() => setAgreedTerms(!agreedTerms)}
-            className="flex items-start gap-3 w-full text-left active:opacity-80"
-          >
-            <div
-              className="w-5 h-5 rounded-md flex-shrink-0 flex items-center justify-center mt-0.5 transition-all"
+            {/* Submit */}
+            <button
+              type="submit"
+              disabled={isLoading}
+              className="w-full py-4 rounded-2xl font-bold text-white text-sm transition-all active:scale-[0.97] disabled:opacity-60 cursor-pointer mt-1"
               style={{
-                background: agreedTerms ? 'linear-gradient(135deg, #7C3AED, #A855F7)' : 'white',
-                border: agreedTerms ? 'none' : '1.5px solid #C4B5FD',
+                background: 'linear-gradient(135deg, #7C3AED, #A855F7)',
+                boxShadow: '0 6px 20px rgba(124,58,237,0.35)',
               }}
             >
-              {agreedTerms && <CheckIcon />}
-            </div>
-            <p className="text-xs leading-relaxed" style={{ color: '#6B7280' }}>
-              I agree to the{' '}
-              <span className="font-bold" style={{ color: '#7C3AED' }}>Terms & Conditions</span>
-              {' '}and{' '}
-              <span className="font-bold" style={{ color: '#7C3AED' }}>Privacy Policy</span>
-            </p>
-          </button>
+              {isLoading ? (
+                <span className="flex items-center justify-center gap-2">
+                  <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                  Creating Account…
+                </span>
+              ) : (
+                'Create Account'
+              )}
+            </button>
+          </form>
 
-          {error && (
-            <div className="bg-red-50 text-red-500 p-2.5 rounded-xl text-xs text-center border border-red-100 font-semibold">
-              {error}
-            </div>
-          )}
+          {/* Divider */}
+          <div className="flex items-center gap-3 w-full my-4">
+            <div className="flex-1 h-px" style={{ background: '#E8E3FF' }} />
+            <span className="text-xs font-medium" style={{ color: '#A78BFA' }}>or continue with</span>
+            <div className="flex-1 h-px" style={{ background: '#E8E3FF' }} />
+          </div>
 
-          {/* Submit */}
-          <button
-            type="submit"
-            disabled={isLoading || usernameStatus === 'taken'}
-            className="w-full py-4 rounded-2xl font-bold text-white text-sm transition-all active:scale-[0.97] disabled:opacity-70"
-            style={{
-              background: 'linear-gradient(135deg, #7C3AED, #A855F7)',
-              boxShadow: '0 6px 20px rgba(124,58,237,0.35)',
-            }}
-          >
-            {isLoading ? (
-              <span className="flex items-center justify-center gap-2">
-                <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                Creating Account…
-              </span>
-            ) : 'Create Account'}
-          </button>
-        </form>
+          {/* Google Button */}
+          <GoogleButton onSuccess={onRegisterSuccess} text="Continue with Google" />
 
-        {/* Toggle */}
-        <p className="text-sm mt-6 text-center" style={{ color: '#6B7280' }}>
-          Already have an account?{' '}
-          <button
-            type="button"
-            onClick={onToggleForm}
-            className="font-bold hover:opacity-80 transition-opacity"
-            style={{ color: '#7C3AED' }}
-          >
-            Login
-          </button>
-        </p>
+          {/* Toggle */}
+          <p className="text-sm mt-6 text-center" style={{ color: '#6B7280' }}>
+            Already have an account?{' '}
+            <button
+              type="button"
+              onClick={onToggleForm}
+              className="font-bold hover:opacity-80 transition-opacity cursor-pointer"
+              style={{ color: '#7C3AED' }}
+            >
+              Login
+            </button>
+          </p>
+        </div>
       </div>
     </div>
   );

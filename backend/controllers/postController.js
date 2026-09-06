@@ -43,6 +43,8 @@ exports.getPosts = async (req, res) => {
     const isAdminOnly = req.query.adminOnly === 'true';
     if (isAdminOnly) {
       query.authorId = null;
+    } else {
+      query.isHidden = { $ne: true };
     }
     
     let postQuery = Post.find(query);
@@ -52,7 +54,14 @@ exports.getPosts = async (req, res) => {
       postQuery = postQuery
         .populate('authorId', 'name profilePic googleAvatar facebookAvatar isEmailVerified verificationBadge')
         .populate('comments.user', 'name username profilePic isEmailVerified verificationBadge')
-        .populate('comments.replies.user', 'name username profilePic isEmailVerified verificationBadge');
+        .populate('comments.replies.user', 'name username profilePic isEmailVerified verificationBadge')
+        .populate({
+          path: 'sharedPostId',
+          populate: {
+            path: 'authorId',
+            select: 'name profilePic googleAvatar facebookAvatar isEmailVerified verificationBadge'
+          }
+        });
     }
 
     const posts = await postQuery.sort({ createdAt: -1 }).limit(30).lean();
@@ -86,7 +95,14 @@ exports.getPostById = async (req, res) => {
     const post = await Post.findById(req.params.id)
       .populate('authorId', 'name profilePic googleAvatar facebookAvatar isEmailVerified verificationBadge')
       .populate('comments.user', 'name username profilePic isEmailVerified verificationBadge')
-      .populate('comments.replies.user', 'name username profilePic isEmailVerified verificationBadge');
+      .populate('comments.replies.user', 'name username profilePic isEmailVerified verificationBadge')
+      .populate({
+        path: 'sharedPostId',
+        populate: {
+          path: 'authorId',
+          select: 'name profilePic googleAvatar facebookAvatar isEmailVerified verificationBadge'
+        }
+      });
     if (!post) {
       return res.status(404).json({ message: 'Post not found' });
     }
@@ -220,12 +236,20 @@ exports.getPostsFeed = async (req, res) => {
     // Fetch the 15 most recent community posts with populated likers (paginated)
     const feedPostsPromise = Post.find({
       authorId: { $ne: null, $nin: blockedUserIds }, // Exclude admin updates and blocked users
-      'reports.user': { $ne: currentUserId } // Exclude posts reported by the current user
+      'reports.user': { $ne: currentUserId }, // Exclude posts reported by the current user
+      isHidden: { $ne: true }
     })
       .populate('authorId', 'name profilePic googleAvatar facebookAvatar isEmailVerified verificationBadge')
       .populate('likes', 'name profilePic googleAvatar facebookAvatar')
       .populate('comments.user', 'name username profilePic isEmailVerified verificationBadge')
       .populate('comments.replies.user', 'name username profilePic isEmailVerified verificationBadge')
+      .populate({
+        path: 'sharedPostId',
+        populate: {
+          path: 'authorId',
+          select: 'name profilePic googleAvatar facebookAvatar isEmailVerified verificationBadge'
+        }
+      })
       .sort({ createdAt: -1 })
       .skip(skip)
       .limit(limit)
@@ -1077,4 +1101,222 @@ exports.deleteComment = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
+
+// ─── Admin Post Management ──────────────────────────────────────────────────
+
+// @desc    Get paginated posts for admin management with search & filter
+// @route   GET /api/admin/posts/admin-manage
+// @access  Private/Admin
+exports.getAdminPosts = async (req, res) => {
+  try {
+    const page = Math.max(1, parseInt(req.query.page, 10) || 1);
+    const limit = Math.max(1, parseInt(req.query.limit, 10) || 20);
+    const skip = (page - 1) * limit;
+    const search = (req.query.search || '').trim();
+    const filter = req.query.filter || 'all'; // 'all', 'user_only', 'official', 'hidden', 'visible', 'reported'
+
+    const query = {};
+
+    if (filter === 'user_only') {
+      query.authorId = { $ne: null };
+    } else if (filter === 'official') {
+      query.authorId = null;
+    } else if (filter === 'hidden') {
+      query.isHidden = true;
+    } else if (filter === 'visible') {
+      query.isHidden = { $ne: true };
+    } else if (filter === 'reported') {
+      query['reports.0'] = { $exists: true };
+    }
+
+    if (search) {
+      // Find matching users by name or email/phone
+      const matchingUsers = await User.find({
+        $or: [
+          { name: { $regex: search, $options: 'i' } },
+          { phoneOrEmail: { $regex: search, $options: 'i' } },
+        ]
+      }).select('_id');
+      const matchingUserIds = matchingUsers.map(u => u._id);
+
+      query.$or = [
+        { content: { $regex: search, $options: 'i' } },
+        { title: { $regex: search, $options: 'i' } },
+        { authorName: { $regex: search, $options: 'i' } },
+        { authorId: { $in: matchingUserIds } }
+      ];
+    }
+
+    const [posts, totalPosts] = await Promise.all([
+      Post.find(query)
+        .populate('authorId', 'name phoneOrEmail profilePic googleAvatar facebookAvatar isEmailVerified verificationBadge')
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(limit)
+        .lean(),
+      Post.countDocuments(query)
+    ]);
+
+    const totalPages = Math.ceil(totalPosts / limit) || 1;
+
+    res.json({
+      success: true,
+      posts,
+      totalPosts,
+      totalPages,
+      currentPage: page,
+      limit
+    });
+  } catch (error) {
+    console.error('getAdminPosts error:', error);
+    res.status(500).json({ message: 'Failed to fetch posts', error: error.message });
+  }
+};
+
+// @desc    Toggle hide / unhide a post (Admin)
+// @route   PUT /api/admin/posts/:id/toggle-hide
+// @access  Private/Admin
+exports.toggleHidePost = async (req, res) => {
+  try {
+    const post = await Post.findById(req.params.id);
+    if (!post) {
+      return res.status(404).json({ message: 'Post not found' });
+    }
+
+    post.isHidden = !post.isHidden;
+    if (req.body.reason) {
+      post.hiddenReason = req.body.reason;
+    }
+    await post.save();
+
+    res.json({
+      success: true,
+      message: post.isHidden ? 'Post is now hidden from the community feed.' : 'Post has been unhidden and restored to the feed.',
+      post
+    });
+  } catch (error) {
+    console.error('toggleHidePost error:', error);
+    res.status(500).json({ message: 'Failed to toggle post visibility', error: error.message });
+  }
+};
+
+// @desc    Send warning notification to post owner (Admin)
+// @route   POST /api/admin/posts/:id/warn
+// @access  Private/Admin
+exports.sendPostWarning = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { warningMessage, reason } = req.body;
+    if (!warningMessage || !warningMessage.trim()) {
+      return res.status(400).json({ message: 'Warning message is required' });
+    }
+
+    const post = await Post.findById(id).populate('authorId', 'name phoneOrEmail');
+    if (!post) {
+      return res.status(404).json({ message: 'Post not found' });
+    }
+
+    if (!post.authorId) {
+      return res.status(400).json({ message: 'This is an official system post without an author user.' });
+    }
+
+    const recipientUserId = post.authorId._id || post.authorId;
+    const notifTitle = reason ? `Community Guidelines Warning: ${reason}` : 'Content Warning from Admin ⚠️';
+    const finalMsg = warningMessage.trim();
+
+    await createNotification(
+      recipientUserId,
+      notifTitle,
+      finalMsg,
+      'system',
+      post._id
+    );
+
+    res.json({
+      success: true,
+      message: `Warning notification successfully sent to ${post.authorId.name || 'user'}.`,
+    });
+  } catch (error) {
+    console.error('sendPostWarning error:', error);
+    res.status(500).json({ message: 'Failed to send warning', error: error.message });
+  }
+};
+
+// @desc    Share a post to user's feed/timeline (Repost)
+// @route   POST /api/posts/:id/share-to-feed
+// @access  Private
+exports.sharePostToFeed = async (req, res) => {
+  try {
+    const originalPost = await Post.findById(req.params.id);
+    if (!originalPost) {
+      return res.status(404).json({ message: 'Post not found' });
+    }
+
+    const { caption } = req.body;
+    // If the post being shared is itself already a shared post, link to the root original post
+    const targetPostId = originalPost.sharedPostId || originalPost._id;
+
+    const newPost = await Post.create({
+      content: caption || '',
+      sharedPostId: targetPostId,
+      authorId: req.user._id,
+      authorName: req.user.name || 'User',
+      isVerified: req.user.isEmailVerified || false,
+      postType: 'standard'
+    });
+
+    // Increment shareCount on the target post and the post being directly shared
+    await Post.findByIdAndUpdate(targetPostId, { $inc: { shareCount: 1 } });
+    if (originalPost._id.toString() !== targetPostId.toString()) {
+      await Post.findByIdAndUpdate(originalPost._id, { $inc: { shareCount: 1 } });
+    }
+
+    // Populate post with author and shared post details
+    const populatedPost = await Post.findById(newPost._id)
+      .populate('authorId', 'name profilePic googleAvatar facebookAvatar isEmailVerified verificationBadge')
+      .populate({
+        path: 'sharedPostId',
+        populate: {
+          path: 'authorId',
+          select: 'name profilePic googleAvatar facebookAvatar isEmailVerified verificationBadge'
+        }
+      });
+
+    // Notify original post author if different user
+    if (originalPost.authorId && originalPost.authorId.toString() !== req.user._id.toString()) {
+      try {
+        const authorNameStr = req.user.name || 'A user';
+        createNotification(
+          originalPost.authorId,
+          `${authorNameStr} shared your post! 🔁`,
+          `${authorNameStr} shared your post to their timeline.`,
+          'share',
+          newPost._id,
+          req.user._id
+        ).catch(e => console.error('Share notification error:', e));
+      } catch (notifyErr) {
+        console.error('Error dispatching share notification:', notifyErr);
+      }
+    }
+
+    const postObj = populatedPost.toObject();
+    const authorObj = postObj.authorId;
+    res.status(201).json({
+      ...postObj,
+      authorId: authorObj ? authorObj._id.toString() : null,
+      authorDetails: authorObj ? {
+        name: authorObj.name,
+        profilePic: authorObj.profilePic,
+        googleAvatar: authorObj.googleAvatar,
+        facebookAvatar: authorObj.facebookAvatar,
+        isEmailVerified: authorObj.isEmailVerified,
+        verificationBadge: authorObj.verificationBadge || 'none'
+      } : null
+    });
+  } catch (error) {
+    console.error('Error sharing post to feed:', error);
+    res.status(500).json({ message: error.message });
+  }
+};
+
 

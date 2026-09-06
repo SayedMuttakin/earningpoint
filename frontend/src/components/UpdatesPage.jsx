@@ -628,7 +628,7 @@ const RelatedNewsSlider = ({ posts, onSelect }) => {
               <div className="min-w-0 flex-1">
                 <div className="flex items-center gap-1.5">
                   <span className="font-black text-slate-900 dark:text-slate-100 text-sm">Zenivio News</span>
-                  <VerifiedBadge iconClassName="w-[14px] h-[14px] fill-blue-500 text-white" />
+                  <VerifiedBadge iconClassName="w-[14px] h-[14px]" />
                 </div>
                 <span className="text-slate-400 dark:text-slate-500 text-[11px] font-bold block truncate">
                   {detailPost.customTime || `${formatExactDateShort(detailPost.createdAt)} · ${formatRelativeTime(detailPost.createdAt)}`}

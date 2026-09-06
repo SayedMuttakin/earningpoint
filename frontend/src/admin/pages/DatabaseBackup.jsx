@@ -2,7 +2,8 @@ import React, { useState, useEffect, useRef } from 'react';
 import { 
   Database, Download, Upload, Copy, Check, RefreshCw, AlertTriangle, 
   Trash2, FileJson, CheckCircle2, AlertCircle, ArrowRight, Layers,
-  HardDrive, ShieldCheck, ChevronDown, ChevronUp, Sparkles, X, Eye
+  HardDrive, ShieldCheck, ChevronDown, ChevronUp, Sparkles, X, Eye,
+  Image as ImageIcon, Globe, Zap, CheckCheck
 } from 'lucide-react';
 import { Capacitor } from '@capacitor/core';
 import { Share } from '@capacitor/share';
@@ -17,6 +18,7 @@ const DatabaseBackup = ({ ADMIN_API, authHeaders }) => {
   const [exportingFull, setExportingFull] = useState(false);
   const [exportingCol, setExportingCol] = useState(null);
   const [copiedFull, setCopiedFull] = useState(false);
+  const [includeMediaExport, setIncludeMediaExport] = useState(true);
 
   // View JSON Modal
   const [viewJsonModal, setViewJsonModal] = useState(false);
@@ -31,8 +33,14 @@ const DatabaseBackup = ({ ADMIN_API, authHeaders }) => {
   const [fileContent, setFileContent] = useState('');
   const [importMode, setImportMode] = useState('upsert'); // 'upsert' | 'replace'
   const [targetCollection, setTargetCollection] = useState(''); // '' = auto-detect
+  const [importSourceUrl, setImportSourceUrl] = useState('http://72.61.117.87:5010');
   const [importing, setImporting] = useState(false);
   const [importResult, setImportResult] = useState(null);
+
+  // Live Media Sync states
+  const [syncSourceUrl, setSyncSourceUrl] = useState('http://72.61.117.87:5010');
+  const [syncingMedia, setSyncingMedia] = useState(false);
+  const [syncResult, setSyncResult] = useState(null);
   
   // Danger Zone
   const [showClearModal, setShowClearModal] = useState(false);
@@ -135,14 +143,19 @@ const DatabaseBackup = ({ ADMIN_API, authHeaders }) => {
   const handleDownloadFullExport = async () => {
     setExportingFull(true);
     try {
-      const res = await fetch(`${ADMIN_API}/database/export`, { headers: authHeaders });
+      const query = new URLSearchParams({
+        download: 'true',
+        includeMedia: includeMediaExport ? 'true' : 'false'
+      }).toString();
+
+      const res = await fetch(`${ADMIN_API}/database/export?${query}`, { headers: authHeaders });
       if (!res.ok) {
         const err = await res.json().catch(() => ({}));
         showToast('❌ ' + (err.message || 'Failed to export database'));
         return;
       }
       const data = await res.json();
-      const filename = `database_backup_${new Date().toISOString().slice(0, 10)}.json`;
+      const filename = `database_backup_${includeMediaExport ? 'with_images_' : ''}${new Date().toISOString().slice(0, 10)}.json`;
       await downloadJsonFile(data, filename);
     } catch (err) {
       console.error(err);
@@ -156,7 +169,11 @@ const DatabaseBackup = ({ ADMIN_API, authHeaders }) => {
   const handleCopyFullJson = async () => {
     setExportingFull(true);
     try {
-      const res = await fetch(`${ADMIN_API}/database/export`, { headers: authHeaders });
+      const query = new URLSearchParams({
+        includeMedia: includeMediaExport ? 'true' : 'false'
+      }).toString();
+
+      const res = await fetch(`${ADMIN_API}/database/export?${query}`, { headers: authHeaders });
       if (res.ok) {
         const data = await res.json();
         const jsonStr = JSON.stringify(data, null, 2);
@@ -178,11 +195,15 @@ const DatabaseBackup = ({ ADMIN_API, authHeaders }) => {
   const handleViewFullJson = async () => {
     setExportingFull(true);
     try {
-      const res = await fetch(`${ADMIN_API}/database/export`, { headers: authHeaders });
+      const query = new URLSearchParams({
+        includeMedia: includeMediaExport ? 'true' : 'false'
+      }).toString();
+
+      const res = await fetch(`${ADMIN_API}/database/export?${query}`, { headers: authHeaders });
       if (res.ok) {
         const data = await res.json();
         const jsonStr = JSON.stringify(data, null, 2);
-        setViewJsonTitle(`database_backup_${new Date().toISOString().slice(0, 10)}.json`);
+        setViewJsonTitle(`database_backup_${includeMediaExport ? 'with_images_' : ''}${new Date().toISOString().slice(0, 10)}.json`);
         setViewJsonData(jsonStr);
         setViewJsonModal(true);
       } else {
@@ -199,7 +220,12 @@ const DatabaseBackup = ({ ADMIN_API, authHeaders }) => {
   const handleExportSingleCol = async (colName) => {
     setExportingCol(colName);
     try {
-      const res = await fetch(`${ADMIN_API}/database/export?collection=${colName}`, { headers: authHeaders });
+      const query = new URLSearchParams({
+        collection: colName,
+        includeMedia: includeMediaExport ? 'true' : 'false'
+      }).toString();
+
+      const res = await fetch(`${ADMIN_API}/database/export?${query}`, { headers: authHeaders });
       if (res.ok) {
         const data = await res.json();
         const filename = `${colName}_backup_${new Date().toISOString().slice(0, 10)}.json`;
@@ -272,6 +298,7 @@ const DatabaseBackup = ({ ADMIN_API, authHeaders }) => {
           data: rawData,
           mode: importMode,
           targetCollection: targetCollection || undefined,
+          sourceServerUrl: importSourceUrl.trim() || undefined,
         }),
       });
 
@@ -289,6 +316,42 @@ const DatabaseBackup = ({ ADMIN_API, authHeaders }) => {
       showToast('❌ Server error during database import: ' + err.message);
     } finally {
       setImporting(false);
+    }
+  };
+
+  // ── Sync Missing Media from Old Server ──
+  const handleSyncMedia = async () => {
+    if (!syncSourceUrl.trim()) {
+      showToast('❌ Please provide the source server URL/IP (e.g. http://72.61.117.87:5010)');
+      return;
+    }
+
+    setSyncingMedia(true);
+    setSyncResult(null);
+
+    try {
+      const res = await fetch(`${ADMIN_API}/database/sync-media`, {
+        method: 'POST',
+        headers: { ...authHeaders, 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          sourceServerUrl: syncSourceUrl.trim()
+        }),
+      });
+
+      const data = await res.json();
+      if (res.ok && data.success) {
+        setSyncResult(data);
+        showToast('🎉 ' + data.message);
+        fetchStats();
+      } else {
+        showToast('❌ ' + (data.message || 'Failed to sync media'));
+        if (data.stats) setSyncResult(data);
+      }
+    } catch (err) {
+      console.error(err);
+      showToast('❌ Error during media sync: ' + err.message);
+    } finally {
+      setSyncingMedia(false);
     }
   };
 
@@ -365,7 +428,7 @@ const DatabaseBackup = ({ ADMIN_API, authHeaders }) => {
       </div>
 
       {/* Stats Overview Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
         <div className="bg-[#0F172A] p-5 rounded-2xl border border-slate-800 shadow-md flex items-center justify-between">
           <div>
             <span className="text-[11px] font-black uppercase tracking-wider text-slate-400">Database Name</span>
@@ -398,6 +461,113 @@ const DatabaseBackup = ({ ADMIN_API, authHeaders }) => {
           </div>
           <FileJson className="w-6 h-6 text-purple-400/50" />
         </div>
+
+        <div className="bg-[#0F172A] p-5 rounded-2xl border border-slate-800 shadow-md flex items-center justify-between">
+          <div>
+            <span className="text-[11px] font-black uppercase tracking-wider text-slate-400">Stored Uploads</span>
+            <div className="text-2xl font-black text-teal-400 mt-1 font-mono">
+              {dbStats?.totalUploadsCount?.toLocaleString() ?? '0'}
+            </div>
+          </div>
+          <ImageIcon className="w-6 h-6 text-teal-400/50" />
+        </div>
+      </div>
+
+      {/* ─── TOOL: SYNC MISSING MEDIA FROM OLD SERVER ─── */}
+      <div className="bg-gradient-to-br from-indigo-950/40 via-[#0F172A] to-slate-900 p-6 rounded-3xl border border-indigo-500/30 shadow-xl space-y-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-800/80 pb-4">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-2xl bg-indigo-600/20 border border-indigo-500/30 flex items-center justify-center text-indigo-400">
+              <Zap className="w-5 h-5" />
+            </div>
+            <div>
+              <h3 className="text-base font-black text-white flex items-center gap-2">
+                Sync Missing Images / Media from Old Server
+                <span className="text-[10px] bg-indigo-500/20 text-indigo-300 font-bold px-2 py-0.5 rounded-full border border-indigo-500/30">
+                  1-Click Fix
+                </span>
+              </h3>
+              <p className="text-xs text-slate-400 font-medium mt-0.5">
+                Imported database records on this new server, but images/avatars/posts look blank? Pull all missing images over HTTP.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-12 gap-3 items-end">
+          <div className="sm:col-span-8 space-y-1.5">
+            <label className="text-xs font-bold text-slate-300 flex items-center gap-1.5">
+              <Globe className="w-3.5 h-3.5 text-indigo-400" />
+              Source Server URL / IP (Where original images are hosted):
+            </label>
+            <input
+              type="text"
+              value={syncSourceUrl}
+              onChange={(e) => setSyncSourceUrl(e.target.value)}
+              placeholder="e.g. http://72.61.117.87:5010"
+              className="w-full bg-[#0B1120] border border-slate-700 rounded-xl px-4 py-2.5 text-xs font-mono font-bold text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500"
+            />
+          </div>
+
+          <div className="sm:col-span-4">
+            <button
+              onClick={handleSyncMedia}
+              disabled={syncingMedia || !syncSourceUrl.trim()}
+              className="w-full py-2.5 px-4 rounded-xl bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white font-black text-xs shadow-lg shadow-indigo-500/25 transition-all active:scale-95 flex items-center justify-center gap-2 disabled:opacity-50"
+            >
+              {syncingMedia ? (
+                <>
+                  <RefreshCw className="w-4 h-4 animate-spin" />
+                  <span>Scanning & Downloading...</span>
+                </>
+              ) : (
+                <>
+                  <Download className="w-4 h-4" />
+                  <span>Start Live Media Sync</span>
+                </>
+              )}
+            </button>
+          </div>
+        </div>
+
+        {/* Sync Result Summary */}
+        {syncResult && (
+          <div className="mt-3 p-4 rounded-2xl bg-slate-900 border border-slate-800 space-y-3 animate-fade-in">
+            <div className="flex items-center justify-between">
+              <h4 className="text-xs font-black uppercase text-indigo-400 flex items-center gap-1.5">
+                <CheckCheck className="w-4 h-4" />
+                Media Sync Result
+              </h4>
+              <button 
+                onClick={() => setSyncResult(null)}
+                className="text-slate-500 hover:text-white"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            {syncResult.stats && (
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-center">
+                <div className="bg-[#0F172A] p-2.5 rounded-xl border border-slate-800">
+                  <span className="text-[10px] text-slate-400 block font-bold">Total Referenced</span>
+                  <span className="text-sm font-black text-white font-mono">{syncResult.stats.totalReferenced}</span>
+                </div>
+                <div className="bg-[#0F172A] p-2.5 rounded-xl border border-slate-800">
+                  <span className="text-[10px] text-slate-400 block font-bold">Downloaded New</span>
+                  <span className="text-sm font-black text-emerald-400 font-mono">+{syncResult.stats.downloaded}</span>
+                </div>
+                <div className="bg-[#0F172A] p-2.5 rounded-xl border border-slate-800">
+                  <span className="text-[10px] text-slate-400 block font-bold">Already Existed</span>
+                  <span className="text-sm font-black text-indigo-400 font-mono">{syncResult.stats.existing}</span>
+                </div>
+                <div className="bg-[#0F172A] p-2.5 rounded-xl border border-slate-800">
+                  <span className="text-[10px] text-slate-400 block font-bold">Missing on Source</span>
+                  <span className="text-sm font-black text-amber-400 font-mono">{syncResult.stats.failed}</span>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
       </div>
 
       {/* Main Grid: Left = Backup / Export, Right = Import / Paste */}
@@ -414,13 +584,33 @@ const DatabaseBackup = ({ ADMIN_API, authHeaders }) => {
                 Export Full Database
               </h3>
               <span className="text-[10px] font-extrabold uppercase px-2 py-0.5 rounded-md bg-indigo-500/10 text-indigo-400 border border-indigo-500/20">
-                JSON Backup
+                Complete Backup
               </span>
             </div>
 
             <p className="text-xs text-slate-400 font-medium leading-relaxed">
-              Download or copy all collections (users, posts, messages, settings, transactions, etc.) into a single structured JSON file.
+              Export all database collections (users, posts, messages, settings, transactions, verifications, banners) into JSON format.
             </p>
+
+            {/* Include Media Checkbox */}
+            <div className="bg-slate-900/80 p-3 rounded-2xl border border-slate-800 flex items-center justify-between">
+              <div className="flex items-center gap-2.5">
+                <ImageIcon className="w-4 h-4 text-emerald-400 shrink-0" />
+                <div>
+                  <span className="text-xs font-bold text-white block">Include Images & Media Files</span>
+                  <span className="text-[10px] text-slate-400 block font-medium">Embeds all uploaded photos/audio into the JSON</span>
+                </div>
+              </div>
+              <label className="relative inline-flex items-center cursor-pointer">
+                <input 
+                  type="checkbox" 
+                  checked={includeMediaExport} 
+                  onChange={(e) => setIncludeMediaExport(e.target.checked)}
+                  className="sr-only peer"
+                />
+                <div className="w-9 h-5 bg-slate-800 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-emerald-500"></div>
+              </label>
+            </div>
 
             <div className="flex flex-col gap-2.5 pt-1">
               <button
@@ -464,7 +654,7 @@ const DatabaseBackup = ({ ADMIN_API, authHeaders }) => {
               <span className="text-[11px] text-slate-400 font-bold">Single Export</span>
             </div>
 
-            <div className="divide-y divide-slate-800/60 max-h-[380px] overflow-y-auto pr-1">
+            <div className="divide-y divide-slate-800/60 max-h-[340px] overflow-y-auto pr-1">
               {loading ? (
                 <div className="py-8 text-center text-slate-500 text-xs font-bold">Loading collections...</div>
               ) : !dbStats?.collections?.length ? (
@@ -578,6 +768,24 @@ const DatabaseBackup = ({ ADMIN_API, authHeaders }) => {
               </div>
             </div>
 
+            {/* Source Server URL for auto-downloading images during import */}
+            <div className="bg-slate-900/70 p-3 rounded-2xl border border-slate-800 space-y-1">
+              <label className="text-[11px] font-bold text-slate-300 flex items-center gap-1.5">
+                <Globe className="w-3.5 h-3.5 text-teal-400" />
+                Fallback Source Server URL (Auto-download missing media):
+              </label>
+              <input
+                type="text"
+                value={importSourceUrl}
+                onChange={(e) => setImportSourceUrl(e.target.value)}
+                placeholder="http://72.61.117.87:5010"
+                className="w-full bg-[#0B1120] border border-slate-700 rounded-xl px-3 py-2 text-xs font-mono font-bold text-white placeholder-slate-500 focus:outline-none focus:border-teal-500"
+              />
+              <span className="text-[10px] text-slate-400 block">
+                If the JSON does not contain embedded Base64 images, images will automatically be downloaded from this server.
+              </span>
+            </div>
+
             {/* Tab 1: Paste JSON */}
             {importTab === 'paste' ? (
               <div className="space-y-2">
@@ -600,7 +808,7 @@ const DatabaseBackup = ({ ADMIN_API, authHeaders }) => {
                   value={pastedJson}
                   onChange={(e) => setPastedJson(e.target.value)}
                   placeholder={`Example JSON format:\n{\n  "collections": {\n    "users": [ { "_id": "...", "name": "John", ... } ],\n    "posts": [ { ... } ]\n  }\n}\n\nOr directly paste an array of documents:\n[\n  { "name": "...", "email": "..." }\n]`}
-                  rows={14}
+                  rows={13}
                   className="w-full bg-[#0B1120] border border-slate-800 rounded-2xl p-4 text-xs font-mono text-slate-200 placeholder-slate-600 focus:outline-none focus:border-indigo-500 resize-y leading-relaxed"
                   spellCheck={false}
                 />
@@ -677,7 +885,7 @@ const DatabaseBackup = ({ ADMIN_API, authHeaders }) => {
                 </div>
 
                 {importResult.stats && (
-                  <div className="grid grid-cols-4 gap-2 text-center">
+                  <div className="grid grid-cols-2 sm:grid-cols-5 gap-2 text-center">
                     <div className="bg-[#0F172A] p-2 rounded-xl border border-slate-800">
                       <span className="text-[10px] text-slate-400 block font-bold">Inserted</span>
                       <span className="text-base font-black text-emerald-400 font-mono">+{importResult.stats.totalImported}</span>
@@ -685,6 +893,10 @@ const DatabaseBackup = ({ ADMIN_API, authHeaders }) => {
                     <div className="bg-[#0F172A] p-2 rounded-xl border border-slate-800">
                       <span className="text-[10px] text-slate-400 block font-bold">Updated</span>
                       <span className="text-base font-black text-indigo-400 font-mono">~{importResult.stats.totalUpdated}</span>
+                    </div>
+                    <div className="bg-[#0F172A] p-2 rounded-xl border border-slate-800">
+                      <span className="text-[10px] text-slate-400 block font-bold">Media Restored</span>
+                      <span className="text-base font-black text-teal-400 font-mono">+{importResult.stats.mediaFilesRestored || 0}</span>
                     </div>
                     <div className="bg-[#0F172A] p-2 rounded-xl border border-slate-800">
                       <span className="text-[10px] text-slate-400 block font-bold">Skipped</span>

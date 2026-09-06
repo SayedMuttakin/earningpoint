@@ -67,8 +67,17 @@ app.get('/api/image', async (req, res) => {
 
   res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
 
+  const audioMimes = {
+    '.mp3': 'audio/mpeg',
+    '.wav': 'audio/wav',
+    '.ogg': 'audio/ogg',
+    '.m4a': 'audio/mp4',
+    '.aac': 'audio/aac'
+  };
+
   if (!isImage || !sharp) {
     if (ext === '.webp') res.setHeader('Content-Type', 'image/webp');
+    if (audioMimes[ext]) res.setHeader('Content-Type', audioMimes[ext]);
     return res.sendFile(filePath);
   }
 
@@ -160,6 +169,9 @@ const startServer = async () => {
 
     const emailVerifyRoutes = require('./routes/emailVerifyRoutes');
     app.use('/api/email-verify', emailVerifyRoutes);
+
+    const accountVerifyRoutes = require('./routes/accountVerifyRoutes');
+    app.use('/api/account-verify', accountVerifyRoutes);
 
     const messageRoutes = require('./routes/messageRoutes');
     app.use('/api/messages', messageRoutes);

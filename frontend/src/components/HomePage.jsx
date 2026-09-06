@@ -536,6 +536,16 @@ const CommunityPostCard = ({ post, onFollowToggle, onLikeToggle, onCommentClick,
   const commentsCount = post.comments?.length || 0;
   const shareCount = Math.floor(likesCount * 0.15);
 
+  const isProfilePictureUpdate = Boolean(
+    post.postType === 'profile_picture' || 
+    (post.content && post.content.toLowerCase().includes('updated their profile picture'))
+  );
+
+  const isCoverPhotoUpdate = Boolean(
+    post.postType === 'cover_photo' || 
+    (post.content && post.content.toLowerCase().includes('updated their cover photo'))
+  );
+
   const handleSaveToggle = async (e) => {
     if (e) e.stopPropagation();
     try {
@@ -676,8 +686,18 @@ const CommunityPostCard = ({ post, onFollowToggle, onLikeToggle, onCommentClick,
               >
                 {post.authorDetails?.name || post.authorName || 'User'}
               </button>
-              {((post.authorDetails && (post.authorDetails.verificationBadge === 'blue' || post.authorDetails.verificationBadge === 'golden' || (post.authorDetails.isEmailVerified && post.authorDetails.verificationBadge !== 'none'))) || (!post.authorDetails && post.isVerified)) && (
-                <VerifiedBadge type={post.authorDetails?.verificationBadge === 'golden' ? 'golden' : 'blue'} iconClassName="w-[14px] h-[14px] inline-block flex-shrink-0" />
+              {((post.authorDetails && (post.authorDetails.verificationBadge === 'blue' || post.authorDetails.verificationBadge === 'purple' || post.authorDetails.verificationBadge === 'golden' || (post.authorDetails.isEmailVerified && post.authorDetails.verificationBadge !== 'none'))) || (!post.authorDetails && post.isVerified)) && (
+                <VerifiedBadge type={post.authorDetails?.verificationBadge === 'golden' ? 'golden' : 'purple'} iconClassName="w-[14px] h-[14px] inline-block flex-shrink-0" />
+              )}
+              {isProfilePictureUpdate && (
+                <span className="text-xs font-normal text-slate-500 dark:text-slate-400">
+                  updated their profile picture.
+                </span>
+              )}
+              {isCoverPhotoUpdate && (
+                <span className="text-xs font-normal text-slate-500 dark:text-slate-400">
+                  updated their cover photo.
+                </span>
               )}
               {parsedFeeling && (
                 <span className="text-xs font-normal text-slate-500 dark:text-slate-400">
@@ -840,26 +860,67 @@ const CommunityPostCard = ({ post, onFollowToggle, onLikeToggle, onCommentClick,
         <div className={`w-full rounded-2xl p-5 flex items-center justify-center min-h-[160px] text-center text-base md:text-lg font-black shadow-inner my-2 ${GRADIENTS_MAP[post.bgGradient]}`}>
           {post.content}
         </div>
-      ) : (
+      ) : post.content && (
+        (!isProfilePictureUpdate && !isCoverPhotoUpdate) ||
+        (isProfilePictureUpdate && post.content.trim() !== 'updated their profile picture.') ||
+        (isCoverPhotoUpdate && post.content.trim() !== 'updated their cover photo.')
+      ) ? (
         <div className="text-slate-750 dark:text-slate-355 text-xs leading-relaxed whitespace-pre-wrap font-medium pb-1">
           {post.content}
         </div>
-      )}
+      ) : null}
 
       {/* Media Attachment (Image or Video) */}
       {post.image && (
-        <div 
-          onClick={() => onImageClick && onImageClick(getImageUrl(post.image))}
-          className="rounded-2xl overflow-hidden bg-slate-100 dark:bg-slate-900 mt-2 w-full flex items-center justify-center select-none cursor-pointer hover:opacity-95 transition-opacity"
-        >
-          <img 
-            src={getImageUrl(post.image)} 
-            alt="Post Content"
-            className="w-full h-auto max-h-[580px] object-cover rounded-2xl"
-            loading="lazy"
-            decoding="async"
-          />
-        </div>
+        isProfilePictureUpdate ? (
+          /* Facebook-Style Profile Picture Display - Full 1:1 Image Frame */
+          <div 
+            onClick={() => onImageClick && onImageClick(getImageUrl(post.image))}
+            className="relative w-full aspect-square max-h-[520px] rounded-2xl overflow-hidden bg-slate-950 border border-slate-200/80 dark:border-slate-800 shadow-sm mt-2 select-none cursor-pointer group flex items-center justify-center"
+          >
+            {/* Ambient blurred backdrop for seamless edge blending */}
+            <div 
+              className="absolute inset-0 bg-cover bg-center blur-2xl opacity-40 scale-110 pointer-events-none"
+              style={{ backgroundImage: `url(${getImageUrl(post.image)})` }}
+            />
+            {/* Full Image */}
+            <img 
+              src={getImageUrl(post.image)} 
+              alt="Profile Picture"
+              className="relative w-full h-full object-cover z-10 group-hover:scale-[1.01] transition-transform duration-300"
+              loading="lazy"
+              decoding="async"
+            />
+          </div>
+        ) : isCoverPhotoUpdate ? (
+          /* Facebook-Style Cover Photo Display */
+          <div 
+            onClick={() => onImageClick && onImageClick(getImageUrl(post.image))}
+            className="relative w-full aspect-[16/9] sm:aspect-[2.3/1] max-h-[340px] rounded-2xl overflow-hidden bg-slate-100 dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-sm mt-2 select-none cursor-pointer group"
+          >
+            <img 
+              src={getImageUrl(post.image)} 
+              alt="Cover Photo"
+              className="w-full h-full object-cover group-hover:scale-[1.01] transition-transform duration-300"
+              loading="lazy"
+              decoding="async"
+            />
+          </div>
+        ) : (
+          /* Standard Photo Post */
+          <div 
+            onClick={() => onImageClick && onImageClick(getImageUrl(post.image))}
+            className="rounded-2xl overflow-hidden bg-slate-100 dark:bg-slate-900 mt-2 w-full flex items-center justify-center select-none cursor-pointer hover:opacity-95 transition-opacity"
+          >
+            <img 
+              src={getImageUrl(post.image)} 
+              alt="Post Content"
+              className="w-full h-auto max-h-[580px] object-cover rounded-2xl"
+              loading="lazy"
+              decoding="async"
+            />
+          </div>
+        )
       )}
 
       {post.video && (
@@ -890,6 +951,76 @@ const CommunityPostCard = ({ post, onFollowToggle, onLikeToggle, onCommentClick,
         </div>
       )}
 
+      {/* Facebook-style Embedded Shared Post Card */}
+      {post.sharedPostId && typeof post.sharedPostId === 'object' && (() => {
+        const sp = post.sharedPostId;
+        const spAuthor = sp.authorId || sp.authorDetails;
+        const spAuthorName = spAuthor?.name || sp.authorName || 'User';
+        const spAuthorPic = spAuthor?.profilePic || spAuthor?.googleAvatar || spAuthor?.facebookAvatar || '';
+        const spIsVerified = spAuthor?.verificationBadge === 'blue' || spAuthor?.verificationBadge === 'purple' || spAuthor?.verificationBadge === 'golden' || spAuthor?.isEmailVerified || sp.isVerified;
+        const spBadgeType = spAuthor?.verificationBadge === 'golden' ? 'golden' : 'purple';
+        const spTimeAgo = formatRelativeTime(sp.createdAt);
+        const spImage = sp.image ? getImageUrl(sp.image) : null;
+
+        return (
+          <div className="mt-2.5 rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50/60 dark:bg-slate-850/50 overflow-hidden hover:bg-slate-100/60 dark:hover:bg-slate-800/40 transition-colors">
+            {/* Original Author Header */}
+            <div className="p-3 sm:p-3.5 flex items-center gap-2.5">
+              <div 
+                onClick={(e) => {
+                  e.stopPropagation();
+                  if (spAuthor?._id && onUserClick) onUserClick(spAuthor._id);
+                }}
+                className="w-8 h-8 rounded-full overflow-hidden shrink-0 bg-slate-200 dark:bg-slate-700 cursor-pointer"
+              >
+                {spAuthorPic ? (
+                  <img src={getImageUrl(spAuthorPic)} alt="" className="w-full h-full object-cover" />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center font-bold text-xs text-slate-600 dark:text-slate-300">
+                    {spAuthorName.charAt(0).toUpperCase()}
+                  </div>
+                )}
+              </div>
+              <div className="min-w-0">
+                <div className="flex items-center gap-1">
+                  <span 
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      if (spAuthor?._id && onUserClick) onUserClick(spAuthor._id);
+                    }}
+                    className="font-extrabold text-xs sm:text-sm text-slate-850 dark:text-slate-100 hover:underline cursor-pointer truncate"
+                  >
+                    {spAuthorName}
+                  </span>
+                  {spIsVerified && <VerifiedBadge type={spBadgeType} iconClassName="w-3.5 h-3.5 inline-block shrink-0" />}
+                </div>
+                <span className="text-[10px] text-slate-400 font-bold block">{spTimeAgo}</span>
+              </div>
+            </div>
+
+            {/* Original Post Content */}
+            {sp.content && (
+              <p className="px-3 sm:px-3.5 pb-2.5 text-xs text-slate-750 dark:text-slate-300 whitespace-pre-wrap leading-relaxed font-medium">
+                {sp.content}
+              </p>
+            )}
+
+            {/* Original Post Image */}
+            {spImage && (
+              <div 
+                onClick={(e) => {
+                  e.stopPropagation();
+                  if (onImageClick) onImageClick(spImage);
+                }}
+                className="w-full max-h-[420px] overflow-hidden bg-slate-900 cursor-pointer"
+              >
+                <img src={spImage} alt="Shared content" className="w-full h-auto object-cover max-h-[420px]" loading="lazy" />
+              </div>
+            )}
+          </div>
+        );
+      })()}
+
       {/* Action Icons Row */}
       <div className="flex items-center justify-between pt-1 select-none relative">
         <div className="flex items-center gap-4.5">
@@ -897,19 +1028,19 @@ const CommunityPostCard = ({ post, onFollowToggle, onLikeToggle, onCommentClick,
           {/* Single Tap Heart / Love Button */}
           <button 
             onClick={handleLikeToggle}
-            disabled={isLiking}
+            onContextMenu={(e) => {
+              e.preventDefault();
+              setShowReactionPicker(true);
+            }}
             className="flex items-center gap-1.5 group active:scale-90 transition-transform"
           >
-            <Heart 
-              className={`w-6 h-6 transition-all duration-200 ${
-                isLiked 
-                  ? 'fill-red-500 stroke-red-500 scale-110 animate-pulse' 
-                  : 'text-slate-700 dark:text-slate-350 group-hover:text-red-500'
-              }`} 
-              strokeWidth={2}
-            />
+            {isLiked ? (
+              <Heart className="w-5.5 h-5.5 text-rose-500 fill-rose-500" strokeWidth={2} />
+            ) : (
+              <Heart className="w-5.5 h-5.5 text-slate-700 dark:text-slate-350 group-hover:text-rose-500" strokeWidth={2} />
+            )}
             <span className="text-xs font-black text-slate-650 dark:text-slate-400 mt-0.5">
-              {likesCount > 0 ? (likesCount >= 1000 ? `${(likesCount/1000).toFixed(1)}k` : likesCount) : 'Like'}
+              {likesCount}
             </span>
           </button>
 
@@ -918,9 +1049,9 @@ const CommunityPostCard = ({ post, onFollowToggle, onLikeToggle, onCommentClick,
             onClick={onCommentClick}
             className="flex items-center gap-1.5 group active:scale-90 transition-transform"
           >
-            <MessageCircle className="w-6 h-6 text-slate-700 dark:text-slate-350 group-hover:text-indigo-500" strokeWidth={2} />
+            <MessageCircle className="w-5.5 h-5.5 text-slate-700 dark:text-slate-350 group-hover:text-indigo-500" strokeWidth={2} />
             <span className="text-xs font-black text-slate-650 dark:text-slate-400 mt-0.5">
-              {commentsCount > 0 ? commentsCount : 'Comment'}
+              {commentsCount}
             </span>
           </button>
 
@@ -930,14 +1061,14 @@ const CommunityPostCard = ({ post, onFollowToggle, onLikeToggle, onCommentClick,
               e.stopPropagation();
               const shareUrl = `${window.location.origin}?post=${post._id}`;
               if (onShareClick) {
-                onShareClick(shareUrl, post.title || 'Zenivio Post', post.content || 'Check out this post');
+                onShareClick(shareUrl, post.title || 'Zenivio Post', post.content || 'Check out this post', post);
               }
             }}
             className="flex items-center gap-1.5 group active:scale-90 transition-transform"
           >
             <Send className="w-5.5 h-5.5 text-slate-700 dark:text-slate-350 group-hover:text-emerald-500 -rotate-12" strokeWidth={2} />
             <span className="text-xs font-black text-slate-650 dark:text-slate-400 mt-0.5">
-              {shareCount}
+              {post.shareCount !== undefined ? post.shareCount : shareCount}
             </span>
           </button>
         </div>
@@ -1304,6 +1435,17 @@ const HomePage = ({ setActiveTab, setSelectedNewsId, setActiveChatPartner, setSe
     return () => window.removeEventListener('tabReclickRefresh', handleReclick);
   }, []);
 
+  useEffect(() => {
+    const handlePostShared = (e) => {
+      if (e.detail && e.detail._id) {
+        setFeedPosts(prev => [e.detail, ...prev]);
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
+    };
+    window.addEventListener('post_shared', handlePostShared);
+    return () => window.removeEventListener('post_shared', handlePostShared);
+  }, []);
+
   const fetchMorePosts = async () => {
     if (fetchingMore || !hasMorePosts) return;
     setFetchingMore(true);
@@ -1431,7 +1573,11 @@ const HomePage = ({ setActiveTab, setSelectedNewsId, setActiveChatPartner, setSe
 
   useEffect(() => {
     if (highlightedPostId) {
-      const targetPostId = typeof highlightedPostId === 'object' ? highlightedPostId.postId : highlightedPostId;
+      let rawId = typeof highlightedPostId === 'object' ? (highlightedPostId.postId?._id || highlightedPostId.postId) : highlightedPostId;
+      if (typeof rawId === 'object' && rawId?._id) {
+        rawId = rawId._id;
+      }
+      const targetPostId = rawId ? rawId.toString() : '';
       const shouldOpenComment = typeof highlightedPostId === 'object' ? !!highlightedPostId.openComment : false;
 
       if (!targetPostId) return;
@@ -1466,8 +1612,12 @@ const HomePage = ({ setActiveTab, setSelectedNewsId, setActiveChatPartner, setSe
               const postEl = document.getElementById(`post-${targetPostId}`);
               if (postEl) {
                 postEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                postEl.classList.add('ring-4', 'ring-purple-500/50', 'transition-all', 'duration-500');
+                setTimeout(() => {
+                  postEl.classList.remove('ring-4', 'ring-purple-500/50');
+                }, 3000);
               }
-            }, 300);
+            }, 350);
 
             if (setHighlightedPostId) setHighlightedPostId(null);
           }
@@ -1620,7 +1770,7 @@ const HomePage = ({ setActiveTab, setSelectedNewsId, setActiveChatPartner, setSe
       <PullToRefresh onRefresh={handleRefresh} refreshing={refreshing}>
         <div className="min-h-screen bg-slate-50 dark:bg-slate-950 pb-24 flex flex-col relative">
         {/* Content Body */}
-        <div className="max-w-xl mx-auto px-4 pt-3 pb-8 w-full flex-1 space-y-6">
+        <div className="w-full max-w-xl lg:max-w-2xl mx-auto px-2 sm:px-4 pt-2 lg:pt-0 pb-8 flex-1 space-y-6">
           {/* SEO H1 Heading (Screen Reader & Search Engine Optimized) */}
           <h1 className="sr-only">Zenivio – More Than a Social Network</h1>
 
@@ -1766,8 +1916,8 @@ const HomePage = ({ setActiveTab, setSelectedNewsId, setActiveChatPartner, setSe
                       onImageClick={setPreviewImageUrl}
                       showToast={showToastNotification}
                       onActionTrigger={handleActionTrigger}
-                      onShareClick={(url, title, text) => {
-                        setShareData({ url, title, text });
+                      onShareClick={(url, title, text, postObj) => {
+                        setShareData({ url, title, text, post: postObj || post });
                         setShareModalOpen(true);
                       }}
                       onOpenReactionsModal={(id) => setShowReactionsPostId(id)}
@@ -2018,6 +2168,7 @@ const HomePage = ({ setActiveTab, setSelectedNewsId, setActiveChatPartner, setSe
           shareUrl={shareData.url} 
           title={shareData.title} 
           text={shareData.text} 
+          post={shareData.post}
           showToast={showToastNotification} 
         />
 

@@ -37,6 +37,9 @@ const navItems = [
   { id: 'badges', label: 'Give Badges', icon: (
     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138z" /></svg>
   )},
+  { id: 'admins', label: 'Admin Team', icon: (
+    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" /></svg>
+  )},
   { id: 'database', label: 'Database Backup', icon: (
     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4m0 5c0 2.21-3.582 4-8 4s-8-1.79-8-4" /></svg>
   )},
@@ -45,11 +48,20 @@ const navItems = [
   )},
 ];
 
-const AdminLayout = ({ activePage, setActivePage, onLogout, ADMIN_API, authHeaders, children }) => {
+const AdminLayout = ({ activePage, setActivePage, onLogout, ADMIN_API, authHeaders, adminUser, children }) => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [notifications, setNotifications] = useState([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [showNotifDropdown, setShowNotifDropdown] = useState(false);
+
+  // Change Password state
+  const [showPassModal, setShowPassModal] = useState(false);
+  const [currentPass, setCurrentPass] = useState('');
+  const [newPass, setNewPass] = useState('');
+  const [confirmPass, setConfirmPass] = useState('');
+  const [passLoading, setPassLoading] = useState(false);
+  const [passError, setPassError] = useState('');
+  const [passSuccess, setPassSuccess] = useState('');
 
   const fetchNotifications = useCallback(async () => {
     if (!ADMIN_API || !authHeaders) return;
@@ -115,6 +127,50 @@ const AdminLayout = ({ activePage, setActivePage, onLogout, ADMIN_API, authHeade
     }
   };
 
+  const handleChangePassword = async (e) => {
+    e.preventDefault();
+    if (newPass !== confirmPass) {
+      setPassError('New passwords do not match');
+      return;
+    }
+    if (newPass.length < 6) {
+      setPassError('Password must be at least 6 characters');
+      return;
+    }
+    setPassLoading(true);
+    setPassError('');
+    setPassSuccess('');
+    try {
+      const res = await fetch(`${ADMIN_API}/change-password`, {
+        method: 'POST',
+        headers: authHeaders,
+        body: JSON.stringify({ currentPassword: currentPass, newPassword: newPass }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message || 'Failed to update password');
+      setPassSuccess('Password updated successfully!');
+      setCurrentPass('');
+      setNewPass('');
+      setConfirmPass('');
+      setTimeout(() => {
+        setShowPassModal(false);
+        setPassSuccess('');
+      }, 1500);
+    } catch (err) {
+      setPassError(err.message);
+    } finally {
+      setPassLoading(false);
+    }
+  };
+
+  // Filter nav items based on role & permissions
+  const filteredNavItems = navItems.filter(item => {
+    if (!adminUser) return true;
+    if (adminUser.role === 'super_admin') return true;
+    if (item.id === 'admins') return false; // only Super Admin
+    return Array.isArray(adminUser.permissions) && adminUser.permissions.includes(item.id);
+  });
+
   const NavItem = ({ item }) => {
     const isActive = activePage === item.id;
     return (
@@ -122,8 +178,8 @@ const AdminLayout = ({ activePage, setActivePage, onLogout, ADMIN_API, authHeade
         onClick={() => { setActivePage(item.id); setSidebarOpen(false); }}
         className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold transition-all ${
           isActive
-            ? 'bg-gradient-to-r from-indigo-600 to-purple-600 text-white shadow-lg shadow-indigo-500/25'
-            : 'text-slate-400 hover:text-white hover:bg-slate-800'
+            ? 'bg-gradient-to-r from-indigo-600 to-purple-600 text-white shadow-lg shadow-indigo-500/25 font-bold'
+            : 'text-slate-400 hover:text-white hover:bg-slate-800/70'
         }`}
       >
         {item.icon}
@@ -134,38 +190,68 @@ const AdminLayout = ({ activePage, setActivePage, onLogout, ADMIN_API, authHeade
 
   const Sidebar = () => (
     <div className="flex flex-col h-full bg-[#0F172A]">
-      {/* Logo */}
-      <div className="flex items-center gap-3 px-6 py-6 border-b border-slate-800">
-        <div className="w-9 h-9 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-xl flex items-center justify-center shadow-lg flex-shrink-0">
-          <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" /></svg>
-        </div>
+      {/* Brand Logo Header */}
+      <div className="flex items-center gap-3.5 px-5 py-5 border-b border-slate-800/80 bg-slate-900/40">
+        <img
+          src="/zenivio-logo.png"
+          alt="Zenivio Logo"
+          className="w-10 h-10 rounded-xl object-contain shadow-lg border border-indigo-500/20 bg-slate-900 p-0.5"
+        />
         <div>
-          <div className="text-white font-black text-base leading-none">Zenivio</div>
-          <div className="text-indigo-400 text-xs font-bold tracking-widest uppercase leading-none mt-0.5">Admin</div>
+          <div className="text-white font-black text-base tracking-tight leading-tight">Zenivio</div>
+          <div className="flex items-center gap-1.5 mt-0.5">
+            <span className="text-indigo-400 text-[10px] font-bold tracking-widest uppercase">Admin Panel</span>
+            {adminUser?.role === 'super_admin' ? (
+              <span className="text-[9px] font-black text-amber-400 bg-amber-500/15 border border-amber-500/30 px-1.5 py-0.2 rounded tracking-wide">SUPER</span>
+            ) : (
+              <span className="text-[9px] font-black text-indigo-400 bg-indigo-500/15 border border-indigo-500/30 px-1.5 py-0.2 rounded tracking-wide">STAFF</span>
+            )}
+          </div>
         </div>
       </div>
 
-      {/* Nav */}
+      {/* Nav Items */}
       <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
-        {navItems.map(item => <NavItem key={item.id} item={item} />)}
+        {filteredNavItems.map(item => <NavItem key={item.id} item={item} />)}
       </nav>
 
-      {/* User / Logout */}
-      <div className="px-3 pb-4 border-t border-slate-800 pt-3">
-        <div className="flex items-center gap-3 px-4 py-3 mb-2">
-          <div className="w-8 h-8 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white font-bold text-xs flex-shrink-0">A</div>
-          <div>
-            <div className="text-white text-xs font-bold">Admin</div>
-            <div className="text-slate-500 text-xs">admin@zenivio.com</div>
+      {/* User Info / Actions */}
+      <div className="px-3 pb-4 border-t border-slate-800/80 pt-3 bg-slate-900/30">
+        <div className="flex items-center gap-3 px-3 py-2.5 mb-2 rounded-xl bg-slate-800/40 border border-slate-800/60">
+          <div className={`w-9 h-9 rounded-xl flex items-center justify-center text-white font-black text-xs shadow-md ${
+            adminUser?.role === 'super_admin'
+              ? 'bg-gradient-to-tr from-amber-500 to-indigo-600 border border-amber-400/40'
+              : 'bg-gradient-to-tr from-indigo-600 to-purple-600'
+          }`}>
+            {adminUser?.name ? adminUser.name.charAt(0).toUpperCase() : 'A'}
+          </div>
+          <div className="min-w-0 flex-1">
+            <div className="text-white text-xs font-bold truncate flex items-center gap-1">
+              {adminUser?.name || 'Administrator'}
+              {adminUser?.role === 'super_admin' && <span className="text-amber-400 text-[10px]">👑</span>}
+            </div>
+            <div className="text-slate-400 text-[11px] truncate font-mono">{adminUser?.email || 'admin@zenivio.com'}</div>
           </div>
         </div>
-        <button
-          onClick={onLogout}
-          className="w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-rose-400 hover:text-rose-300 hover:bg-rose-900/20 transition-all text-sm font-semibold"
-        >
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" /></svg>
-          Sign Out
-        </button>
+
+        <div className="grid grid-cols-2 gap-2">
+          <button
+            onClick={() => { setShowPassModal(true); setPassError(''); setPassSuccess(''); }}
+            className="flex items-center justify-center gap-1.5 py-2 px-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-indigo-300 hover:text-white transition-all text-xs font-bold border border-slate-700/60"
+            title="Change Password"
+          >
+            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" /></svg>
+            Password
+          </button>
+          <button
+            onClick={onLogout}
+            className="flex items-center justify-center gap-1.5 py-2 px-2 rounded-xl bg-rose-950/30 hover:bg-rose-900/50 text-rose-300 hover:text-white transition-all text-xs font-bold border border-rose-900/40"
+            title="Sign Out"
+          >
+            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" /></svg>
+            Logout
+          </button>
+        </div>
       </div>
     </div>
   );
@@ -198,8 +284,20 @@ const AdminLayout = ({ activePage, setActivePage, onLogout, ADMIN_API, authHeade
             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" /></svg>
           </button>
           
-          <div className="flex-1">
-            <h1 className="text-white font-bold text-lg capitalize">{navItems.find(n => n.id === activePage)?.label || activePage}</h1>
+          <div className="flex-1 flex items-center gap-3">
+            <img
+              src="/zenivio-logo.png"
+              alt="Zenivio Logo"
+              className="w-8 h-8 rounded-lg object-contain border border-indigo-500/20 bg-slate-900 p-0.5 shadow-sm"
+            />
+            <div>
+              <h1 className="text-white font-bold text-base sm:text-lg capitalize leading-tight">
+                {navItems.find(n => n.id === activePage)?.label || activePage}
+              </h1>
+              <div className="text-[10px] text-slate-400 font-medium hidden sm:block">
+                Zenivio Management Console
+              </div>
+            </div>
           </div>
 
           {/* Notifications Dropdown */}
@@ -284,6 +382,18 @@ const AdminLayout = ({ activePage, setActivePage, onLogout, ADMIN_API, authHeade
             )}
           </div>
 
+          {/* Change Password quick button in Header */}
+          <button
+            onClick={() => { setShowPassModal(true); setPassError(''); setPassSuccess(''); }}
+            className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-750 text-slate-300 hover:text-white border border-slate-700 text-xs font-bold transition-all shadow-sm"
+            title="Change Password"
+          >
+            <svg className="w-3.5 h-3.5 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
+            </svg>
+            <span>Password</span>
+          </button>
+
           <div className="flex items-center gap-2 bg-[#111827] border border-slate-800 px-3 py-1.5 rounded-xl">
             <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
             <span className="text-emerald-400 text-xs font-bold uppercase tracking-wider">Live</span>
@@ -295,6 +405,100 @@ const AdminLayout = ({ activePage, setActivePage, onLogout, ADMIN_API, authHeade
           {children}
         </main>
       </div>
+
+      {/* Change Password Modal */}
+      {showPassModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div className="fixed inset-0 bg-black/75 backdrop-blur-sm" onClick={() => !passLoading && setShowPassModal(false)} />
+          <div className="relative z-10 w-full max-w-md bg-[#111827] border border-slate-800 rounded-2xl shadow-2xl p-6 animate-in zoom-in-95 duration-150">
+            <div className="flex items-center justify-between pb-4 border-b border-slate-800 mb-5">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-indigo-600/20 border border-indigo-500/30 flex items-center justify-center text-indigo-400">
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
+                  </svg>
+                </div>
+                <div>
+                  <h3 className="text-base font-black text-white">Change Admin Password</h3>
+                  <p className="text-slate-400 text-xs mt-0.5">{adminUser?.email || 'admin@zenivio.com'}</p>
+                </div>
+              </div>
+              <button
+                onClick={() => setShowPassModal(false)}
+                className="text-slate-400 hover:text-white p-1 rounded-lg"
+              >
+                ✕
+              </button>
+            </div>
+
+            {passSuccess && (
+              <div className="mb-4 bg-emerald-500/10 border border-emerald-500/30 text-emerald-300 rounded-xl px-4 py-2.5 text-xs font-bold">
+                ✓ {passSuccess}
+              </div>
+            )}
+            {passError && (
+              <div className="mb-4 bg-rose-500/10 border border-rose-500/30 text-rose-400 rounded-xl px-4 py-2.5 text-xs font-bold">
+                ⚠️ {passError}
+              </div>
+            )}
+
+            <form onSubmit={handleChangePassword} className="space-y-4">
+              <div>
+                <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-1.5">Current Password</label>
+                <input
+                  type="password"
+                  required
+                  value={currentPass}
+                  onChange={e => setCurrentPass(e.target.value)}
+                  placeholder="Enter current password"
+                  className="w-full bg-[#1E293B] border border-slate-700 focus:border-indigo-500 rounded-xl px-4 py-2.5 text-white font-medium text-sm outline-none"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-1.5">New Password</label>
+                <input
+                  type="password"
+                  required
+                  minLength={6}
+                  value={newPass}
+                  onChange={e => setNewPass(e.target.value)}
+                  placeholder="Minimum 6 characters"
+                  className="w-full bg-[#1E293B] border border-slate-700 focus:border-indigo-500 rounded-xl px-4 py-2.5 text-white font-medium text-sm outline-none"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-1.5">Confirm New Password</label>
+                <input
+                  type="password"
+                  required
+                  value={confirmPass}
+                  onChange={e => setConfirmPass(e.target.value)}
+                  placeholder="Re-enter new password"
+                  className="w-full bg-[#1E293B] border border-slate-700 focus:border-indigo-500 rounded-xl px-4 py-2.5 text-white font-medium text-sm outline-none"
+                />
+              </div>
+
+              <div className="pt-2 flex items-center justify-end gap-3">
+                <button
+                  type="button"
+                  onClick={() => setShowPassModal(false)}
+                  disabled={passLoading}
+                  className="px-4 py-2 text-slate-400 hover:text-white text-xs font-bold rounded-xl"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={passLoading}
+                  className="px-5 py-2.5 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white text-xs font-bold rounded-xl shadow-lg shadow-indigo-500/25 disabled:opacity-50 flex items-center gap-2"
+                >
+                  {passLoading ? 'Updating...' : 'Update Password'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

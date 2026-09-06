@@ -83,7 +83,6 @@ const SupportPage = ({ onBack }) => {
 
     return () => {
       newSocket.disconnect();
-      stopRingtone();
     };
   }, []);
 
@@ -220,7 +219,7 @@ const SupportPage = ({ onBack }) => {
           <div>
             <h1 className="text-sm sm:text-base font-black text-slate-800 dark:text-white flex items-center gap-1.5 leading-tight">
               Zenivio Help &amp; Support
-              <VerifiedBadge iconClassName="w-[16px] h-[16px] fill-blue-500 text-white flex-shrink-0" />
+              <VerifiedBadge iconClassName="w-[16px] h-[16px] flex-shrink-0" />
             </h1>
             <p className="text-[11px] font-bold text-emerald-500 flex items-center gap-1 mt-0.5">
               Active Now
@@ -238,7 +237,7 @@ const SupportPage = ({ onBack }) => {
           </div>
           <h3 className="font-black text-slate-800 dark:text-white flex items-center gap-1.5 text-base">
             Zenivio Support Team
-            <VerifiedBadge iconClassName="w-[16px] h-[16px] fill-blue-500 text-white" />
+            <VerifiedBadge iconClassName="w-[16px] h-[16px]" />
           </h3>
           <p className="text-xs text-slate-400 mt-1">You are connected to our support desk. How can we help?</p>
         </div>

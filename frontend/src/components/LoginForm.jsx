@@ -66,7 +66,7 @@ const FacebookIcon = () => (
 );
 
 // ── GoogleButton ──────────────────────────────────────────────────────────────
-const GoogleButton = ({ onSuccess }) => {
+const GoogleButton = ({ onSuccess, text = "Continue with Google" }) => {
   const [loading, setLoading] = useState(false);
   const [googleError, setGoogleError] = useState('');
 
@@ -157,7 +157,7 @@ const GoogleButton = ({ onSuccess }) => {
   };
 
   return (
-    <>
+    <div className="w-full">
       {googleError && (
         <div className="mb-2 bg-red-50 text-red-500 p-2 rounded-xl text-xs text-center border border-red-100 font-semibold w-full">
           {googleError}
@@ -167,16 +167,16 @@ const GoogleButton = ({ onSuccess }) => {
         type="button"
         onClick={handleGoogleLogin}
         disabled={loading}
-        className="w-14 h-14 flex items-center justify-center rounded-2xl transition-all active:scale-95 disabled:opacity-70"
-        style={{ background: 'white', border: '1.5px solid #E5E7EB', boxShadow: '0 2px 8px rgba(0,0,0,0.06)' }}
+        className="w-full flex items-center justify-center gap-3 py-3.5 px-4 rounded-2xl font-bold text-sm text-slate-750 dark:text-slate-200 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-xs hover:bg-slate-50 dark:hover:bg-slate-750 transition-all active:scale-[0.98] disabled:opacity-70 cursor-pointer"
       >
         {loading ? (
-          <div className="w-5 h-5 border-2 border-gray-200 border-t-gray-600 rounded-full animate-spin" />
+          <div className="w-5 h-5 border-2 border-gray-300 border-t-purple-600 rounded-full animate-spin flex-shrink-0" />
         ) : (
           <GoogleIcon />
         )}
+        <span>{loading ? 'Connecting with Google…' : text}</span>
       </button>
-    </>
+    </div>
   );
 };
 
@@ -377,7 +377,7 @@ const LoginForm = ({ onToggleForm, onLoginSuccess, onForgotPassword }) => {
 
   return (
     <div
-      className="w-full min-h-screen flex flex-col overflow-y-auto"
+      className="w-full min-h-screen flex flex-col justify-center items-center overflow-y-auto py-8 sm:py-12 px-4"
       style={{ background: 'linear-gradient(160deg, #F5F0FF 0%, #FFFFFF 60%, #EDE9FE 100%)' }}
     >
       {/* Decorative blobs */}
@@ -390,32 +390,42 @@ const LoginForm = ({ onToggleForm, onLoginSuccess, onForgotPassword }) => {
         style={{ background: 'radial-gradient(circle, rgba(139,92,246,0.2) 0%, transparent 70%)' }}
       />
 
-      {/* Back button */}
-      <div className="flex items-center px-5 pt-12 pb-2 z-10">
-        <button
-          type="button"
-          onClick={onToggleForm}
-          className="w-9 h-9 flex items-center justify-center rounded-full transition-all active:scale-90"
-          style={{ background: 'rgba(124,58,237,0.08)' }}
-        >
-          <svg viewBox="0 0 24 24" fill="none" stroke="#7C3AED" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5">
-            <polyline points="15 18 9 12 15 6"/>
-          </svg>
-        </button>
-      </div>
-
-      {/* Content */}
-      <div className="flex-1 flex flex-col items-center px-6 pb-10 z-10 pt-4">
-        <h1 className="text-3xl font-black mb-1 bg-gradient-to-r from-brand-600 via-indigo-600 to-purple-600 bg-clip-text text-transparent select-none">
-          Zenivio
-        </h1>
-
-        <div className="text-center mb-6 mt-1">
-          <p className="text-lg font-bold" style={{ color: '#1E1B4B' }}>Welcome Back!</p>
-          <p className="text-sm mt-0.5" style={{ color: '#6B7280' }}>Login to continue your journey</p>
+      {/* Main Centered Card on Desktop */}
+      <div className="w-full max-w-[420px] sm:max-w-[440px] mx-auto bg-white/80 dark:bg-slate-900/80 sm:bg-white sm:dark:bg-slate-900 backdrop-blur-md sm:shadow-2xl rounded-[32px] sm:border border-purple-100/80 dark:border-purple-900/30 p-6 sm:p-8 z-10 flex flex-col">
+        {/* Back button */}
+        <div className="flex items-center justify-between pb-3">
+          <button
+            type="button"
+            onClick={onToggleForm}
+            className="w-9 h-9 flex items-center justify-center rounded-full transition-all active:scale-90 cursor-pointer"
+            style={{ background: 'rgba(124,58,237,0.08)' }}
+            title="Back"
+          >
+            <svg viewBox="0 0 24 24" fill="none" stroke="#7C3AED" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5">
+              <polyline points="15 18 9 12 15 6"/>
+            </svg>
+          </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="w-full space-y-3.5">
+        {/* Content */}
+        <div className="flex flex-col items-center w-full">
+          <div className="flex items-center gap-2 mb-1 select-none">
+            <img 
+              src="/zenivio-logo.png" 
+              alt="Zenivio Logo" 
+              className="w-8 h-8 sm:w-9 sm:h-9 object-contain rounded-xl shadow-xs" 
+            />
+            <h1 className="text-3xl font-black bg-gradient-to-r from-brand-600 via-indigo-600 to-purple-600 bg-clip-text text-transparent">
+              Zenivio
+            </h1>
+          </div>
+
+          <div className="text-center mb-6 mt-1">
+            <p className="text-lg font-bold" style={{ color: '#1E1B4B' }}>Welcome Back!</p>
+            <p className="text-sm mt-0.5" style={{ color: '#6B7280' }}>Login to continue your journey</p>
+          </div>
+
+          <form onSubmit={handleSubmit} className="w-full space-y-3.5">
           <InputField
             icon={MailIcon}
             name="phoneOrEmail"
@@ -510,6 +520,7 @@ const LoginForm = ({ onToggleForm, onLoginSuccess, onForgotPassword }) => {
             Sign Up
           </button>
         </p>
+      </div>
       </div>
     </div>
   );

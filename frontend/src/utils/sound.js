@@ -1,14 +1,17 @@
 import { LocalNotifications } from '@capacitor/local-notifications';
 import { Capacitor } from '@capacitor/core';
 
-// Global unlocked AudioContext singleton
+// Global unlocked AudioContext singleton for synthetic fallback
 let globalAudioCtx = null;
+let htmlAudioInstance = null;
 
 const getAudioContext = () => {
   if (!globalAudioCtx && typeof window !== 'undefined') {
     const AudioContextClass = window.AudioContext || window.webkitAudioContext;
     if (AudioContextClass) {
-      globalAudioCtx = new AudioContextClass();
+      try {
+        globalAudioCtx = new AudioContextClass();
+      } catch (e) {}
     }
   }
   if (globalAudioCtx && globalAudioCtx.state === 'suspended') {
@@ -17,70 +20,75 @@ const getAudioContext = () => {
   return globalAudioCtx;
 };
 
-// Automatically unlock AudioContext on first user touch/interaction
+// Automatically unlock audio on first user touch/interaction
 if (typeof window !== 'undefined') {
   const unlock = () => {
-    const ctx = getAudioContext();
-    if (ctx && ctx.state === 'suspended') {
-      ctx.resume().catch(() => {});
-    }
+    try {
+      const ctx = getAudioContext();
+      if (ctx && ctx.state === 'suspended') {
+        ctx.resume().catch(() => {});
+      }
+      if (!htmlAudioInstance) {
+        htmlAudioInstance = new Audio('/notification.wav');
+        htmlAudioInstance.load();
+      }
+    } catch (e) {}
   };
-  window.addEventListener('click', unlock, { passive: true });
-  window.addEventListener('touchstart', unlock, { passive: true });
-  window.addEventListener('keydown', unlock, { passive: true });
+  window.addEventListener('click', unlock, { passive: true, once: true });
+  window.addEventListener('touchstart', unlock, { passive: true, once: true });
+  window.addEventListener('keydown', unlock, { passive: true, once: true });
 }
 
-// Crisp, high-clarity 3-tone chime (C6 -> E6 -> G6)
-export const playNotificationSound = () => {
+// Synthesize pleasant 4-tone chime via Web Audio
+const playSynthChime = () => {
   try {
     const ctx = getAudioContext();
     if (!ctx) return;
-
     if (ctx.state === 'suspended') {
-      ctx.resume();
+      ctx.resume().catch(() => {});
     }
 
     const now = ctx.currentTime;
 
-    // Tone 1: 1046.50 Hz (C6)
-    const osc1 = ctx.createOscillator();
-    const gain1 = ctx.createGain();
-    osc1.type = 'sine';
-    osc1.frequency.setValueAtTime(1046.50, now);
-    gain1.gain.setValueAtTime(0.28, now);
-    gain1.gain.exponentialRampToValueAtTime(0.001, now + 0.35);
-    osc1.connect(gain1);
-    gain1.connect(ctx.destination);
-    osc1.start(now);
-    osc1.stop(now + 0.35);
+    const playTone = (freq, startTime, duration, gainVal) => {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(freq, startTime);
+      gain.gain.setValueAtTime(0.001, startTime);
+      gain.gain.linearRampToValueAtTime(gainVal, startTime + 0.02);
+      gain.gain.exponentialRampToValueAtTime(0.001, startTime + duration);
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start(startTime);
+      osc.stop(startTime + duration);
+    };
 
-    // Tone 2: 1318.51 Hz (E6) - slight delay for chime effect
-    const osc2 = ctx.createOscillator();
-    const gain2 = ctx.createGain();
-    osc2.type = 'sine';
-    osc2.frequency.setValueAtTime(1318.51, now + 0.08);
-    gain2.gain.setValueAtTime(0.001, now);
-    gain2.gain.setValueAtTime(0.32, now + 0.08);
-    gain2.gain.exponentialRampToValueAtTime(0.001, now + 0.45);
-    osc2.connect(gain2);
-    gain2.connect(ctx.destination);
-    osc2.start(now + 0.08);
-    osc2.stop(now + 0.45);
-
-    // Tone 3: 1567.98 Hz (G6) - sparkling finish
-    const osc3 = ctx.createOscillator();
-    const gain3 = ctx.createGain();
-    osc3.type = 'sine';
-    osc3.frequency.setValueAtTime(1567.98, now + 0.16);
-    gain3.gain.setValueAtTime(0.001, now);
-    gain3.gain.setValueAtTime(0.35, now + 0.16);
-    gain3.gain.exponentialRampToValueAtTime(0.001, now + 0.55);
-    osc3.connect(gain3);
-    gain3.connect(ctx.destination);
-    osc3.start(now + 0.16);
-    osc3.stop(now + 0.55);
+    // C6 (1046Hz) -> E6 (1318Hz) -> G6 (1568Hz) -> C7 (2093Hz)
+    playTone(1046.50, now, 0.35, 0.30);
+    playTone(1318.51, now + 0.08, 0.40, 0.35);
+    playTone(1567.98, now + 0.16, 0.50, 0.40);
+    playTone(2093.00, now + 0.24, 0.55, 0.25);
   } catch (e) {
-    console.warn('[Sound] Audio chime playback error:', e);
+    console.warn('[Sound] Synth chime error:', e);
+  }
+};
+
+// Play notification sound using HTML5 Audio (primary) + Web Audio synth (fallback)
+export const playNotificationSound = () => {
+  try {
+    const audio = htmlAudioInstance || new Audio('/notification.wav');
+    audio.volume = 1.0;
+    audio.currentTime = 0;
+    const playPromise = audio.play();
+    if (playPromise !== undefined) {
+      playPromise.catch((err) => {
+        // Fallback to Web Audio oscillator if audio element is blocked
+        playSynthChime();
+      });
+    }
+  } catch (e) {
+    playSynthChime();
   }
 };
 
@@ -91,9 +99,9 @@ const ensureNotificationChannel = async () => {
   try {
     await LocalNotifications.createChannel({
       id: 'zenivio_messages',
-      name: 'Direct Messages',
+      name: 'Direct Messages & Notifications',
       description: 'Incoming Zenivio chat messages and notifications',
-      importance: 5, // High importance -> shows head-up banner & plays sound
+      importance: 5, // High importance -> shows heads-up banner & plays sound
       visibility: 1, // Visible on lock screen
       sound: 'default',
       vibration: true,
@@ -106,10 +114,35 @@ const ensureNotificationChannel = async () => {
   }
 };
 
+// Proactively request notification permissions (call on app mount/login)
+export const requestNotificationPermissions = async () => {
+  try {
+    if (Capacitor.isNativePlatform()) {
+      await ensureNotificationChannel();
+      const perm = await LocalNotifications.checkPermissions();
+      if (perm.display !== 'granted') {
+        await LocalNotifications.requestPermissions();
+      }
+    } else if (typeof window !== 'undefined' && 'Notification' in window) {
+      if (Notification.permission === 'default') {
+        await Notification.requestPermission();
+      }
+    }
+  } catch (e) {
+    console.warn('[Notifications] Permission request error:', e);
+  }
+};
+
 // Trigger status bar notification specifically for Incoming Messages
 export const triggerMessageNotification = async (senderName, messageText, extraData = {}) => {
-  // Always play the chime
+  // Always play the crisp chime
   playNotificationSound();
+
+  const cleanSnippet = messageText 
+    ? (messageText.startsWith('/api/image') ? '📷 Photo' : (messageText.length > 80 ? `${messageText.substring(0, 80)}...` : messageText))
+    : 'Sent you a message';
+
+  const title = senderName ? `${senderName} 💬` : 'New Message 💬';
 
   try {
     if (Capacitor.isNativePlatform()) {
@@ -121,14 +154,10 @@ export const triggerMessageNotification = async (senderName, messageText, extraD
         if (req.display !== 'granted') return;
       }
 
-      const cleanSnippet = messageText 
-        ? (messageText.startsWith('/api/image') ? '📷 Photo' : (messageText.length > 80 ? `${messageText.substring(0, 80)}...` : messageText))
-        : 'Sent you a message';
-
       await LocalNotifications.schedule({
         notifications: [
           {
-            title: senderName ? `${senderName} 💬` : 'New Message 💬',
+            title,
             body: cleanSnippet,
             id: Math.floor(Math.random() * 1000000),
             channelId: 'zenivio_messages',
@@ -139,15 +168,52 @@ export const triggerMessageNotification = async (senderName, messageText, extraD
           }
         ]
       });
+    } else if (typeof window !== 'undefined' && 'Notification' in window && Notification.permission === 'granted') {
+      // Mobile / Desktop Web Notification
+      new Notification(title, {
+        body: cleanSnippet,
+        icon: '/applogo.png',
+        badge: '/favicon.png',
+        tag: `msg-${Date.now()}`
+      });
     }
   } catch (e) {
-    console.warn('[LocalNotifications] Message push notification error:', e);
+    console.warn('[Notifications] Message push notification error:', e);
   }
 };
 
-// General system notification (silent or without status bar spam unless requested)
+// General system notification (shows on native & plays sound)
 export const triggerSystemNotification = async (title, body, extraData = {}) => {
-  // Only play subtle chime, do not spam phone status bar
   playNotificationSound();
-};
 
+  try {
+    if (Capacitor.isNativePlatform()) {
+      await ensureNotificationChannel();
+      const perm = await LocalNotifications.checkPermissions();
+      if (perm.display === 'granted') {
+        await LocalNotifications.schedule({
+          notifications: [
+            {
+              title: title || 'Zenivio Notification 🔔',
+              body: body || 'You have a new update',
+              id: Math.floor(Math.random() * 1000000),
+              channelId: 'zenivio_messages',
+              sound: 'default',
+              smallIcon: 'ic_launcher',
+              schedule: { at: new Date(Date.now() + 50) },
+              extra: extraData
+            }
+          ]
+        });
+      }
+    } else if (typeof window !== 'undefined' && 'Notification' in window && Notification.permission === 'granted') {
+      new Notification(title || 'Zenivio Notification 🔔', {
+        body: body || 'You have a new update',
+        icon: '/applogo.png',
+        badge: '/favicon.png'
+      });
+    }
+  } catch (e) {
+    console.warn('[Notifications] System notification error:', e);
+  }
+};

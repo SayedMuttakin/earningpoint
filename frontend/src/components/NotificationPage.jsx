@@ -148,6 +148,16 @@ const NotificationPage = ({ onBack, setActiveTab, setSelectedNotificationPostId,
     }
   };
 
+  const getBadgeCornerIcon = (type) => {
+    switch (type) {
+      case 'follow': return <UserPlus className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-white" strokeWidth={2.5} />;
+      case 'like': return <Heart className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-white fill-white" />;
+      case 'comment': return <MessageSquare className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-white fill-white" />;
+      case 'mention': return <AtSign className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-white" strokeWidth={2.5} />;
+      default: return <Bell className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-white" />;
+    }
+  };
+
   const getIcon = (type) => {
     switch (type) {
       case 'follow': return <UserPlus className="w-4 h-4 sm:w-5 sm:h-5 text-indigo-500" />;
@@ -199,7 +209,7 @@ const NotificationPage = ({ onBack, setActiveTab, setSelectedNotificationPostId,
           <div className="flex items-center gap-3">
             <button 
               onClick={onBack}
-              className="w-8 h-8 sm:w-10 sm:h-10 flex items-center justify-center bg-slate-50 dark:bg-slate-800 rounded-full border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 shadow-sm active:scale-95 transition-all"
+              className="w-8 h-8 sm:w-10 sm:h-10 flex items-center justify-center bg-slate-50 dark:bg-slate-800 rounded-full border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 shadow-sm active:scale-95 transition-all cursor-pointer"
             >
               <ArrowLeft size={18} />
             </button>
@@ -214,7 +224,7 @@ const NotificationPage = ({ onBack, setActiveTab, setSelectedNotificationPostId,
           {notifications.length > 0 && (
             <button
               onClick={markAllAsRead}
-              className="text-[10px] sm:text-xs font-black text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-900/30 px-3 py-1.5 rounded-full flex items-center gap-1 hover:bg-indigo-100 transition-colors shadow-sm"
+              className="text-[10px] sm:text-xs font-black text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-900/30 px-3 py-1.5 rounded-full flex items-center gap-1 hover:bg-indigo-100 transition-colors shadow-sm cursor-pointer"
             >
               <CheckCircle2 size={12} /> Mark Read
             </button>
@@ -262,7 +272,7 @@ const NotificationPage = ({ onBack, setActiveTab, setSelectedNotificationPostId,
                   {notifications.map((n, idx) => {
                     const sender = n.sender;
                     const senderId = sender?._id || n.senderId;
-                    const hasVerifiedBadge = sender && ((sender.verificationBadge === 'golden' || sender.verificationBadge === 'blue') || (sender.isEmailVerified && sender.verificationBadge !== 'none'));
+                    const hasVerifiedBadge = sender && ((sender.verificationBadge === 'golden' || sender.verificationBadge === 'blue' || sender.verificationBadge === 'purple') || (sender.isEmailVerified && sender.verificationBadge !== 'none'));
                     const isFollowNotif = n.type === 'follow' || (n.title && n.title.toLowerCase().includes('follow'));
 
                     return (
@@ -285,7 +295,7 @@ const NotificationPage = ({ onBack, setActiveTab, setSelectedNotificationPostId,
                           </div>
                         )}
                         
-                        {/* Avatar or Notification Icon */}
+                        {/* Avatar or Notification Icon with Clean Floating Badge */}
                         {sender && sender.profilePic ? (
                           <div 
                             onClick={(e) => {
@@ -296,20 +306,49 @@ const NotificationPage = ({ onBack, setActiveTab, setSelectedNotificationPostId,
                                 onBack();
                               }
                             }}
-                            className="relative w-12 h-12 sm:w-14 sm:h-14 rounded-2xl overflow-hidden shrink-0 shadow-inner cursor-pointer active:scale-95 transition-transform"
+                            className="relative w-12 h-12 sm:w-14 sm:h-14 shrink-0 cursor-pointer active:scale-95 transition-transform"
                           >
                             <img 
                               src={getImageUrl(sender.profilePic)} 
                               alt={sender.name || 'User'} 
-                              className="w-full h-full object-cover"
+                              className="w-full h-full object-cover rounded-2xl border border-slate-100 dark:border-slate-700 shadow-xs"
                               onError={(e) => { e.target.style.display = 'none'; }}
                             />
-                            <div className={`absolute bottom-0 right-0 p-1 rounded-tl-xl ${
-                              n.type === 'follow' ? 'bg-indigo-600 text-white' :
-                              n.type === 'like' ? 'bg-rose-500 text-white' :
-                              n.type === 'comment' ? 'bg-purple-600 text-white' : 'bg-slate-800 text-white'
+                            {/* Floating Corner Badge with White Icon */}
+                            <div className={`absolute -bottom-1 -right-1 w-5 h-5 sm:w-5.5 sm:h-5.5 rounded-full flex items-center justify-center ring-2 ring-white dark:ring-slate-800 shadow-sm ${
+                              n.type === 'follow' ? 'bg-indigo-600' :
+                              n.type === 'like' ? 'bg-rose-500' :
+                              n.type === 'comment' ? 'bg-purple-600' : 'bg-slate-800'
                             }`}>
-                              {getIcon(n.type)}
+                              {getBadgeCornerIcon(n.type)}
+                            </div>
+                          </div>
+                        ) : sender ? (
+                          <div 
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              if (senderId && setActivePublicProfileUserId && setActiveTab) {
+                                setActivePublicProfileUserId(senderId);
+                                setActiveTab('PublicProfile');
+                                onBack();
+                              }
+                            }}
+                            className="relative w-12 h-12 sm:w-14 sm:h-14 shrink-0 cursor-pointer active:scale-95 transition-transform"
+                          >
+                            <div className={`w-full h-full rounded-2xl flex items-center justify-center font-black text-white text-base shadow-inner ${
+                              n.type === 'follow' ? 'bg-gradient-to-tr from-indigo-500 to-purple-600' :
+                              n.type === 'like' ? 'bg-gradient-to-tr from-rose-500 to-pink-600' :
+                              n.type === 'comment' ? 'bg-gradient-to-tr from-purple-500 to-indigo-600' :
+                              'bg-slate-700'
+                            }`}>
+                              {sender.name ? sender.name.charAt(0).toUpperCase() : 'U'}
+                            </div>
+                            <div className={`absolute -bottom-1 -right-1 w-5 h-5 sm:w-5.5 sm:h-5.5 rounded-full flex items-center justify-center ring-2 ring-white dark:ring-slate-800 shadow-sm ${
+                              n.type === 'follow' ? 'bg-indigo-600' :
+                              n.type === 'like' ? 'bg-rose-500' :
+                              n.type === 'comment' ? 'bg-purple-600' : 'bg-slate-800'
+                            }`}>
+                              {getBadgeCornerIcon(n.type)}
                             </div>
                           </div>
                         ) : (
@@ -329,10 +368,18 @@ const NotificationPage = ({ onBack, setActiveTab, setSelectedNotificationPostId,
                           className="flex-1 min-w-0 py-0.5 sm:py-1 cursor-pointer" 
                           onClick={() => {
                             if (!n.isRead) markAsRead(n._id);
-                            if (n.postId && setSelectedNotificationPostId && setActiveTab) {
-                              const isCommentNotif = n.type === 'comment' || (n.title && n.title.toLowerCase().includes('comment')) || (n.message && n.message.toLowerCase().includes('commented'));
+                            
+                            // Safely extract string postId
+                            const rawPostId = n.postId?._id || n.postId;
+                            const targetPostId = rawPostId ? rawPostId.toString() : '';
+
+                            if (targetPostId && setSelectedNotificationPostId && setActiveTab) {
+                              const isCommentNotif = n.type === 'comment' || 
+                                (n.title && n.title.toLowerCase().includes('comment')) || 
+                                (n.message && n.message.toLowerCase().includes('commented'));
+                              
                               setSelectedNotificationPostId({
-                                postId: n.postId,
+                                postId: targetPostId,
                                 openComment: isCommentNotif
                               });
                               setActiveTab('Home');
@@ -419,11 +466,11 @@ const NotificationPage = ({ onBack, setActiveTab, setSelectedNotificationPostId,
       {selectedNotification && (
         selectedNotification.type === 'badge' ? (
           (() => {
-            const isBlue = selectedNotification.title.toLowerCase().includes('public figure') || selectedNotification.title.toLowerCase().includes('blue');
-            const badgeColor = isBlue ? '#1d9bf0' : '#EAB308';
-            const badgeTitle = isBlue ? 'Verified Public Figure' : 'Verified Individual';
-            const badgeDescription = isBlue 
-              ? 'This account authentically represents a recognized public figure and has been verified by Zenivio.'
+            const isPurpleOrBlue = selectedNotification.title.toLowerCase().includes('public figure') || selectedNotification.title.toLowerCase().includes('blue') || selectedNotification.title.toLowerCase().includes('purple');
+            const badgeColor = isPurpleOrBlue ? '#7c3aed' : '#EAB308';
+            const badgeTitle = isPurpleOrBlue ? 'Verified Account' : 'Verified Individual';
+            const badgeDescription = isPurpleOrBlue 
+              ? 'This account authentically represents a recognized user and has been verified with the official Zenivio Purple Badge.'
               : 'This account belongs to a real person whose identity has been verified by Zenivio.';
 
             return (

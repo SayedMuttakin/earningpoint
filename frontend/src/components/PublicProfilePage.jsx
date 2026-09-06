@@ -26,13 +26,20 @@ import {
   Download,
   Search,
   Send,
-  Trash2
+  Trash2,
+  Shield,
+  ShieldCheck,
+  CheckCircle2,
+  ChevronRight,
+  MoreVertical,
+  Edit
 } from 'lucide-react';
 import { API_BASE, getImageUrl } from '../config';
 import VerifiedBadge from './VerifiedBadge';
 import ShareModal from './ShareModal';
 import ImagePreviewModal from './ImagePreviewModal';
 import ImageCropModal from './ImageCropModal';
+import VerifyIn2MinutesModal from './VerifyIn2MinutesModal';
 
 // Reactions List Modal (Who Reacted / Liked on Profile Posts)
 const ProfileReactionsModal = ({ postId, onClose, onUserClick }) => {
@@ -643,6 +650,22 @@ const PublicProfilePage = ({ userId, onBack, currentUser, isOwnProfile, setActiv
   const [toastMessage, setToastMessage] = useState('');
   const [showToast, setShowToast] = useState(false);
   const toastTimerRef = React.useRef(null);
+
+  // Own Post Management States
+  const [postActionMenuOpen, setPostActionMenuOpen] = useState(false);
+  const [showDeletePostConfirm, setShowDeletePostConfirm] = useState(false);
+  const [showEditPostModal, setShowEditPostModal] = useState(false);
+  const [editingPostContent, setEditingPostContent] = useState('');
+  const [isUpdatingPost, setIsUpdatingPost] = useState(false);
+  const [isDeletingPost, setIsDeletingPost] = useState(false);
+
+  // Photo Upload Caption & Confirmation Modal State
+  const [pendingUploadModal, setPendingUploadModal] = useState({
+    isOpen: false,
+    type: 'avatar',
+    image: '',
+    caption: ''
+  });
   
   // 4-icon tabs navigation: 'grid', 'reels', 'shop', 'saved'
   const [activeSubTab, setActiveSubTab] = useState('grid');
@@ -668,6 +691,7 @@ const PublicProfilePage = ({ userId, onBack, currentUser, isOwnProfile, setActiv
 
   // Edit Profile Modal State
   const [showEditProfileModal, setShowEditProfileModal] = useState(false);
+  const [showVerify2MinModal, setShowVerify2MinModal] = useState(false);
   const [editName, setEditName] = useState('');
   const [editBio, setEditBio] = useState('');
   const [editWebsite, setEditWebsite] = useState('');
@@ -1016,37 +1040,136 @@ const PublicProfilePage = ({ userId, onBack, currentUser, isOwnProfile, setActiv
     }
   };
 
-  // Handle completed crop from ImageCropModal
-  const handleCropComplete = async (croppedBase64) => {
+  // Handle completed crop from ImageCropModal — open caption dialog
+  const handleCropComplete = (croppedBase64) => {
     const isAvatar = cropModalData.type === 'avatar';
     setCropModalData({ isOpen: false, imageSrc: '', type: 'avatar' });
+    setPendingUploadModal({
+      isOpen: true,
+      type: isAvatar ? 'avatar' : 'cover',
+      image: croppedBase64,
+      caption: ''
+    });
+  };
+
+  // Confirm photo upload with custom caption
+  const handleConfirmPhotoUpload = async () => {
+    const isAvatar = pendingUploadModal.type === 'avatar';
+    const imageToUpload = pendingUploadModal.image;
+    const captionToUpload = pendingUploadModal.caption;
+    setPendingUploadModal({ isOpen: false, type: 'avatar', image: '', caption: '' });
     setImageCompressing(true);
 
     try {
       if (isAvatar) {
-        setProfile(prev => ({ ...prev, profilePic: croppedBase64 }));
+        setProfile(prev => ({ ...prev, profilePic: imageToUpload }));
       } else {
-        setProfile(prev => ({ ...prev, coverPic: croppedBase64 }));
+        setProfile(prev => ({ ...prev, coverPic: imageToUpload }));
       }
 
       const token = localStorage.getItem('token');
+      const payload = isAvatar 
+        ? { profilePic: imageToUpload, profilePicCaption: captionToUpload.trim() || undefined }
+        : { coverPic: imageToUpload, coverPicCaption: captionToUpload.trim() || undefined };
+
       const res = await fetch(`${API_BASE}/api/profile/update`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${token}`
         },
-        body: JSON.stringify(isAvatar ? { profilePic: croppedBase64 } : { coverPic: croppedBase64 })
+        body: JSON.stringify(payload)
       });
 
       if (res.ok) {
         showToastNotification(isAvatar ? 'Profile picture updated! ✨' : 'Cover photo updated! ✨');
         fetchPublicProfile();
+      } else {
+        const errorData = await res.json();
+        showToastNotification(errorData.message || 'Failed to update photo');
       }
     } catch (err) {
       console.error('Failed to save cropped photo:', err);
+      showToastNotification('Failed to update photo. Please try again.');
     } finally {
       setImageCompressing(false);
+    }
+  };
+
+  // Handle Delete Post from Detail View
+  const handleDeleteDetailPost = async () => {
+    if (!selectedDetailPost?._id) return;
+    setIsDeletingPost(true);
+    try {
+      const token = localStorage.getItem('token');
+      const res = await fetch(`${API_BASE}/api/posts/${selectedDetailPost._id}`, {
+        method: 'DELETE',
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      if (res.ok) {
+        setProfile(prev => prev ? {
+          ...prev,
+          posts: (prev.posts || []).filter(p => (p._id || p) !== selectedDetailPost._id),
+          postsCount: Math.max(0, (prev.postsCount || 1) - 1)
+        } : prev);
+        setPosts(prev => (prev || []).filter(p => (p._id || p) !== selectedDetailPost._id));
+        // Remove from cached feed if exists
+        try {
+          const cachedFeed = localStorage.getItem('cached_feed_posts');
+          if (cachedFeed) {
+            const list = JSON.parse(cachedFeed);
+            const filtered = list.filter(p => p._id !== selectedDetailPost._id);
+            localStorage.setItem('cached_feed_posts', JSON.stringify(filtered));
+          }
+        } catch (_) {}
+        showToastNotification('Post deleted successfully! 🗑️');
+        setShowDeletePostConfirm(false);
+        setSelectedDetailPost(null);
+      } else {
+        const data = await res.json();
+        showToastNotification(data.message || 'Failed to delete post');
+      }
+    } catch (err) {
+      console.error('Delete post error:', err);
+      showToastNotification('Network error while deleting post');
+    } finally {
+      setIsDeletingPost(false);
+    }
+  };
+
+  // Handle Update Post Content from Detail View
+  const handleUpdateDetailPost = async (e) => {
+    if (e && e.preventDefault) e.preventDefault();
+    if (!selectedDetailPost?._id) return;
+    setIsUpdatingPost(true);
+    try {
+      const token = localStorage.getItem('token');
+      const res = await fetch(`${API_BASE}/api/posts/${selectedDetailPost._id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify({ content: editingPostContent })
+      });
+      if (res.ok) {
+        setSelectedDetailPost(prev => prev ? { ...prev, content: editingPostContent } : null);
+        setProfile(prev => prev ? {
+          ...prev,
+          posts: (prev.posts || []).map(p => (p._id === selectedDetailPost._id ? { ...p, content: editingPostContent } : p))
+        } : prev);
+        setPosts(prev => (prev || []).map(p => (p._id === selectedDetailPost._id ? { ...p, content: editingPostContent } : p)));
+        showToastNotification('Post updated successfully! ✨');
+        setShowEditPostModal(false);
+      } else {
+        const data = await res.json();
+        showToastNotification(data.message || 'Failed to update post');
+      }
+    } catch (err) {
+      console.error('Update post error:', err);
+      showToastNotification('Network error while updating post');
+    } finally {
+      setIsUpdatingPost(false);
     }
   };
 
@@ -1426,7 +1549,7 @@ const PublicProfilePage = ({ userId, onBack, currentUser, isOwnProfile, setActiv
         <div className="text-center mt-3.5 space-y-1 w-full max-w-md">
           <h2 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white flex items-center justify-center gap-1.5">
             {profile.name}
-            {((profile.verificationBadge === 'blue' || profile.verificationBadge === 'golden') || (profile.isEmailVerified && profile.verificationBadge !== 'none')) && (
+            {(profile.verificationBadge === 'blue' || profile.verificationBadge === 'golden') && (
               <VerifiedBadge type={profile.verificationBadge === 'golden' ? 'golden' : 'blue'} iconClassName="w-5 h-5 flex-shrink-0" />
             )}
           </h2>
@@ -1434,6 +1557,27 @@ const PublicProfilePage = ({ userId, onBack, currentUser, isOwnProfile, setActiv
           <p className="text-xs font-black text-slate-500 dark:text-slate-400 tracking-wide font-mono">
             @{profile.username}
           </p>
+
+          {/* Simple "Verified" text above bio (NOT blue/golden badge) */}
+          {Boolean(profile.isAccountVerified || (profile.isPhoneVerified && profile.isEmailVerified)) ? (
+            <div className="flex items-center justify-center pt-1 pb-0.5 select-none">
+              <span className="inline-flex items-center gap-1.5 text-xs font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-50/80 dark:bg-emerald-950/40 px-2.5 py-0.5 rounded-full border border-emerald-200/60 dark:border-emerald-800/60">
+                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />
+                <span>Verified</span>
+              </span>
+            </div>
+          ) : isOwn ? (
+            <div className="flex items-center justify-center pt-1.5 pb-0.5 select-none">
+              <button
+                onClick={() => setShowVerify2MinModal(true)}
+                className="group inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-gradient-to-r from-indigo-600 via-purple-600 to-indigo-600 hover:from-indigo-700 hover:to-purple-700 text-white text-[11px] font-black shadow-md shadow-indigo-600/20 hover:shadow-indigo-600/35 active:scale-95 transition-all"
+              >
+                <Shield className="w-3.5 h-3.5 text-indigo-200 group-hover:scale-110 transition-transform" />
+                <span>Verify in 2 minutes</span>
+                <ChevronRight className="w-3.5 h-3.5 text-white/70 group-hover:translate-x-0.5 transition-transform" />
+              </button>
+            </div>
+          ) : null}
 
           {profile.bio && (
             <p className="text-xs font-semibold text-slate-655 dark:text-slate-350 leading-relaxed px-4 pt-1 max-w-sm mx-auto whitespace-pre-wrap select-text">
@@ -2177,93 +2321,235 @@ const PublicProfilePage = ({ userId, onBack, currentUser, isOwnProfile, setActiv
 
       {/* Post Detail Modal */}
       {selectedDetailPost && (
-        <div className="fixed inset-0 z-[110] flex items-center justify-center p-4 bg-black/75 backdrop-blur-xs animate-fade-in" onClick={() => setSelectedDetailPost(null)}>
+        <div className="fixed inset-0 z-[110] flex items-center justify-center p-4 bg-black/75 backdrop-blur-xs animate-fade-in" onClick={() => { setSelectedDetailPost(null); setPostActionMenuOpen(false); }}>
           <div 
-            className="bg-white dark:bg-slate-900 rounded-3xl p-5 w-full max-w-md border border-slate-200/50 dark:border-slate-800 shadow-2xl flex flex-col max-h-[85vh] animate-slide-up"
+            className="bg-white dark:bg-slate-900 rounded-3xl p-4 sm:p-5 w-full max-w-md border border-slate-200/50 dark:border-slate-800 shadow-2xl flex flex-col max-h-[88vh] animate-slide-up"
             onClick={(e) => e.stopPropagation()}
           >
             {/* Header */}
-            <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800/80">
-              <div className="flex items-center gap-3 text-left">
-                <div className="w-8 h-8 rounded-full overflow-hidden border border-slate-200 dark:border-slate-800 bg-slate-100 shrink-0">
-                  {profile.profilePic ? (
-                    <img 
-                      src={profile.profilePic.startsWith('http') || profile.profilePic.startsWith('/api') || profile.profilePic.startsWith('data:') 
-                        ? profile.profilePic 
-                        : `${API_BASE}/api/image?file=${encodeURIComponent(profile.profilePic)}`} 
-                      alt={profile.name} 
-                      className="w-full h-full object-cover"
-                    />
-                  ) : (
-                    <div className="w-full h-full bg-gradient-to-tr from-indigo-500 to-brand-500 flex items-center justify-center text-white text-[10px] font-black uppercase">
-                      {profile.name.charAt(0)}
+            {(() => {
+              const isPostAuthor = Boolean(
+                isOwnProfile || 
+                (currentUser?._id && (
+                  (selectedDetailPost.authorId && (selectedDetailPost.authorId === currentUser._id || selectedDetailPost.authorId._id === currentUser._id)) ||
+                  (selectedDetailPost.user && (selectedDetailPost.user === currentUser._id || selectedDetailPost.user._id === currentUser._id)) ||
+                  (profile?._id && profile._id.toString() === currentUser._id.toString())
+                ))
+              );
+
+              return (
+                <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800/80">
+                  <div className="flex items-center gap-3 text-left">
+                    <div className="w-8 h-8 rounded-full overflow-hidden border border-slate-200 dark:border-slate-800 bg-slate-100 shrink-0">
+                      {profile.profilePic ? (
+                        <img 
+                          src={profile.profilePic.startsWith('http') || profile.profilePic.startsWith('/api') || profile.profilePic.startsWith('data:') 
+                            ? profile.profilePic 
+                            : `${API_BASE}/api/image?file=${encodeURIComponent(profile.profilePic)}`} 
+                          alt={profile.name} 
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <div className="w-full h-full bg-gradient-to-tr from-indigo-500 to-brand-500 flex items-center justify-center text-white text-[10px] font-black uppercase">
+                          {profile.name ? profile.name.charAt(0) : 'U'}
+                        </div>
+                      )}
                     </div>
-                  )}
-                </div>
-                <div>
-                  <h4 className="font-extrabold text-xs text-slate-850 dark:text-white flex items-center gap-1">
-                    {profile.name}
-                    {((profile.verificationBadge === 'blue' || profile.verificationBadge === 'golden') || (profile.isEmailVerified && profile.verificationBadge !== 'none')) && (
-                      <VerifiedBadge type={profile.verificationBadge === 'golden' ? 'golden' : 'blue'} iconClassName="w-3.5 h-3.5" />
+                    <div>
+                      <h4 className="font-extrabold text-xs text-slate-850 dark:text-white flex items-center gap-1">
+                        {profile.name}
+                        {((profile.verificationBadge === 'blue' || profile.verificationBadge === 'golden') || (profile.isEmailVerified && profile.verificationBadge !== 'none')) && (
+                          <VerifiedBadge type={profile.verificationBadge === 'golden' ? 'golden' : 'blue'} iconClassName="w-3.5 h-3.5" />
+                        )}
+                      </h4>
+                      <p className="text-[9px] text-slate-400 font-bold uppercase mt-0.5">
+                        {formatRelativeTime(selectedDetailPost.createdAt)}
+                      </p>
+                    </div>
+                  </div>
+                  
+                  <div className="flex items-center gap-1 relative">
+                    {/* 3 Dots Menu for Own Post */}
+                    {isPostAuthor && (
+                      <div className="relative">
+                        <button
+                          type="button"
+                          onClick={() => setPostActionMenuOpen(!postActionMenuOpen)}
+                          className="p-1.5 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full text-slate-500 dark:text-slate-400 transition-colors cursor-pointer"
+                          title="Post options"
+                        >
+                          <MoreVertical className="w-5 h-5" />
+                        </button>
+
+                        {/* Dropdown Menu */}
+                        {postActionMenuOpen && (
+                          <div className="absolute right-0 top-full mt-1 w-36 bg-white dark:bg-slate-800 rounded-2xl shadow-xl border border-slate-100 dark:border-slate-700 py-1.5 z-50 animate-fade-in">
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setPostActionMenuOpen(false);
+                                setEditingPostContent(selectedDetailPost.content || '');
+                                setShowEditPostModal(true);
+                              }}
+                              className="w-full px-3.5 py-2 text-left text-xs font-bold text-slate-700 dark:text-slate-200 hover:bg-purple-50 dark:hover:bg-slate-750 flex items-center gap-2 cursor-pointer transition-colors"
+                            >
+                              <Edit className="w-3.5 h-3.5 text-purple-600" />
+                              <span>Edit Post</span>
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setPostActionMenuOpen(false);
+                                setShowDeletePostConfirm(true);
+                              }}
+                              className="w-full px-3.5 py-2 text-left text-xs font-bold text-red-600 hover:bg-red-50 dark:hover:bg-red-950/30 flex items-center gap-2 cursor-pointer transition-colors"
+                            >
+                              <Trash2 className="w-3.5 h-3.5 text-red-500" />
+                              <span>Delete Post</span>
+                            </button>
+                          </div>
+                        )}
+                      </div>
                     )}
-                  </h4>
-                  <p className="text-[9px] text-slate-400 font-bold uppercase mt-0.5">
-                    {formatRelativeTime(selectedDetailPost.createdAt)}
-                  </p>
+
+                    {/* Save/Bookmark Button */}
+                    <button
+                      type="button"
+                      onClick={() => handleSaveToggleDetail(selectedDetailPost)}
+                      className="p-1.5 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full text-slate-500 dark:text-slate-400 transition-colors cursor-pointer"
+                      title="Save post"
+                    >
+                      <Bookmark className={`w-5 h-5 ${selectedDetailPost.isSaved ? 'fill-yellow-500 text-yellow-500' : ''}`} />
+                    </button>
+                    <button 
+                      type="button"
+                      onClick={() => {
+                        setSelectedDetailPost(null);
+                        setPostActionMenuOpen(false);
+                      }} 
+                      className="p-1.5 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full text-slate-500 dark:text-slate-400 transition-colors cursor-pointer"
+                      title="Close"
+                    >
+                      <X className="w-5 h-5" />
+                    </button>
+                  </div>
                 </div>
-              </div>
-              
-              <div className="flex items-center gap-1">
-                {/* Save/Bookmark Button */}
-                <button
-                  onClick={() => handleSaveToggleDetail(selectedDetailPost)}
-                  className="p-1.5 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full text-slate-500 dark:text-slate-400 transition-colors"
-                >
-                  <Bookmark className={`w-5 h-5 ${selectedDetailPost.isSaved ? 'fill-yellow-500 text-yellow-500' : ''}`} />
-                </button>
-                <button 
-                  onClick={() => setSelectedDetailPost(null)} 
-                  className="p-1.5 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full text-slate-500 dark:text-slate-400 transition-colors"
-                >
-                  <X className="w-5 h-5" />
-                </button>
-              </div>
-            </div>
+              );
+            })()}
 
             {/* Content */}
             <div className="flex-1 overflow-y-auto py-4 space-y-4 no-scrollbar">
-              {selectedDetailPost.content && (
+              {selectedDetailPost.content && 
+                selectedDetailPost.content.trim() !== 'updated their profile picture.' &&
+                selectedDetailPost.content.trim() !== 'updated their cover photo.' && (
                 <p className="text-slate-800 dark:text-slate-200 text-xs font-semibold leading-relaxed whitespace-pre-wrap text-left select-text">
                   {selectedDetailPost.content}
                 </p>
               )}
 
               {selectedDetailPost.image && (
-                <div 
-                  onClick={() => setPreviewImageUrl(selectedDetailPost.image.startsWith('http') || selectedDetailPost.image.startsWith('/api') || selectedDetailPost.image.startsWith('data:') ? selectedDetailPost.image : `${API_BASE}/api/image?file=${encodeURIComponent(selectedDetailPost.image)}`)}
-                  className="rounded-2xl overflow-hidden border border-slate-100 dark:border-slate-850 bg-slate-50 dark:bg-slate-950 flex items-center justify-center w-full max-h-[580px] cursor-pointer hover:opacity-95 transition-opacity"
-                >
-                  <img 
-                    src={selectedDetailPost.image.startsWith('http') || selectedDetailPost.image.startsWith('/api') || selectedDetailPost.image.startsWith('data:') 
-                      ? selectedDetailPost.image 
-                      : `${API_BASE}/api/image?file=${encodeURIComponent(selectedDetailPost.image)}`} 
-                    alt="Attachment"
-                    className="w-full h-auto object-cover max-h-[580px] rounded-2xl"
-                  />
-                </div>
+                (selectedDetailPost.postType === 'profile_picture' || selectedDetailPost.content?.toLowerCase().includes('updated their profile picture')) ? (
+                  <div 
+                    onClick={() => setPreviewImageUrl(selectedDetailPost.image.startsWith('http') || selectedDetailPost.image.startsWith('/api') || selectedDetailPost.image.startsWith('data:') ? selectedDetailPost.image : `${API_BASE}/api/image?file=${encodeURIComponent(selectedDetailPost.image)}`)}
+                    className="relative w-full aspect-square max-h-[520px] rounded-2xl overflow-hidden bg-slate-950 border border-slate-200/80 dark:border-slate-800 shadow-sm cursor-pointer group flex items-center justify-center"
+                  >
+                    <div 
+                      className="absolute inset-0 bg-cover bg-center blur-2xl opacity-40 scale-125 pointer-events-none"
+                      style={{ backgroundImage: `url(${selectedDetailPost.image.startsWith('http') || selectedDetailPost.image.startsWith('/api') || selectedDetailPost.image.startsWith('data:') ? selectedDetailPost.image : `${API_BASE}/api/image?file=${encodeURIComponent(selectedDetailPost.image)}`})` }}
+                    />
+                    <img 
+                      src={selectedDetailPost.image.startsWith('http') || selectedDetailPost.image.startsWith('/api') || selectedDetailPost.image.startsWith('data:') ? selectedDetailPost.image : `${API_BASE}/api/image?file=${encodeURIComponent(selectedDetailPost.image)}`} 
+                      alt="Profile Picture"
+                      className="relative w-full h-full object-cover z-10 group-hover:scale-[1.01] transition-transform duration-300"
+                    />
+                  </div>
+                ) : (selectedDetailPost.postType === 'cover_photo' || selectedDetailPost.content?.toLowerCase().includes('updated their cover photo')) ? (
+                  <div 
+                    onClick={() => setPreviewImageUrl(selectedDetailPost.image.startsWith('http') || selectedDetailPost.image.startsWith('/api') || selectedDetailPost.image.startsWith('data:') ? selectedDetailPost.image : `${API_BASE}/api/image?file=${encodeURIComponent(selectedDetailPost.image)}`)}
+                    className="relative w-full aspect-[16/9] sm:aspect-[2.3/1] max-h-[340px] rounded-2xl overflow-hidden bg-slate-100 dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-sm cursor-pointer"
+                  >
+                    <img 
+                      src={selectedDetailPost.image.startsWith('http') || selectedDetailPost.image.startsWith('/api') || selectedDetailPost.image.startsWith('data:') ? selectedDetailPost.image : `${API_BASE}/api/image?file=${encodeURIComponent(selectedDetailPost.image)}`} 
+                      alt="Cover Photo"
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                ) : (
+                  <div 
+                    onClick={() => setPreviewImageUrl(selectedDetailPost.image.startsWith('http') || selectedDetailPost.image.startsWith('/api') || selectedDetailPost.image.startsWith('data:') ? selectedDetailPost.image : `${API_BASE}/api/image?file=${encodeURIComponent(selectedDetailPost.image)}`)}
+                    className="rounded-2xl overflow-hidden border border-slate-100 dark:border-slate-850 bg-slate-50 dark:bg-slate-950 flex items-center justify-center w-full max-h-[580px] cursor-pointer hover:opacity-95 transition-opacity"
+                  >
+                    <img 
+                      src={selectedDetailPost.image.startsWith('http') || selectedDetailPost.image.startsWith('/api') || selectedDetailPost.image.startsWith('data:') 
+                        ? selectedDetailPost.image 
+                        : `${API_BASE}/api/image?file=${encodeURIComponent(selectedDetailPost.image)}`} 
+                      alt="Attachment"
+                      className="w-full h-auto object-cover max-h-[580px] rounded-2xl"
+                    />
+                  </div>
+                )
               )}
+
+              {/* Embedded Shared Post in Detail Modal */}
+              {selectedDetailPost.sharedPostId && typeof selectedDetailPost.sharedPostId === 'object' && (() => {
+                const sp = selectedDetailPost.sharedPostId;
+                const spAuthor = sp.authorId || sp.authorDetails;
+                const spAuthorName = spAuthor?.name || sp.authorName || 'User';
+                const spAuthorPic = spAuthor?.profilePic || spAuthor?.googleAvatar || spAuthor?.facebookAvatar || '';
+                const spIsVerified = spAuthor?.verificationBadge === 'blue' || spAuthor?.verificationBadge === 'purple' || spAuthor?.verificationBadge === 'golden' || spAuthor?.isEmailVerified || sp.isVerified;
+                const spBadgeType = spAuthor?.verificationBadge === 'golden' ? 'golden' : 'purple';
+                const spTimeAgo = formatRelativeTime(sp.createdAt);
+                const spImage = sp.image ? (sp.image.startsWith('http') || sp.image.startsWith('/api') || sp.image.startsWith('data:') ? sp.image : `${API_BASE}/api/image?file=${encodeURIComponent(sp.image)}`) : null;
+
+                return (
+                  <div className="mt-2.5 rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50/60 dark:bg-slate-850/50 overflow-hidden text-left">
+                    <div className="p-3 flex items-center gap-2.5">
+                      <div className="w-8 h-8 rounded-full overflow-hidden shrink-0 bg-slate-200 dark:bg-slate-700">
+                        {spAuthorPic ? (
+                          <img src={spAuthorPic.startsWith('http') || spAuthorPic.startsWith('/api') || spAuthorPic.startsWith('data:') ? spAuthorPic : `${API_BASE}/api/image?file=${encodeURIComponent(spAuthorPic)}`} alt="" className="w-full h-full object-cover" />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center font-bold text-xs text-slate-600 dark:text-slate-300">
+                            {spAuthorName.charAt(0).toUpperCase()}
+                          </div>
+                        )}
+                      </div>
+                      <div className="min-w-0">
+                        <div className="flex items-center gap-1">
+                          <span className="font-extrabold text-xs text-slate-850 dark:text-slate-100 truncate">{spAuthorName}</span>
+                          {spIsVerified && <VerifiedBadge type={spBadgeType} iconClassName="w-3.5 h-3.5 inline-block shrink-0" />}
+                        </div>
+                        <span className="text-[10px] text-slate-400 font-bold block">{spTimeAgo}</span>
+                      </div>
+                    </div>
+                    {sp.content && (
+                      <p className="px-3 pb-2.5 text-xs text-slate-750 dark:text-slate-300 whitespace-pre-wrap leading-relaxed font-medium">
+                        {sp.content}
+                      </p>
+                    )}
+                    {spImage && (
+                      <div 
+                        onClick={() => setPreviewImageUrl(spImage)}
+                        className="w-full max-h-[400px] overflow-hidden bg-slate-900 cursor-pointer"
+                      >
+                        <img src={spImage} alt="" className="w-full h-auto object-cover max-h-[400px]" />
+                      </div>
+                    )}
+                  </div>
+                );
+              })()}
             </div>
 
-            {/* Footer with interactive Like, Who Liked, Comments and Share */}
-            <div className="flex items-center justify-between pt-3 border-t border-slate-100 dark:border-slate-850">
-              <div className="flex items-center gap-3 text-xs font-black">
+            {/* Footer with interactive Like, Who Liked, Comments and Share - strictly 1 single row on mobile */}
+            <div className="flex items-center justify-between gap-1.5 pt-3 border-t border-slate-100 dark:border-slate-850 overflow-x-auto no-scrollbar">
+              <div className="flex items-center gap-1 sm:gap-2 text-[11px] sm:text-xs font-black shrink-0">
                 {/* Heart / Love Interactive Toggle */}
                 <button
+                  type="button"
                   onClick={() => handleLikeToggleDetail(selectedDetailPost._id)}
-                  className="flex items-center gap-1.5 py-1 px-2 rounded-full hover:bg-rose-50 dark:hover:bg-rose-950/30 transition-all active:scale-90"
+                  className="flex items-center gap-1 py-1 px-2 rounded-full hover:bg-rose-50 dark:hover:bg-rose-950/30 transition-all active:scale-90 cursor-pointer shrink-0 whitespace-nowrap"
                   title="Like post"
                 >
-                  <Heart className={`w-5 h-5 transition-all ${selectedDetailPost.isLiked ? 'text-red-500 fill-red-500 scale-110' : 'text-slate-500 hover:text-red-500'}`} />
+                  <Heart className={`w-4 h-4 transition-all ${selectedDetailPost.isLiked ? 'text-red-500 fill-red-500 scale-110' : 'text-slate-500 hover:text-red-500'}`} />
                   <span className={selectedDetailPost.isLiked ? 'text-red-500' : 'text-slate-600 dark:text-slate-350'}>
                     {selectedDetailPost.isLiked ? 'Liked' : 'Like'}
                   </span>
@@ -2271,8 +2557,9 @@ const PublicProfilePage = ({ userId, onBack, currentUser, isOwnProfile, setActiv
 
                 {/* Who Liked Button (Opens Reactions Modal) */}
                 <button
+                  type="button"
                   onClick={() => setShowReactionsPostId(selectedDetailPost._id)}
-                  className="flex items-center gap-1 py-1 px-2.5 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-350 hover:text-slate-900 dark:hover:text-white transition-all cursor-pointer border border-slate-200/60 dark:border-slate-800"
+                  className="flex items-center gap-1 py-1 px-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-350 hover:text-slate-900 dark:hover:text-white transition-all cursor-pointer border border-slate-200/60 dark:border-slate-800 shrink-0 whitespace-nowrap"
                   title="View who liked this post"
                 >
                   <Heart className="w-3.5 h-3.5 text-red-500 fill-red-500" />
@@ -2281,32 +2568,115 @@ const PublicProfilePage = ({ userId, onBack, currentUser, isOwnProfile, setActiv
 
                 {/* Comments Button (Opens Comments Drawer) */}
                 <button
+                  type="button"
                   onClick={() => setActiveCommentPost(selectedDetailPost)}
-                  className="flex items-center gap-1.5 py-1 px-2.5 rounded-full hover:bg-indigo-50 dark:hover:bg-indigo-950/30 text-slate-600 dark:text-slate-350 hover:text-[#7C3AED] transition-all active:scale-95 cursor-pointer border border-slate-200/60 dark:border-slate-800"
+                  className="flex items-center gap-1 py-1 px-2 rounded-full hover:bg-indigo-50 dark:hover:bg-indigo-950/30 text-slate-600 dark:text-slate-350 hover:text-[#7C3AED] transition-all active:scale-95 cursor-pointer border border-slate-200/60 dark:border-slate-800 shrink-0 whitespace-nowrap"
                   title="View and write comments"
                 >
-                  <MessageCircle className="w-4 h-4 text-[#7C3AED]" />
+                  <MessageCircle className="w-3.5 h-3.5 text-[#7C3AED]" />
                   <span>{selectedDetailPost.commentsCount || (selectedDetailPost.comments ? selectedDetailPost.comments.length : 0)} Comments</span>
                 </button>
               </div>
 
-              {/* Share */}
+              {/* Share Button (Opens ShareModal) */}
               <button
+                type="button"
                 onClick={() => {
                   const shareUrl = `${window.location.origin}?post=${selectedDetailPost._id}`;
-                  if (navigator.share) {
-                    navigator.share({ title: 'Zenivio Post', url: shareUrl }).catch(() => {});
-                  } else {
-                    navigator.clipboard.writeText(shareUrl);
-                    showToastNotification('Link copied to clipboard!');
-                  }
+                  setShareData({
+                    url: shareUrl,
+                    title: 'Zenivio Post',
+                    text: selectedDetailPost.content ? (selectedDetailPost.content.length > 80 ? selectedDetailPost.content.substring(0, 80) + '...' : selectedDetailPost.content) : 'Check out this post on Zenivio',
+                    post: selectedDetailPost
+                  });
+                  setShareModalOpen(true);
                 }}
-                className="p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 transition-all active:scale-90"
+                className="flex items-center gap-1 py-1 px-2 sm:px-2.5 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-500 hover:text-[#7C3AED] dark:text-slate-400 dark:hover:text-[#A78BFA] transition-all active:scale-95 cursor-pointer border border-slate-200/60 dark:border-slate-800 shrink-0 whitespace-nowrap"
                 title="Share post"
               >
-                <Send className="w-4 h-4 -rotate-12" />
+                <Send className="w-3.5 h-3.5 -rotate-12" />
+                <span className="text-[11px] sm:text-xs font-black">Share</span>
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Post Confirmation Modal */}
+      {showDeletePostConfirm && (
+        <div className="fixed inset-0 z-[120] flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-fade-in" onClick={() => setShowDeletePostConfirm(false)}>
+          <div className="bg-white dark:bg-slate-900 rounded-3xl p-6 w-full max-w-sm border border-slate-100 dark:border-slate-800 shadow-2xl animate-scale-up text-center" onClick={(e) => e.stopPropagation()}>
+            <div className="w-12 h-12 rounded-2xl bg-red-100 dark:bg-red-950/50 text-red-600 flex items-center justify-center mx-auto mb-3">
+              <Trash2 className="w-6 h-6" />
+            </div>
+            <h3 className="text-base font-black text-slate-900 dark:text-white mb-1">Delete this post?</h3>
+            <p className="text-xs text-slate-500 dark:text-slate-400 mb-5 font-medium leading-relaxed">
+              This post will be permanently removed from your profile and feed. This action cannot be undone.
+            </p>
+            <div className="flex gap-2.5">
+              <button
+                type="button"
+                disabled={isDeletingPost}
+                onClick={() => setShowDeletePostConfirm(false)}
+                className="flex-1 py-2.5 rounded-xl text-xs font-bold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 cursor-pointer transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                disabled={isDeletingPost}
+                onClick={handleDeleteDetailPost}
+                className="flex-1 py-2.5 rounded-xl text-xs font-bold bg-red-600 hover:bg-red-700 text-white cursor-pointer transition-colors flex items-center justify-center gap-1.5"
+              >
+                {isDeletingPost ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Delete'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Edit Post Modal */}
+      {showEditPostModal && (
+        <div className="fixed inset-0 z-[120] flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-fade-in" onClick={() => setShowEditPostModal(false)}>
+          <div className="bg-white dark:bg-slate-900 rounded-3xl p-5 sm:p-6 w-full max-w-md border border-slate-100 dark:border-slate-800 shadow-2xl animate-scale-up" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800">
+              <h3 className="text-sm font-black text-slate-900 dark:text-white flex items-center gap-2">
+                <Edit className="w-4 h-4 text-purple-600" /> Edit Post Caption
+              </h3>
+              <button
+                type="button"
+                onClick={() => setShowEditPostModal(false)}
+                className="p-1 rounded-full text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            <form onSubmit={handleUpdateDetailPost} className="pt-3 space-y-3">
+              <textarea
+                value={editingPostContent}
+                onChange={(e) => setEditingPostContent(e.target.value)}
+                placeholder="What's on your mind?"
+                rows={4}
+                className="w-full p-3 rounded-2xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-purple-500 resize-none"
+              />
+              <div className="flex justify-end gap-2 pt-1">
+                <button
+                  type="button"
+                  disabled={isUpdatingPost}
+                  onClick={() => setShowEditPostModal(false)}
+                  className="px-4 py-2 rounded-xl text-xs font-bold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 cursor-pointer"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={isUpdatingPost}
+                  className="px-5 py-2 rounded-xl text-xs font-bold bg-gradient-to-r from-purple-600 to-indigo-600 text-white hover:opacity-90 cursor-pointer flex items-center gap-1.5 shadow-md shadow-purple-600/20"
+                >
+                  {isUpdatingPost ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Save Changes'}
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}
@@ -2596,8 +2966,78 @@ const PublicProfilePage = ({ userId, onBack, currentUser, isOwnProfile, setActiv
         shareUrl={shareData.url} 
         title={shareData.title} 
         text={shareData.text} 
+        post={shareData.post}
         showToast={showToastNotification} 
       />
+
+      {/* Photo Upload Caption & Confirmation Modal */}
+      {pendingUploadModal.isOpen && (
+        <div className="fixed inset-0 z-[100] bg-slate-950/70 backdrop-blur-sm flex items-center justify-center p-4 animate-fade-in text-slate-800 dark:text-white" onClick={() => setPendingUploadModal({ isOpen: false, type: 'avatar', image: '', caption: '' })}>
+          <div 
+            className="bg-white dark:bg-slate-900 w-full max-w-md rounded-3xl border border-slate-100 dark:border-slate-800 shadow-2xl overflow-hidden animate-scale-up"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="px-5 py-4 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
+              <h3 className="text-base font-black">
+                {pendingUploadModal.type === 'avatar' ? 'Update Profile Picture' : 'Update Cover Photo'}
+              </h3>
+              <button
+                onClick={() => setPendingUploadModal({ isOpen: false, type: 'avatar', image: '', caption: '' })}
+                className="p-1 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400 transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="p-5 space-y-4">
+              {/* Image Preview */}
+              <div className="flex justify-center">
+                {pendingUploadModal.type === 'avatar' ? (
+                  <div className="w-32 h-32 rounded-full overflow-hidden border-4 border-purple-500/30 shadow-lg bg-slate-100 dark:bg-slate-800">
+                    <img src={pendingUploadModal.image} alt="Preview" className="w-full h-full object-cover" />
+                  </div>
+                ) : (
+                  <div className="w-full aspect-[2.2/1] rounded-2xl overflow-hidden border-2 border-purple-500/30 shadow-lg bg-slate-100 dark:bg-slate-800">
+                    <img src={pendingUploadModal.image} alt="Preview" className="w-full h-full object-cover" />
+                  </div>
+                )}
+              </div>
+
+              {/* Caption Input */}
+              <div>
+                <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 mb-1.5">
+                  Write a Caption (Optional)
+                </label>
+                <textarea
+                  rows={3}
+                  value={pendingUploadModal.caption}
+                  onChange={(e) => setPendingUploadModal(prev => ({ ...prev, caption: e.target.value }))}
+                  placeholder={pendingUploadModal.type === 'avatar' ? "Say something about your new profile picture..." : "Say something about your new cover photo..."}
+                  className="w-full p-3 rounded-2xl bg-slate-50 dark:bg-slate-850 border border-slate-200 dark:border-slate-800 text-xs sm:text-sm text-slate-800 dark:text-slate-100 outline-none focus:ring-2 focus:ring-[#7C3AED] resize-none font-medium placeholder-slate-400"
+                />
+              </div>
+
+              {/* Action Buttons */}
+              <div className="flex items-center gap-3 pt-1">
+                <button
+                  type="button"
+                  onClick={() => setPendingUploadModal({ isOpen: false, type: 'avatar', image: '', caption: '' })}
+                  className="flex-1 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 font-black text-xs text-slate-600 dark:text-slate-350 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  onClick={handleConfirmPhotoUpload}
+                  className="flex-1 py-2.5 rounded-xl bg-[#7C3AED] hover:bg-[#6D28D9] text-white font-black text-xs shadow-md shadow-purple-500/20 active:scale-95 transition-all"
+                >
+                  Save & Post
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {followListModal && (
         <FollowListModal
@@ -2766,6 +3206,23 @@ const PublicProfilePage = ({ userId, onBack, currentUser, isOwnProfile, setActiv
           onCommentSubmit={handleCommentSubmitDetail}
           currentUserId={currentUser?._id}
           onUserClick={onUserClick}
+        />
+      )}
+
+      {/* Verify in 2 Minutes Modal */}
+      {showVerify2MinModal && (
+        <VerifyIn2MinutesModal
+          isOpen={showVerify2MinModal}
+          onClose={() => setShowVerify2MinModal(false)}
+          onSuccess={() => {
+            setProfile(prev => prev ? ({
+              ...prev,
+              isAccountVerified: true,
+              isPhoneVerified: true,
+              isEmailVerified: true,
+            }) : prev);
+          }}
+          initialUser={profile}
         />
       )}
     </div>

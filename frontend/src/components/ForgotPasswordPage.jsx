@@ -29,18 +29,19 @@ const ForgotPasswordPage = ({ onBack }) => {
   };
 
   return (
-    <div className="min-h-screen bg-white dark:bg-slate-900 flex flex-col">
-      {/* Header */}
-      <div className="px-4 pt-12 pb-4 flex items-center gap-3">
-        <button
-          onClick={onBack}
-          className="w-9 h-9 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center active:scale-95 transition-transform"
-        >
-          <ChevronLeft className="w-5 h-5 text-slate-700 dark:text-slate-300" />
-        </button>
-      </div>
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex flex-col justify-center items-center py-8 px-4">
+      <div className="w-full max-w-[420px] sm:max-w-[440px] mx-auto flex flex-col px-6 sm:px-8 py-8 bg-white dark:bg-slate-900 sm:border border-slate-100 dark:border-slate-800 rounded-3xl sm:shadow-xl">
+        {/* Header */}
+        <div className="pb-4 flex items-center gap-3">
+          <button
+            onClick={onBack}
+            className="w-9 h-9 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center active:scale-95 transition-transform cursor-pointer"
+          >
+            <ChevronLeft className="w-5 h-5 text-slate-700 dark:text-slate-300" />
+          </button>
+        </div>
 
-      <div className="flex-1 flex flex-col px-6 pt-4">
+        <div className="flex-1 flex flex-col pt-2">
         {step === 'sent' ? (
           /* ── Success Screen ── */
           <div className="flex flex-col items-center justify-center flex-1 gap-4 text-center pb-20">
@@ -115,6 +116,7 @@ const ForgotPasswordPage = ({ onBack }) => {
             </form>
           </>
         )}
+      </div>
       </div>
     </div>
   );

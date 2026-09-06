@@ -61,6 +61,11 @@ router.get('/:id/reactions', postController.getPostReactions);
 // @access  Private
 router.post('/:id/save', protect, postController.toggleSavePost);
 
+// @route   POST /api/posts/:id/share-to-feed
+// @desc    Share a post to user's feed/timeline (Repost)
+// @access  Private
+router.post('/:id/share-to-feed', protect, postController.sharePostToFeed);
+
 // @route   DELETE /api/posts/:id
 // @desc    Delete a post by user
 // @access  Private

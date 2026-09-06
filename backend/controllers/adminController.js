@@ -13,25 +13,135 @@ const Notification = require('../models/Notification');
 const AdminNotification = require('../models/AdminNotification');
 const mongoose = require('mongoose');
 const jwt = require('jsonwebtoken');
+const fs = require('fs');
+const path = require('path');
 const { createNotification } = require('./notificationController');
 const { activateReferralBonus } = require('./referralController');
 
+const Admin = require('../models/Admin');
+const { sendAdminInvitationEmail } = require('../utils/emailService');
+
 // ─── Admin Login ──────────────────────────────────────────────────────────────
 exports.adminLogin = async (req, res) => {
-  const { email, password } = req.body;
-  const ADMIN_EMAIL = process.env.ADMIN_EMAIL || 'admin@zenivio.com';
-  const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'Admin@12345';
+  try {
+    const { email, password } = req.body;
+    if (!email || !password) {
+      return res.status(400).json({ message: 'Email and password are required' });
+    }
 
-  if (email !== ADMIN_EMAIL || password !== ADMIN_PASSWORD) {
+    const cleanEmail = email.toLowerCase().trim();
+    const ADMIN_EMAIL = (process.env.ADMIN_EMAIL || 'khalidhumayun25@gmail.com').toLowerCase().trim();
+    const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'Admin@12345';
+
+    // Auto-seed Super Admin if no super admin exists in DB
+    let superAdmin = await Admin.findOne({ role: 'super_admin' });
+    if (!superAdmin) {
+      superAdmin = await Admin.create({
+        name: 'Khalid Humayun',
+        email: ADMIN_EMAIL,
+        password: ADMIN_PASSWORD,
+        role: 'super_admin',
+        permissions: [
+          'dashboard', 'users', 'transactions', 'support', 'referrals',
+          'posts', 'articles', 'missions', 'products', 'announcements',
+          'verifications', 'badges', 'database', 'settings', 'admins'
+        ],
+        isActive: true,
+      });
+      console.log('Default Super Admin seeded:', ADMIN_EMAIL);
+    }
+
+    // Find admin by email
+    let admin = await Admin.findOne({ email: cleanEmail });
+
+    if (admin) {
+      if (!admin.isActive) {
+        return res.status(403).json({ message: 'Your admin account has been deactivated. Please contact Super Admin.' });
+      }
+
+      let isMatch = await admin.comparePassword(password);
+      if (!isMatch) {
+        // Check if master env password matches for super admin fallback
+        if (admin.role === 'super_admin' && cleanEmail === ADMIN_EMAIL && password === ADMIN_PASSWORD) {
+          admin.password = password;
+          await admin.save();
+          isMatch = true;
+        } else {
+          return res.status(401).json({ message: 'Invalid email or password' });
+        }
+      }
+
+      admin.lastLogin = new Date();
+      await admin.save();
+
+      const token = jwt.sign(
+        {
+          id: admin._id,
+          name: admin.name,
+          email: admin.email,
+          role: admin.role,
+          permissions: admin.permissions || [],
+        },
+        process.env.JWT_SECRET || 'fallback_secret',
+        { expiresIn: '7d' }
+      );
+
+      return res.json({
+        token,
+        admin: {
+          id: admin._id,
+          name: admin.name,
+          email: admin.email,
+          role: admin.role,
+          permissions: admin.permissions || [],
+        },
+      });
+    }
+
+    // Fallback if matching env admin directly
+    if (cleanEmail === ADMIN_EMAIL && password === ADMIN_PASSWORD) {
+      const newSuper = await Admin.create({
+        name: 'Super Admin',
+        email: ADMIN_EMAIL,
+        password: ADMIN_PASSWORD,
+        role: 'super_admin',
+        permissions: [
+          'dashboard', 'users', 'transactions', 'support', 'referrals',
+          'posts', 'articles', 'missions', 'products', 'announcements',
+          'verifications', 'badges', 'database', 'settings', 'admins'
+        ],
+        isActive: true,
+      });
+
+      const token = jwt.sign(
+        {
+          id: newSuper._id,
+          name: newSuper.name,
+          email: newSuper.email,
+          role: newSuper.role,
+          permissions: newSuper.permissions,
+        },
+        process.env.JWT_SECRET || 'fallback_secret',
+        { expiresIn: '7d' }
+      );
+
+      return res.json({
+        token,
+        admin: {
+          id: newSuper._id,
+          name: newSuper.name,
+          email: newSuper.email,
+          role: newSuper.role,
+          permissions: newSuper.permissions,
+        },
+      });
+    }
+
     return res.status(401).json({ message: 'Invalid admin credentials' });
+  } catch (error) {
+    console.error('adminLogin error:', error);
+    res.status(500).json({ message: 'Server error during login', error: error.message });
   }
-
-  const token = jwt.sign(
-    { email, role: 'admin' },
-    process.env.JWT_SECRET || 'fallback_secret',
-    { expiresIn: '7d' }
-  );
-  res.json({ token, email, role: 'admin' });
 };
 
 // ─── Dashboard Stats ─────────────────────────────────────────────────────────
@@ -124,7 +234,7 @@ exports.getUsers = async (req, res) => {
     if (filter === 'verified') {
       query.$or = [
         { isEmailVerified: true },
-        { verificationBadge: { $in: ['blue', 'golden'] } }
+        { verificationBadge: { $in: ['blue', 'purple', 'golden'] } }
       ];
     }
 
@@ -176,7 +286,7 @@ exports.updateUser = async (req, res) => {
     if (name !== undefined) user.name = name;
     if (verificationBadge !== undefined) {
       user.verificationBadge = verificationBadge;
-      if (verificationBadge === 'blue' || verificationBadge === 'golden') {
+      if (verificationBadge === 'blue' || verificationBadge === 'purple' || verificationBadge === 'golden') {
         user.isEmailVerified = true;
       } else if (verificationBadge === 'none') {
         user.isEmailVerified = false;
@@ -188,12 +298,12 @@ exports.updateUser = async (req, res) => {
     if (verificationBadge !== undefined && verificationBadge !== oldBadge) {
       let title = '';
       let msg = '';
-      if (verificationBadge === 'blue') {
-        title = 'Verified Public Figure';
-        msg = 'This account authentically represents a recognized public figure and has been verified by Zenivio.';
+      if (verificationBadge === 'blue' || verificationBadge === 'purple') {
+        title = 'Purple Verified Badge';
+        msg = 'Congratulations! Your account has been verified with the official Zenivio Purple Badge.';
       } else if (verificationBadge === 'golden') {
-        title = 'Verified Individual';
-        msg = 'This account belongs to a real person whose identity has been verified by Zenivio.';
+        title = 'Golden Verified Badge';
+        msg = 'Congratulations! Your account has been awarded the official Zenivio Golden verification badge.';
       } else if (verificationBadge === 'none') {
         title = 'Verification Status Updated';
         msg = 'Your verification badge has been removed by the administrator.';
@@ -546,11 +656,11 @@ exports.updateVerificationStatus = async (req, res) => {
     await verification.save();
 
     if (status === 'approved') {
-      await User.findByIdAndUpdate(verification.userId, { isEmailVerified: true, verificationBadge: 'blue' });
+      await User.findByIdAndUpdate(verification.userId, { isEmailVerified: true, verificationBadge: 'purple' });
       createNotification(
         verification.userId,
-        'Verified Public Figure',
-        'This account authentically represents a recognized public figure and has been verified by Zenivio.',
+        'Purple Verified Badge',
+        'Congratulations! Your account has been verified with the official Zenivio Purple Badge.',
         'badge'
       );
     } else if (status === 'rejected') {
@@ -979,6 +1089,71 @@ const sanitizeDocForImport = (doc) => {
   return result;
 };
 
+// Helper to extract all media filenames from exported/imported collections
+const extractMediaFilenamesFromCollections = (collections) => {
+  const filenames = new Set();
+  
+  const scanValue = (val) => {
+    if (!val) return;
+    if (typeof val === 'string') {
+      const clean = val.trim();
+      if (clean.startsWith('data:')) return; // ignore raw base64
+      
+      let extracted = clean;
+      if (extracted.includes('/api/image?file=')) {
+        extracted = extracted.split('/api/image?file=')[1].split('&')[0];
+      } else if (extracted.includes('/uploads/')) {
+        extracted = extracted.split('/uploads/')[1].split('?')[0];
+      } else if (extracted.startsWith('http://') || extracted.startsWith('https://')) {
+        try {
+          const u = new URL(extracted);
+          if (u.pathname.includes('/api/image')) {
+            extracted = u.searchParams.get('file') || '';
+          } else {
+            const parts = u.pathname.split('/');
+            extracted = parts[parts.length - 1] || '';
+          }
+        } catch (e) {
+          const parts = extracted.split('/');
+          extracted = parts[parts.length - 1].split('?')[0];
+        }
+      }
+
+      const safeName = path.basename(extracted);
+      if (
+        safeName &&
+        safeName.length > 3 &&
+        !safeName.includes('/') &&
+        !safeName.includes('\\') &&
+        (/\.(webp|jpg|jpeg|png|gif|webm|mp4|mp3|wav|m4a|svg|ico)$/i.test(safeName) ||
+         safeName.startsWith('avatar-') ||
+         safeName.startsWith('post-') ||
+         safeName.startsWith('cover-') ||
+         safeName.startsWith('id-') ||
+         safeName.startsWith('voice-') ||
+         safeName.startsWith('msg-') ||
+         safeName.startsWith('banner-') ||
+         safeName.startsWith('product-') ||
+         safeName.startsWith('group-') ||
+         safeName.startsWith('image-'))
+      ) {
+        filenames.add(safeName);
+      }
+    } else if (Array.isArray(val)) {
+      for (const item of val) {
+        scanValue(item);
+      }
+    } else if (typeof val === 'object') {
+      for (const key of Object.keys(val)) {
+        scanValue(val[key]);
+      }
+    }
+  };
+
+  scanValue(collections);
+  return Array.from(filenames);
+};
+
 // 1. Get database summary & collection stats
 exports.getDatabaseStats = async (req, res) => {
   try {
@@ -999,13 +1174,23 @@ exports.getDatabaseStats = async (req, res) => {
       stats.push({ name, count });
     }
 
-    // Sort by count descending
     stats.sort((a, b) => b.count - a.count);
+
+    // Count local uploads files
+    const uploadsDir = path.join(__dirname, '../uploads');
+    let totalUploadsCount = 0;
+    if (fs.existsSync(uploadsDir)) {
+      try {
+        const files = fs.readdirSync(uploadsDir);
+        totalUploadsCount = files.filter(f => f !== 'cache' && fs.statSync(path.join(uploadsDir, f)).isFile()).length;
+      } catch (e) {}
+    }
 
     res.json({
       dbName: db.databaseName,
       totalCollections: stats.length,
       totalDocuments: totalDocs,
+      totalUploadsCount,
       collections: stats,
     });
   } catch (error) {
@@ -1014,7 +1199,7 @@ exports.getDatabaseStats = async (req, res) => {
   }
 };
 
-// 2. Export full database or specific collection as JSON
+// 2. Export full database or specific collection as JSON with optional embedded media
 exports.exportDatabase = async (req, res) => {
   try {
     const db = mongoose.connection.db;
@@ -1022,7 +1207,7 @@ exports.exportDatabase = async (req, res) => {
       return res.status(500).json({ message: 'Database connection not established' });
     }
 
-    const { collection, download } = req.query;
+    const { collection, download, includeMedia } = req.query;
     const collectionsList = await db.listCollections().toArray();
     
     const targetCollections = collection 
@@ -1046,6 +1231,57 @@ exports.exportDatabase = async (req, res) => {
       collections: exportedData,
     };
 
+    // If includeMedia is requested, embed all referenced image & audio files as Base64
+    if (includeMedia === 'true' || includeMedia === true) {
+      const referencedFiles = extractMediaFilenamesFromCollections(exportedData);
+      const uploadsDir = path.join(__dirname, '../uploads');
+      const mediaFiles = {};
+      let embeddedCount = 0;
+
+      const allFilesToExport = new Set(referencedFiles);
+      if (fs.existsSync(uploadsDir)) {
+        try {
+          const diskFiles = fs.readdirSync(uploadsDir);
+          for (const f of diskFiles) {
+            if (f === 'cache' || f.startsWith('.')) continue;
+            const fullP = path.join(uploadsDir, f);
+            if (fs.statSync(fullP).isFile()) {
+              allFilesToExport.add(f);
+            }
+          }
+        } catch (e) {}
+      }
+
+      for (const filename of allFilesToExport) {
+        const safeName = path.basename(filename);
+        const filePath = path.join(uploadsDir, safeName);
+        if (fs.existsSync(filePath)) {
+          try {
+            const fileBuffer = fs.readFileSync(filePath);
+            const ext = path.extname(safeName).toLowerCase().replace('.', '');
+            const mimeType = ext === 'png' ? 'image/png' 
+              : (ext === 'jpg' || ext === 'jpeg') ? 'image/jpeg' 
+              : ext === 'webp' ? 'image/webp'
+              : ext === 'webm' ? 'audio/webm'
+              : ext === 'mp4' ? 'video/mp4'
+              : ext === 'mp3' ? 'audio/mpeg'
+              : ext === 'wav' ? 'audio/wav'
+              : ext === 'm4a' ? 'audio/mp4'
+              : ext === 'svg' ? 'image/svg+xml'
+              : 'application/octet-stream';
+            mediaFiles[safeName] = `data:${mimeType};base64,${fileBuffer.toString('base64')}`;
+            embeddedCount++;
+          } catch (e) {
+            console.warn(`Could not read file ${safeName}:`, e.message);
+          }
+        }
+      }
+
+      payload.includeMedia = true;
+      payload.totalMediaFiles = embeddedCount;
+      payload.mediaFiles = mediaFiles;
+    }
+
     if (download === 'true') {
       const filename = `database_backup_${collection ? collection + '_' : ''}${new Date().toISOString().slice(0, 10)}.json`;
       res.setHeader('Content-Type', 'application/json');
@@ -1060,7 +1296,7 @@ exports.exportDatabase = async (req, res) => {
   }
 };
 
-// 3. Import / Restore / Paste JSON data into MongoDB
+// 3. Import / Restore / Paste JSON data into MongoDB + Auto-Restore Media Files
 exports.importDatabase = async (req, res) => {
   try {
     const db = mongoose.connection.db;
@@ -1068,12 +1304,11 @@ exports.importDatabase = async (req, res) => {
       return res.status(500).json({ message: 'Database connection not established' });
     }
 
-    let { data, mode = 'upsert', targetCollection } = req.body;
+    let { data, mode = 'upsert', targetCollection, sourceServerUrl } = req.body;
     if (!data) {
       return res.status(400).json({ message: 'No database data provided to import' });
     }
 
-    // Parse string if user pasted raw JSON
     let parsedData = data;
     if (typeof data === 'string') {
       try {
@@ -1083,6 +1318,31 @@ exports.importDatabase = async (req, res) => {
       }
     }
 
+    // ── 1. Restore Embedded Media Files (Base64) ──
+    let mediaFilesRestored = 0;
+    const uploadsDir = path.join(__dirname, '../uploads');
+    if (!fs.existsSync(uploadsDir)) {
+      fs.mkdirSync(uploadsDir, { recursive: true });
+    }
+
+    if (parsedData.mediaFiles && typeof parsedData.mediaFiles === 'object') {
+      for (const [filename, base64OrData] of Object.entries(parsedData.mediaFiles)) {
+        if (!base64OrData || typeof base64OrData !== 'string') continue;
+        try {
+          const safeName = path.basename(filename);
+          const base64Content = base64OrData.replace(/^data:[^;]+;base64,/, '');
+          const buffer = Buffer.from(base64Content, 'base64');
+          if (buffer.length > 0) {
+            fs.writeFileSync(path.join(uploadsDir, safeName), buffer);
+            mediaFilesRestored++;
+          }
+        } catch (e) {
+          console.warn(`Could not restore media file ${filename}:`, e.message);
+        }
+      }
+    }
+
+    // ── 2. Process Collections ──
     let collectionsToProcess = {};
 
     if (parsedData.collections && typeof parsedData.collections === 'object' && !Array.isArray(parsedData.collections)) {
@@ -1176,7 +1436,6 @@ exports.importDatabase = async (req, res) => {
             }
           }
         } catch (err) {
-          // If duplicate key error on secondary index (e.g. email / phone), skip or update safely
           if (err.code === 11000) {
             try {
               if (doc._id) {
@@ -1199,10 +1458,51 @@ exports.importDatabase = async (req, res) => {
       }
     }
 
+    // ── 3. Auto-Download Missing Images if sourceServerUrl provided ──
+    let autoDownloadedMedia = 0;
+    if (sourceServerUrl && typeof sourceServerUrl === 'string' && sourceServerUrl.trim()) {
+      let cleanSourceUrl = sourceServerUrl.trim().replace(/\/+$/, '');
+      if (!cleanSourceUrl.startsWith('http://') && !cleanSourceUrl.startsWith('https://')) {
+        cleanSourceUrl = 'http://' + cleanSourceUrl;
+      }
+
+      const referencedFiles = extractMediaFilenamesFromCollections(collectionsToProcess);
+      for (const filename of referencedFiles) {
+        const safeName = path.basename(filename);
+        const localPath = path.join(uploadsDir, safeName);
+        if (!fs.existsSync(localPath)) {
+          const possibleUrls = [
+            `${cleanSourceUrl}/api/image?file=${encodeURIComponent(safeName)}`,
+            `${cleanSourceUrl}/uploads/${encodeURIComponent(safeName)}`,
+          ];
+          for (const targetUrl of possibleUrls) {
+            try {
+              const response = await fetch(targetUrl, { signal: AbortSignal.timeout(6000) });
+              if (response.ok) {
+                const arrayBuffer = await response.arrayBuffer();
+                const buffer = Buffer.from(arrayBuffer);
+                if (buffer.length > 0) {
+                  fs.writeFileSync(localPath, buffer);
+                  autoDownloadedMedia++;
+                  break;
+                }
+              }
+            } catch (e) {}
+          }
+        }
+      }
+    }
+
     res.json({
       success: true,
-      message: `Database import complete! Total ${totalImported} inserted, ${totalUpdated} updated, ${totalSkipped} skipped, ${totalErrors} errors.`,
-      stats: { totalImported, totalUpdated, totalSkipped, totalErrors },
+      message: `Database import complete! ${totalImported} inserted, ${totalUpdated} updated, ${mediaFilesRestored + autoDownloadedMedia} media files restored.`,
+      stats: { 
+        totalImported, 
+        totalUpdated, 
+        totalSkipped, 
+        totalErrors,
+        mediaFilesRestored: mediaFilesRestored + autoDownloadedMedia
+      },
       summary,
     });
   } catch (error) {
@@ -1211,7 +1511,97 @@ exports.importDatabase = async (req, res) => {
   }
 };
 
-// 4. Clear/Reset Collection(s)
+// 4. Sync All Missing Media from Source Server
+exports.syncMediaFromServer = async (req, res) => {
+  try {
+    let { sourceServerUrl } = req.body;
+    if (!sourceServerUrl) {
+      return res.status(400).json({ message: 'Please provide source server URL or IP (e.g. http://72.61.117.87:5010)' });
+    }
+
+    sourceServerUrl = sourceServerUrl.trim().replace(/\/+$/, '');
+    if (!sourceServerUrl.startsWith('http://') && !sourceServerUrl.startsWith('https://')) {
+      sourceServerUrl = 'http://' + sourceServerUrl;
+    }
+
+    const db = mongoose.connection.db;
+    if (!db) {
+      return res.status(500).json({ message: 'Database connection not established' });
+    }
+
+    const collectionsList = await db.listCollections().toArray();
+    const allCollections = {};
+    for (const col of collectionsList) {
+      if (col.name.startsWith('system.')) continue;
+      allCollections[col.name] = await db.collection(col.name).find({}).toArray();
+    }
+
+    const referencedFiles = extractMediaFilenamesFromCollections(allCollections);
+    const uploadsDir = path.join(__dirname, '../uploads');
+    if (!fs.existsSync(uploadsDir)) {
+      fs.mkdirSync(uploadsDir, { recursive: true });
+    }
+
+    let downloadedCount = 0;
+    let existingCount = 0;
+    let failedCount = 0;
+    const errors = [];
+
+    for (const filename of referencedFiles) {
+      const safeFilename = path.basename(filename);
+      const localPath = path.join(uploadsDir, safeFilename);
+
+      if (fs.existsSync(localPath)) {
+        existingCount++;
+        continue;
+      }
+
+      const possibleUrls = [
+        `${sourceServerUrl}/api/image?file=${encodeURIComponent(safeFilename)}`,
+        `${sourceServerUrl}/uploads/${encodeURIComponent(safeFilename)}`,
+      ];
+
+      let downloaded = false;
+      for (const targetUrl of possibleUrls) {
+        try {
+          const response = await fetch(targetUrl, { signal: AbortSignal.timeout(8000) });
+          if (response.ok) {
+            const arrayBuffer = await response.arrayBuffer();
+            const buffer = Buffer.from(arrayBuffer);
+            if (buffer.length > 0) {
+              fs.writeFileSync(localPath, buffer);
+              downloadedCount++;
+              downloaded = true;
+              break;
+            }
+          }
+        } catch (e) {}
+      }
+
+      if (!downloaded) {
+        failedCount++;
+        errors.push(safeFilename);
+      }
+    }
+
+    res.json({
+      success: true,
+      message: `Media sync complete! Downloaded: ${downloadedCount}, Already Existed: ${existingCount}, Missing on source: ${failedCount}`,
+      stats: {
+        totalReferenced: referencedFiles.length,
+        downloaded: downloadedCount,
+        existing: existingCount,
+        failed: failedCount,
+        failedFiles: errors.slice(0, 30),
+      },
+    });
+  } catch (error) {
+    console.error('syncMediaFromServer error:', error);
+    res.status(500).json({ message: 'Failed to sync media from server', error: error.message });
+  }
+};
+
+// 5. Clear/Reset Collection(s)
 exports.clearDatabase = async (req, res) => {
   try {
     const { confirmation, collection } = req.body;
@@ -1239,6 +1629,179 @@ exports.clearDatabase = async (req, res) => {
   } catch (error) {
     console.error('clearDatabase error:', error);
     res.status(500).json({ message: 'Failed to clear database', error: error.message });
+  }
+};
+
+// ─── Admin Profile & Password Change ─────────────────────────────────────────
+exports.getAdminProfile = async (req, res) => {
+  try {
+    const admin = await Admin.findById(req.admin.id).select('-password');
+    if (!admin) {
+      return res.status(404).json({ message: 'Admin account not found' });
+    }
+    res.json(admin);
+  } catch (error) {
+    res.status(500).json({ message: 'Failed to fetch profile', error: error.message });
+  }
+};
+
+exports.changeAdminPassword = async (req, res) => {
+  try {
+    const { currentPassword, newPassword } = req.body;
+    if (!currentPassword || !newPassword) {
+      return res.status(400).json({ message: 'Current and new password are required' });
+    }
+    if (newPassword.length < 6) {
+      return res.status(400).json({ message: 'New password must be at least 6 characters long' });
+    }
+
+    const admin = await Admin.findById(req.admin.id);
+    if (!admin) {
+      return res.status(404).json({ message: 'Admin account not found' });
+    }
+
+    const isMatch = await admin.comparePassword(currentPassword);
+    if (!isMatch) {
+      return res.status(400).json({ message: 'Current password is incorrect' });
+    }
+
+    admin.password = newPassword;
+    await admin.save();
+
+    res.json({ success: true, message: 'Password updated successfully!' });
+  } catch (error) {
+    console.error('changeAdminPassword error:', error);
+    res.status(500).json({ message: 'Failed to update password', error: error.message });
+  }
+};
+
+// ─── Sub-Admin Management (Super Admin only) ──────────────────────────────────
+exports.getSubAdmins = async (req, res) => {
+  try {
+    const admins = await Admin.find().select('-password').sort({ createdAt: -1 });
+    res.json(admins);
+  } catch (error) {
+    console.error('getSubAdmins error:', error);
+    res.status(500).json({ message: 'Failed to fetch sub-admins', error: error.message });
+  }
+};
+
+exports.createSubAdmin = async (req, res) => {
+  try {
+    const { name, email, password, permissions, role } = req.body;
+    if (!name || !email || !password) {
+      return res.status(400).json({ message: 'Name, email and password are required' });
+    }
+
+    const cleanEmail = email.toLowerCase().trim();
+    const existing = await Admin.findOne({ email: cleanEmail });
+    if (existing) {
+      return res.status(400).json({ message: 'An admin with this email already exists' });
+    }
+
+    const assignedRole = role === 'super_admin' ? 'super_admin' : 'admin';
+    const assignedPermissions = Array.isArray(permissions) ? permissions : [];
+
+    const newAdmin = await Admin.create({
+      name: name.trim(),
+      email: cleanEmail,
+      password: password,
+      role: assignedRole,
+      permissions: assignedPermissions,
+      isActive: true,
+      createdBy: req.admin.id || null,
+    });
+
+    // Send invitation email asynchronously
+    sendAdminInvitationEmail({
+      toEmail: cleanEmail,
+      name: name.trim(),
+      temporaryPassword: password,
+      role: assignedRole,
+      permissions: assignedPermissions,
+      loginUrl: 'https://zenivio.it.com/admin',
+    }).catch(err => console.error('Admin invitation email failed to send:', err));
+
+    const sanitized = newAdmin.toObject();
+    delete sanitized.password;
+
+    res.status(201).json({
+      success: true,
+      message: `Admin created successfully and invitation email sent to ${cleanEmail}`,
+      admin: sanitized,
+    });
+  } catch (error) {
+    console.error('createSubAdmin error:', error);
+    res.status(500).json({ message: 'Failed to create admin', error: error.message });
+  }
+};
+
+exports.updateSubAdmin = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { name, permissions, isActive, password, role } = req.body;
+
+    const admin = await Admin.findById(id);
+    if (!admin) {
+      return res.status(404).json({ message: 'Admin not found' });
+    }
+
+    // Prevent deactivating or demoting the last active Super Admin
+    if (admin.role === 'super_admin' && (isActive === false || (role && role !== 'super_admin'))) {
+      const superAdminCount = await Admin.countDocuments({ role: 'super_admin', isActive: true });
+      if (superAdminCount <= 1) {
+        return res.status(400).json({ message: 'Cannot deactivate or demote the sole active Super Admin.' });
+      }
+    }
+
+    if (name) admin.name = name.trim();
+    if (Array.isArray(permissions)) admin.permissions = permissions;
+    if (typeof isActive === 'boolean') admin.isActive = isActive;
+    if (role && ['super_admin', 'admin'].includes(role)) admin.role = role;
+    if (password && password.trim().length >= 6) {
+      admin.password = password.trim();
+    }
+
+    await admin.save();
+
+    const sanitized = admin.toObject();
+    delete sanitized.password;
+
+    res.json({
+      success: true,
+      message: 'Admin updated successfully',
+      admin: sanitized,
+    });
+  } catch (error) {
+    console.error('updateSubAdmin error:', error);
+    res.status(500).json({ message: 'Failed to update admin', error: error.message });
+  }
+};
+
+exports.deleteSubAdmin = async (req, res) => {
+  try {
+    const { id } = req.params;
+    if (id === req.admin.id) {
+      return res.status(400).json({ message: 'You cannot delete your own admin account.' });
+    }
+
+    const admin = await Admin.findById(id);
+    if (!admin) {
+      return res.status(404).json({ message: 'Admin not found' });
+    }
+
+    if (admin.role === 'super_admin') {
+      const superAdminCount = await Admin.countDocuments({ role: 'super_admin' });
+      if (superAdminCount <= 1) {
+        return res.status(400).json({ message: 'Cannot delete the only Super Admin.' });
+      }
+    }
+
+    await Admin.findByIdAndDelete(id);
+    res.json({ success: true, message: 'Admin removed successfully' });
+  } catch (error) {
+    console.error('deleteSubAdmin error:', error);
+    res.status(500).json({ message: 'Failed to delete admin', error: error.message });
   }
 };
 

@@ -3,7 +3,8 @@ import {
   Search, Send, ArrowLeft, Loader2, User as UserIcon, WifiOff, Phone, 
   Video, PhoneOff, Image, Mic, Smile, ThumbsUp, ChevronRight, UserPlus, 
   MoreVertical, Star, X, Users, SquarePen, Check, Plus,
-  CornerUpLeft, Edit3, Trash2, Undo, CheckCheck
+  CornerUpLeft, Edit3, Trash2, Undo, CheckCheck,
+  Music, Volume2, VolumeX, Play, Pause, Upload
 } from 'lucide-react';
 import { io } from 'socket.io-client';
 import { API_BASE, getImageUrl } from '../config';
@@ -29,6 +30,37 @@ const EMOJIS = [
   '🧠', '🦷', '🦴', '👀', '👁️', '👅', '👄', '💋', '🩸', '❤️',
   '🧡', '💛', '💚', '💙', '💜', '🖤', '🤍', '🤎', '💔', '❣️',
   '💕', '💞', '💓', '💗', '💖', '💘', '💝', '💟', '🔥', '✨'
+];
+
+const STORY_MUSIC_PRESETS = [
+  {
+    id: 'lofi_chill',
+    title: 'Lo-Fi Chill Beat',
+    artist: 'Zenivio Lo-Fi',
+    genre: 'Lo-Fi / Chill',
+    url: '/music/lofi_chill.wav'
+  },
+  {
+    id: 'acoustic_love',
+    title: 'Romantic Acoustic',
+    artist: 'Sunset Serenade',
+    genre: 'Acoustic / Indie',
+    url: '/music/acoustic_love.wav'
+  },
+  {
+    id: 'upbeat_pop',
+    title: 'Upbeat Pop Groove',
+    artist: 'Dance City',
+    genre: 'Pop / Dance',
+    url: '/music/upbeat_pop.wav'
+  },
+  {
+    id: 'bangla_melody',
+    title: 'Bangla Melodic Serenade',
+    artist: 'Dhaka Folk Vibe',
+    genre: 'Bengali Folk Melody',
+    url: '/music/bangla_melody.wav'
+  }
 ];
 
 const getProfilePicUrl = (pic) => {
@@ -210,6 +242,15 @@ const MessengerPage = ({
   const [storyTextColor, setStoryTextColor] = useState('#ffffff');
   const [storyFontStyle, setStoryFontStyle] = useState('normal');
   const [isSavingStory, setIsSavingStory] = useState(false);
+  const [storyMusic, setStoryMusic] = useState(null); // { title: '', artist: '', url: '' }
+  const [showMusicPicker, setShowMusicPicker] = useState(false);
+  const [previewingMusicUrl, setPreviewingMusicUrl] = useState(null);
+  const [isUploadingAudio, setIsUploadingAudio] = useState(false);
+  const [isStoryMuted, setIsStoryMuted] = useState(false);
+  const storyAudioRef = useRef(null);
+  const previewAudioRef = useRef(null);
+  const storyAudioUploadInputRef = useRef(null);
+
   // Story Viewer
   const [viewingStoryUser, setViewingStoryUser] = useState(null); // { _id, name, profilePic, stories[] }
   const [viewingStoryIndex, setViewingStoryIndex] = useState(0);
@@ -435,8 +476,74 @@ const MessengerPage = ({
     }
   };
 
+  const togglePreviewTrack = (url) => {
+    if (previewingMusicUrl === url) {
+      if (previewAudioRef.current) {
+        previewAudioRef.current.pause();
+      }
+      setPreviewingMusicUrl(null);
+    } else {
+      if (previewAudioRef.current) {
+        previewAudioRef.current.pause();
+      }
+      previewAudioRef.current = new Audio(url);
+      previewAudioRef.current.play().catch(() => {});
+      setPreviewingMusicUrl(url);
+      previewAudioRef.current.onended = () => setPreviewingMusicUrl(null);
+    }
+  };
+
+  const handleSelectMusic = (track) => {
+    setStoryMusic({
+      title: track.title,
+      artist: track.artist || 'Original Sound',
+      url: track.url
+    });
+    setShowMusicPicker(false);
+    if (previewAudioRef.current) {
+      previewAudioRef.current.pause();
+      setPreviewingMusicUrl(null);
+    }
+  };
+
+  const handleCustomAudioUpload = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setIsUploadingAudio(true);
+    try {
+      const token = localStorage.getItem('token');
+      const formData = new FormData();
+      formData.append('file', file);
+      const res = await fetch(`${API_BASE}/api/messages/upload`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}` },
+        body: formData
+      });
+      if (res.ok) {
+        const data = await res.json();
+        const audioUrl = `${API_BASE}/api/image?file=${encodeURIComponent(data.filename)}`;
+        const cleanTitle = file.name.replace(/\.[^/.]+$/, '');
+        setStoryMusic({
+          title: cleanTitle.length > 25 ? cleanTitle.substring(0, 25) + '...' : cleanTitle,
+          artist: 'Custom Sound',
+          url: audioUrl
+        });
+        setShowMusicPicker(false);
+        if (previewAudioRef.current) {
+          previewAudioRef.current.pause();
+          setPreviewingMusicUrl(null);
+        }
+      }
+    } catch (err) {
+      console.error('Audio upload failed:', err);
+    } finally {
+      setIsUploadingAudio(false);
+      e.target.value = '';
+    }
+  };
+
   const handleSaveStory = async () => {
-    if (!storyText.trim() && !storyEmoji && !storyImage) return;
+    if (!storyText.trim() && !storyEmoji && !storyImage && !storyMusic) return;
     setIsSavingStory(true);
     try {
       const token = localStorage.getItem('token');
@@ -447,6 +554,7 @@ const MessengerPage = ({
       formData.append('textColor', storyTextColor);
       formData.append('fontStyle', storyFontStyle);
       if (storyImage) formData.append('image', storyImage);
+      if (storyMusic) formData.append('music', JSON.stringify(storyMusic));
 
       const res = await fetch(`${API_BASE}/api/messages/story`, {
         method: 'POST',
@@ -459,6 +567,7 @@ const MessengerPage = ({
         setStoryEmoji('');
         setStoryImage(null);
         setStoryImagePreview('');
+        setStoryMusic(null);
         setStoryBg('linear-gradient(135deg, #7C3AED 0%, #2563EB 100%)');
         setStoryFontStyle('normal');
         fetchStories();
@@ -580,12 +689,42 @@ const MessengerPage = ({
     setStoryProgress(0);
   };
 
-  // Auto-progress story viewer
+  // Auto-progress story viewer & handle background music playback
   useEffect(() => {
-    if (!viewingStoryUser) return;
+    if (!viewingStoryUser) {
+      if (storyAudioRef.current) {
+        storyAudioRef.current.pause();
+        storyAudioRef.current.currentTime = 0;
+      }
+      return;
+    }
+
+    const currentStory = viewingStoryUser.stories[viewingStoryIndex];
+
+    // Background music playback
+    if (currentStory?.music?.url) {
+      const trackUrl = currentStory.music.url.startsWith('http') || currentStory.music.url.startsWith('/music') || currentStory.music.url.startsWith('/api')
+        ? currentStory.music.url
+        : `${API_BASE}/api/image?file=${encodeURIComponent(currentStory.music.url)}`;
+
+      if (!storyAudioRef.current) {
+        storyAudioRef.current = new Audio(trackUrl);
+      } else {
+        storyAudioRef.current.src = trackUrl;
+      }
+      storyAudioRef.current.loop = true;
+      storyAudioRef.current.muted = isStoryMuted;
+      storyAudioRef.current.currentTime = 0;
+      storyAudioRef.current.play().catch(() => {});
+    } else {
+      if (storyAudioRef.current) {
+        storyAudioRef.current.pause();
+      }
+    }
+
     if (storyProgressTimer.current) clearInterval(storyProgressTimer.current);
     setStoryProgress(0);
-    const totalDuration = 5000; // 5 seconds per story
+    const totalDuration = currentStory?.music?.url ? 10000 : 5000; // 10s for music stories, 5s normal
     const interval = 50;
     let elapsed = 0;
     storyProgressTimer.current = setInterval(() => {
@@ -604,8 +743,12 @@ const MessengerPage = ({
         }
       }
     }, interval);
-    return () => { if (storyProgressTimer.current) clearInterval(storyProgressTimer.current); };
-  }, [viewingStoryUser, viewingStoryIndex]);
+
+    return () => {
+      if (storyProgressTimer.current) clearInterval(storyProgressTimer.current);
+      if (storyAudioRef.current) storyAudioRef.current.pause();
+    };
+  }, [viewingStoryUser, viewingStoryIndex, isStoryMuted]);
 
   useEffect(() => {
     fetchUsers();
@@ -1941,8 +2084,8 @@ const MessengerPage = ({
                             <div className="min-w-0 flex-1">
                               <h3 className="font-black text-slate-800 dark:text-slate-100 text-[15px] truncate leading-tight flex items-center gap-1">
                                 <span className="truncate">{chat.name}</span>
-                                {((chat.verificationBadge === 'blue' || chat.verificationBadge === 'golden') || (chat.isEmailVerified && chat.verificationBadge !== 'none')) && (
-                                  <VerifiedBadge type={chat.verificationBadge === 'golden' ? 'golden' : 'blue'} iconClassName="w-3.5 h-3.5 text-blue-500 fill-blue-500 flex-shrink-0" />
+                                {((chat.verificationBadge === 'blue' || chat.verificationBadge === 'purple' || chat.verificationBadge === 'golden') || (chat.isEmailVerified && chat.verificationBadge !== 'none')) && (
+                                  <VerifiedBadge type={chat.verificationBadge === 'golden' ? 'golden' : 'purple'} iconClassName="w-3.5 h-3.5 flex-shrink-0" />
                                 )}
                               </h3>
                               <p className="text-xs text-slate-400 dark:text-slate-500 truncate mt-1 leading-none">
@@ -1957,7 +2100,7 @@ const MessengerPage = ({
                               {formatRelativeTime(chat.lastMessageTime)}
                             </span>
                             {chat.unreadCount > 0 && (
-                              <span className="w-5 h-5 bg-[#1d9bf0] text-white text-[10px] font-black rounded-full flex items-center justify-center shadow-3xs">
+                              <span className="w-5 h-5 bg-purple-600 text-white text-[10px] font-black rounded-full flex items-center justify-center shadow-3xs">
                                 {chat.unreadCount}
                               </span>
                             )}
@@ -1994,8 +2137,8 @@ const MessengerPage = ({
                                   <div className="flex items-center justify-between">
                                     <h2 className="text-[14px] font-extrabold text-slate-900 dark:text-white truncate flex items-center gap-1">
                                       <span className="truncate">{user.name}</span>
-                                      {((user.verificationBadge === 'blue' || user.verificationBadge === 'golden') || (user.isEmailVerified && user.verificationBadge !== 'none')) && (
-                                        <VerifiedBadge type={user.verificationBadge === 'golden' ? 'golden' : 'blue'} iconClassName="w-3.5 h-3.5 text-blue-500 fill-blue-500 flex-shrink-0" />
+                                      {((user.verificationBadge === 'blue' || user.verificationBadge === 'purple' || user.verificationBadge === 'golden') || (user.isEmailVerified && user.verificationBadge !== 'none')) && (
+                                        <VerifiedBadge type={user.verificationBadge === 'golden' ? 'golden' : 'purple'} iconClassName="w-3.5 h-3.5 flex-shrink-0" />
                                       )}
                                       {user.username && (
                                         <span className="text-[11px] font-mono text-slate-400 font-normal shrink-0">
@@ -2070,8 +2213,8 @@ const MessengerPage = ({
                 <div>
                   <h1 className="text-base sm:text-lg font-black text-slate-855 dark:text-white flex items-center gap-1.5 leading-tight">
                     <span>{activePartner.name}</span>
-                    {((activePartner.verificationBadge === 'blue' || activePartner.verificationBadge === 'golden') || (activePartner.isEmailVerified && activePartner.verificationBadge !== 'none')) && (
-                      <VerifiedBadge type={activePartner.verificationBadge === 'golden' ? 'golden' : 'blue'} iconClassName="w-4 h-4 text-blue-500 fill-blue-500 flex-shrink-0" />
+                    {((activePartner.verificationBadge === 'blue' || activePartner.verificationBadge === 'purple' || activePartner.verificationBadge === 'golden') || (activePartner.isEmailVerified && activePartner.verificationBadge !== 'none')) && (
+                      <VerifiedBadge type={activePartner.verificationBadge === 'golden' ? 'golden' : 'purple'} iconClassName="w-4 h-4 flex-shrink-0" />
                     )}
                   </h1>
                   {activePartner.isGroup || onlineUsers.includes(activePartner._id?.toString()) ? (
@@ -2161,8 +2304,8 @@ const MessengerPage = ({
                   </div>
                   <h3 className="font-black text-slate-800 dark:text-white flex items-center justify-center gap-1">
                     <span>{activePartner.name}</span>
-                    {((activePartner.verificationBadge === 'blue' || activePartner.verificationBadge === 'golden') || (activePartner.isEmailVerified && activePartner.verificationBadge !== 'none')) && (
-                      <VerifiedBadge type={activePartner.verificationBadge === 'golden' ? 'golden' : 'blue'} iconClassName="w-4 h-4 text-blue-500 fill-blue-500 flex-shrink-0" />
+                    {((activePartner.verificationBadge === 'blue' || activePartner.verificationBadge === 'purple' || activePartner.verificationBadge === 'golden') || (activePartner.isEmailVerified && activePartner.verificationBadge !== 'none')) && (
+                      <VerifiedBadge type={activePartner.verificationBadge === 'golden' ? 'golden' : 'purple'} iconClassName="w-4 h-4 flex-shrink-0" />
                     )}
                   </h3>
                   <p className="text-xs text-slate-400 mt-1">Start your conversation with {activePartner.name} now.</p>
@@ -2835,12 +2978,32 @@ const MessengerPage = ({
                     <X className="w-4 h-4" />
                   </button>
                 )}
+
+                {/* Floating Music Sticker */}
+                {storyMusic && (
+                  <div className="flex items-center gap-2.5 px-3.5 py-2 rounded-2xl bg-black/60 backdrop-blur-md border border-white/20 shadow-xl max-w-xs animate-fade-in mt-1 select-none">
+                    <div className="w-7 h-7 rounded-xl bg-gradient-to-tr from-purple-600 to-indigo-600 flex items-center justify-center text-white shrink-0 shadow-md">
+                      <Music className="w-3.5 h-3.5 animate-pulse" />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="text-xs font-black text-white truncate leading-tight">{storyMusic.title}</p>
+                      <p className="text-[10px] text-white/70 truncate leading-tight">{storyMusic.artist}</p>
+                    </div>
+                    <button
+                      onClick={() => setStoryMusic(null)}
+                      className="p-1 rounded-full hover:bg-white/20 text-white/80 hover:text-white transition-colors"
+                      title="Remove music"
+                    >
+                      <X className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                )}
               </div>
 
               {/* Bottom Controls Panel */}
               <div className="relative shrink-0 bg-black/50 backdrop-blur-md rounded-t-3xl px-5 pt-4 pb-8 space-y-4 z-10">
 
-                {/* Photo + Text Input Row */}
+                {/* Photo + Music + Text Input Row */}
                 <div className="flex items-center gap-2">
                   {/* Photo picker button */}
                   <button
@@ -2849,6 +3012,16 @@ const MessengerPage = ({
                     title="Add Photo"
                   >
                     📷
+                  </button>
+                  {/* Music picker button */}
+                  <button
+                    onClick={() => setShowMusicPicker(true)}
+                    className={`w-10 h-10 rounded-xl flex items-center justify-center text-xl shrink-0 active:scale-90 transition-transform border ${
+                      storyMusic ? 'bg-gradient-to-tr from-purple-600 to-indigo-600 text-white border-purple-400 shadow-md shadow-purple-500/40' : 'bg-white/20 text-white border-white/30'
+                    }`}
+                    title="Add Music / Song"
+                  >
+                    🎵
                   </button>
                   {/* Text Input */}
                   <div className="flex-1 flex items-center bg-white/20 rounded-2xl px-4 py-2 gap-2">
@@ -2937,6 +3110,143 @@ const MessengerPage = ({
                   e.target.value = '';
                 }}
               />
+
+              {/* Hidden audio file input for custom story songs */}
+              <input
+                ref={storyAudioUploadInputRef}
+                type="file"
+                accept="audio/*"
+                className="hidden"
+                onChange={handleCustomAudioUpload}
+              />
+
+              {/* Music Picker Bottom Sheet Modal */}
+              {showMusicPicker && (
+                <div 
+                  className="fixed inset-0 z-[120] bg-black/70 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-4 animate-fade-in" 
+                  onClick={() => {
+                    setShowMusicPicker(false);
+                    if (previewAudioRef.current) {
+                      previewAudioRef.current.pause();
+                      setPreviewingMusicUrl(null);
+                    }
+                  }}
+                >
+                  <div 
+                    className="bg-slate-900 text-white w-full max-w-md rounded-t-[2.5rem] sm:rounded-3xl border border-slate-800 shadow-2xl overflow-hidden flex flex-col max-h-[85vh] animate-slide-up"
+                    onClick={e => e.stopPropagation()}
+                  >
+                    {/* Header */}
+                    <div className="p-5 border-b border-slate-800 flex items-center justify-between">
+                      <div className="flex items-center gap-2.5">
+                        <div className="w-8 h-8 rounded-full bg-[#7C3AED]/20 text-[#A78BFA] flex items-center justify-center font-bold">
+                          <Music className="w-4 h-4" />
+                        </div>
+                        <div>
+                          <h3 className="font-black text-base">Story Music</h3>
+                          <p className="text-[10px] text-slate-400 font-bold">Add background soundtrack</p>
+                        </div>
+                      </div>
+                      <button
+                        onClick={() => {
+                          setShowMusicPicker(false);
+                          if (previewAudioRef.current) {
+                            previewAudioRef.current.pause();
+                            setPreviewingMusicUrl(null);
+                          }
+                        }}
+                        className="p-1.5 rounded-full hover:bg-slate-800 text-slate-400"
+                      >
+                        <X className="w-5 h-5" />
+                      </button>
+                    </div>
+
+                    {/* Choose Song from Device button */}
+                    <div className="p-4 border-b border-slate-800 bg-slate-850/50">
+                      <button
+                        onClick={() => storyAudioUploadInputRef.current?.click()}
+                        disabled={isUploadingAudio}
+                        className="w-full py-2.5 px-4 rounded-2xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-black text-xs flex items-center justify-center gap-2 active:scale-98 transition-all shadow-md shadow-purple-600/20 disabled:opacity-50"
+                      >
+                        {isUploadingAudio ? (
+                          <>
+                            <Loader2 className="w-4 h-4 animate-spin" />
+                            <span>Uploading Custom Audio...</span>
+                          </>
+                        ) : (
+                          <>
+                            <Upload className="w-4 h-4" />
+                            <span>📁 Choose Song from Device (MP3 / Audio)</span>
+                          </>
+                        )}
+                      </button>
+                      <p className="text-[10px] text-slate-400 text-center mt-1.5 font-medium">Select any song file from your phone storage</p>
+                    </div>
+
+                    {/* Preset Tracks */}
+                    <div className="p-4 overflow-y-auto flex-1 space-y-2 min-h-[220px]">
+                      <span className="text-[11px] font-black text-slate-400 uppercase tracking-wider block px-1 mb-1">
+                        Popular Music Tracks
+                      </span>
+                      {STORY_MUSIC_PRESETS.map((track) => {
+                        const isSelected = storyMusic?.url === track.url;
+                        const isPreviewing = previewingMusicUrl === track.url;
+
+                        return (
+                          <div
+                            key={track.id}
+                            className={`p-3 rounded-2xl border flex items-center justify-between gap-3 transition-all ${
+                              isSelected 
+                                ? 'border-[#7C3AED] bg-[#7C3AED]/20' 
+                                : 'border-slate-800 bg-slate-800/40 hover:bg-slate-800/80'
+                            }`}
+                          >
+                            <div className="flex items-center gap-3 min-w-0">
+                              <button
+                                onClick={() => togglePreviewTrack(track.url)}
+                                className="w-10 h-10 rounded-xl bg-gradient-to-tr from-purple-600 to-indigo-600 flex items-center justify-center text-white shrink-0 active:scale-90 transition-transform shadow-md"
+                              >
+                                {isPreviewing ? <Pause className="w-4 h-4 fill-white" /> : <Play className="w-4 h-4 fill-white ml-0.5" />}
+                              </button>
+                              <div className="min-w-0">
+                                <h4 className="text-xs font-black truncate">{track.title}</h4>
+                                <p className="text-[10px] text-slate-400 truncate">{track.artist} • {track.genre}</p>
+                              </div>
+                            </div>
+
+                            <button
+                              onClick={() => handleSelectMusic(track)}
+                              className={`px-3.5 py-1.5 rounded-full text-xs font-black transition-all active:scale-95 shrink-0 ${
+                                isSelected
+                                  ? 'bg-emerald-500 text-white shadow-md shadow-emerald-500/25'
+                                  : 'bg-white/15 hover:bg-white/25 text-white'
+                              }`}
+                            >
+                              {isSelected ? 'Selected ✓' : 'Select'}
+                            </button>
+                          </div>
+                        );
+                      })}
+                    </div>
+
+                    {/* Remove Music button */}
+                    {storyMusic && (
+                      <div className="p-4 border-t border-slate-800 bg-slate-900">
+                        <button
+                          onClick={() => {
+                            setStoryMusic(null);
+                            setShowMusicPicker(false);
+                            if (previewAudioRef.current) previewAudioRef.current.pause();
+                          }}
+                          className="w-full py-2 text-center text-xs font-black text-rose-400 hover:text-rose-300"
+                        >
+                          Remove Music
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
             </div>
           );
         })()}
@@ -3000,6 +3310,18 @@ const MessengerPage = ({
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
+                  {story.music?.url && (
+                    <button
+                      onClick={e => {
+                        e.stopPropagation();
+                        setIsStoryMuted(prev => !prev);
+                      }}
+                      className="w-9 h-9 rounded-full bg-black/40 backdrop-blur-md text-white flex items-center justify-center active:scale-90 border border-white/20 transition-all hover:bg-black/60"
+                      title={isStoryMuted ? "Unmute" : "Mute"}
+                    >
+                      {isStoryMuted ? <VolumeX className="w-4 h-4 text-rose-400" /> : <Volume2 className="w-4 h-4 text-emerald-400 animate-pulse" />}
+                    </button>
+                  )}
                   {isOwnStory && (
                     <button
                       onClick={e => {
@@ -3020,6 +3342,27 @@ const MessengerPage = ({
                   </button>
                 </div>
               </div>
+
+              {/* Floating Music Badge if music attached */}
+              {story.music && (
+                <div 
+                  className="relative z-10 px-4 py-2 mt-2 self-center flex items-center gap-2.5 bg-black/50 backdrop-blur-md rounded-full border border-white/25 text-white shadow-xl animate-fade-in"
+                  onClick={e => e.stopPropagation()}
+                >
+                  <div className="w-6 h-6 rounded-full bg-gradient-to-tr from-purple-500 to-pink-500 flex items-center justify-center text-xs shadow">
+                    🎵
+                  </div>
+                  <div className="flex flex-col text-left">
+                    <span className="text-xs font-black leading-tight max-w-[170px] truncate">{story.music.title}</span>
+                    <span className="text-[10px] text-white/70 leading-tight max-w-[170px] truncate">{story.music.artist || 'Original Audio'}</span>
+                  </div>
+                  <div className="flex items-end gap-0.5 h-3 ml-1">
+                    <span className={`w-0.5 bg-white rounded-full ${!isStoryMuted ? 'animate-[bounce_0.6s_infinite_ease-in-out]' : 'h-1'}`} style={{ height: !isStoryMuted ? '100%' : '20%' }}></span>
+                    <span className={`w-0.5 bg-white rounded-full ${!isStoryMuted ? 'animate-[bounce_0.8s_infinite_ease-in-out]' : 'h-2'}`} style={{ height: !isStoryMuted ? '60%' : '40%' }}></span>
+                    <span className={`w-0.5 bg-white rounded-full ${!isStoryMuted ? 'animate-[bounce_0.5s_infinite_ease-in-out]' : 'h-3'}`} style={{ height: !isStoryMuted ? '80%' : '60%' }}></span>
+                  </div>
+                </div>
+              )}
 
               {/* Story Content */}
               <div className="relative flex-1 flex flex-col items-center justify-center px-8 gap-5 z-10">
@@ -3194,8 +3537,8 @@ const MessengerPage = ({
                           <div>
                             <p className="font-bold text-sm leading-tight flex items-center gap-1">
                               <span>{user.name}</span>
-                              {((user.verificationBadge === 'blue' || user.verificationBadge === 'golden') || (user.isEmailVerified && user.verificationBadge !== 'none')) && (
-                                <VerifiedBadge type={user.verificationBadge === 'golden' ? 'golden' : 'blue'} iconClassName="w-3.5 h-3.5 text-blue-500 fill-blue-500 flex-shrink-0" />
+                              {((user.verificationBadge === 'blue' || user.verificationBadge === 'purple' || user.verificationBadge === 'golden') || (user.isEmailVerified && user.verificationBadge !== 'none')) && (
+                                <VerifiedBadge type={user.verificationBadge === 'golden' ? 'golden' : 'purple'} iconClassName="w-3.5 h-3.5 flex-shrink-0" />
                               )}
                             </p>
                             <p className="text-[10px] text-slate-400 truncate max-w-[150px] mt-0.5">@{user.username || 'user'}</p>

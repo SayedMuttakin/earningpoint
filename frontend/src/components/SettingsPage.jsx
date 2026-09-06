@@ -692,15 +692,15 @@ const SettingsPage = ({
                 >
                   <div className="flex items-center gap-3.5 min-w-0">
                     <div className={`w-10 h-10 flex-shrink-0 rounded-full flex items-center justify-center ${item.color} shadow-3xs`}>
-                      <item.icon className="w-5 h-5" strokeWidth={2.4} />
+                      <item.icon className="w-5 h-5" strokeWidth={2} />
                     </div>
                     <div className="min-w-0">
-                      <span className="font-black text-[15px] text-slate-855 dark:text-slate-200 block truncate">{item.label}</span>
-                      <span className="text-[10px] text-slate-400 dark:text-slate-550 font-bold block truncate mt-0.5">{item.sub}</span>
+                      <span className="font-semibold text-[15px] text-slate-855 dark:text-slate-200 block truncate">{item.label}</span>
+                      <span className="text-[11px] text-slate-400 dark:text-slate-500 font-medium block truncate mt-0.5">{item.sub}</span>
                     </div>
                   </div>
                   
-                  <ChevronRight className="w-4.5 h-4.5 text-indigo-500 dark:text-indigo-400 flex-shrink-0" strokeWidth={3} />
+                  <ChevronRight className="w-4.5 h-4.5 text-slate-400 dark:text-slate-500 flex-shrink-0" strokeWidth={2} />
                 </button>
               ))}
             </div>
@@ -819,11 +819,11 @@ const SettingsPage = ({
                     >
                       <div className="flex items-start gap-3.5 min-w-0 pr-3">
                         <div className={`w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 ${parentColor}`}>
-                          <Icon className="w-5 h-5" strokeWidth={2.4} />
+                          <Icon className="w-5 h-5" strokeWidth={2} />
                         </div>
                         <div className="min-w-0">
-                          <span className="font-black text-[14px] text-slate-800 dark:text-slate-200 block truncate">{subItem.label}</span>
-                          <span className="text-[10px] text-slate-400 dark:text-slate-500 font-bold block mt-0.5 leading-relaxed">{subItem.sub}</span>
+                          <span className="font-semibold text-[14px] text-slate-800 dark:text-slate-200 block truncate">{subItem.label}</span>
+                          <span className="text-[11px] text-slate-400 dark:text-slate-500 font-normal block mt-0.5 leading-relaxed">{subItem.sub}</span>
                         </div>
                       </div>
                       
@@ -845,14 +845,14 @@ const SettingsPage = ({
                   >
                     <div className="flex items-start gap-3.5 min-w-0 pr-3">
                       <div className={`w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 ${parentColor} group-hover:scale-105 transition-transform`}>
-                        <Icon className="w-5 h-5" strokeWidth={2.4} />
+                        <Icon className="w-5 h-5" strokeWidth={2} />
                       </div>
                       <div className="min-w-0">
-                        <span className="font-black text-[14px] text-slate-800 dark:text-slate-200 block truncate group-hover:text-indigo-500 dark:group-hover:text-indigo-400 transition-colors">{subItem.label}</span>
-                        <span className="text-[10px] text-slate-400 dark:text-slate-500 font-bold block mt-0.5 leading-relaxed">{subItem.sub}</span>
+                        <span className="font-semibold text-[14px] text-slate-800 dark:text-slate-200 block truncate group-hover:text-indigo-500 dark:group-hover:text-indigo-400 transition-colors">{subItem.label}</span>
+                        <span className="text-[11px] text-slate-400 dark:text-slate-500 font-normal block mt-0.5 leading-relaxed">{subItem.sub}</span>
                       </div>
                     </div>
-                    <ChevronRight className="w-4 h-4 text-slate-400 group-hover:text-indigo-500 group-hover:translate-x-0.5 transition-all flex-shrink-0" strokeWidth={3} />
+                    <ChevronRight className="w-4 h-4 text-slate-400 group-hover:text-indigo-500 group-hover:translate-x-0.5 transition-all flex-shrink-0" strokeWidth={2} />
                   </button>
                 );
               })}

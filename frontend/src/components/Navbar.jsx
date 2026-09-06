@@ -3,7 +3,7 @@ import {
   Home, Bell, ShoppingCart, User, Settings, Menu, X, Video, Newspaper,
   Lock, Globe, Shield, ShieldCheck, Trash2, ChevronRight, ChevronDown, ChevronUp, Moon, Sun, 
   Database, HelpCircle, FileText, LogOut, ArrowLeft, Smartphone, 
-  CheckCircle2, Search, Rocket, Palette, Headphones, MessageCircle, Plus, Check, Users, UserPlus 
+  CheckCircle2, Search, Rocket, Coins, Palette, Headphones, MessageCircle, Plus, Check, Users, UserPlus 
 } from 'lucide-react';
 import { API_BASE, getImageUrl } from '../config';
 import VerifiedBadge from './VerifiedBadge';
@@ -170,12 +170,25 @@ const Navbar = ({
   };
 
   useEffect(() => {
+    const token = localStorage.getItem('token');
+    if (!token || !currentUser) {
+      setUnreadCount(0);
+      setUnreadMessagesCount(0);
+      return;
+    }
+
     fetchUnreadCount();
     fetchUnreadMessagesCount();
     const interval = setInterval(() => {
+      const curToken = localStorage.getItem('token');
+      if (!curToken) {
+        setUnreadCount(0);
+        setUnreadMessagesCount(0);
+        return;
+      }
       fetchUnreadCount();
       fetchUnreadMessagesCount();
-    }, 20000);
+    }, 25000);
 
     const handleNewUnreadMsg = () => {
       setUnreadMessagesCount(prev => prev + 1);
@@ -192,7 +205,7 @@ const Navbar = ({
       window.removeEventListener('new_unread_message', handleNewUnreadMsg);
       window.removeEventListener('messages_read_update', handleReadMsgUpdate);
     };
-  }, []);
+  }, [currentUser]);
 
   const fetchUnreadCount = async () => {
     try {
@@ -201,12 +214,13 @@ const Navbar = ({
       const res = await fetch(`${API_BASE}/api/notifications/unread-count`, {
         headers: { Authorization: `Bearer ${token}` }
       });
-      const data = await res.json();
-      if (res.ok) {
+      if (!res.ok) return;
+      const data = await res.json().catch(() => null);
+      if (data && typeof data.count === 'number') {
         setUnreadCount(data.count);
       }
     } catch (err) {
-      console.error('Failed to fetch unread count:', err);
+      // safe fallback on logout or network change
     }
   };
 
@@ -217,12 +231,13 @@ const Navbar = ({
       const res = await fetch(`${API_BASE}/api/messages/unread-count`, {
         headers: { Authorization: `Bearer ${token}` }
       });
-      const data = await res.json();
-      if (res.ok && typeof data.unreadCount === 'number') {
+      if (!res.ok) return;
+      const data = await res.json().catch(() => null);
+      if (data && typeof data.unreadCount === 'number') {
         setUnreadMessagesCount(data.unreadCount);
       }
     } catch (err) {
-      console.error('Failed to fetch unread messages count:', err);
+      // safe fallback on logout or network change
     }
   };
 
@@ -370,14 +385,14 @@ const Navbar = ({
                   </div>
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-1.5">
-                      <span className="font-black text-[16px] text-slate-800 dark:text-white block truncate leading-tight group-hover:text-brand-600 transition-colors">
+                      <span className="font-bold text-[15px] text-slate-800 dark:text-white block truncate leading-tight group-hover:text-brand-600 transition-colors">
                         {currentUser?.name || 'User'}
                       </span>
                       {((currentUser?.verificationBadge === 'blue' || currentUser?.verificationBadge === 'golden') || (currentUser?.isEmailVerified && currentUser?.verificationBadge !== 'none')) && (
-                        <VerifiedBadge type={currentUser?.verificationBadge === 'golden' ? 'golden' : 'blue'} iconClassName="w-4.5 h-4.5 flex-shrink-0" />
+                        <VerifiedBadge type={currentUser?.verificationBadge === 'golden' ? 'golden' : 'blue'} iconClassName="w-4 h-4 flex-shrink-0" />
                       )}
                     </div>
-                    <span className="text-[12px] text-slate-500 dark:text-slate-400 font-bold block truncate mt-0.5">
+                    <span className="text-[12px] text-slate-500 dark:text-slate-400 font-medium block truncate mt-0.5">
                       {currentUser?.phoneOrEmail || ''}
                     </span>
                   </div>
@@ -396,7 +411,7 @@ const Navbar = ({
                   }`}
                   title="Switch Account"
                 >
-                  {showAccountSwitcher ? <ChevronUp className="w-4 h-4" strokeWidth={2.5} /> : <ChevronDown className="w-4 h-4" strokeWidth={2.5} />}
+                  {showAccountSwitcher ? <ChevronUp className="w-4 h-4" strokeWidth={2} /> : <ChevronDown className="w-4 h-4" strokeWidth={2} />}
                 </button>
 
                 {/* Close Drawer Button */}
@@ -413,7 +428,7 @@ const Navbar = ({
             {showAccountSwitcher ? (
               <div className="flex-1 overflow-y-auto no-scrollbar px-3 py-3 space-y-2 bg-slate-50/70 dark:bg-slate-950/40 animate-fade-in">
                 <div className="flex items-center justify-between px-2 py-1">
-                  <div className="flex items-center gap-1.5 text-xs font-black text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                  <div className="flex items-center gap-1.5 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
                     <Users className="w-3.5 h-3.5" />
                     <span>Saved Accounts ({savedAccounts.length || 1})</span>
                   </div>
@@ -446,14 +461,14 @@ const Navbar = ({
                           </div>
                           <div className="min-w-0 flex-1">
                             <div className="flex items-center gap-1">
-                              <span className={`font-black text-[14px] truncate block ${isActive ? 'text-brand-700 dark:text-brand-300' : 'text-slate-800 dark:text-white'}`}>
+                              <span className={`font-semibold text-[14px] truncate block ${isActive ? 'text-brand-700 dark:text-brand-300' : 'text-slate-800 dark:text-white'}`}>
                                 {acc.name || 'User'}
                               </span>
                               {((acc.verificationBadge === 'blue' || acc.verificationBadge === 'golden') || (acc.isEmailVerified && acc.verificationBadge !== 'none')) && (
                                 <VerifiedBadge type={acc.verificationBadge === 'golden' ? 'golden' : 'blue'} iconClassName="w-3.5 h-3.5 flex-shrink-0" />
                               )}
                             </div>
-                            <span className="text-[11px] font-bold text-slate-400 dark:text-slate-500 block truncate">
+                            <span className="text-[11px] font-medium text-slate-400 dark:text-slate-500 block truncate">
                               {acc.phoneOrEmail || ''}
                             </span>
                           </div>
@@ -462,8 +477,8 @@ const Navbar = ({
                         {/* Active Badge / Delete Option */}
                         <div className="flex items-center gap-1.5 flex-shrink-0 ml-2">
                           {isActive ? (
-                            <span className="flex items-center gap-1 text-[11px] font-black text-emerald-600 dark:text-emerald-400 bg-emerald-100/80 dark:bg-emerald-950/40 px-2 py-0.5 rounded-full">
-                              <Check className="w-3 h-3 stroke-[3]" /> Active
+                            <span className="flex items-center gap-1 text-[11px] font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-100/80 dark:bg-emerald-950/40 px-2 py-0.5 rounded-full">
+                              <Check className="w-3 h-3 stroke-[2.5]" /> Active
                             </span>
                           ) : (
                             <button
@@ -483,7 +498,7 @@ const Navbar = ({
                 {/* Add Another Account Button */}
                 <button
                   onClick={handleAddAccount}
-                  className="w-full flex items-center justify-center gap-2 py-3 px-4 bg-white dark:bg-slate-850 hover:bg-slate-100 dark:hover:bg-slate-800 border-2 border-dashed border-slate-200 dark:border-slate-700 active:scale-[0.98] rounded-2xl transition-all text-slate-700 dark:text-slate-200 font-black text-sm mt-2 cursor-pointer shadow-3xs"
+                  className="w-full flex items-center justify-center gap-2 py-3 px-4 bg-white dark:bg-slate-850 hover:bg-slate-100 dark:hover:bg-slate-800 border-2 border-dashed border-slate-200 dark:border-slate-700 active:scale-[0.98] rounded-2xl transition-all text-slate-700 dark:text-slate-200 font-semibold text-sm mt-2 cursor-pointer shadow-3xs"
                 >
                   <UserPlus className="w-4 h-4 text-brand-600 dark:text-brand-400" />
                   <span>Log into Another Account</span>
@@ -500,13 +515,13 @@ const Navbar = ({
                   >
                     <div className="flex items-center gap-3 min-w-0 flex-1 pr-1">
                       <div className={`w-9 h-9 flex-shrink-0 rounded-full flex items-center justify-center ${item.color} shadow-3xs`}>
-                        <item.icon className="w-5 h-5" strokeWidth={2.4} />
+                        <item.icon className="w-5 h-5" strokeWidth={2} />
                       </div>
                       <div className="min-w-0 flex-1">
-                        <span className="font-black text-[15px] text-slate-800 dark:text-slate-100 block truncate leading-snug">{item.label}</span>
+                        <span className="font-semibold text-[15px] text-slate-800 dark:text-slate-100 block truncate leading-snug">{item.label}</span>
                       </div>
                     </div>
-                    <ChevronRight className="w-4 h-4 text-indigo-500 dark:text-indigo-400 flex-shrink-0 ml-1" strokeWidth={3} />
+                    <ChevronRight className="w-4 h-4 text-slate-400 dark:text-slate-500 flex-shrink-0 ml-1" strokeWidth={2} />
                   </button>
                 ))}
               </div>
@@ -515,40 +530,131 @@ const Navbar = ({
         </>
       )}
 
-      {/* Desktop & Top Mobile Navbar (Fixed at top of container with safe-area top padding for notch/curved displays) */}
+      {/* Desktop & Top Mobile/Tablet Navbar */}
       {activeTab !== 'Video' && activeTab !== 'Messenger' && activeTab !== 'Support' && (
-        <nav className="fixed top-0 left-0 right-0 mx-auto w-full max-w-xl bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-b border-slate-200/80 dark:border-slate-800/80 shadow-xs z-[9998] flex flex-col justify-center px-4 pt-[max(8px,env(safe-area-inset-top,8px))] pb-1">
-          <div className="flex justify-between items-center w-full h-13">
-            {/* Left Side: Mobile Menu Button and Brand */}
-            <div className="flex items-center gap-1 sm:gap-2 relative z-50">
+        <nav className="fixed top-0 left-0 right-0 w-full bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-b border-slate-200/80 dark:border-slate-800/80 shadow-xs z-[9998] flex flex-col justify-center pt-[max(8px,env(safe-area-inset-top,8px))] pb-1 lg:py-2">
+          <div className="w-full max-w-7xl xl:max-w-[1360px] 2xl:max-w-[1440px] mx-auto px-4 lg:px-6 flex justify-between items-center h-12 lg:h-14">
+            
+            {/* Left Side: Mobile/Tablet Menu Button & Brand Logo */}
+            <div className="flex items-center gap-2 sm:gap-3 relative z-50">
+              {/* Mobile & Tablet Hamburger Menu */}
               <button 
                 onClick={() => setIsSidebarOpen(true)}
-                className="text-slate-500 dark:text-slate-400 hover:text-brand-600 p-2 transition-colors cursor-pointer"
+                className="lg:hidden text-slate-500 dark:text-slate-400 hover:text-brand-600 p-1.5 transition-colors cursor-pointer"
+                title="Menu"
               >
-                <Menu className="h-7 w-7" />
+                <Menu className="h-6 w-6" />
               </button>
+
+              {/* Brand Logo with Icon */}
               <div
-                className="flex items-center gap-1.5 cursor-pointer hover:opacity-90 transition-opacity select-none"
+                className="flex items-center gap-2 cursor-pointer hover:opacity-95 transition-opacity select-none group"
                 onClick={() => handleTabButtonClick('Home')}
               >
+                <img 
+                  src="/zenivio-logo.png" 
+                  alt="Zenivio Logo" 
+                  className="w-8 h-8 sm:w-9 sm:h-9 object-contain rounded-xl shadow-xs group-hover:scale-105 transition-transform" 
+                />
                 <span 
-                  className="text-2xl sm:text-3xl font-black bg-gradient-to-r from-brand-500 to-brand-700 bg-clip-text text-transparent transform hover:scale-105 transition-all duration-300"
+                  className="text-2xl sm:text-3xl font-black bg-gradient-to-r from-brand-500 to-brand-700 bg-clip-text text-transparent transform transition-all duration-300"
                 >
                   Zenivio
                 </span>
               </div>
             </div>
 
-            {/* Right Side: Notification & Messenger Icons */}
-            <div className="flex items-center gap-1">
-              {/* Notification (Bell) Button - Placed before Messenger */}
+            {/* Center Section: Desktop Primary Navigation Tabs with Icon + Text */}
+            <div className="hidden lg:flex items-center justify-center gap-1.5 xl:gap-3 flex-1 max-w-xl xl:max-w-2xl mx-auto h-full px-2">
+              {/* Home Tab */}
+              <button
+                onClick={() => handleTabButtonClick('Home')}
+                className={`relative flex items-center gap-2 px-3.5 xl:px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                  activeTab === 'Home' 
+                    ? 'text-brand-600 dark:text-brand-400 bg-brand-50/80 dark:bg-brand-950/40 shadow-3xs' 
+                    : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:white hover:bg-slate-100 dark:hover:bg-slate-800'
+                }`}
+                title="Home Feed"
+              >
+                <Home className="w-5 h-5" strokeWidth={activeTab === 'Home' ? 2.5 : 2} fill={activeTab === 'Home' ? 'currentColor' : 'none'} />
+                <span>Home</span>
+                {activeTab === 'Home' && (
+                  <span className="absolute -bottom-1 left-3 right-3 h-0.5 bg-brand-600 dark:bg-brand-400 rounded-full" />
+                )}
+              </button>
+
+              {/* News Tab */}
+              <button
+                onClick={() => handleTabButtonClick('Updates')}
+                className={`relative flex items-center gap-2 px-3.5 xl:px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                  activeTab === 'Updates' 
+                    ? 'text-rose-600 dark:text-rose-400 bg-rose-50/80 dark:bg-rose-950/40 shadow-3xs' 
+                    : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800'
+                }`}
+                title="Latest News"
+              >
+                <Newspaper className="w-5 h-5" strokeWidth={activeTab === 'Updates' ? 2.5 : 2} fill={activeTab === 'Updates' ? 'currentColor' : 'none'} />
+                <span>News</span>
+                {activeTab === 'Updates' && (
+                  <span className="absolute -bottom-1 left-3 right-3 h-0.5 bg-rose-600 dark:bg-rose-400 rounded-full" />
+                )}
+              </button>
+
+              {/* Cart / Marketplace Tab */}
+              <button
+                onClick={() => handleTabButtonClick('Cart')}
+                className={`relative flex items-center gap-2 px-3.5 xl:px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                  activeTab === 'Cart' 
+                    ? 'text-emerald-600 dark:text-emerald-400 bg-emerald-50/80 dark:bg-emerald-950/40 shadow-3xs' 
+                    : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800'
+                }`}
+                title="Marketplace"
+              >
+                <ShoppingCart className="w-5 h-5" strokeWidth={activeTab === 'Cart' ? 2.5 : 2} fill={activeTab === 'Cart' ? 'currentColor' : 'none'} />
+                <span>Market</span>
+                {activeTab === 'Cart' && (
+                  <span className="absolute -bottom-1 left-3 right-3 h-0.5 bg-emerald-600 dark:bg-emerald-400 rounded-full" />
+                )}
+              </button>
+
+              {/* Earn Rewards Tab */}
+              <button
+                onClick={() => handleTabButtonClick('Earning')}
+                className={`relative flex items-center gap-2 px-3.5 xl:px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                  activeTab === 'Earning' 
+                    ? 'text-amber-600 dark:text-amber-400 bg-amber-50/80 dark:bg-amber-950/40 shadow-3xs' 
+                    : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800'
+                }`}
+                title="Earn Rewards"
+              >
+                <Coins className="w-5 h-5" strokeWidth={activeTab === 'Earning' ? 2.5 : 2} fill={activeTab === 'Earning' ? 'currentColor' : 'none'} />
+                <span>Earning</span>
+                {activeTab === 'Earning' && (
+                  <span className="absolute -bottom-1 left-3 right-3 h-0.5 bg-amber-600 dark:bg-amber-400 rounded-full" />
+                )}
+              </button>
+            </div>
+
+            {/* Right Side: Create, Notifications & Messenger Icons, Profile */}
+            <div className="flex items-center gap-1.5 sm:gap-2">
+              {/* Desktop Create Post Button */}
+              <button 
+                onClick={() => handleTabButtonClick('CreatePost')}
+                className="hidden lg:flex items-center gap-1.5 px-3.5 py-2 bg-gradient-to-r from-brand-600 to-indigo-600 hover:from-brand-500 hover:to-indigo-500 text-white rounded-full text-xs font-bold transition-all shadow-sm active:scale-95 cursor-pointer"
+                title="Create Post"
+              >
+                <Plus className="w-4 h-4" strokeWidth={2.5} />
+                <span>Create</span>
+              </button>
+
+              {/* Notification (Bell) Button */}
               <button 
                 onClick={() => handleTabButtonClick('Notification')}
-                className="relative p-2 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 hover:scale-105 active:scale-95 transition-all duration-300 flex items-center justify-center border border-transparent hover:border-slate-150/40 dark:hover:border-slate-750/30 cursor-pointer"
+                className="relative p-2 lg:p-2.5 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 lg:bg-slate-100 lg:dark:bg-slate-800 hover:scale-105 active:scale-95 transition-all duration-300 flex items-center justify-center cursor-pointer"
                 title="Notifications"
               >
                 <div className="relative">
-                  <Bell className="w-6.5 h-6.5 text-slate-700 dark:text-slate-200" strokeWidth={2} />
+                  <Bell className="w-5.5 h-5.5 lg:w-5 lg:h-5 text-slate-700 dark:text-slate-200" strokeWidth={2} />
                   {unreadCount > 0 && (
                     <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-rose-500 rounded-full border-2 border-white dark:border-slate-900 animate-pulse" />
                   )}
@@ -561,27 +667,43 @@ const Navbar = ({
                   handleTabButtonClick('Messenger');
                   setUnreadMessagesCount(0);
                 }}
-                className="relative p-2 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 hover:scale-105 active:scale-95 transition-all duration-300 flex items-center justify-center border border-transparent hover:border-slate-150/40 dark:hover:border-slate-750/30 cursor-pointer"
+                className="relative p-2 lg:p-2.5 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 lg:bg-slate-100 lg:dark:bg-slate-800 hover:scale-105 active:scale-95 transition-all duration-300 flex items-center justify-center cursor-pointer"
                 title="Messenger Chat"
               >
                 <div className="relative">
-                  <MessageCircle className="w-6.5 h-6.5 text-slate-700 dark:text-slate-200 transform active:scale-90 transition-transform duration-300" strokeWidth={2} />
+                  <MessageCircle className="w-5.5 h-5.5 lg:w-5 lg:h-5 text-slate-700 dark:text-slate-200 transform active:scale-90 transition-transform duration-300" strokeWidth={2} />
                   {unreadMessagesCount > 0 ? (
-                    <span className="absolute -top-1.5 -right-2 min-w-[18px] h-[18px] bg-rose-500 text-white text-[10px] font-black rounded-full flex items-center justify-center px-1 shadow-md border-2 border-white dark:border-slate-900 animate-pulse">
+                    <span className="absolute -top-1.5 -right-2 min-w-[18px] h-[18px] bg-rose-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center px-1 shadow-md border-2 border-white dark:border-slate-900 animate-pulse">
                       {unreadMessagesCount > 99 ? '99+' : unreadMessagesCount}
                     </span>
                   ) : null}
                 </div>
               </button>
+
+              {/* Desktop User Profile Chip */}
+              <div 
+                onClick={handleOpenMyProfile}
+                className="hidden lg:flex items-center gap-2 p-1 pr-3 rounded-full bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 cursor-pointer transition-colors border border-slate-200/50 dark:border-slate-700/50"
+                title="My Profile"
+              >
+                <img 
+                  src={getAvatarUrl(currentUser)} 
+                  alt="Avatar" 
+                  className="w-7 h-7 rounded-full object-cover border border-white dark:border-slate-900"
+                />
+                <span className="text-xs font-bold text-slate-800 dark:text-slate-200 max-w-[90px] truncate">
+                  {currentUser?.name?.split(' ')[0] || 'Profile'}
+                </span>
+              </div>
             </div>
             
           </div>
         </nav>
       )}
 
-      {/* Sticky Flat Bottom Navigation (Pinned strictly to Viewport Window with Safe Area Clearance) */}
+      {/* Sticky Flat Bottom Navigation (Pinned strictly to Mobile & Tablet Viewport Window, Hidden on Desktop) */}
       {activeTab !== 'Video' && activeTab !== 'Messenger' && activeTab !== 'Support' && (
-        <div className="fixed bottom-0 left-0 right-0 mx-auto w-full max-w-xl bg-gradient-to-r from-indigo-50/95 via-purple-50/95 to-pink-50/95 dark:from-slate-900/95 dark:via-slate-950/95 dark:to-slate-900/95 backdrop-blur-md rounded-t-[24px] z-[9999] shadow-[0_-8px_30px_rgba(99,102,241,0.15)] min-h-[68px] pt-1.5 pb-[max(12px,env(safe-area-inset-bottom,12px))] px-3 flex items-center">
+        <div className="fixed bottom-0 left-0 right-0 mx-auto w-full max-w-xl md:max-w-2xl lg:hidden bg-gradient-to-r from-indigo-50/95 via-purple-50/95 to-pink-50/95 dark:from-slate-900/95 dark:via-slate-950/95 dark:to-slate-900/95 backdrop-blur-md rounded-t-[24px] z-[9999] shadow-[0_-8px_30px_rgba(99,102,241,0.15)] min-h-[68px] pt-1.5 pb-[max(12px,env(safe-area-inset-bottom,12px))] px-3 flex items-center">
         <div className="flex justify-around items-center w-full relative h-full">
           
           {/* Home Tab */}

@@ -1,13 +1,15 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Search, Send, Share2, Check, Loader2, X, Link } from 'lucide-react';
+import { Search, Send, Share2, Check, Loader2, X, Link, Repeat } from 'lucide-react';
 import { API_BASE } from '../config';
 import { Share } from '@capacitor/share';
 
-const ShareModal = ({ isOpen, onClose, shareUrl, title, text, showToast }) => {
+const ShareModal = ({ isOpen, onClose, shareUrl, title, text, showToast, post }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(false);
   const [sendingStates, setSendingStates] = useState({}); // { [userId]: 'idle' | 'sending' | 'sent' }
+  const [feedCaption, setFeedCaption] = useState('');
+  const [isSharingToFeed, setIsSharingToFeed] = useState(false);
 
   // Load default users (recent chats / followed friends)
   const loadDefaultUsers = useCallback(async () => {
@@ -74,10 +76,44 @@ const ShareModal = ({ isOpen, onClose, shareUrl, title, text, showToast }) => {
     if (isOpen) {
       setSearchQuery('');
       setSendingStates({});
+      setFeedCaption('');
     }
   }, [isOpen]);
 
   if (!isOpen) return null;
+
+  const handleShareToFeed = async () => {
+    if (!post?._id || isSharingToFeed) return;
+    setIsSharingToFeed(true);
+    try {
+      const token = localStorage.getItem('token');
+      const res = await fetch(`${API_BASE}/api/posts/${post._id}/share-to-feed`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ caption: feedCaption.trim() })
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        if (showToast) {
+          showToast('Shared to your feed! 🎉');
+        }
+        window.dispatchEvent(new CustomEvent('post_shared', { detail: data }));
+        onClose();
+      } else {
+        const err = await res.json();
+        alert(err.message || 'Failed to share post');
+      }
+    } catch (err) {
+      console.error('Error sharing post to feed:', err);
+      alert('Failed to share to feed. Please try again.');
+    } finally {
+      setIsSharingToFeed(false);
+    }
+  };
 
   const handleSendToUser = async (userId) => {
     setSendingStates(prev => ({ ...prev, [userId]: 'sending' }));
@@ -174,7 +210,9 @@ const ShareModal = ({ isOpen, onClose, shareUrl, title, text, showToast }) => {
       >
         {/* Header */}
         <div className="flex items-center justify-between px-5 py-4 border-b border-slate-100 dark:border-slate-800">
-          <h3 className="text-lg font-black text-slate-850 dark:text-slate-100">Send to Friends</h3>
+          <h3 className="text-lg font-black text-slate-850 dark:text-slate-100">
+            {post ? 'Share Post' : 'Send to Friends'}
+          </h3>
           <button 
             onClick={onClose}
             className="p-1 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-500 dark:text-slate-400 transition-colors"
@@ -183,16 +221,93 @@ const ShareModal = ({ isOpen, onClose, shareUrl, title, text, showToast }) => {
           </button>
         </div>
 
+        {/* Facebook-style Share to Feed / Timeline Card */}
+        {post && post._id && (
+          <div className="p-4 bg-purple-50/40 dark:bg-purple-950/20 border-b border-slate-100 dark:border-slate-800">
+            <div className="flex items-center gap-2 mb-2.5">
+              <div className="w-7 h-7 rounded-full bg-[#7C3AED]/10 text-[#7C3AED] flex items-center justify-center font-bold shrink-0">
+                <Repeat className="w-3.5 h-3.5" />
+              </div>
+              <div>
+                <h4 className="text-xs font-black text-slate-800 dark:text-slate-100 leading-tight">Share to Your Feed</h4>
+                <p className="text-[10px] text-slate-400 font-bold">Repost on your profile timeline</p>
+              </div>
+            </div>
+
+            <textarea
+              rows={2}
+              value={feedCaption}
+              onChange={(e) => setFeedCaption(e.target.value)}
+              placeholder="Say something about this post... (optional)"
+              className="w-full p-2.5 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs text-slate-800 dark:text-slate-100 outline-none focus:ring-2 focus:ring-[#7C3AED] placeholder-slate-400 resize-none font-medium mb-2"
+            />
+
+            {/* Mini preview */}
+            <div className="p-2 rounded-xl bg-white/90 dark:bg-slate-850 border border-slate-200/60 dark:border-slate-800 flex items-center justify-between gap-2.5 mb-2.5">
+              <div className="flex items-center gap-2 min-w-0">
+                <div className="w-6 h-6 rounded-full bg-slate-200 dark:bg-slate-700 overflow-hidden shrink-0">
+                  {(post.authorDetails?.profilePic || post.authorProfilePic) ? (
+                    <img 
+                      src={(post.authorDetails?.profilePic || post.authorProfilePic).startsWith('http') 
+                        ? (post.authorDetails?.profilePic || post.authorProfilePic) 
+                        : `${API_BASE}/api/image?file=${encodeURIComponent(post.authorDetails?.profilePic || post.authorProfilePic)}`} 
+                      className="w-full h-full object-cover" 
+                      alt="" 
+                    />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center text-[9px] font-black text-slate-500">
+                      {(post.authorDetails?.name || post.authorName || 'U').charAt(0)}
+                    </div>
+                  )}
+                </div>
+                <div className="min-w-0">
+                  <p className="text-[11px] font-black text-slate-800 dark:text-slate-200 truncate">
+                    {post.authorDetails?.name || post.authorName || 'Original Post'}
+                  </p>
+                  <p className="text-[10px] text-slate-400 truncate">
+                    {post.content || (post.image ? 'Photo' : 'Post')}
+                  </p>
+                </div>
+              </div>
+              {post.image && (
+                <img 
+                  src={post.image.startsWith('http') ? post.image : `${API_BASE}/api/image?file=${encodeURIComponent(post.image)}`} 
+                  alt="" 
+                  className="w-8 h-8 rounded-lg object-cover shrink-0 border border-slate-200 dark:border-slate-700" 
+                />
+              )}
+            </div>
+
+            <button
+              onClick={handleShareToFeed}
+              disabled={isSharingToFeed}
+              className="w-full py-2 px-3 rounded-xl bg-[#7C3AED] hover:bg-[#6D28D9] text-white font-black text-xs flex items-center justify-center gap-2 active:scale-98 transition-all shadow-md shadow-purple-500/20 disabled:opacity-50"
+            >
+              {isSharingToFeed ? (
+                <>
+                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                  <span>Sharing to Feed...</span>
+                </>
+              ) : (
+                <>
+                  <Repeat className="w-3.5 h-3.5" />
+                  <span>Share to Feed Now</span>
+                </>
+              )}
+            </button>
+          </div>
+        )}
+
         {/* Search */}
-        <div className="px-5 py-3 border-b border-slate-50/50 dark:border-slate-850">
+        <div className="px-5 py-2.5 border-b border-slate-50/50 dark:border-slate-850">
           <div className="relative">
-            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
+            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
             <input 
               type="text"
-              placeholder="Search users..."
+              placeholder="Send in direct message..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-11 pr-4 py-2.5 bg-slate-50 dark:bg-slate-850 text-slate-850 dark:text-slate-100 rounded-2xl text-sm border-0 focus:ring-2 focus:ring-indigo-500 placeholder-slate-400 transition-all font-semibold outline-none"
+              className="w-full pl-10 pr-4 py-2 bg-slate-50 dark:bg-slate-850 text-slate-850 dark:text-slate-100 rounded-xl text-xs border-0 focus:ring-2 focus:ring-[#7C3AED] placeholder-slate-400 transition-all font-semibold outline-none"
             />
           </div>
         </div>

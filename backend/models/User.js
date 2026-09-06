@@ -79,6 +79,12 @@ const UserSchema = new mongoose.Schema({
     bgGradient: { type: String, default: 'linear-gradient(135deg, #7C3AED 0%, #2563EB 100%)' },
     textColor: { type: String, default: '#ffffff' },
     fontStyle: { type: String, default: 'normal' },
+    music: {
+      title: { type: String, default: '' },
+      artist: { type: String, default: '' },
+      url: { type: String, default: '' },
+      coverUrl: { type: String, default: '' }
+    },
     createdAt: { type: Date, default: Date.now }
   }],
   highlights: [{
@@ -202,7 +208,7 @@ const UserSchema = new mongoose.Schema({
   },
   verificationBadge: {
     type: String,
-    enum: ['none', 'blue', 'golden'],
+    enum: ['none', 'blue', 'purple', 'golden'],
     default: 'none',
   },
   level: {
@@ -220,6 +226,28 @@ const UserSchema = new mongoose.Schema({
   emailVerificationExpiry: {
     type: Date,
     default: null,
+  },
+  // Phone Verification (Verify in 2 minutes)
+  verifiedPhone: {
+    type: String,
+    default: '',
+  },
+  isPhoneVerified: {
+    type: Boolean,
+    default: false,
+  },
+  phoneVerificationCode: {
+    type: String,
+    default: null,
+  },
+  phoneVerificationExpiry: {
+    type: Date,
+    default: null,
+  },
+  // Verified Account Status (Both Email & Phone verified)
+  isAccountVerified: {
+    type: Boolean,
+    default: false,
   },
   // Password Reset
   passwordResetToken: {

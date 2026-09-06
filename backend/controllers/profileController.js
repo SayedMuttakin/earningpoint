@@ -63,12 +63,17 @@ exports.updateProfile = async (req, res) => {
       user.profilePic = savedProfilePic;
 
       // Automatically generate a timeline post
+      const profileCaption = (req.body.profilePicCaption && req.body.profilePicCaption.trim()) 
+        ? req.body.profilePicCaption.trim() 
+        : 'updated their profile picture.';
+
       const newPost = new Post({
-        content: `updated their profile picture.`,
+        content: profileCaption,
         image: savedProfilePic,
         authorId: user._id,
         authorName: user.name || 'User',
-        isVerified: user.isEmailVerified || false
+        isVerified: user.isEmailVerified || false,
+        postType: 'profile_picture'
       });
       await newPost.save();
     }
@@ -81,12 +86,17 @@ exports.updateProfile = async (req, res) => {
       user.coverPic = savedCoverPic;
 
       // Automatically generate a timeline post
+      const coverCaption = (req.body.coverPicCaption && req.body.coverPicCaption.trim())
+        ? req.body.coverPicCaption.trim()
+        : 'updated their cover photo.';
+
       const newPost = new Post({
-        content: `updated their cover photo.`,
+        content: coverCaption,
         image: savedCoverPic,
         authorId: user._id,
         authorName: user.name || 'User',
-        isVerified: user.isEmailVerified || false
+        isVerified: user.isEmailVerified || false,
+        postType: 'cover_photo'
       });
       await newPost.save();
     }
@@ -318,10 +328,17 @@ exports.getPublicProfile = async (req, res) => {
     // Fetch user + posts in parallel with field projections for maximum performance
     const [user, posts] = await Promise.all([
       User.findById(targetUserId)
-        .select('name username referralCode phoneOrEmail profilePic coverPic googleAvatar facebookAvatar isEmailVerified verificationBadge followers following bio location website highlights dob gender dobPrivacy genderPrivacy')
+        .select('name username referralCode phoneOrEmail profilePic coverPic googleAvatar facebookAvatar isEmailVerified verificationBadge isPhoneVerified isAccountVerified verifiedPhone verifiedEmail followers following bio location website highlights dob gender dobPrivacy genderPrivacy')
         .lean(),
       Post.find({ authorId: targetUserId })
-        .select('_id content title image video createdAt likes comments')
+        .select('_id content title image video createdAt likes comments sharedPostId shareCount postType')
+        .populate({
+          path: 'sharedPostId',
+          populate: {
+            path: 'authorId',
+            select: 'name profilePic googleAvatar facebookAvatar isEmailVerified verificationBadge'
+          }
+        })
         .sort({ createdAt: -1 })
         .limit(40)  // Paginate — load first 40 posts only
         .lean()
@@ -355,6 +372,10 @@ exports.getPublicProfile = async (req, res) => {
         googleAvatar: user.googleAvatar,
         facebookAvatar: user.facebookAvatar,
         isEmailVerified: user.isEmailVerified,
+        isPhoneVerified: Boolean(user.isPhoneVerified),
+        isAccountVerified: Boolean(user.isAccountVerified || (user.isEmailVerified && user.isPhoneVerified)),
+        verifiedPhone: user.verifiedPhone || '',
+        verifiedEmail: user.verifiedEmail || '',
         verificationBadge: user.verificationBadge || 'none',
         followersCount: user.followers ? user.followers.length : 0,
         followingCount: user.following ? user.following.length : 0,
@@ -408,6 +429,9 @@ exports.getPublicProfile = async (req, res) => {
           isEmailVerified: user.isEmailVerified,
           verificationBadge: user.verificationBadge || 'none'
         },
+        sharedPostId: p.sharedPostId || null,
+        shareCount: p.shareCount || 0,
+        postType: p.postType || 'standard',
         isLiked: (p.likes || []).some(id => id.toString() === currentUserId.toString())
       }))
     });

@@ -290,6 +290,16 @@ exports.addStory = async (req, res) => {
       return res.status(400).json({ message: 'Maximum 10 stories allowed at once' });
     }
 
+    // Parse music if provided
+    let parsedMusic = null;
+    if (req.body.music) {
+      try {
+        parsedMusic = typeof req.body.music === 'string' ? JSON.parse(req.body.music) : req.body.music;
+      } catch (e) {
+        parsedMusic = null;
+      }
+    }
+
     // Push new story
     user.stories.push({
       text: text || '',
@@ -298,6 +308,7 @@ exports.addStory = async (req, res) => {
       bgGradient: bgGradient || 'linear-gradient(135deg, #7C3AED 0%, #2563EB 100%)',
       textColor: textColor || '#ffffff',
       fontStyle: fontStyle || 'normal',
+      music: parsedMusic || null,
       createdAt: new Date()
     });
     await user.save();

@@ -16,7 +16,9 @@ import { Capacitor } from '@capacitor/core';
 import { LocalNotifications } from '@capacitor/local-notifications';
 import { AdMobService } from './utils/admob';
 import AppUpdateModal from './components/AppUpdateModal';
-import { playNotificationSound, triggerSystemNotification, triggerMessageNotification } from './utils/sound';
+import DesktopSidebarLeft from './components/DesktopSidebarLeft';
+import DesktopSidebarRight from './components/DesktopSidebarRight';
+import { playNotificationSound, triggerSystemNotification, triggerMessageNotification, requestNotificationPermissions } from './utils/sound';
 
 // Lazy load other sub-pages/components to split bundle size and make initial load super fast
 const CartPage = lazy(() => import('./components/CartPage'));
@@ -199,8 +201,10 @@ function App() {
   const activeChatPartnerRef = React.useRef(activeChatPartner);
   activeChatPartnerRef.current = activeChatPartner;
 
-  // Listen for native notification clicks from phone status bar
+  // Listen for native notification clicks from phone status bar & proactively request permissions
   useEffect(() => {
+    requestNotificationPermissions();
+
     let actionSub = null;
     if (Capacitor.isNativePlatform()) {
       LocalNotifications.addListener('localNotificationActionPerformed', (notification) => {
@@ -313,11 +317,20 @@ function App() {
       });
 
       newSocket.on('receive_message', (data) => {
-        triggerSystemNotification(
-          data?.senderName ? `Message from ${data.senderName}` : 'New Message',
-          data?.text || 'Sent you a message',
-          data
-        );
+        const curTab = activeTabRef.current;
+        const curPartner = activeChatPartnerRef.current;
+        const curPartnerId = curPartner?._id ? curPartner._id.toString() : '';
+        const msgSenderId = data?.senderId ? data.senderId.toString() : '';
+        const isCurrentlyInChat = curTab === 'Messenger' && msgSenderId && curPartnerId === msgSenderId;
+
+        if (!isCurrentlyInChat) {
+          triggerMessageNotification(
+            data?.senderName || 'New Message',
+            data?.text || 'Sent you a message',
+            data
+          );
+          window.dispatchEvent(new CustomEvent('new_unread_message', { detail: data }));
+        }
       });
 
       newSocket.on('online_users', (usersList) => {
@@ -569,8 +582,8 @@ function App() {
 
   if (isAuthenticated) {
     return (
-      <div className="fixed inset-0 h-[100dvh] w-full bg-gradient-to-br from-slate-200 via-indigo-50/40 to-slate-200 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950 flex flex-col items-center justify-between overflow-hidden">
-        <div className="relative w-full max-w-xl h-full flex flex-col bg-white dark:bg-slate-950 shadow-2xl overflow-hidden border-x border-slate-200/50 dark:border-slate-800/50">
+      <div className="fixed inset-0 h-[100dvh] w-full bg-slate-100 dark:bg-slate-950 flex flex-col items-center justify-between overflow-hidden">
+        <div className="relative w-full h-full flex flex-col bg-white dark:bg-slate-950 overflow-hidden">
           
           {/* Global Facebook-style Animated Post Upload Banner */}
           {postUploadState && (
@@ -622,6 +635,7 @@ function App() {
             onToggleDarkMode={handleToggleDarkMode}
             navigateToSettingsSubMenu={navigateToSettingsSubMenu}
           />
+
           {/* MessengerPage is always mounted outside main to overlay top/bottom navbars when active */}
           <div className={activeTab === 'Messenger' ? 'absolute inset-0 z-[9999] bg-white dark:bg-slate-950 flex flex-col overflow-hidden' : 'hidden'}>
             <Suspense fallback={<PageLoader />}>
@@ -642,12 +656,14 @@ function App() {
               />
             </Suspense>
           </div>
+
           {/* SupportPage is mounted outside main for full screen chat view with back button and bottom input field */}
           <div className={activeTab === 'Support' ? 'absolute inset-0 z-[9999] bg-white dark:bg-slate-950 flex flex-col overflow-hidden' : 'hidden'}>
             <Suspense fallback={<PageLoader />}>
               <SupportPage onBack={() => handleBackNavigation()} />
             </Suspense>
           </div>
+
           {/* VideoReelsPage is rendered outside main for full screen immersive view with back button */}
           <div className={activeTab === 'Video' ? 'absolute inset-0 z-[9999] bg-black flex flex-col overflow-hidden' : 'hidden'}>
             <Suspense fallback={<PageLoader />}>
@@ -655,138 +671,164 @@ function App() {
             </Suspense>
           </div>
 
-          <main className="flex-1 overflow-y-auto overflow-x-hidden pt-[calc(3.5rem+max(4px,env(safe-area-inset-top,4px)))] pb-[calc(76px+max(14px,env(safe-area-inset-bottom,14px)))] relative no-scrollbar">
-            <Suspense fallback={<PageLoader />}>
-          {/* HomePage is always mounted but hidden when not active — prevents re-fetching on every tab switch */}
-          <div style={{ display: activeTab === 'Home' ? 'block' : 'none' }}>
-            <HomePage 
-              onBuyNow={handleBuyNow} 
-              setActiveTab={setActiveTab} 
-              setSelectedNewsId={setSelectedNewsId}
-              setActiveChatPartner={setActiveChatPartner}
-              setSelectedReelId={setSelectedReelId}
-              highlightedPostId={selectedNotificationPostId}
-              setHighlightedPostId={setSelectedNotificationPostId}
-              setPostToEdit={setPostToEdit}
-              onUserClick={(uid) => {
-                setActivePublicProfileUserId(uid);
-                setActiveTab('PublicProfile');
-              }}
-            />
+          {/* Main Responsive Body Container (3-Column on Desktop, 1-Column on Mobile & Tablet) */}
+          <div className="flex-1 w-full overflow-y-auto overflow-x-hidden pt-[calc(3.5rem+max(4px,env(safe-area-inset-top,4px)))] lg:pt-[calc(4.5rem+max(4px,env(safe-area-inset-top,4px)))] pb-[calc(76px+max(14px,env(safe-area-inset-bottom,14px)))] lg:pb-8 relative no-scrollbar">
+            <div className="w-full max-w-7xl xl:max-w-[1360px] 2xl:max-w-[1440px] mx-auto px-4 lg:px-6 flex justify-between gap-6">
+              
+              {/* Desktop Left Sidebar (Facebook Style) */}
+              <DesktopSidebarLeft 
+                currentUser={currentUser}
+                activeTab={activeTab}
+                setActiveTab={setActiveTab}
+                onLogout={handleLogout}
+                darkMode={darkMode}
+                onToggleDarkMode={handleToggleDarkMode}
+                navigateToSettingsSubMenu={navigateToSettingsSubMenu}
+              />
+
+              {/* Center Feed / Active Page Column */}
+              <main className="w-full max-w-xl md:max-w-2xl min-h-[calc(100vh-120px)] flex-shrink-0">
+                <Suspense fallback={<PageLoader />}>
+                  {/* HomePage is always mounted but hidden when not active — prevents re-fetching on every tab switch */}
+                  <div style={{ display: activeTab === 'Home' ? 'block' : 'none' }}>
+                    <HomePage 
+                      onBuyNow={handleBuyNow} 
+                      setActiveTab={setActiveTab} 
+                      setSelectedNewsId={setSelectedNewsId}
+                      setActiveChatPartner={setActiveChatPartner}
+                      setSelectedReelId={setSelectedReelId}
+                      highlightedPostId={selectedNotificationPostId}
+                      setHighlightedPostId={setSelectedNotificationPostId}
+                      setPostToEdit={setPostToEdit}
+                      onUserClick={(uid) => {
+                        setActivePublicProfileUserId(uid);
+                        setActiveTab('PublicProfile');
+                      }}
+                    />
+                  </div>
+
+                  {activeTab === 'CreatePost' && (
+                    <CreatePostPage currentUser={currentUser} onBack={() => handleBackNavigation()} setActiveTab={setActiveTab} postToEdit={postToEdit} setPostUploadState={setPostUploadState} />
+                  )}
+                  {activeTab === 'Cart' && <CartPage onBuyNow={handleBuyNow} />}
+                  {activeTab === 'Checkout' && <CheckoutPage product={selectedProduct} onBack={() => handleBackNavigation()} onSuccess={(method) => { setSelectedPaymentMethod(method); setActiveTab('PaymentSuccess'); }} />}
+                  {activeTab === 'Notification' && (
+                    <NotificationPage 
+                      onBack={() => handleBackNavigation()} 
+                      setActiveTab={setActiveTab}
+                      setSelectedNotificationPostId={setSelectedNotificationPostId}
+                      setActivePublicProfileUserId={setActivePublicProfileUserId}
+                    />
+                  )}
+                  {activeTab === 'PublicProfile' && (
+                    <PublicProfilePage 
+                      userId={activePublicProfileUserId}
+                      currentUser={currentUser}
+                      onBack={() => handleBackNavigation()}
+                      setActiveTab={setActiveTab}
+                      setSelectedReelId={setSelectedReelId}
+                      setActiveChatPartner={setActiveChatPartner}
+                      onlineUsers={onlineUsers}
+                      socket={socket}
+                      onUserClick={(uid) => {
+                        setActivePublicProfileUserId(uid);
+                        setActiveTab('PublicProfile');
+                      }}
+                    />
+                  )}
+                  {activeTab === 'MyProfile' && (
+                    <PublicProfilePage 
+                      userId="me"
+                      currentUser={currentUser}
+                      isOwnProfile={true}
+                      onBack={() => handleBackNavigation()}
+                      setActiveTab={setActiveTab}
+                      setSelectedReelId={setSelectedReelId}
+                      setActiveChatPartner={setActiveChatPartner}
+                      onlineUsers={onlineUsers}
+                      socket={socket}
+                      onUserClick={(uid) => {
+                        setActivePublicProfileUserId(uid);
+                        setActiveTab('PublicProfile');
+                      }}
+                    />
+                  )}
+                  {activeTab === 'PaymentSuccess' && <PaymentSuccess paymentMethod={selectedPaymentMethod} onBack={() => showBackAd(() => handleBackNavigation())} />}
+                  {activeTab === 'EditProfile' && (
+                    <PublicProfilePage 
+                      userId="me"
+                      currentUser={currentUser}
+                      isOwnProfile={true}
+                      startEditing={true}
+                      onBack={() => handleBackNavigation()}
+                      setActiveTab={setActiveTab}
+                      setSelectedReelId={setSelectedReelId}
+                      setActiveChatPartner={setActiveChatPartner}
+                      onlineUsers={onlineUsers}
+                      socket={socket}
+                      onUserClick={(uid) => {
+                        setActivePublicProfileUserId(uid);
+                        setActiveTab('PublicProfile');
+                      }}
+                    />
+                  )}
+                  {activeTab === 'Verify' && <VerificationPage onBack={() => showBackAd(() => handleBackNavigation())} />}
+                  {activeTab === 'Language' && <LanguagePage onBack={() => showBackAd(() => handleBackNavigation())} />}
+                  {activeTab === 'ChangePassword' && <ChangePasswordPage onBack={() => showBackAd(() => handleBackNavigation())} />}
+                  {activeTab === 'Referrals' && <ReferralsPage onBack={() => showBackAd(() => handleBackNavigation())} />}
+                  {activeTab === 'Leaderboard' && <LeaderboardPage onBack={() => showBackAd(() => handleBackNavigation())} />}
+                  {activeTab === 'TransactionHistory' && <TransactionHistoryPage onBack={() => showBackAd(() => handleBackNavigation())} />}
+                  {activeTab === 'TermsPrivacy' && (
+                    <TermsPrivacyPage 
+                      onBack={() => showBackAd(() => handleBackNavigation())} 
+                      initialTab={termsPrivacyInitialTab}
+                      darkMode={darkMode}
+                      onToggleDarkMode={handleToggleDarkMode}
+                    />
+                  )}
+                  {activeTab === 'DeleteAccount' && <DeleteAccountPage onBack={() => showBackAd(() => handleBackNavigation())} onLogout={handleLogout} />}
+                  {activeTab === 'Earning' && <EarningPage onReferralsClick={() => setActiveTab('Referrals')} setActiveTab={setActiveTab} />}
+                  
+                  {activeTab === 'Setting' && (
+                    <SettingsPage 
+                      darkMode={darkMode} 
+                      onToggleDarkMode={handleToggleDarkMode} 
+                      onLogout={handleLogout}
+                      onBack={() => handleBackNavigation()}
+                      onPasswordClick={() => setActiveTab('ChangePassword')}
+                      onLanguageClick={() => setActiveTab('Language')}
+                      onTermsClick={() => setActiveTab('TermsPrivacy')}
+                      onDeleteClick={() => setActiveTab('DeleteAccount')}
+                      onNotificationClick={() => setActiveTab('Notification')}
+                      onSupportClick={() => setActiveTab('Support')}
+                      onVerifyClick={() => setActiveTab('Verify')}
+                      initialSubMenuKey={initialSettingsSubMenu}
+                      onCloseSubMenu={() => setInitialSettingsSubMenu(null)}
+                    />
+                  )}
+                  
+                  {activeTab === 'Updates' && (
+                    <UpdatesPage 
+                      onBack={() => {
+                        setSelectedNewsId(null);
+                        handleBackNavigation();
+                      }} 
+                      selectedPostId={selectedNewsId}
+                      setSelectedPostId={setSelectedNewsId}
+                    />
+                  )}
+                </Suspense>
+              </main>
+
+              {/* Desktop Right Sidebar (Facebook Style) */}
+              <DesktopSidebarRight 
+                currentUser={currentUser}
+                setActiveTab={setActiveTab}
+                setSelectedNewsId={setSelectedNewsId}
+              />
+            </div>
           </div>
 
-          {activeTab === 'CreatePost' && (
-            <CreatePostPage currentUser={currentUser} onBack={() => handleBackNavigation()} setActiveTab={setActiveTab} postToEdit={postToEdit} setPostUploadState={setPostUploadState} />
-          )}
-          {activeTab === 'Cart' && <CartPage onBuyNow={handleBuyNow} />}
-          {activeTab === 'Checkout' && <CheckoutPage product={selectedProduct} onBack={() => handleBackNavigation()} onSuccess={(method) => { setSelectedPaymentMethod(method); setActiveTab('PaymentSuccess'); }} />}
-          {activeTab === 'Notification' && (
-            <NotificationPage 
-              onBack={() => handleBackNavigation()} 
-              setActiveTab={setActiveTab}
-              setSelectedNotificationPostId={setSelectedNotificationPostId}
-              setActivePublicProfileUserId={setActivePublicProfileUserId}
-            />
-          )}
-          {activeTab === 'PublicProfile' && (
-            <PublicProfilePage 
-              userId={activePublicProfileUserId}
-              currentUser={currentUser}
-              onBack={() => handleBackNavigation()}
-              setActiveTab={setActiveTab}
-              setSelectedReelId={setSelectedReelId}
-              setActiveChatPartner={setActiveChatPartner}
-              onlineUsers={onlineUsers}
-              socket={socket}
-              onUserClick={(uid) => {
-                setActivePublicProfileUserId(uid);
-                setActiveTab('PublicProfile');
-              }}
-            />
-          )}
-          {activeTab === 'MyProfile' && (
-            <PublicProfilePage 
-              userId="me"
-              currentUser={currentUser}
-              isOwnProfile={true}
-              onBack={() => handleBackNavigation()}
-              setActiveTab={setActiveTab}
-              setSelectedReelId={setSelectedReelId}
-              setActiveChatPartner={setActiveChatPartner}
-              onlineUsers={onlineUsers}
-              socket={socket}
-              onUserClick={(uid) => {
-                setActivePublicProfileUserId(uid);
-                setActiveTab('PublicProfile');
-              }}
-            />
-          )}
-          {activeTab === 'PaymentSuccess' && <PaymentSuccess paymentMethod={selectedPaymentMethod} onBack={() => showBackAd(() => handleBackNavigation())} />}
-          {activeTab === 'EditProfile' && (
-            <PublicProfilePage 
-              userId="me"
-              currentUser={currentUser}
-              isOwnProfile={true}
-              startEditing={true}
-              onBack={() => handleBackNavigation()}
-              setActiveTab={setActiveTab}
-              setSelectedReelId={setSelectedReelId}
-              setActiveChatPartner={setActiveChatPartner}
-              onlineUsers={onlineUsers}
-              socket={socket}
-              onUserClick={(uid) => {
-                setActivePublicProfileUserId(uid);
-                setActiveTab('PublicProfile');
-              }}
-            />
-          )}
-          {activeTab === 'Verify' && <VerificationPage onBack={() => showBackAd(() => handleBackNavigation())} />}
-          {activeTab === 'Language' && <LanguagePage onBack={() => showBackAd(() => handleBackNavigation())} />}
-          {activeTab === 'ChangePassword' && <ChangePasswordPage onBack={() => showBackAd(() => handleBackNavigation())} />}
-          {activeTab === 'Referrals' && <ReferralsPage onBack={() => showBackAd(() => handleBackNavigation())} />}
-          {activeTab === 'Leaderboard' && <LeaderboardPage onBack={() => showBackAd(() => handleBackNavigation())} />}
-          {activeTab === 'TransactionHistory' && <TransactionHistoryPage onBack={() => showBackAd(() => handleBackNavigation())} />}
-          {activeTab === 'TermsPrivacy' && (
-            <TermsPrivacyPage 
-              onBack={() => showBackAd(() => handleBackNavigation())} 
-              initialTab={termsPrivacyInitialTab}
-              darkMode={darkMode}
-              onToggleDarkMode={handleToggleDarkMode}
-            />
-          )}
-          {activeTab === 'DeleteAccount' && <DeleteAccountPage onBack={() => showBackAd(() => handleBackNavigation())} onLogout={handleLogout} />}
-          {activeTab === 'Earning' && <EarningPage onReferralsClick={() => setActiveTab('Referrals')} setActiveTab={setActiveTab} />}
-          
-          {activeTab === 'Setting' && (
-            <SettingsPage 
-              darkMode={darkMode} 
-              onToggleDarkMode={handleToggleDarkMode} 
-              onLogout={handleLogout}
-              onBack={() => handleBackNavigation()}
-              onPasswordClick={() => setActiveTab('ChangePassword')}
-              onLanguageClick={() => setActiveTab('Language')}
-              onTermsClick={() => setActiveTab('TermsPrivacy')}
-              onDeleteClick={() => setActiveTab('DeleteAccount')}
-              onNotificationClick={() => setActiveTab('Notification')}
-              onSupportClick={() => setActiveTab('Support')}
-              onVerifyClick={() => setActiveTab('Verify')}
-              initialSubMenuKey={initialSettingsSubMenu}
-              onCloseSubMenu={() => setInitialSettingsSubMenu(null)}
-            />
-          )}
-          
-          {activeTab === 'Updates' && (
-            <UpdatesPage 
-              onBack={() => {
-                setSelectedNewsId(null);
-                handleBackNavigation();
-              }} 
-              selectedPostId={selectedNewsId}
-              setSelectedPostId={setSelectedNewsId}
-            />
-          )}
-        </Suspense>
-          </main>
           {/* In-App Update Prompt Modal */}
           {showUpdateModal && (
             <AppUpdateModal 
