@@ -2457,7 +2457,7 @@ const MessengerPage = ({
             </div>
 
             {/* Bottom Input form panel */}
-            <div className="bg-white dark:bg-slate-950 border-t border-slate-200/60 dark:border-slate-900 p-3 shrink-0 pb-safe pb-4 relative">
+            <div className="bg-white dark:bg-slate-950 border-t border-slate-200/60 dark:border-slate-900 px-2 sm:px-3 py-2 sm:py-2.5 shrink-0 pb-safe pb-3 sm:pb-4 relative w-full overflow-hidden">
               {/* Custom Emoji Picker Popover */}
               {showEmojiPicker && (
                 <div 
@@ -2488,7 +2488,7 @@ const MessengerPage = ({
 
               {/* Replying Preview Banner */}
               {replyingTo && (
-                <div className="max-w-4xl mx-auto mb-2 flex items-center justify-between bg-purple-50 dark:bg-slate-900 border-l-4 border-[#7C3AED] px-3.5 py-2 rounded-r-2xl shadow-xs animate-fade-in select-none">
+                <div className="w-full max-w-4xl mx-auto mb-2 flex items-center justify-between bg-purple-50 dark:bg-slate-900 border-l-4 border-[#7C3AED] px-3.5 py-2 rounded-r-2xl shadow-xs animate-fade-in select-none">
                   <div className="min-w-0 flex-1 flex items-center gap-2">
                     <CornerUpLeft className="w-4 h-4 text-[#7C3AED] flex-shrink-0" />
                     <div className="min-w-0 flex-1">
@@ -2501,9 +2501,9 @@ const MessengerPage = ({
                     </div>
                   </div>
                   <button 
-                    type="button"
+                    type="button" 
                     onClick={() => setReplyingTo(null)}
-                    className="p-1 hover:bg-purple-100 dark:hover:bg-slate-800 rounded-full text-slate-400 hover:text-slate-600 transition-colors ml-2"
+                    className="p-1 hover:bg-purple-100 dark:hover:bg-slate-800 rounded-full text-slate-400 hover:text-slate-600 transition-colors ml-2 cursor-pointer"
                   >
                     <X className="w-4 h-4" />
                   </button>
@@ -2512,7 +2512,7 @@ const MessengerPage = ({
 
               {/* Editing Preview Banner */}
               {editingMessage && (
-                <div className="max-w-4xl mx-auto mb-2 flex items-center justify-between bg-amber-50 dark:bg-amber-950/30 border-l-4 border-amber-500 px-3.5 py-2 rounded-r-2xl shadow-xs animate-fade-in select-none">
+                <div className="w-full max-w-4xl mx-auto mb-2 flex items-center justify-between bg-amber-50 dark:bg-amber-950/30 border-l-4 border-amber-500 px-3.5 py-2 rounded-r-2xl shadow-xs animate-fade-in select-none">
                   <div className="min-w-0 flex-1 flex items-center gap-2">
                     <Edit3 className="w-4 h-4 text-amber-600 dark:text-amber-400 flex-shrink-0" />
                     <div className="min-w-0 flex-1">
@@ -2530,28 +2530,28 @@ const MessengerPage = ({
                       setEditingMessage(null);
                       setMessageInput('');
                     }}
-                    className="p-1 hover:bg-amber-100 dark:hover:bg-slate-800 rounded-full text-slate-400 hover:text-slate-600 transition-colors ml-2"
+                    className="p-1 hover:bg-amber-100 dark:hover:bg-slate-800 rounded-full text-slate-400 hover:text-slate-600 transition-colors ml-2 cursor-pointer"
                   >
                     <X className="w-4 h-4" />
                   </button>
                 </div>
               )}
 
-              <form onSubmit={handleSendMessage} className="flex items-center gap-2 max-w-4xl mx-auto">
+              <form onSubmit={handleSendMessage} className="flex items-center gap-1.5 sm:gap-2 w-full max-w-4xl mx-auto">
                 {isRecording ? (
                   // Recording UI
-                  <div className="flex-1 flex items-center justify-between bg-red-550/10 dark:bg-red-950/20 border border-red-200/50 dark:border-red-900/30 rounded-full px-4 py-2 transition-all duration-200">
-                    <div className="flex items-center gap-2">
-                      <span className="w-2.5 h-2.5 rounded-full bg-red-500 animate-pulse" />
-                      <span className="text-red-500 dark:text-red-400 text-sm font-black tracking-wider">
-                        Recording Voice: {formatRecordTime(recordingDuration)}
+                  <div className="flex-1 min-w-0 flex items-center justify-between bg-red-550/10 dark:bg-red-950/20 border border-red-200/50 dark:border-red-900/30 rounded-full px-3.5 py-1.5 transition-all duration-200">
+                    <div className="flex items-center gap-2 min-w-0">
+                      <span className="w-2.5 h-2.5 rounded-full bg-red-500 animate-pulse shrink-0" />
+                      <span className="text-red-500 dark:text-red-400 text-xs sm:text-sm font-black tracking-wider truncate">
+                        Recording: {formatRecordTime(recordingDuration)}
                       </span>
                     </div>
-                    <div className="flex items-center gap-1">
+                    <div className="flex items-center gap-1 shrink-0">
                       <button 
                         type="button" 
                         onClick={() => stopVoiceRecording(false)}
-                        className="p-2 text-rose-500 hover:bg-rose-100 dark:hover:bg-rose-900/50 rounded-full transition-colors active:scale-95" 
+                        className="p-1.5 sm:p-2 text-rose-500 hover:bg-rose-100 dark:hover:bg-rose-900/50 rounded-full transition-colors active:scale-95 cursor-pointer" 
                         title="Cancel Recording"
                       >
                         <X className="w-5 h-5" />
@@ -2559,7 +2559,7 @@ const MessengerPage = ({
                       <button 
                         type="button" 
                         onClick={() => stopVoiceRecording(true)}
-                        className="p-2 text-emerald-500 hover:bg-emerald-100 dark:hover:bg-emerald-900/50 rounded-full transition-colors active:scale-95" 
+                        className="p-1.5 sm:p-2 text-emerald-500 hover:bg-emerald-100 dark:hover:bg-emerald-900/50 rounded-full transition-colors active:scale-95 cursor-pointer" 
                         title="Send Voice Note"
                       >
                         <Send className="w-5 h-5" />
@@ -2569,12 +2569,12 @@ const MessengerPage = ({
                 ) : (
                   // Normal input UI
                   <>
-                    <div className="flex items-center gap-1 text-slate-400 dark:text-slate-500">
+                    <div className="flex items-center gap-0.5 sm:gap-1 text-slate-400 dark:text-slate-500 shrink-0">
                       <button 
                         type="button" 
                         onClick={() => imageInputRef.current?.click()}
                         disabled={isUploadingImage}
-                        className={`p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-900 hover:text-indigo-650 active:scale-95 transition-all ${isUploadingImage ? 'opacity-50 cursor-not-allowed' : ''}`} 
+                        className={`p-1.5 sm:p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-900 hover:text-indigo-600 active:scale-95 transition-all cursor-pointer ${isUploadingImage ? 'opacity-50 cursor-not-allowed' : ''}`} 
                         title="Share Image"
                       >
                         {isUploadingImage ? (
@@ -2586,36 +2586,37 @@ const MessengerPage = ({
                       <button 
                         type="button" 
                         onClick={startVoiceRecording}
-                        className="p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-900 hover:text-indigo-650 active:scale-95 transition-all" 
+                        className="p-1.5 sm:p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-900 hover:text-indigo-600 active:scale-95 transition-all cursor-pointer" 
                         title="Record Voice"
                       >
                         <Mic className="w-5 h-5" />
                       </button>
                     </div>
 
-                    <div className="flex-1 flex items-center bg-slate-100 dark:bg-slate-900 rounded-full px-4 py-0.5 border border-transparent focus-within:bg-white dark:focus-within:bg-slate-950 focus-within:border-slate-200 dark:focus-within:border-slate-800 transition-all duration-200 shadow-inner">
+                    <div className="flex-1 min-w-0 flex items-center bg-slate-100 dark:bg-slate-900 rounded-full pl-3.5 sm:pl-4 pr-1.5 sm:pr-2 py-0.5 border border-transparent focus-within:bg-white dark:focus-within:bg-slate-950 focus-within:border-slate-200 dark:focus-within:border-slate-800 transition-all duration-200 shadow-inner">
                       <input
                         type="text"
                         value={messageInput}
                         onChange={handleInputChange}
                         placeholder="Type a message..."
-                        className="flex-1 bg-transparent border-none py-2.5 text-slate-800 dark:text-white placeholder-slate-400 focus:ring-0 outline-none text-[15px] font-medium"
+                        className="flex-1 min-w-0 w-full bg-transparent border-none py-2 sm:py-2.5 text-slate-800 dark:text-white placeholder-slate-400 focus:ring-0 outline-none text-sm sm:text-[15px] font-medium"
                       />
                       <button 
                         type="button" 
                         ref={emojiButtonRef}
                         onClick={() => setShowEmojiPicker(!showEmojiPicker)}
-                        className={`p-1.5 transition-colors ${showEmojiPicker ? 'text-[#7C3AED]' : 'text-slate-400 dark:text-slate-500 hover:text-[#7C3AED]'}`} 
+                        className={`p-1.5 transition-colors shrink-0 cursor-pointer ${showEmojiPicker ? 'text-[#7C3AED]' : 'text-slate-400 dark:text-slate-500 hover:text-[#7C3AED]'}`} 
                         title="Emojis"
                       >
-                        <Smile className="w-5.5 h-5.5" />
+                        <Smile className="w-5 h-5 sm:w-5.5 sm:h-5.5" />
                       </button>
                     </div>
 
                     {messageInput.trim() ? (
                       <button
                         type="submit"
-                        className="w-10 h-10 bg-[#7C3AED] hover:bg-[#6D28D9] active:scale-95 text-white rounded-full flex items-center justify-center shrink-0 transition-all shadow-sm"
+                        className="w-9.5 h-9.5 sm:w-10 sm:h-10 bg-[#7C3AED] hover:bg-[#6D28D9] active:scale-95 text-white rounded-full flex items-center justify-center shrink-0 transition-all shadow-sm cursor-pointer"
+                        title="Send Message"
                       >
                         <Send className="w-4.5 h-4.5" />
                       </button>
@@ -2623,7 +2624,7 @@ const MessengerPage = ({
                       <button
                         type="button"
                         onClick={handleSendThumbsUp}
-                        className="w-10 h-10 hover:bg-slate-100 dark:hover:bg-slate-900 text-[#7C3AED] active:scale-90 rounded-full flex items-center justify-center shrink-0 transition-all"
+                        className="w-9.5 h-9.5 sm:w-10 sm:h-10 hover:bg-slate-100 dark:hover:bg-slate-900 text-[#7C3AED] active:scale-90 rounded-full flex items-center justify-center shrink-0 transition-all cursor-pointer"
                         title="Send Like"
                       >
                         <ThumbsUp className="w-5 h-5 fill-[#7C3AED]" />

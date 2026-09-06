@@ -296,30 +296,30 @@ const SupportPage = ({ onBack }) => {
       </div>
 
       {/* Chat Input Area at bottom */}
-      <div className="shrink-0 bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 p-3 pb-[max(12px,env(safe-area-inset-bottom))] shadow-lg">
-        <form onSubmit={handleSendMessage} className="flex items-center gap-2 max-w-4xl mx-auto">
+      <div className="shrink-0 bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 px-2 sm:px-3 py-2 sm:py-2.5 pb-[max(12px,env(safe-area-inset-bottom))] shadow-lg w-full overflow-hidden">
+        <form onSubmit={handleSendMessage} className="flex items-center gap-1.5 sm:gap-2 w-full max-w-4xl mx-auto">
           {/* Decorative Icons */}
-          <div className="flex items-center gap-1 text-slate-400 dark:text-slate-500">
-            <button type="button" className="p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-indigo-600 active:scale-95 transition-all" title="Share Photo">
+          <div className="flex items-center gap-0.5 sm:gap-1 text-slate-400 dark:text-slate-500 shrink-0">
+            <button type="button" className="p-1.5 sm:p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-indigo-600 active:scale-95 transition-all cursor-pointer" title="Share Photo">
               <Image className="w-5 h-5" />
             </button>
-            <button type="button" className="p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-indigo-600 active:scale-95 transition-all" title="Record Voice">
+            <button type="button" className="p-1.5 sm:p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-indigo-600 active:scale-95 transition-all cursor-pointer" title="Record Voice">
               <Mic className="w-5 h-5" />
             </button>
           </div>
 
           {/* Pill Input */}
-          <div className="flex-1 flex items-center bg-slate-100 dark:bg-slate-800 rounded-full px-4 py-0.5 border border-transparent focus-within:bg-white dark:focus-within:bg-slate-850 focus-within:border-slate-200 dark:focus-within:border-slate-700 transition-all duration-200 shadow-inner">
+          <div className="flex-1 min-w-0 flex items-center bg-slate-100 dark:bg-slate-800 rounded-full pl-3.5 sm:pl-4 pr-1.5 sm:pr-2 py-0.5 border border-transparent focus-within:bg-white dark:focus-within:bg-slate-850 focus-within:border-slate-200 dark:focus-within:border-slate-700 transition-all duration-200 shadow-inner">
             <input
               type="text"
               value={messageInput}
               onChange={(e) => setMessageInput(e.target.value)}
               onKeyPress={handleKeyPress}
               placeholder="Type a message..."
-              className="flex-1 bg-transparent border-none py-2.5 text-slate-800 dark:text-white placeholder-slate-450 focus:ring-0 outline-none text-[15px] font-medium"
+              className="flex-1 min-w-0 w-full bg-transparent border-none py-2 sm:py-2.5 text-slate-800 dark:text-white placeholder-slate-450 focus:ring-0 outline-none text-sm sm:text-[15px] font-medium"
             />
-            <button type="button" className="p-1.5 text-slate-400 dark:text-slate-500 hover:text-indigo-600 transition-colors" title="Emojis">
-              <Smile className="w-5.5 h-5.5" />
+            <button type="button" className="p-1.5 text-slate-400 dark:text-slate-500 hover:text-indigo-600 transition-colors shrink-0 cursor-pointer" title="Emojis">
+              <Smile className="w-5 h-5 sm:w-5.5 sm:h-5.5" />
             </button>
           </div>
 
@@ -327,7 +327,7 @@ const SupportPage = ({ onBack }) => {
           <button
             type="submit"
             disabled={!messageInput.trim()}
-            className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 transition-all ${
+            className={`w-9.5 h-9.5 sm:w-10 sm:h-10 rounded-full flex items-center justify-center shrink-0 transition-all ${
               messageInput.trim()
                 ? 'bg-indigo-600 hover:bg-indigo-700 active:scale-95 text-white shadow-md shadow-indigo-600/30 cursor-pointer'
                 : 'bg-slate-200 dark:bg-slate-800 text-slate-400 dark:text-slate-600 cursor-not-allowed opacity-60'
