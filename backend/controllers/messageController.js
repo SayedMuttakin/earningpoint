@@ -338,12 +338,12 @@ exports.deleteStory = async (req, res) => {
   }
 };
 
-// Get all active (24h) stories from following/chat users + yourself
+// Get all active (24h) stories from following/chat users + yourself + active community users
 exports.getStories = async (req, res) => {
   try {
     const currentUserId = req.user._id;
     const currentUser = await User.findById(currentUserId);
-    const followingIds = currentUser.following || [];
+    const followingIds = currentUser?.following || [];
 
     const messagedUserIds = await Message.distinct('sender', { receiver: currentUserId, group: { $exists: false } });
     const receivedUserIds = await Message.distinct('receiver', { sender: currentUserId, group: { $exists: false } });
@@ -356,14 +356,21 @@ exports.getStories = async (req, res) => {
 
     const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
 
-    const users = await User.find({
+    const relatedUsers = await User.find({
       _id: { $in: relatedUserIds },
       'stories.0': { $exists: true }
     }).select('name profilePic stories');
 
+    const otherUsers = await User.find({
+      _id: { $nin: relatedUserIds },
+      'stories.0': { $exists: true }
+    }).select('name profilePic stories').limit(20);
+
+    const allUsers = [...relatedUsers, ...otherUsers];
+
     // Filter expired stories and users with no active stories
-    const result = users.map(u => {
-      const activeStories = u.stories.filter(s => new Date(s.createdAt) >= twentyFourHoursAgo);
+    const result = allUsers.map(u => {
+      const activeStories = (u.stories || []).filter(s => new Date(s.createdAt) >= twentyFourHoursAgo);
       return {
         _id: u._id,
         name: u.name,

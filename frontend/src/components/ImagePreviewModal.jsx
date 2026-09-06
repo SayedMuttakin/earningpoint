@@ -3,6 +3,7 @@ import { Download, X, Loader2, ZoomIn, ZoomOut, RotateCcw, Check } from 'lucide-
 import { Capacitor } from '@capacitor/core';
 import { Share } from '@capacitor/share';
 import { getImageUrl } from '../config';
+import { saveImageToPhone } from '../utils/downloadHelper';
 
 const ImagePreviewModal = ({ imageUrl, onClose }) => {
   const [downloading, setDownloading] = useState(false);
@@ -37,68 +38,15 @@ const ImagePreviewModal = ({ imageUrl, onClose }) => {
     e.stopPropagation();
     if (downloading) return;
     setDownloading(true);
-    const fullUrl = getImageUrl(imageUrl);
 
     try {
-      if (Capacitor.isNativePlatform()) {
-        try {
-          const canShare = await Share.canShare();
-          if (canShare.value) {
-            await Share.share({
-              title: 'Zenivio Image',
-              url: fullUrl,
-              dialogTitle: 'Save / Download Image'
-            });
-            setDownloadSuccess(true);
-            setTimeout(() => setDownloadSuccess(false), 2500);
-            return;
-          }
-        } catch (shareErr) {
-          if (shareErr.name === 'AbortError') return;
-        }
+      const ok = await saveImageToPhone(imageUrl);
+      if (ok) {
+        setDownloadSuccess(true);
+        setTimeout(() => setDownloadSuccess(false), 2500);
       }
-
-      // Web / Blob download
-      const response = await fetch(fullUrl, { mode: 'cors' });
-      const blob = await response.blob();
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `zenivio_image_${Date.now()}.jpg`;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      window.URL.revokeObjectURL(url);
-      setDownloadSuccess(true);
-      setTimeout(() => setDownloadSuccess(false), 2500);
     } catch (err) {
-      console.warn('Direct blob download failed, attempting Canvas data-url / browser fallback:', err);
-      try {
-        const img = new Image();
-        img.crossOrigin = 'anonymous';
-        img.onload = () => {
-          const canvas = document.createElement('canvas');
-          canvas.width = img.naturalWidth || img.width;
-          canvas.height = img.naturalHeight || img.height;
-          const ctx = canvas.getContext('2d');
-          ctx.drawImage(img, 0, 0);
-          const dataUrl = canvas.toDataURL('image/jpeg', 0.95);
-          const a = document.createElement('a');
-          a.href = dataUrl;
-          a.download = `zenivio_image_${Date.now()}.jpg`;
-          document.body.appendChild(a);
-          a.click();
-          document.body.removeChild(a);
-          setDownloadSuccess(true);
-          setTimeout(() => setDownloadSuccess(false), 2500);
-        };
-        img.onerror = () => {
-          window.open(fullUrl, '_system');
-        };
-        img.src = fullUrl;
-      } catch (canvasErr) {
-        window.open(fullUrl, '_system');
-      }
+      console.warn('Image download failed:', err);
     } finally {
       setDownloading(false);
     }

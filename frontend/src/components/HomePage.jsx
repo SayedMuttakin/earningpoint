@@ -7,6 +7,10 @@ import BannerAd from './BannerAd';
 import NewsSlider from './NewsSlider';
 import ShareModal from './ShareModal';
 import ImagePreviewModal from './ImagePreviewModal';
+import { saveImageToPhone } from '../utils/downloadHelper';
+import StoryTray from './Story/StoryTray';
+import StoryCreatorModal from './Story/StoryCreatorModal';
+import StoryViewerModal from './Story/StoryViewerModal';
 
 const GRADIENTS_MAP = {
   aurora: 'bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 text-white',
@@ -789,7 +793,7 @@ const CommunityPostCard = ({ post, onFollowToggle, onLikeToggle, onCommentClick,
                     onClick={(e) => {
                       e.stopPropagation();
                       setShowMenu(false);
-                      if (onPreviewImage) onPreviewImage(post.image);
+                      saveImageToPhone(post.image, showToast);
                     }}
                     className="w-full flex items-center gap-3 px-4 py-3 text-sm font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
                   >
@@ -1230,6 +1234,19 @@ const HomePage = ({ setActiveTab, setSelectedNewsId, setActiveChatPartner, setSe
   // Post Creation States
   const [postingLoading, setPostingLoading] = useState(false);
 
+  // Story States (Facebook Style)
+  const [stories, setStories] = useState(() => {
+    try {
+      const cached = localStorage.getItem('cached_stories');
+      return cached ? JSON.parse(cached) : [];
+    } catch (e) {
+      return [];
+    }
+  });
+  const [showStoryCreator, setShowStoryCreator] = useState(false);
+  const [viewingStoryUser, setViewingStoryUser] = useState(null);
+  const [viewingStoryIndex, setViewingStoryIndex] = useState(0);
+
   const [toastMessage, setToastMessage] = useState('');
   const [showToast, setShowToast] = useState(false);
   const toastTimerRef = useRef(null);
@@ -1495,6 +1512,25 @@ const HomePage = ({ setActiveTab, setSelectedNewsId, setActiveChatPartner, setSe
     return () => observer.unobserve(sentinel);
   }, [page, hasMorePosts, fetchingMore]);
 
+  const fetchStories = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) return;
+      const res = await fetchWithTimeout(`${API_BASE}/api/messages/stories`, {
+        headers: { Authorization: `Bearer ${token}` }
+      }, 5000);
+      if (res && res.ok) {
+        const data = await res.json();
+        if (Array.isArray(data)) {
+          setStories(data);
+          safeLocalStorageSet('cached_stories', JSON.stringify(data));
+        }
+      }
+    } catch (e) {
+      console.error('Failed to fetch stories:', e);
+    }
+  };
+
   const fetchHomeData = async () => {
     setPage(1);
     setHasMorePosts(true);
@@ -1502,8 +1538,8 @@ const HomePage = ({ setActiveTab, setSelectedNewsId, setActiveChatPartner, setSe
       const token = localStorage.getItem('token');
       if (!token) return;
 
-      // 1-roundtrip unified feed & news fetch + profile fetch + suggested users in parallel
-      const [feedRes, profileRes, suggestionsRes] = await Promise.all([
+      // 1-roundtrip unified feed & news fetch + profile fetch + suggested users + stories in parallel
+      const [feedRes, profileRes, suggestionsRes, storiesRes] = await Promise.all([
         fetchWithTimeout(`${API_BASE}/api/posts/feed?includeNews=true&page=1&limit=15`, {
           headers: { Authorization: `Bearer ${token}` }
         }, 5000).catch(err => { console.error('Feed fetch failed:', err); return null; }),
@@ -1512,7 +1548,10 @@ const HomePage = ({ setActiveTab, setSelectedNewsId, setActiveChatPartner, setSe
         }, 5000).catch(err => { console.error('Profile fetch failed:', err); return null; }),
         fetchWithTimeout(`${API_BASE}/api/profile/suggestions`, {
           headers: { Authorization: `Bearer ${token}` }
-        }, 5000).catch(err => { console.error('Suggestions fetch failed:', err); return null; })
+        }, 5000).catch(err => { console.error('Suggestions fetch failed:', err); return null; }),
+        fetchWithTimeout(`${API_BASE}/api/messages/stories`, {
+          headers: { Authorization: `Bearer ${token}` }
+        }, 5000).catch(err => { console.error('Stories fetch failed:', err); return null; })
       ]);
 
       if (feedRes && feedRes.ok) {
@@ -1544,6 +1583,14 @@ const HomePage = ({ setActiveTab, setSelectedNewsId, setActiveChatPartner, setSe
         if (Array.isArray(suggData)) {
           setSuggestedUsers(suggData);
           safeLocalStorageSet('cached_suggested_users', JSON.stringify(suggData));
+        }
+      }
+
+      if (storiesRes && storiesRes.ok) {
+        const storiesData = await storiesRes.json();
+        if (Array.isArray(storiesData)) {
+          setStories(storiesData);
+          safeLocalStorageSet('cached_stories', JSON.stringify(storiesData));
         }
       }
     } catch (err) {
@@ -1774,6 +1821,19 @@ const HomePage = ({ setActiveTab, setSelectedNewsId, setActiveChatPartner, setSe
         <div className="w-full max-w-xl lg:max-w-2xl mx-auto px-2 sm:px-4 pt-2 lg:pt-0 pb-8 flex-1 space-y-6">
           {/* SEO H1 Heading (Screen Reader & Search Engine Optimized) */}
           <h1 className="sr-only">Zenivio – More Than a Social Network</h1>
+
+          {/* Facebook Style Story (Day) Tray */}
+          <div className="bg-white dark:bg-slate-900 rounded-3xl p-3 sm:p-4 shadow-2xs border border-slate-150/50 dark:border-slate-800/80">
+            <StoryTray
+              stories={stories}
+              currentUser={currentUser}
+              onOpenCreator={() => setShowStoryCreator(true)}
+              onOpenViewer={(user, idx = 0) => {
+                setViewingStoryUser(user);
+                setViewingStoryIndex(idx);
+              }}
+            />
+          </div>
 
           {/* Banner */}
           <BannerSection onStartEarning={() => setActiveTab && setActiveTab('Earning')} />
@@ -2161,6 +2221,32 @@ const HomePage = ({ setActiveTab, setSelectedNewsId, setActiveChatPartner, setSe
 
             </div>
           </div>
+        )}
+
+        {/* Story Creator Modal */}
+        {showStoryCreator && (
+          <StoryCreatorModal
+            isOpen={showStoryCreator}
+            onClose={() => setShowStoryCreator(false)}
+            onStoryCreated={() => {
+              fetchStories();
+              showToastNotification('Story shared successfully! 🌟');
+            }}
+          />
+        )}
+
+        {/* Story Viewer Modal */}
+        {viewingStoryUser && (
+          <StoryViewerModal
+            storyUser={viewingStoryUser}
+            initialIndex={viewingStoryIndex}
+            currentUser={currentUser}
+            onClose={() => setViewingStoryUser(null)}
+            onDeleteStory={(deletedId) => {
+              fetchStories();
+              showToastNotification('Story deleted 🗑️');
+            }}
+          />
         )}
 
         <ShareModal 

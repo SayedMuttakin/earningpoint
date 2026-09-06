@@ -1,0 +1,456 @@
+import React, { useState, useEffect, useRef } from 'react';
+import { 
+  X, Volume2, VolumeX, Trash2, Download, Send, Heart, Flame, Laugh, 
+  ChevronLeft, ChevronRight, Music 
+} from 'lucide-react';
+import { API_BASE, getImageUrl } from '../../config';
+import { saveImageToPhone } from '../../utils/downloadHelper';
+
+const formatRelativeTime = (timeStr) => {
+  if (!timeStr) return '';
+  const diffMs = Date.now() - new Date(timeStr).getTime();
+  const diffMins = Math.floor(diffMs / 60000);
+  const diffHours = Math.floor(diffMins / 60);
+  const diffDays = Math.floor(diffHours / 24);
+
+  if (diffMins < 1) return 'Just now';
+  if (diffMins < 60) return `${diffMins}m`;
+  if (diffHours < 24) return `${diffHours}h`;
+  return `${diffDays}d`;
+};
+
+const StoryViewerModal = ({
+  storyUser,
+  initialIndex = 0,
+  currentUser = null,
+  onClose,
+  onDeleteStory,
+  onNextUser,
+  onPrevUser,
+}) => {
+  const [currentIndex, setCurrentIndex] = useState(initialIndex);
+  const [progress, setProgress] = useState(0);
+  const [isMuted, setIsMuted] = useState(false);
+  const [isPaused, setIsPaused] = useState(false);
+  const [replyText, setReplyText] = useState('');
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [toastMsg, setToastMsg] = useState('');
+
+  const audioRef = useRef(null);
+  const progressTimerRef = useRef(null);
+  const currentStory = storyUser?.stories?.[currentIndex];
+  const isOwnStory = storyUser?._id?.toString() === currentUser?._id?.toString();
+
+  // Reset index if storyUser changes
+  useEffect(() => {
+    setCurrentIndex(initialIndex);
+    setProgress(0);
+  }, [storyUser, initialIndex]);
+
+  // Audio Playback & Progress Timer
+  useEffect(() => {
+    if (!currentStory) return;
+
+    // Background music playback
+    if (currentStory.music?.url) {
+      const musicUrl =
+        currentStory.music.url.startsWith('http') ||
+        currentStory.music.url.startsWith('/music') ||
+        currentStory.music.url.startsWith('/api')
+          ? currentStory.music.url
+          : `${API_BASE}/api/image?file=${encodeURIComponent(currentStory.music.url)}`;
+
+      if (!audioRef.current) {
+        audioRef.current = new Audio(musicUrl);
+      } else {
+        audioRef.current.src = musicUrl;
+      }
+      audioRef.current.loop = true;
+      audioRef.current.muted = isMuted;
+      audioRef.current.currentTime = 0;
+      if (!isPaused) {
+        audioRef.current.play().catch(() => {});
+      }
+    } else {
+      if (audioRef.current) {
+        audioRef.current.pause();
+      }
+    }
+
+    // Auto Progress Timer
+    if (progressTimerRef.current) clearInterval(progressTimerRef.current);
+    setProgress(0);
+
+    const totalDuration = currentStory.music?.url ? 10000 : 5000; // 10s for music stories, 5s normal
+    const interval = 50;
+    let elapsed = 0;
+
+    progressTimerRef.current = setInterval(() => {
+      if (isPaused) return;
+
+      elapsed += interval;
+      const pct = Math.min((elapsed / totalDuration) * 100, 100);
+      setProgress(pct);
+
+      if (elapsed >= totalDuration) {
+        clearInterval(progressTimerRef.current);
+        handleNextStory();
+      }
+    }, interval);
+
+    return () => {
+      if (progressTimerRef.current) clearInterval(progressTimerRef.current);
+      if (audioRef.current) {
+        audioRef.current.pause();
+      }
+    };
+  }, [currentStory, isMuted, isPaused]);
+
+  // Toggle Mute
+  const toggleMute = (e) => {
+    e.stopPropagation();
+    setIsMuted((prev) => {
+      const next = !prev;
+      if (audioRef.current) audioRef.current.muted = next;
+      return next;
+    });
+  };
+
+  // Next / Prev navigation
+  const handleNextStory = () => {
+    if (currentIndex + 1 < (storyUser?.stories?.length || 0)) {
+      setCurrentIndex((prev) => prev + 1);
+      setProgress(0);
+    } else if (onNextUser) {
+      onNextUser();
+    } else {
+      onClose();
+    }
+  };
+
+  const handlePrevStory = () => {
+    if (currentIndex > 0) {
+      setCurrentIndex((prev) => prev - 1);
+      setProgress(0);
+    } else if (onPrevUser) {
+      onPrevUser();
+    }
+  };
+
+  const handleDownloadImage = (e) => {
+    e.stopPropagation();
+    if (!currentStory?.image) return;
+    saveImageToPhone(currentStory.image, (msg) => {
+      setToastMsg(msg);
+      setTimeout(() => setToastMsg(''), 2500);
+    });
+  };
+
+  const handleDelete = async () => {
+    if (!currentStory?._id) return;
+    try {
+      const token = localStorage.getItem('token');
+      await fetch(`${API_BASE}/api/messages/story/${currentStory._id}`, {
+        method: 'DELETE',
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (onDeleteStory) onDeleteStory(currentStory._id);
+      setShowDeleteConfirm(false);
+      if (storyUser.stories.length <= 1) {
+        onClose();
+      } else {
+        handleNextStory();
+      }
+    } catch (err) {
+      console.error('Failed to delete story:', err);
+    }
+  };
+
+  const handleSendReaction = (emoji) => {
+    setToastMsg(`Reacted ${emoji} to story!`);
+    setTimeout(() => setToastMsg(''), 2000);
+  };
+
+  const handleSendReply = (e) => {
+    e.preventDefault();
+    if (!replyText.trim()) return;
+    setToastMsg('Reply sent! 💬');
+    setReplyText('');
+    setTimeout(() => setToastMsg(''), 2000);
+  };
+
+  if (!storyUser || !currentStory) return null;
+
+  const hasImage = !!currentStory.image;
+  const imageUrl = hasImage ? getImageUrl(currentStory.image) : null;
+  const timeAgo = formatRelativeTime(currentStory.createdAt);
+
+  return (
+    <div
+      className="fixed inset-0 z-[130] bg-black flex items-center justify-center select-none overflow-hidden animate-fade-in"
+      onPointerDown={() => setIsPaused(true)}
+      onPointerUp={() => setIsPaused(false)}
+      onPointerCancel={() => setIsPaused(false)}
+    >
+      {/* Toast Notification */}
+      {toastMsg && (
+        <div className="absolute top-16 z-50 px-4 py-2 rounded-full bg-slate-900/90 text-white border border-slate-700 text-xs font-bold shadow-2xl animate-fade-in">
+          {toastMsg}
+        </div>
+      )}
+
+      {/* ── 9:16 PHONE WRAPPER ── */}
+      <div
+        className="relative w-full max-w-md h-full sm:max-h-[92vh] sm:rounded-[2.5rem] overflow-hidden flex flex-col justify-between shadow-2xl border-0 sm:border border-white/10"
+        style={
+          hasImage
+            ? {
+                backgroundImage: `url(${imageUrl})`,
+                backgroundSize: 'cover',
+                backgroundPosition: 'center',
+              }
+            : {
+                background: currentStory.bgGradient || 'linear-gradient(135deg, #7C3AED, #2563EB)',
+              }
+        }
+      >
+        {/* Subtle dark overlay for contrast */}
+        {hasImage && <div className="absolute inset-0 bg-black/25 pointer-events-none" />}
+
+        {/* ── TOP PROGRESS BARS ── */}
+        <div className="relative z-20 flex gap-1 px-3 pt-6 sm:pt-4 pb-2 shrink-0">
+          {storyUser.stories.map((_, i) => (
+            <div key={i} className="flex-1 h-1 bg-white/30 rounded-full overflow-hidden">
+              <div
+                className="h-full bg-white transition-none"
+                style={{
+                  width:
+                    i < currentIndex
+                      ? '100%'
+                      : i === currentIndex
+                      ? `${progress}%`
+                      : '0%',
+                }}
+              />
+            </div>
+          ))}
+        </div>
+
+        {/* ── HEADER ── */}
+        <div
+          className="relative z-20 flex items-center justify-between px-4 py-2 shrink-0"
+          onClick={(e) => e.stopPropagation()}
+        >
+          {/* User info */}
+          <div className="flex items-center gap-2.5">
+            <div className="p-0.5 rounded-full bg-gradient-to-tr from-amber-500 via-rose-500 to-purple-600 shadow">
+              {storyUser.profilePic ? (
+                <img
+                  src={getImageUrl(storyUser.profilePic)}
+                  alt={storyUser.name}
+                  className="w-8 h-8 rounded-full object-cover"
+                />
+              ) : (
+                <div className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center text-white text-xs font-black">
+                  {storyUser.name?.charAt(0).toUpperCase() || 'U'}
+                </div>
+              )}
+            </div>
+
+            <div>
+              <p className="text-white font-black text-xs sm:text-sm drop-shadow leading-tight">
+                {storyUser.name}
+              </p>
+              <p className="text-white/70 text-[10px] font-bold drop-shadow">
+                {timeAgo}
+              </p>
+            </div>
+          </div>
+
+          {/* Action buttons */}
+          <div className="flex items-center gap-2">
+            {/* Music Sound Mute/Unmute */}
+            {currentStory.music?.url && (
+              <button
+                onClick={toggleMute}
+                className="w-8 h-8 rounded-full bg-black/40 backdrop-blur-md text-white flex items-center justify-center active:scale-90 border border-white/20"
+                title={isMuted ? 'Unmute' : 'Mute'}
+              >
+                {isMuted ? (
+                  <VolumeX className="w-4 h-4 text-rose-400" />
+                ) : (
+                  <Volume2 className="w-4 h-4 text-emerald-400 animate-pulse" />
+                )}
+              </button>
+            )}
+
+            {/* Direct Phone Download Button */}
+            {hasImage && (
+              <button
+                onClick={handleDownloadImage}
+                className="w-8 h-8 rounded-full bg-black/40 backdrop-blur-md text-white flex items-center justify-center active:scale-90 border border-white/20"
+                title="Download image to phone"
+              >
+                <Download className="w-4 h-4 text-cyan-300" />
+              </button>
+            )}
+
+            {/* Delete button (for own stories) */}
+            {isOwnStory && (
+              <button
+                onClick={() => setShowDeleteConfirm(true)}
+                className="w-8 h-8 rounded-full bg-rose-500/80 backdrop-blur-md text-white flex items-center justify-center active:scale-90 shadow"
+                title="Delete story"
+              >
+                <Trash2 className="w-4 h-4" />
+              </button>
+            )}
+
+            {/* Close */}
+            <button
+              onClick={onClose}
+              className="w-8 h-8 rounded-full bg-black/40 backdrop-blur-md text-white flex items-center justify-center active:scale-90 border border-white/20"
+              title="Close"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          </div>
+        </div>
+
+        {/* ── TAP NAVIGATION ZONES (Left to Prev, Right to Next) ── */}
+        <div className="absolute inset-0 z-10 flex">
+          <div
+            className="w-[30%] h-full cursor-pointer"
+            onClick={(e) => {
+              e.stopPropagation();
+              handlePrevStory();
+            }}
+          />
+          <div
+            className="w-[70%] h-full cursor-pointer"
+            onClick={(e) => {
+              e.stopPropagation();
+              handleNextStory();
+            }}
+          />
+        </div>
+
+        {/* ── CENTER CONTENT (Emoji & Text) ── */}
+        <div className="relative z-15 flex-1 flex flex-col items-center justify-center px-6 gap-4 text-center pointer-events-none">
+          {currentStory.emoji && (
+            <span
+              className="text-7xl leading-none drop-shadow-2xl select-none"
+              style={{ filter: 'drop-shadow(0 4px 16px rgba(0,0,0,0.6))' }}
+            >
+              {currentStory.emoji}
+            </span>
+          )}
+
+          {currentStory.text && (
+            <p
+              className="text-2xl sm:text-3xl leading-snug select-none max-w-xs break-words"
+              style={{
+                color: currentStory.textColor || '#ffffff',
+                fontWeight: currentStory.fontStyle === 'bold' ? '900' : '700',
+                fontStyle: currentStory.fontStyle === 'italic' ? 'italic' : 'normal',
+                textShadow: '0 3px 20px rgba(0,0,0,0.8), 0 1px 6px rgba(0,0,0,0.9)',
+              }}
+            >
+              {currentStory.text}
+            </p>
+          )}
+        </div>
+
+        {/* ── INTERACTIVE FACEBOOK / INSTAGRAM MUSIC STICKER ── */}
+        {currentStory.music && (
+          <div
+            className="relative z-20 self-center mb-4 px-4 py-2 rounded-full bg-black/60 backdrop-blur-md border border-white/25 shadow-2xl flex items-center gap-3 text-white max-w-[280px] pointer-events-auto animate-fade-in"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="w-7 h-7 rounded-full bg-gradient-to-tr from-purple-600 to-pink-600 flex items-center justify-center text-xs shadow-md shrink-0">
+              🎵
+            </div>
+            <div className="min-w-0 flex-1">
+              <p className="text-xs font-black truncate leading-tight">{currentStory.music.title}</p>
+              <p className="text-[10px] text-white/70 truncate leading-tight">{currentStory.music.artist}</p>
+            </div>
+            {/* Equalizer animation */}
+            <div className="flex items-end gap-0.5 h-3 ml-1 shrink-0">
+              <span className={`w-0.5 bg-white rounded-full ${!isMuted ? 'animate-[bounce_0.6s_infinite_ease-in-out]' : 'h-1'}`} style={{ height: !isMuted ? '100%' : '30%' }}></span>
+              <span className={`w-0.5 bg-white rounded-full ${!isMuted ? 'animate-[bounce_0.8s_infinite_ease-in-out]' : 'h-1.5'}`} style={{ height: !isMuted ? '60%' : '40%' }}></span>
+              <span className={`w-0.5 bg-white rounded-full ${!isMuted ? 'animate-[bounce_0.5s_infinite_ease-in-out]' : 'h-2'}`} style={{ height: !isMuted ? '80%' : '50%' }}></span>
+            </div>
+          </div>
+        )}
+
+        {/* ── BOTTOM REPLY / REACTION BAR ── */}
+        <div
+          className="relative z-20 px-4 pb-6 sm:pb-4 pt-2 bg-gradient-to-t from-black/90 to-transparent flex flex-col gap-2 shrink-0"
+          onClick={(e) => e.stopPropagation()}
+        >
+          {/* Quick emoji reactions */}
+          <div className="flex items-center justify-center gap-3 py-1">
+            {['❤️', '🔥', '😂', '👏', '😍', '🎉'].map((em) => (
+              <button
+                key={em}
+                onClick={() => handleSendReaction(em)}
+                className="text-2xl hover:scale-125 active:scale-95 transition-transform"
+              >
+                {em}
+              </button>
+            ))}
+          </div>
+
+          {/* Reply input */}
+          <form onSubmit={handleSendReply} className="flex items-center gap-2">
+            <input
+              type="text"
+              value={replyText}
+              onChange={(e) => setReplyText(e.target.value)}
+              placeholder={`Reply to ${storyUser.name?.split(' ')[0]}...`}
+              className="flex-1 bg-white/20 backdrop-blur-md rounded-full px-4 py-2 text-xs font-semibold text-white placeholder-white/60 outline-none border border-white/25 focus:border-white/60 shadow-inner"
+            />
+            <button
+              type="submit"
+              disabled={!replyText.trim()}
+              className="w-8 h-8 rounded-full bg-[#7C3AED] hover:bg-[#6D28D9] disabled:opacity-40 text-white flex items-center justify-center active:scale-90 transition-transform shadow shrink-0"
+            >
+              <Send className="w-3.5 h-3.5" />
+            </button>
+          </form>
+        </div>
+      </div>
+
+      {/* ── DELETE STORY CONFIRMATION MODAL ── */}
+      {showDeleteConfirm && (
+        <div
+          className="fixed inset-0 z-[160] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4"
+          onClick={(e) => e.stopPropagation()}
+        >
+          <div className="bg-slate-900 border border-slate-800 rounded-3xl p-5 max-w-xs w-full shadow-2xl text-white text-center space-y-3">
+            <h3 className="font-black text-base">Delete Story?</h3>
+            <p className="text-xs text-slate-400">
+              Are you sure you want to permanently remove this story?
+            </p>
+            <div className="flex gap-2 pt-2">
+              <button
+                onClick={() => setShowDeleteConfirm(false)}
+                className="flex-1 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs font-black text-slate-300"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleDelete}
+                className="flex-1 py-2 rounded-xl bg-rose-600 hover:bg-rose-700 text-xs font-black text-white shadow"
+              >
+                Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
+export default StoryViewerModal;

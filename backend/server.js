@@ -67,6 +67,13 @@ app.get('/api/image', async (req, res) => {
 
   res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
 
+  // Support direct file download when ?download=1 is specified
+  if (req.query.download === '1' || req.query.download === 'true') {
+    const rawBase = safeName.replace(/\.[^/.]+$/, "");
+    const dlFilename = req.query.filename ? path.basename(req.query.filename) : `zenivio_${rawBase}.jpg`;
+    res.setHeader('Content-Disposition', `attachment; filename="${dlFilename}"`);
+  }
+
   const audioMimes = {
     '.mp3': 'audio/mpeg',
     '.wav': 'audio/wav',
