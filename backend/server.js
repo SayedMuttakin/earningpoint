@@ -186,6 +186,9 @@ const startServer = async () => {
     const zinipayRoutes = require('./routes/zinipayRoutes');
     app.use('/api/payment/zinipay', zinipayRoutes);
 
+    const musicRoutes = require('./routes/musicRoutes');
+    app.use('/api/music', musicRoutes);
+
     // Basic Route
     app.get('/', (req, res) => {
       res.send('Zenivio API is running...');

@@ -96,3 +96,88 @@ export const STORY_MUSIC_CATALOG = [
     url: '/music/lofi_chill.wav'
   }
 ];
+
+const musicSearchCache = new Map();
+
+/**
+ * Searches global music catalog (Apple Music / iTunes API via backend proxy with direct fallback)
+ * @param {string} query - Custom search text (artist or track name)
+ * @param {string} category - Selected category ('all' | 'bangla' | 'bollywood' | 'pop' | 'lofi')
+ * @returns {Promise<Array>} Array of track objects
+ */
+export async function searchGlobalMusic(query = '', category = 'all', apiBase = '') {
+  let searchTerm = query.trim();
+
+  // If no custom search text, use category default queries
+  if (!searchTerm) {
+    const categoryDefaults = {
+      all: 'trending songs',
+      bangla: 'bangla romantic songs',
+      bollywood: 'arijit singh hits',
+      pop: 'top pop hits',
+      lofi: 'lo-fi beats chill',
+    };
+    searchTerm = categoryDefaults[category] || 'top hits';
+  }
+
+  const cacheKey = searchTerm.toLowerCase();
+  if (musicSearchCache.has(cacheKey)) {
+    return musicSearchCache.get(cacheKey);
+  }
+
+  // 1. Try Backend Proxy
+  try {
+    const res = await fetch(`${apiBase}/api/music/search?term=${encodeURIComponent(searchTerm)}&limit=35`);
+    if (res.ok) {
+      const data = await res.json();
+      if (data.success && Array.isArray(data.tracks) && data.tracks.length > 0) {
+        musicSearchCache.set(cacheKey, data.tracks);
+        return data.tracks;
+      }
+    }
+  } catch (err) {
+    console.warn('Backend music search failed, attempting direct Apple Music fallback...', err);
+  }
+
+  // 2. Direct Fallback to Apple iTunes API
+  try {
+    const directRes = await fetch(
+      `https://itunes.apple.com/search?term=${encodeURIComponent(searchTerm)}&entity=song&limit=30`
+    );
+    if (directRes.ok) {
+      const data = await directRes.json();
+      if (Array.isArray(data.results) && data.results.length > 0) {
+        const tracks = data.results
+          .filter((item) => item.previewUrl && item.trackName)
+          .map((item) => ({
+            id: `itunes_${item.trackId}`,
+            title: item.trackName,
+            artist: item.artistName || 'Unknown Artist',
+            album: item.collectionName || '',
+            url: item.previewUrl,
+            coverUrl: item.artworkUrl100
+              ? item.artworkUrl100.replace(/100x100bb\./, '300x300bb.')
+              : '',
+            genre: item.primaryGenreName || 'Music',
+            duration: Math.round((item.trackTimeMillis || 30000) / 1000),
+          }));
+        musicSearchCache.set(cacheKey, tracks);
+        return tracks;
+      }
+    }
+  } catch (directErr) {
+    console.warn('Direct Apple Music fallback failed:', directErr);
+  }
+
+  // 3. Fallback to local curated tracks
+  const localFiltered = STORY_MUSIC_CATALOG.filter((item) => {
+    const matchesCategory = category === 'all' || item.category === category;
+    const matchesQuery =
+      !query ||
+      item.title.toLowerCase().includes(query.toLowerCase()) ||
+      item.artist.toLowerCase().includes(query.toLowerCase());
+    return matchesCategory && matchesQuery;
+  });
+
+  return localFiltered.length > 0 ? localFiltered : STORY_MUSIC_CATALOG;
+}

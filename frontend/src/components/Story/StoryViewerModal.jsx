@@ -269,9 +269,18 @@ const StoryViewerModal = ({
               <p className="text-white font-black text-xs sm:text-sm drop-shadow leading-tight">
                 {storyUser.name}
               </p>
-              <p className="text-white/70 text-[10px] font-bold drop-shadow">
-                {timeAgo}
-              </p>
+              <div className="flex items-center gap-1.5 text-[10px] text-white/80 font-bold drop-shadow">
+                <span>{timeAgo}</span>
+                {currentStory.music && (
+                  <>
+                    <span>•</span>
+                    <span className="flex items-center gap-1 text-purple-200 truncate max-w-[130px] sm:max-w-[200px]">
+                      <Music className="w-2.5 h-2.5 animate-pulse text-purple-300 shrink-0" />
+                      <span className="truncate">{currentStory.music.title}</span>
+                    </span>
+                  </>
+                )}
+              </div>
             </div>
           </div>
 
@@ -343,9 +352,9 @@ const StoryViewerModal = ({
           />
         </div>
 
-        {/* ── CENTER CONTENT (Emoji & Text) ── */}
+        {/* ── CENTER CONTENT (Emoji for text stories & Text Overlay) ── */}
         <div className="relative z-15 flex-1 flex flex-col items-center justify-center px-6 gap-4 text-center pointer-events-none">
-          {currentStory.emoji && (
+          {!hasImage && currentStory.emoji && (
             <span
               className="text-7xl leading-none drop-shadow-2xl select-none"
               style={{ filter: 'drop-shadow(0 4px 16px rgba(0,0,0,0.6))' }}
@@ -368,28 +377,6 @@ const StoryViewerModal = ({
             </p>
           )}
         </div>
-
-        {/* ── INTERACTIVE FACEBOOK / INSTAGRAM MUSIC STICKER ── */}
-        {currentStory.music && (
-          <div
-            className="relative z-20 self-center mb-4 px-4 py-2 rounded-full bg-black/60 backdrop-blur-md border border-white/25 shadow-2xl flex items-center gap-3 text-white max-w-[280px] pointer-events-auto animate-fade-in"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="w-7 h-7 rounded-full bg-gradient-to-tr from-purple-600 to-pink-600 flex items-center justify-center text-xs shadow-md shrink-0">
-              🎵
-            </div>
-            <div className="min-w-0 flex-1">
-              <p className="text-xs font-black truncate leading-tight">{currentStory.music.title}</p>
-              <p className="text-[10px] text-white/70 truncate leading-tight">{currentStory.music.artist}</p>
-            </div>
-            {/* Equalizer animation */}
-            <div className="flex items-end gap-0.5 h-3 ml-1 shrink-0">
-              <span className={`w-0.5 bg-white rounded-full ${!isMuted ? 'animate-[bounce_0.6s_infinite_ease-in-out]' : 'h-1'}`} style={{ height: !isMuted ? '100%' : '30%' }}></span>
-              <span className={`w-0.5 bg-white rounded-full ${!isMuted ? 'animate-[bounce_0.8s_infinite_ease-in-out]' : 'h-1.5'}`} style={{ height: !isMuted ? '60%' : '40%' }}></span>
-              <span className={`w-0.5 bg-white rounded-full ${!isMuted ? 'animate-[bounce_0.5s_infinite_ease-in-out]' : 'h-2'}`} style={{ height: !isMuted ? '80%' : '50%' }}></span>
-            </div>
-          </div>
-        )}
 
         {/* ── BOTTOM REPLY / REACTION BAR ── */}
         <div

@@ -4,7 +4,7 @@ import {
   Play, Pause, Upload, ZoomIn, ZoomOut, RotateCcw, Move, Loader2, Check 
 } from 'lucide-react';
 import { API_BASE } from '../../config';
-import { STORY_MUSIC_CATALOG, STORY_MUSIC_CATEGORIES } from '../../data/storyMusicCatalog';
+import { STORY_MUSIC_CATALOG, STORY_MUSIC_CATEGORIES, searchGlobalMusic } from '../../data/storyMusicCatalog';
 
 const STORY_BG_PRESETS = [
   { bg: 'linear-gradient(135deg, #7C3AED 0%, #2563EB 100%)', label: 'Purple' },
@@ -32,6 +32,12 @@ const StoryCreatorModal = ({ isOpen, onClose, onStoryCreated }) => {
   // Content states
   const [storyText, setStoryText] = useState('');
   const [storyEmoji, setStoryEmoji] = useState('');
+  const [emojiPos, setEmojiPos] = useState({ x: 0, y: 0 });
+  const [emojiScale, setEmojiScale] = useState(1);
+  const [isDraggingEmoji, setIsDraggingEmoji] = useState(false);
+  const emojiDragStartRef = useRef({ x: 0, y: 0 });
+  const emojiPosStartRef = useRef({ x: 0, y: 0 });
+
   const [storyBg, setStoryBg] = useState(STORY_BG_PRESETS[0].bg);
   const [storyTextColor, setStoryTextColor] = useState('#ffffff');
   const [storyFontStyle, setStoryFontStyle] = useState('normal'); // 'normal' | 'bold' | 'italic'
@@ -47,12 +53,12 @@ const StoryCreatorModal = ({ isOpen, onClose, onStoryCreated }) => {
   const touchDistRef = useRef(null);
 
   // Music states
-  const [storyMusic, setStoryMusic] = useState(null); // { id, title, artist, url, coverGradient, coverIcon }
-  const [musicStickerStyle, setMusicStickerStyle] = useState('pill'); // 'pill' | 'card' | 'minimal'
-  const [musicStickerPos, setMusicStickerPos] = useState({ y: 0 }); // relative vertical offset
+  const [storyMusic, setStoryMusic] = useState(null); // { id, title, artist, url, coverUrl }
   const [showMusicPicker, setShowMusicPicker] = useState(false);
   const [selectedMusicCategory, setSelectedMusicCategory] = useState('all');
   const [musicSearchQuery, setMusicSearchQuery] = useState('');
+  const [musicSearchResults, setMusicSearchResults] = useState([]);
+  const [isLoadingMusic, setIsLoadingMusic] = useState(false);
   const [previewingAudioUrl, setPreviewingAudioUrl] = useState(null);
   const [isUploadingAudio, setIsUploadingAudio] = useState(false);
 
@@ -152,6 +158,62 @@ const StoryCreatorModal = ({ isOpen, onClose, onStoryCreated }) => {
   const handleTouchEnd = () => {
     touchDistRef.current = null;
   };
+
+  // ────────────────── DRAGGABLE EMOJI HANDLERS ──────────────────
+  const handleEmojiPointerDown = (e) => {
+    e.stopPropagation();
+    try {
+      e.currentTarget.setPointerCapture(e.pointerId);
+    } catch (err) {}
+    setIsDraggingEmoji(true);
+    emojiDragStartRef.current = { x: e.clientX, y: e.clientY };
+    emojiPosStartRef.current = { ...emojiPos };
+  };
+
+  const handleEmojiPointerMove = (e) => {
+    if (!isDraggingEmoji) return;
+    e.stopPropagation();
+    const dx = e.clientX - emojiDragStartRef.current.x;
+    const dy = e.clientY - emojiDragStartRef.current.y;
+    setEmojiPos({
+      x: emojiPosStartRef.current.x + dx,
+      y: emojiPosStartRef.current.y + dy,
+    });
+  };
+
+  const handleEmojiPointerUp = (e) => {
+    if (isDraggingEmoji) {
+      setIsDraggingEmoji(false);
+      try {
+        e.currentTarget.releasePointerCapture(e.pointerId);
+      } catch (err) {}
+    }
+  };
+
+  // ────────────────── LIVE GLOBAL MUSIC SEARCH ──────────────────
+  useEffect(() => {
+    if (!showMusicPicker) return;
+    let isCurrent = true;
+    setIsLoadingMusic(true);
+
+    const timer = setTimeout(async () => {
+      try {
+        const tracks = await searchGlobalMusic(musicSearchQuery, selectedMusicCategory, API_BASE);
+        if (isCurrent) {
+          setMusicSearchResults(tracks);
+        }
+      } catch (err) {
+        console.error('Music search error:', err);
+      } finally {
+        if (isCurrent) setIsLoadingMusic(false);
+      }
+    }, musicSearchQuery ? 350 : 0);
+
+    return () => {
+      isCurrent = false;
+      clearTimeout(timer);
+    };
+  }, [musicSearchQuery, selectedMusicCategory, showMusicPicker]);
 
   // ────────────────── MUSIC PREVIEW & PICKER ──────────────────
   const togglePreviewAudio = (audioUrl) => {
@@ -266,11 +328,51 @@ const StoryCreatorModal = ({ isOpen, onClose, onStoryCreated }) => {
 
           ctx.drawImage(img, centerX, centerY, finalW, finalH);
 
+          // 3. Draw emoji with exact scale and position on high-res canvas
+          if (storyEmoji) {
+            const baseEmojiSize = 90;
+            const scaledEmojiPx = Math.round(baseEmojiSize * emojiScale * scaleMultiplier);
+            ctx.font = `${scaledEmojiPx}px "Segoe UI Emoji", "Apple Color Emoji", "Noto Color Emoji", sans-serif`;
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            const emojiCanvasX = (1080 / 2) + (emojiPos.x * scaleMultiplier);
+            const emojiCanvasY = (1920 / 2) + (emojiPos.y * scaleMultiplier);
+            ctx.fillText(storyEmoji, emojiCanvasX, emojiCanvasY);
+          }
+
           canvas.toBlob(
             (blob) => resolve(blob),
             'image/jpeg',
             0.92
           );
+        });
+      } else if (!imagePreviewUrl && storyEmoji && frameContainerRef.current) {
+        // Bake gradient + emoji to canvas so positioning is identical on all screens
+        finalImageBlob = await new Promise((resolve) => {
+          const canvas = document.createElement('canvas');
+          canvas.width = 1080;
+          canvas.height = 1920;
+          const ctx = canvas.getContext('2d');
+          const containerRect = frameContainerRef.current.getBoundingClientRect();
+          const scaleMultiplier = 1080 / containerRect.width;
+
+          // Gradient background
+          const grad = ctx.createLinearGradient(0, 0, 1080, 1920);
+          grad.addColorStop(0, '#7C3AED');
+          grad.addColorStop(1, '#2563EB');
+          ctx.fillStyle = grad;
+          ctx.fillRect(0, 0, 1080, 1920);
+
+          const baseEmojiSize = 90;
+          const scaledEmojiPx = Math.round(baseEmojiSize * emojiScale * scaleMultiplier);
+          ctx.font = `${scaledEmojiPx}px "Segoe UI Emoji", "Apple Color Emoji", "Noto Color Emoji", sans-serif`;
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'middle';
+          const emojiCanvasX = (1080 / 2) + (emojiPos.x * scaleMultiplier);
+          const emojiCanvasY = (1920 / 2) + (emojiPos.y * scaleMultiplier);
+          ctx.fillText(storyEmoji, emojiCanvasX, emojiCanvasY);
+
+          canvas.toBlob((blob) => resolve(blob), 'image/jpeg', 0.92);
         });
       }
 
@@ -292,6 +394,7 @@ const StoryCreatorModal = ({ isOpen, onClose, onStoryCreated }) => {
         formData.append(
           'music',
           JSON.stringify({
+            id: storyMusic.id,
             title: storyMusic.title,
             artist: storyMusic.artist,
             url: storyMusic.url,
@@ -323,6 +426,8 @@ const StoryCreatorModal = ({ isOpen, onClose, onStoryCreated }) => {
     }
     setStoryText('');
     setStoryEmoji('');
+    setEmojiPos({ x: 0, y: 0 });
+    setEmojiScale(1);
     removeImage();
     setStoryMusic(null);
     onClose();
@@ -359,25 +464,43 @@ const StoryCreatorModal = ({ isOpen, onClose, onStoryCreated }) => {
           <X className="w-5 h-5" />
         </button>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1.5 sm:gap-2">
+          {/* Selected Music Badge in Top Bar (Unobtrusive) */}
+          {storyMusic && (
+            <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-purple-950/80 border border-purple-500/50 text-white text-[11px] font-bold max-w-[120px] sm:max-w-[170px] truncate shadow">
+              <Music className="w-3 h-3 text-purple-300 animate-pulse shrink-0" />
+              <span className="truncate">{storyMusic.title}</span>
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setStoryMusic(null);
+                }}
+                className="text-white/60 hover:text-white p-0.5 ml-0.5 shrink-0"
+                title="Remove music"
+              >
+                <X className="w-3 h-3" />
+              </button>
+            </div>
+          )}
+
           {/* Music Button */}
           <button
             onClick={() => setShowMusicPicker(true)}
-            className={`px-3 py-1.5 rounded-full flex items-center gap-1.5 text-xs font-black backdrop-blur-md border transition-all active:scale-95 ${
+            className={`px-2.5 sm:px-3 py-1.5 rounded-full flex items-center gap-1.5 text-xs font-black backdrop-blur-md border transition-all active:scale-95 whitespace-nowrap ${
               storyMusic
                 ? 'bg-gradient-to-r from-purple-600 to-pink-600 border-purple-400 text-white shadow-lg shadow-purple-500/30'
                 : 'bg-white/20 border-white/25 text-white'
             }`}
           >
             <Music className="w-3.5 h-3.5" />
-            <span>{storyMusic ? 'Change Music' : 'Add Music'}</span>
+            <span>{storyMusic ? 'Change' : 'Add Music'}</span>
           </button>
 
           {/* Share Button */}
           <button
             onClick={handleSaveStory}
             disabled={isSubmitting || (!storyText.trim() && !storyEmoji && !rawImageFile && !storyMusic)}
-            className="px-4 py-1.5 rounded-full bg-white text-[#7C3AED] hover:bg-slate-100 font-black text-xs sm:text-sm disabled:opacity-40 active:scale-95 transition-all shadow-xl flex items-center gap-1.5"
+            className="px-3.5 sm:px-4 py-1.5 rounded-full bg-white text-[#7C3AED] hover:bg-slate-100 font-black text-xs sm:text-sm disabled:opacity-40 active:scale-95 transition-all shadow-xl flex items-center gap-1.5 whitespace-nowrap"
           >
             {isSubmitting ? (
               <>
@@ -387,7 +510,7 @@ const StoryCreatorModal = ({ isOpen, onClose, onStoryCreated }) => {
             ) : (
               <>
                 <Check className="w-3.5 h-3.5" strokeWidth={3} />
-                <span>Share Story</span>
+                <span>Share</span>
               </>
             )}
           </button>
@@ -429,7 +552,7 @@ const StoryCreatorModal = ({ isOpen, onClose, onStoryCreated }) => {
                 }}
                 className="w-full h-full object-cover select-none pointer-events-none"
               />
-              {/* Subtle framing guide border when zoomed */}
+              {/* Framing guide border when zoomed */}
               {zoom !== 1 && (
                 <div className="absolute inset-0 border border-white/20 rounded-[2.5rem] pointer-events-none" />
               )}
@@ -447,18 +570,43 @@ const StoryCreatorModal = ({ isOpen, onClose, onStoryCreated }) => {
             </div>
           )}
 
-          {/* Overlays (Text & Emoji) */}
-          <div className="relative z-20 flex flex-col items-center justify-center px-6 gap-3 text-center pointer-events-none">
-            {storyEmoji && (
+          {/* Draggable & Resizable Emoji Overlay (Finger / Mouse Move & Resize) */}
+          {storyEmoji && (
+            <div
+              onPointerDown={handleEmojiPointerDown}
+              onPointerMove={handleEmojiPointerMove}
+              onPointerUp={handleEmojiPointerUp}
+              onPointerCancel={handleEmojiPointerUp}
+              className="absolute z-25 cursor-grab active:cursor-grabbing pointer-events-auto touch-none select-none flex items-center justify-center p-2 group"
+              style={{
+                transform: `translate(${emojiPos.x}px, ${emojiPos.y}px) scale(${emojiScale})`,
+                transition: isDraggingEmoji ? 'none' : 'transform 0.1s ease-out',
+              }}
+            >
               <span
-                className="text-6xl drop-shadow-2xl select-none animate-bounce"
-                style={{ filter: 'drop-shadow(0 4px 12px rgba(0,0,0,0.5))' }}
+                className="text-6xl drop-shadow-2xl select-none block leading-none"
+                style={{ filter: 'drop-shadow(0 4px 14px rgba(0,0,0,0.7))' }}
               >
                 {storyEmoji}
               </span>
-            )}
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setStoryEmoji('');
+                  setEmojiPos({ x: 0, y: 0 });
+                  setEmojiScale(1);
+                }}
+                className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-black/80 text-white border border-white/40 flex items-center justify-center opacity-80 hover:opacity-100 shadow transition-opacity"
+                title="Remove emoji"
+              >
+                <X className="w-3 h-3" />
+              </button>
+            </div>
+          )}
 
-            {storyText && (
+          {/* Text Overlay */}
+          {storyText && (
+            <div className="relative z-20 flex flex-col items-center justify-center px-6 text-center pointer-events-none">
               <p
                 className="text-xl sm:text-2xl leading-snug select-none break-words max-w-[280px]"
                 style={{
@@ -470,93 +618,6 @@ const StoryCreatorModal = ({ isOpen, onClose, onStoryCreated }) => {
               >
                 {storyText}
               </p>
-            )}
-          </div>
-
-          {/* ── INTERACTIVE FACEBOOK / INSTAGRAM MUSIC STICKER ── */}
-          {storyMusic && (
-            <div
-              onClick={(e) => {
-                e.stopPropagation();
-                // Cycle sticker style: pill -> card -> minimal
-                setMusicStickerStyle((prev) =>
-                  prev === 'pill' ? 'card' : prev === 'card' ? 'minimal' : 'pill'
-                );
-              }}
-              title="Tap to change sticker style"
-              className="absolute z-25 bottom-12 left-1/2 -translate-x-1/2 cursor-pointer active:scale-95 transition-transform animate-scale-up"
-            >
-              {/* STYLE 1: Modern Pill */}
-              {musicStickerStyle === 'pill' && (
-                <div className="px-4 py-2 rounded-full bg-black/60 backdrop-blur-md border border-white/25 shadow-2xl flex items-center gap-3 text-white max-w-[280px]">
-                  <div className={`w-7 h-7 rounded-full bg-gradient-to-tr ${storyMusic.coverGradient || 'from-purple-600 to-pink-600'} flex items-center justify-center text-xs shadow-md shrink-0`}>
-                    {storyMusic.coverIcon || '🎵'}
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <p className="text-xs font-black truncate leading-tight">{storyMusic.title}</p>
-                    <p className="text-[10px] text-white/70 truncate leading-tight">{storyMusic.artist}</p>
-                  </div>
-                  {/* Equalizer animation */}
-                  <div className="flex items-end gap-0.5 h-3 ml-1 shrink-0">
-                    <span className="w-0.5 bg-white rounded-full h-full animate-[bounce_0.6s_infinite_ease-in-out]"></span>
-                    <span className="w-0.5 bg-white rounded-full h-[60%] animate-[bounce_0.8s_infinite_ease-in-out]"></span>
-                    <span className="w-0.5 bg-white rounded-full h-[80%] animate-[bounce_0.5s_infinite_ease-in-out]"></span>
-                  </div>
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setStoryMusic(null);
-                    }}
-                    className="p-1 rounded-full hover:bg-white/20 text-white/70 hover:text-white"
-                  >
-                    <X className="w-3 h-3" />
-                  </button>
-                </div>
-              )}
-
-              {/* STYLE 2: Glassmorphism Card */}
-              {musicStickerStyle === 'card' && (
-                <div className="p-3 rounded-2xl bg-black/70 backdrop-blur-lg border border-white/30 shadow-2xl flex items-center gap-3 text-white w-64">
-                  <div className={`w-11 h-11 rounded-xl bg-gradient-to-tr ${storyMusic.coverGradient || 'from-purple-600 to-pink-600'} flex items-center justify-center text-lg shadow-md shrink-0`}>
-                    {storyMusic.coverIcon || '🎵'}
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <p className="text-xs font-black truncate leading-tight">{storyMusic.title}</p>
-                    <p className="text-[10px] text-white/70 truncate mt-0.5">{storyMusic.artist}</p>
-                    <div className="flex items-center gap-1 mt-1 text-[9px] text-purple-300 font-bold">
-                      <span>Soundtrack</span>
-                      <span>•</span>
-                      <span>{storyMusic.genre || 'Music'}</span>
-                    </div>
-                  </div>
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setStoryMusic(null);
-                    }}
-                    className="p-1.5 rounded-full hover:bg-white/20 text-white/70 hover:text-white"
-                  >
-                    <X className="w-3.5 h-3.5" />
-                  </button>
-                </div>
-              )}
-
-              {/* STYLE 3: Minimalist Badge */}
-              {musicStickerStyle === 'minimal' && (
-                <div className="px-3 py-1.5 rounded-xl bg-white/25 backdrop-blur-md border border-white/40 shadow-xl flex items-center gap-2 text-white max-w-[260px]">
-                  <Music className="w-3.5 h-3.5 text-amber-300 animate-pulse shrink-0" />
-                  <span className="text-xs font-black truncate">{storyMusic.title}</span>
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setStoryMusic(null);
-                    }}
-                    className="p-0.5 rounded-full hover:bg-white/20 text-white/70 hover:text-white ml-1"
-                  >
-                    <X className="w-3 h-3" />
-                  </button>
-                </div>
-              )}
             </div>
           )}
 
@@ -576,49 +637,49 @@ const StoryCreatorModal = ({ isOpen, onClose, onStoryCreated }) => {
       {/* ── BOTTOM CONTROLS & TOOLBAR ── */}
       <div className="w-full max-w-lg bg-slate-950/95 backdrop-blur-lg border-t border-slate-800/80 rounded-t-3xl px-3.5 pt-2.5 pb-[max(12px,env(safe-area-inset-bottom,12px))] space-y-2.5 z-30 shrink-0">
         
-        {/* Sub-tab navigation (Frame Zoom / Text / Background) */}
-        <div className="flex items-center justify-between px-1">
-          <div className="flex gap-2">
+        {/* Sub-tab navigation — Strictly Single Line (No Line-Breaks on mobile or desktop) */}
+        <div className="flex items-center justify-between gap-1 w-full overflow-x-auto scrollbar-none px-0.5">
+          <div className="flex items-center gap-1 sm:gap-1.5 shrink-0">
             <button
               onClick={() => setActiveControlTab('frame')}
-              className={`px-3 py-1 rounded-full text-xs font-black transition-all ${
+              className={`px-2.5 sm:px-3 py-1 rounded-full text-[11px] sm:text-xs font-black whitespace-nowrap transition-all shrink-0 ${
                 activeControlTab === 'frame'
                   ? 'bg-purple-600 text-white shadow-md shadow-purple-600/30'
-                  : 'bg-slate-800 text-slate-400 hover:text-white'
+                  : 'bg-slate-800 text-slate-300 hover:text-white'
               }`}
             >
-              📸 Framing / Photo
+              📸 Framing
             </button>
             <button
               onClick={() => setActiveControlTab('text')}
-              className={`px-3 py-1 rounded-full text-xs font-black transition-all ${
+              className={`px-2.5 sm:px-3 py-1 rounded-full text-[11px] sm:text-xs font-black whitespace-nowrap transition-all shrink-0 ${
                 activeControlTab === 'text'
                   ? 'bg-purple-600 text-white shadow-md shadow-purple-600/30'
-                  : 'bg-slate-800 text-slate-400 hover:text-white'
+                  : 'bg-slate-800 text-slate-300 hover:text-white'
               }`}
             >
-              ✏️ Text & Emojis
+              ✏️ Text
             </button>
             {!imagePreviewUrl && (
               <button
                 onClick={() => setActiveControlTab('bg')}
-                className={`px-3 py-1 rounded-full text-xs font-black transition-all ${
+                className={`px-2.5 sm:px-3 py-1 rounded-full text-[11px] sm:text-xs font-black whitespace-nowrap transition-all shrink-0 ${
                   activeControlTab === 'bg'
                     ? 'bg-purple-600 text-white shadow-md shadow-purple-600/30'
-                    : 'bg-slate-800 text-slate-400 hover:text-white'
+                    : 'bg-slate-800 text-slate-300 hover:text-white'
                 }`}
               >
-                🎨 Background
+                🎨 Color
               </button>
             )}
           </div>
 
           <button
             onClick={() => fileInputRef.current?.click()}
-            className="px-2.5 py-1 rounded-full bg-white/10 hover:bg-white/20 text-white text-[11px] font-black flex items-center gap-1 border border-white/15"
+            className="px-2 sm:px-2.5 py-1 rounded-full bg-white/10 hover:bg-white/20 text-white text-[11px] sm:text-xs font-black flex items-center gap-1 border border-white/15 whitespace-nowrap shrink-0 ml-1"
           >
-            <ImageIcon className="w-3 h-3" />
-            <span>{imagePreviewUrl ? 'Change Photo' : 'Add Photo'}</span>
+            <ImageIcon className="w-3 h-3 shrink-0" />
+            <span>{imagePreviewUrl ? 'Change' : '+ Photo'}</span>
           </button>
         </div>
 
@@ -724,15 +785,92 @@ const StoryCreatorModal = ({ isOpen, onClose, onStoryCreated }) => {
               {QUICK_EMOJIS.map((em) => (
                 <button
                   key={em}
-                  onClick={() => setStoryEmoji(storyEmoji === em ? '' : em)}
+                  onClick={() => {
+                    if (storyEmoji === em) {
+                      setStoryEmoji('');
+                    } else {
+                      setStoryEmoji(em);
+                      setEmojiScale(1);
+                      setEmojiPos({ x: 0, y: 0 });
+                    }
+                  }}
                   className={`text-xl p-1.5 rounded-xl shrink-0 transition-transform active:scale-90 ${
-                    storyEmoji === em ? 'bg-purple-600/40 scale-110' : 'bg-slate-900'
+                    storyEmoji === em ? 'bg-purple-600/40 ring-2 ring-purple-500 scale-110' : 'bg-slate-900'
                   }`}
                 >
                   {em}
                 </button>
               ))}
             </div>
+
+            {/* Emoji Resizing Controls (ছোট / বড়) */}
+            {storyEmoji && (
+              <div className="bg-slate-900 border border-slate-800 rounded-xl p-2 space-y-1.5">
+                <div className="flex items-center justify-between text-[11px]">
+                  <span className="font-bold text-slate-300 flex items-center gap-1">
+                    <span className="text-sm">{storyEmoji}</span>
+                    <span>Emoji Size (ছোট / বড়)</span>
+                  </span>
+                  <span className="text-purple-400 font-black bg-purple-950/60 px-1.5 py-0.5 rounded-md border border-purple-800/60 text-[10px]">
+                    {Math.round(emojiScale * 100)}%
+                  </span>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => setEmojiScale((s) => Math.max(0.5, +(s - 0.1).toFixed(2)))}
+                    className="px-2 py-0.5 rounded-lg bg-slate-800 text-slate-300 hover:text-white text-[10px] font-black active:scale-95"
+                  >
+                    - ছোট
+                  </button>
+                  <input
+                    type="range"
+                    min="0.5"
+                    max="2.5"
+                    step="0.05"
+                    value={emojiScale}
+                    onChange={(e) => setEmojiScale(parseFloat(e.target.value))}
+                    className="flex-1 accent-purple-500 h-1 bg-slate-800 rounded-lg cursor-pointer"
+                  />
+                  <button
+                    onClick={() => setEmojiScale((s) => Math.min(2.5, +(s + 0.1).toFixed(2)))}
+                    className="px-2 py-0.5 rounded-lg bg-slate-800 text-slate-300 hover:text-white text-[10px] font-black active:scale-95"
+                  >
+                    + বড়
+                  </button>
+                </div>
+
+                <div className="flex items-center justify-between pt-1 border-t border-slate-800/60 text-[10px]">
+                  <span className="text-slate-400">💡 Drag emoji to move anywhere</span>
+                  <div className="flex items-center gap-1">
+                    <button
+                      onClick={() => setEmojiScale(0.75)}
+                      className={`px-2 py-0.5 rounded font-bold ${emojiScale === 0.75 ? 'bg-purple-600 text-white' : 'bg-slate-800 text-slate-300'}`}
+                    >
+                      Small
+                    </button>
+                    <button
+                      onClick={() => setEmojiScale(1.0)}
+                      className={`px-2 py-0.5 rounded font-bold ${emojiScale === 1.0 ? 'bg-purple-600 text-white' : 'bg-slate-800 text-slate-300'}`}
+                    >
+                      Normal
+                    </button>
+                    <button
+                      onClick={() => setEmojiScale(1.6)}
+                      className={`px-2 py-0.5 rounded font-bold ${emojiScale === 1.6 ? 'bg-purple-600 text-white' : 'bg-slate-800 text-slate-300'}`}
+                    >
+                      Large
+                    </button>
+                    <button
+                      onClick={() => setEmojiPos({ x: 0, y: 0 })}
+                      className="px-2 py-0.5 rounded font-bold bg-slate-800 hover:bg-slate-700 text-slate-300"
+                    >
+                      Center
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
 
             {/* Font Style & Colors */}
             <div className="flex items-center justify-between pt-1">
@@ -905,12 +1043,17 @@ const StoryCreatorModal = ({ isOpen, onClose, onStoryCreated }) => {
 
             {/* Song List */}
             <div className="flex-1 overflow-y-auto p-3 space-y-2">
-              {filteredMusicCatalog.length === 0 ? (
+              {isLoadingMusic ? (
+                <div className="py-12 flex flex-col items-center justify-center gap-2 text-slate-400 text-xs">
+                  <Loader2 className="w-6 h-6 animate-spin text-purple-400" />
+                  <span>Searching music catalog...</span>
+                </div>
+              ) : (musicSearchResults.length > 0 ? musicSearchResults : filteredMusicCatalog).length === 0 ? (
                 <div className="py-8 text-center text-slate-500 text-xs">
-                  No music tracks found
+                  No music tracks found. Try typing another song or artist name.
                 </div>
               ) : (
-                filteredMusicCatalog.map((track) => {
+                (musicSearchResults.length > 0 ? musicSearchResults : filteredMusicCatalog).map((track) => {
                   const isSelected = storyMusic?.id === track.id;
                   const isPreviewing = previewingAudioUrl === track.url;
 
@@ -923,17 +1066,36 @@ const StoryCreatorModal = ({ isOpen, onClose, onStoryCreated }) => {
                           : 'border-slate-800 bg-slate-950/40 hover:bg-slate-800/40'
                       }`}
                     >
-                      {/* Left: Play button + Info */}
-                      <div className="flex items-center gap-3 min-w-0 flex-1">
+                      {/* Left: Play button / Album Art + Info */}
+                      <div className="flex items-center gap-2.5 min-w-0 flex-1">
                         <button
                           onClick={() => togglePreviewAudio(track.url)}
-                          className="w-10 h-10 rounded-xl bg-gradient-to-tr from-purple-600 to-indigo-600 text-white flex items-center justify-center shrink-0 shadow active:scale-90 transition-transform"
+                          className="w-10 h-10 rounded-xl bg-gradient-to-tr from-purple-600 to-indigo-600 text-white flex items-center justify-center shrink-0 shadow active:scale-90 transition-transform relative overflow-hidden"
                           title={isPreviewing ? 'Pause' : 'Play preview'}
                         >
-                          {isPreviewing ? (
-                            <Pause className="w-4 h-4 fill-white" />
+                          {track.coverUrl ? (
+                            <>
+                              <img
+                                src={track.coverUrl}
+                                alt={track.title}
+                                className="w-full h-full object-cover"
+                              />
+                              <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
+                                {isPreviewing ? (
+                                  <Pause className="w-4 h-4 fill-white" />
+                                ) : (
+                                  <Play className="w-4 h-4 fill-white ml-0.5" />
+                                )}
+                              </div>
+                            </>
                           ) : (
-                            <Play className="w-4 h-4 fill-white ml-0.5" />
+                            <>
+                              {isPreviewing ? (
+                                <Pause className="w-4 h-4 fill-white" />
+                              ) : (
+                                <Play className="w-4 h-4 fill-white ml-0.5" />
+                              )}
+                            </>
                           )}
                         </button>
 
@@ -942,7 +1104,7 @@ const StoryCreatorModal = ({ isOpen, onClose, onStoryCreated }) => {
                             {track.title}
                           </p>
                           <p className="text-[10px] text-slate-400 truncate mt-0.5">
-                            {track.artist} • <span className="text-purple-400">{track.genre}</span>
+                            {track.artist} {track.genre ? <>• <span className="text-purple-400">{track.genre}</span></> : null}
                           </p>
                         </div>
                       </div>
