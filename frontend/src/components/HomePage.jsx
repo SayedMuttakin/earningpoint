@@ -1822,8 +1822,11 @@ const HomePage = ({ setActiveTab, setSelectedNewsId, setActiveChatPartner, setSe
           {/* SEO H1 Heading (Screen Reader & Search Engine Optimized) */}
           <h1 className="sr-only">Zenivio – More Than a Social Network</h1>
 
-          {/* Facebook Style Story (Day) Tray */}
-          <div className="bg-white dark:bg-slate-900 rounded-3xl p-3 sm:p-4 shadow-2xs border border-slate-150/50 dark:border-slate-800/80">
+          {/* Banner */}
+          <BannerSection onStartEarning={() => setActiveTab && setActiveTab('Earning')} />
+
+          {/* Facebook Style Story (Day) Tray — Borderless & Compact */}
+          <div className="w-full">
             <StoryTray
               stories={stories}
               currentUser={currentUser}
@@ -1834,9 +1837,6 @@ const HomePage = ({ setActiveTab, setSelectedNewsId, setActiveChatPartner, setSe
               }}
             />
           </div>
-
-          {/* Banner */}
-          <BannerSection onStartEarning={() => setActiveTab && setActiveTab('Earning')} />
 
           {/* Community Feed Section */}
           <div ref={communityFeedRef} className="space-y-4 pt-1">

@@ -179,6 +179,14 @@ const StoryViewerModal = ({
     setTimeout(() => setToastMsg(''), 2000);
   };
 
+  // Lock body scroll when viewer is open
+  useEffect(() => {
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, []);
+
   if (!storyUser || !currentStory) return null;
 
   const hasImage = !!currentStory.image;
@@ -187,7 +195,7 @@ const StoryViewerModal = ({
 
   return (
     <div
-      className="fixed inset-0 z-[130] bg-black flex items-center justify-center select-none overflow-hidden animate-fade-in"
+      className="fixed inset-0 z-[100000] bg-black flex items-center justify-center select-none overflow-hidden animate-fade-in h-[100dvh]"
       onPointerDown={() => setIsPaused(true)}
       onPointerUp={() => setIsPaused(false)}
       onPointerCancel={() => setIsPaused(false)}
@@ -218,7 +226,7 @@ const StoryViewerModal = ({
         {hasImage && <div className="absolute inset-0 bg-black/25 pointer-events-none" />}
 
         {/* ── TOP PROGRESS BARS ── */}
-        <div className="relative z-20 flex gap-1 px-3 pt-6 sm:pt-4 pb-2 shrink-0">
+        <div className="relative z-20 flex gap-1 px-3 pt-[max(12px,env(safe-area-inset-top,12px))] pb-2 shrink-0">
           {storyUser.stories.map((_, i) => (
             <div key={i} className="flex-1 h-1 bg-white/30 rounded-full overflow-hidden">
               <div
@@ -385,7 +393,7 @@ const StoryViewerModal = ({
 
         {/* ── BOTTOM REPLY / REACTION BAR ── */}
         <div
-          className="relative z-20 px-4 pb-6 sm:pb-4 pt-2 bg-gradient-to-t from-black/90 to-transparent flex flex-col gap-2 shrink-0"
+          className="relative z-20 px-4 pb-[max(16px,env(safe-area-inset-bottom,16px))] pt-2 bg-gradient-to-t from-black/90 to-transparent flex flex-col gap-2 shrink-0"
           onClick={(e) => e.stopPropagation()}
         >
           {/* Quick emoji reactions */}
@@ -424,7 +432,7 @@ const StoryViewerModal = ({
       {/* ── DELETE STORY CONFIRMATION MODAL ── */}
       {showDeleteConfirm && (
         <div
-          className="fixed inset-0 z-[160] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4"
+          className="fixed inset-0 z-[100010] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4"
           onClick={(e) => e.stopPropagation()}
         >
           <div className="bg-slate-900 border border-slate-800 rounded-3xl p-5 max-w-xs w-full shadow-2xl text-white text-center space-y-3">

@@ -338,14 +338,22 @@ const StoryCreatorModal = ({ isOpen, onClose, onStoryCreated }) => {
     return matchesCategory && matchesQuery;
   });
 
+  // Lock body scroll when modal is open
+  useEffect(() => {
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, []);
+
   return (
-    <div className="fixed inset-0 z-[120] bg-black flex flex-col items-center justify-between select-none overflow-hidden animate-fade-in">
+    <div className="fixed inset-0 z-[100000] bg-black flex flex-col items-center justify-between select-none overflow-hidden animate-fade-in h-[100dvh]">
       
       {/* ── TOP NAV BAR ── */}
-      <div className="w-full max-w-lg px-4 pt-10 pb-3 flex items-center justify-between z-30 bg-gradient-to-b from-black/80 to-transparent">
+      <div className="w-full max-w-lg px-4 pt-[max(12px,env(safe-area-inset-top,12px))] pb-2 flex items-center justify-between z-30 bg-gradient-to-b from-black/80 to-transparent shrink-0">
         <button
           onClick={handleClose}
-          className="w-10 h-10 rounded-full bg-white/20 backdrop-blur-md text-white flex items-center justify-center active:scale-90 transition-transform"
+          className="w-9 h-9 rounded-full bg-white/20 backdrop-blur-md text-white flex items-center justify-center active:scale-90 transition-transform"
           title="Close"
         >
           <X className="w-5 h-5" />
@@ -387,13 +395,13 @@ const StoryCreatorModal = ({ isOpen, onClose, onStoryCreated }) => {
       </div>
 
       {/* ── MAIN 9:16 STORY CANVAS FRAME ── */}
-      <div className="flex-1 w-full max-w-sm flex items-center justify-center px-3 py-1 relative">
+      <div className="flex-1 min-h-0 w-full max-w-sm flex items-center justify-center px-3 py-1 relative">
         <div
           ref={frameContainerRef}
           onWheel={handleWheel}
           onTouchMove={handleTouchMove}
           onTouchEnd={handleTouchEnd}
-          className="relative w-full aspect-[9/16] max-h-[72vh] rounded-[2.5rem] overflow-hidden shadow-2xl border border-white/10 flex flex-col items-center justify-center cursor-grab active:cursor-grabbing touch-none"
+          className="relative w-full aspect-[9/16] max-h-[48dvh] sm:max-h-[56dvh] rounded-3xl overflow-hidden shadow-2xl border border-white/10 flex flex-col items-center justify-center cursor-grab active:cursor-grabbing touch-none"
           style={
             imagePreviewUrl
               ? { backgroundColor: '#0f172a' }
@@ -566,10 +574,10 @@ const StoryCreatorModal = ({ isOpen, onClose, onStoryCreated }) => {
       </div>
 
       {/* ── BOTTOM CONTROLS & TOOLBAR ── */}
-      <div className="w-full max-w-lg bg-slate-950/90 backdrop-blur-lg border-t border-slate-800/80 rounded-t-[2rem] px-4 pt-3 pb-8 space-y-3 z-30">
+      <div className="w-full max-w-lg bg-slate-950/95 backdrop-blur-lg border-t border-slate-800/80 rounded-t-3xl px-3.5 pt-2.5 pb-[max(12px,env(safe-area-inset-bottom,12px))] space-y-2.5 z-30 shrink-0">
         
         {/* Sub-tab navigation (Frame Zoom / Text / Background) */}
-        <div className="flex items-center justify-between px-2">
+        <div className="flex items-center justify-between px-1">
           <div className="flex gap-2">
             <button
               onClick={() => setActiveControlTab('frame')}
@@ -808,7 +816,7 @@ const StoryCreatorModal = ({ isOpen, onClose, onStoryCreated }) => {
       {/* ── MUSIC PICKER MODAL (Facebook & Instagram Style) ── */}
       {showMusicPicker && (
         <div
-          className="fixed inset-0 z-[150] bg-black/80 backdrop-blur-md flex items-end sm:items-center justify-center p-0 sm:p-4 animate-fade-in"
+          className="fixed inset-0 z-[100010] bg-black/80 backdrop-blur-md flex items-end sm:items-center justify-center p-0 sm:p-4 animate-fade-in"
           onClick={() => {
             setShowMusicPicker(false);
             if (previewAudioRef.current) {
