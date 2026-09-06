@@ -84,6 +84,10 @@ export default function VerifyIn2MinutesModal({ isOpen, onClose, onSuccess, init
     if (isOpen) {
       setError('');
       fetchStatus();
+      document.body.style.overflow = 'hidden';
+      return () => {
+        document.body.style.overflow = '';
+      };
     }
   }, [isOpen]);
 
@@ -304,7 +308,10 @@ export default function VerifyIn2MinutesModal({ isOpen, onClose, onSuccess, init
   const currentStepperIdx = getStepperIndex();
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-slate-950/75 backdrop-blur-md animate-in fade-in duration-200">
+    <div 
+      onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
+      className="fixed inset-0 z-[100000] flex items-center justify-center p-3 sm:p-6 bg-slate-950/75 backdrop-blur-md animate-in fade-in duration-200"
+    >
       <div className="relative w-full max-w-md md:max-w-4xl bg-white dark:bg-slate-900 rounded-3xl shadow-2xl border border-slate-100 dark:border-slate-800 overflow-hidden flex flex-col md:flex-row max-h-[94vh] md:h-[600px]">
         
         {/* ── DESKTOP LEFT SIDEBAR (Visible on md and up) ── */}
@@ -427,23 +434,25 @@ export default function VerifyIn2MinutesModal({ isOpen, onClose, onSuccess, init
         <div className="flex-1 flex flex-col overflow-hidden bg-white dark:bg-slate-900">
           
           {/* Top Header Bar */}
-          <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100 dark:border-slate-800 shrink-0">
-            <div className="flex items-center gap-2">
-              {step !== 'overview' && step !== 'success' ? (
-                <button 
-                  onClick={() => {
-                    setError('');
-                    if (step === 'phone_otp') setStep('phone_input');
-                    else if (step === 'email_otp') setStep('email_input');
-                    else setStep('overview');
-                  }}
-                  className="p-1.5 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 transition-colors"
-                >
-                  <ArrowLeft className="w-5 h-5" />
-                </button>
-              ) : null}
+          <div className="flex items-center justify-between px-4 sm:px-6 py-3.5 sm:py-4 border-b border-slate-100 dark:border-slate-800 shrink-0">
+            <div className="flex items-center gap-1.5 sm:gap-2">
+              <button 
+                type="button"
+                onClick={() => {
+                  setError('');
+                  if (step === 'phone_otp') setStep('phone_input');
+                  else if (step === 'email_otp') setStep('email_input');
+                  else if (step === 'phone_input' || step === 'email_input') setStep('overview');
+                  else onClose();
+                }}
+                className="p-2 -ml-1 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 transition-colors flex items-center justify-center cursor-pointer active:scale-95"
+                title="Back"
+                aria-label="Back"
+              >
+                <ArrowLeft className="w-5 h-5" />
+              </button>
               <div className="flex items-center gap-2">
-                <Shield className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
+                <Shield className="w-5 h-5 text-indigo-600 dark:text-indigo-400 shrink-0" />
                 <span className="font-extrabold text-sm sm:text-base text-slate-900 dark:text-white">
                   {step === 'phone_input' && 'Mobile Number'}
                   {step === 'phone_otp' && 'Verify Phone SMS'}
@@ -455,8 +464,11 @@ export default function VerifyIn2MinutesModal({ isOpen, onClose, onSuccess, init
               </div>
             </div>
             <button 
+              type="button"
               onClick={onClose}
-              className="p-1.5 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors"
+              className="p-2 -mr-1 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors cursor-pointer active:scale-95"
+              title="Close"
+              aria-label="Close"
             >
               <X className="w-5 h-5" />
             </button>
@@ -576,14 +588,25 @@ export default function VerifyIn2MinutesModal({ isOpen, onClose, onSuccess, init
                     </div>
                   </div>
 
-                  {/* Start CTA Button */}
-                  <button
-                    onClick={handleStartVerification}
-                    className="w-full py-4 rounded-2xl font-black text-sm bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white shadow-lg shadow-indigo-600/25 active:scale-[0.98] transition-all flex items-center justify-center gap-2"
-                  >
-                    <Sparkles className="w-4 h-4" />
-                    {isEmailVerified ? 'View Verification Status' : 'Start Verification'}
-                  </button>
+                  {/* Start CTA Button & Back Button */}
+                  <div className="space-y-2.5">
+                    <button
+                      type="button"
+                      onClick={handleStartVerification}
+                      className="w-full py-4 rounded-2xl font-black text-sm bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white shadow-lg shadow-indigo-600/25 active:scale-[0.98] transition-all flex items-center justify-center gap-2 cursor-pointer"
+                    >
+                      <Sparkles className="w-4 h-4" />
+                      {isEmailVerified ? 'View Verification Status' : 'Start Verification'}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={onClose}
+                      className="w-full py-3 rounded-2xl font-bold text-xs sm:text-sm text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all flex items-center justify-center gap-2 border border-slate-200 dark:border-slate-800 active:scale-[0.98] cursor-pointer"
+                    >
+                      <ArrowLeft className="w-4 h-4" />
+                      <span>Back</span>
+                    </button>
+                  </div>
 
                   {/* Mobile-Only "Why Verify?" Box (Hidden on desktop since left panel displays it) */}
                   <div className="md:hidden bg-slate-50 dark:bg-slate-800/40 rounded-2xl p-4 border border-slate-100 dark:border-slate-800">
@@ -682,10 +705,19 @@ export default function VerifyIn2MinutesModal({ isOpen, onClose, onSuccess, init
                     )}
                   </button>
 
-                  <div className="text-center">
+                  <div className="flex items-center justify-between text-xs pt-1">
                     <button
-                      onClick={() => setStep('email_input')}
-                      className="text-xs font-bold text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
+                      type="button"
+                      onClick={() => { setError(''); setStep('overview'); }}
+                      className="font-bold text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 flex items-center gap-1 cursor-pointer"
+                    >
+                      <ArrowLeft className="w-3.5 h-3.5" />
+                      <span>Back</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => { setError(''); setStep('email_input'); }}
+                      className="font-bold text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 cursor-pointer"
                     >
                       Skip to email verification →
                     </button>
@@ -814,6 +846,17 @@ export default function VerifyIn2MinutesModal({ isOpen, onClose, onSuccess, init
                       </>
                     )}
                   </button>
+
+                  <div className="text-center pt-1">
+                    <button
+                      type="button"
+                      onClick={() => { setError(''); setStep('overview'); }}
+                      className="text-xs font-bold text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 inline-flex items-center gap-1 cursor-pointer"
+                    >
+                      <ArrowLeft className="w-3.5 h-3.5" />
+                      <span>Back</span>
+                    </button>
+                  </div>
                 </div>
               )}
 
