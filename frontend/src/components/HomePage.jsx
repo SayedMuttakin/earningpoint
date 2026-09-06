@@ -1437,8 +1437,9 @@ const HomePage = ({ setActiveTab, setSelectedNewsId, setActiveChatPartner, setSe
 
   useEffect(() => {
     const handlePostShared = (e) => {
-      if (e.detail && e.detail._id) {
-        setFeedPosts(prev => [e.detail, ...prev]);
+      const sharedPost = e.detail?.post || e.detail;
+      if (sharedPost && sharedPost._id) {
+        setFeedPosts(prev => [sharedPost, ...prev]);
         window.scrollTo({ top: 0, behavior: 'smooth' });
       }
     };

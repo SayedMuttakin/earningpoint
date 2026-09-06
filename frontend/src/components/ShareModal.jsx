@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Search, Send, Share2, Check, Loader2, X, Link, Repeat } from 'lucide-react';
-import { API_BASE } from '../config';
+import { API_BASE, getImageUrl } from '../config';
 import { Share } from '@capacitor/share';
 
 const ShareModal = ({ isOpen, onClose, shareUrl, title, text, showToast, post }) => {
@@ -101,7 +101,8 @@ const ShareModal = ({ isOpen, onClose, shareUrl, title, text, showToast, post })
         if (showToast) {
           showToast('Shared to your feed! 🎉');
         }
-        window.dispatchEvent(new CustomEvent('post_shared', { detail: data }));
+        const sharedPostObj = data.post || data;
+        window.dispatchEvent(new CustomEvent('post_shared', { detail: sharedPostObj }));
         onClose();
       } else {
         const err = await res.json();
@@ -243,40 +244,50 @@ const ShareModal = ({ isOpen, onClose, shareUrl, title, text, showToast, post })
             />
 
             {/* Mini preview */}
-            <div className="p-2 rounded-xl bg-white/90 dark:bg-slate-850 border border-slate-200/60 dark:border-slate-800 flex items-center justify-between gap-2.5 mb-2.5">
-              <div className="flex items-center gap-2 min-w-0">
-                <div className="w-6 h-6 rounded-full bg-slate-200 dark:bg-slate-700 overflow-hidden shrink-0">
-                  {(post.authorDetails?.profilePic || post.authorProfilePic) ? (
-                    <img 
-                      src={(post.authorDetails?.profilePic || post.authorProfilePic).startsWith('http') 
-                        ? (post.authorDetails?.profilePic || post.authorProfilePic) 
-                        : `${API_BASE}/api/image?file=${encodeURIComponent(post.authorDetails?.profilePic || post.authorProfilePic)}`} 
-                      className="w-full h-full object-cover" 
-                      alt="" 
-                    />
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center text-[9px] font-black text-slate-500">
-                      {(post.authorDetails?.name || post.authorName || 'U').charAt(0)}
+            {(() => {
+              const originalPost = post.sharedPostId && typeof post.sharedPostId === 'object' ? post.sharedPostId : post;
+              const authorDisplayName = post.authorDetails?.name || post.authorName || originalPost.authorName || 'User';
+              const authorPicUrl = post.authorDetails?.profilePic || post.authorProfilePic || (post.authorId && post.authorId.profilePic) || originalPost.authorProfilePic || (originalPost.authorId && originalPost.authorId.profilePic) || '';
+              const previewImageUrl = post.image || originalPost.image || '';
+              const previewText = post.content || originalPost.content || (previewImageUrl ? 'Photo' : 'Post');
+
+              return (
+                <div className="p-2.5 rounded-2xl bg-white/90 dark:bg-slate-850 border border-slate-200/80 dark:border-slate-800 flex items-center justify-between gap-3 mb-2.5 shadow-xs">
+                  <div className="flex items-center gap-2.5 min-w-0">
+                    <div className="w-8 h-8 rounded-full bg-slate-200 dark:bg-slate-700 overflow-hidden shrink-0 flex items-center justify-center">
+                      {authorPicUrl ? (
+                        <img 
+                          src={getImageUrl(authorPicUrl)} 
+                          className="w-full h-full object-cover" 
+                          alt="" 
+                          onError={(e) => { e.currentTarget.style.display = 'none'; }}
+                        />
+                      ) : (
+                        <span className="text-xs font-black text-slate-500">
+                          {authorDisplayName.charAt(0).toUpperCase()}
+                        </span>
+                      )}
                     </div>
+                    <div className="min-w-0">
+                      <p className="text-xs font-black text-slate-800 dark:text-slate-200 truncate">
+                        {authorDisplayName}
+                      </p>
+                      <p className="text-[11px] text-slate-500 dark:text-slate-400 truncate">
+                        {previewText}
+                      </p>
+                    </div>
+                  </div>
+                  {previewImageUrl && (
+                    <img 
+                      src={getImageUrl(previewImageUrl)} 
+                      alt="" 
+                      className="w-10 h-10 rounded-xl object-cover shrink-0 border border-slate-200 dark:border-slate-700" 
+                      onError={(e) => { e.currentTarget.style.display = 'none'; }}
+                    />
                   )}
                 </div>
-                <div className="min-w-0">
-                  <p className="text-[11px] font-black text-slate-800 dark:text-slate-200 truncate">
-                    {post.authorDetails?.name || post.authorName || 'Original Post'}
-                  </p>
-                  <p className="text-[10px] text-slate-400 truncate">
-                    {post.content || (post.image ? 'Photo' : 'Post')}
-                  </p>
-                </div>
-              </div>
-              {post.image && (
-                <img 
-                  src={post.image.startsWith('http') ? post.image : `${API_BASE}/api/image?file=${encodeURIComponent(post.image)}`} 
-                  alt="" 
-                  className="w-8 h-8 rounded-lg object-cover shrink-0 border border-slate-200 dark:border-slate-700" 
-                />
-              )}
-            </div>
+              );
+            })()}
 
             <button
               onClick={handleShareToFeed}

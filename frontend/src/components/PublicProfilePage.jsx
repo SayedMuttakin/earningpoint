@@ -32,7 +32,8 @@ import {
   CheckCircle2,
   ChevronRight,
   MoreVertical,
-  Edit
+  Edit,
+  Repeat
 } from 'lucide-react';
 import { API_BASE, getImageUrl } from '../config';
 import VerifiedBadge from './VerifiedBadge';
@@ -845,6 +846,19 @@ const PublicProfilePage = ({ userId, onBack, currentUser, isOwnProfile, setActiv
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [userId]);
+
+  // Listen for posts shared to feed to update profile grid instantly
+  useEffect(() => {
+    const handlePostShared = (e) => {
+      const sharedPost = e.detail?.post || e.detail;
+      if (sharedPost && sharedPost._id) {
+        setPosts(prev => [sharedPost, ...(prev || [])]);
+        setProfile(prev => prev ? { ...prev, postsCount: (prev.postsCount || (posts ? posts.length : 0)) + 1 } : prev);
+      }
+    };
+    window.addEventListener('post_shared', handlePostShared);
+    return () => window.removeEventListener('post_shared', handlePostShared);
+  }, [posts]);
 
   // Handle auto-advancing story highlights
   useEffect(() => {
@@ -1897,45 +1911,64 @@ const PublicProfilePage = ({ userId, onBack, currentUser, isOwnProfile, setActiv
           {activeSubTab === 'grid' ? (
             posts.length > 0 ? (
               <div className="grid grid-cols-3 gap-1">
-                {posts.map(post => (
-                  <div
-                    key={post._id}
-                    onClick={() => handleOpenPostDetail(post)}
-                    className="relative aspect-square overflow-hidden bg-slate-100 dark:bg-slate-900 border border-slate-200/20 shadow-xs cursor-pointer group hover:opacity-95 active:scale-98 transition-all"
-                  >
-                    {post.image ? (
-                      <img
-                        src={post.image.startsWith('http') || post.image.startsWith('/api') || post.image.startsWith('data:')
-                          ? post.image
-                          : `${API_BASE}/api/image?file=${encodeURIComponent(post.image)}`}
-                        alt=""
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                      />
-                    ) : (
-                      <div className="w-full h-full p-2 bg-gradient-to-tr from-slate-100 to-slate-200 dark:from-slate-900 dark:to-slate-955 flex flex-col justify-between text-left">
-                        <p className="text-[10px] sm:text-[11px] font-semibold text-slate-800 dark:text-slate-200 line-clamp-4 leading-normal select-none">
-                          {post.content}
-                        </p>
-                        <div className="flex items-center justify-between text-[8px] font-bold text-slate-400 dark:text-slate-500 uppercase mt-1">
-                          <span>Post</span>
-                          <span>{formatRelativeTime(post.createdAt)}</span>
-                        </div>
-                      </div>
-                    )}
+                {posts.map(post => {
+                  const displayImage = post.image || (post.sharedPostId && typeof post.sharedPostId === 'object' ? post.sharedPostId.image : null);
+                  const displayText = post.content || (post.sharedPostId && typeof post.sharedPostId === 'object' ? post.sharedPostId.content : '') || (post.sharedPostId ? 'Shared Post' : '');
+                  const isShared = Boolean(post.sharedPostId);
 
-                    {/* Likes/Comments Hover Overlay */}
-                    <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-4 text-white text-xs font-black z-10 select-none">
-                      <span className="flex items-center gap-1">
-                        <Heart className="w-4 h-4 fill-white text-white" />
-                        {formatCount(post.likesCount)}
-                      </span>
-                      <span className="flex items-center gap-1">
-                        <MessageCircle className="w-4 h-4 fill-white text-white" />
-                        {formatCount(post.commentsCount)}
-                      </span>
+                  return (
+                    <div
+                      key={post._id}
+                      onClick={() => handleOpenPostDetail(post)}
+                      className="relative aspect-square overflow-hidden bg-slate-100 dark:bg-slate-900 border border-slate-200/20 shadow-xs cursor-pointer group hover:opacity-95 active:scale-98 transition-all"
+                    >
+                      {displayImage ? (
+                        <div className="relative w-full h-full">
+                          <img
+                            src={getImageUrl(displayImage)}
+                            alt=""
+                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                            onError={(e) => { e.currentTarget.style.display = 'none'; }}
+                          />
+                          {isShared && (
+                            <div className="absolute top-1.5 right-1.5 px-1.5 py-0.5 rounded-md bg-black/60 backdrop-blur-xs flex items-center gap-1 text-white text-[9px] font-black shadow-sm z-10">
+                              <Repeat className="w-2.5 h-2.5 text-purple-300" />
+                              <span>Shared</span>
+                            </div>
+                          )}
+                        </div>
+                      ) : (
+                        <div className="w-full h-full p-2 bg-gradient-to-tr from-slate-100 to-slate-200 dark:from-slate-900 dark:to-slate-955 flex flex-col justify-between text-left">
+                          {isShared && (
+                            <div className="flex items-center gap-1 text-[9px] font-black text-purple-600 dark:text-purple-400">
+                              <Repeat className="w-3 h-3" />
+                              <span>Shared Post</span>
+                            </div>
+                          )}
+                          <p className="text-[10px] sm:text-[11px] font-semibold text-slate-800 dark:text-slate-200 line-clamp-4 leading-normal select-none">
+                            {displayText}
+                          </p>
+                          <div className="flex items-center justify-between text-[8px] font-bold text-slate-400 dark:text-slate-500 uppercase mt-1">
+                            <span>{isShared ? 'Shared' : 'Post'}</span>
+                            <span>{formatRelativeTime(post.createdAt)}</span>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Likes/Comments Hover Overlay */}
+                      <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-4 text-white text-xs font-black z-10 select-none">
+                        <span className="flex items-center gap-1">
+                          <Heart className="w-4 h-4 fill-white text-white" />
+                          {formatCount(post.likesCount || (post.likes ? post.likes.length : 0))}
+                        </span>
+                        <span className="flex items-center gap-1">
+                          <MessageCircle className="w-4 h-4 fill-white text-white" />
+                          {formatCount(post.commentsCount || (post.comments ? post.comments.length : 0))}
+                        </span>
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             ) : (
               <div className="text-center py-12 bg-white dark:bg-slate-900 border border-slate-150/40 dark:border-slate-800 rounded-3xl text-slate-450 font-bold text-xs select-none">
@@ -1994,45 +2027,64 @@ const PublicProfilePage = ({ userId, onBack, currentUser, isOwnProfile, setActiv
             isOwn ? (
               savedPosts.length > 0 ? (
                 <div className="grid grid-cols-3 gap-1">
-                  {savedPosts.map(post => (
-                    <div
-                      key={post._id}
-                      onClick={() => handleOpenPostDetail(post)}
-                      className="relative aspect-square overflow-hidden bg-slate-100 dark:bg-slate-900 border border-slate-200/20 shadow-xs cursor-pointer group hover:opacity-95 active:scale-98 transition-all"
-                    >
-                      {post.image ? (
-                        <img
-                          src={post.image.startsWith('http') || post.image.startsWith('/api') || post.image.startsWith('data:')
-                            ? post.image
-                            : `${API_BASE}/api/image?file=${encodeURIComponent(post.image)}`}
-                          alt=""
-                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                        />
-                      ) : (
-                        <div className="w-full h-full p-2 bg-gradient-to-tr from-slate-100 to-slate-200 dark:from-slate-900 dark:to-slate-955 flex flex-col justify-between text-left">
-                          <p className="text-[10px] sm:text-[11px] font-semibold text-slate-800 dark:text-slate-200 line-clamp-4 leading-normal select-none">
-                            {post.content}
-                          </p>
-                          <div className="flex items-center justify-between text-[8px] font-bold text-slate-400 dark:text-slate-500 uppercase mt-1">
-                            <span>Post</span>
-                            <span>{formatRelativeTime(post.createdAt)}</span>
-                          </div>
-                        </div>
-                      )}
+                  {savedPosts.map(post => {
+                    const displayImage = post.image || (post.sharedPostId && typeof post.sharedPostId === 'object' ? post.sharedPostId.image : null);
+                    const displayText = post.content || (post.sharedPostId && typeof post.sharedPostId === 'object' ? post.sharedPostId.content : '') || (post.sharedPostId ? 'Shared Post' : '');
+                    const isShared = Boolean(post.sharedPostId);
 
-                      {/* Likes/Comments Hover Overlay */}
-                      <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-4 text-white text-xs font-black z-10 select-none">
-                        <span className="flex items-center gap-1">
-                          <Heart className="w-4 h-4 fill-white text-white" />
-                          {formatCount(post.likesCount)}
-                        </span>
-                        <span className="flex items-center gap-1">
-                          <MessageCircle className="w-4 h-4 fill-white text-white" />
-                          {formatCount(post.commentsCount)}
-                        </span>
+                    return (
+                      <div
+                        key={post._id}
+                        onClick={() => handleOpenPostDetail(post)}
+                        className="relative aspect-square overflow-hidden bg-slate-100 dark:bg-slate-900 border border-slate-200/20 shadow-xs cursor-pointer group hover:opacity-95 active:scale-98 transition-all"
+                      >
+                        {displayImage ? (
+                          <div className="relative w-full h-full">
+                            <img
+                              src={getImageUrl(displayImage)}
+                              alt=""
+                              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                              onError={(e) => { e.currentTarget.style.display = 'none'; }}
+                            />
+                            {isShared && (
+                              <div className="absolute top-1.5 right-1.5 px-1.5 py-0.5 rounded-md bg-black/60 backdrop-blur-xs flex items-center gap-1 text-white text-[9px] font-black shadow-sm z-10">
+                                <Repeat className="w-2.5 h-2.5 text-purple-300" />
+                                <span>Shared</span>
+                              </div>
+                            )}
+                          </div>
+                        ) : (
+                          <div className="w-full h-full p-2 bg-gradient-to-tr from-slate-100 to-slate-200 dark:from-slate-900 dark:to-slate-955 flex flex-col justify-between text-left">
+                            {isShared && (
+                              <div className="flex items-center gap-1 text-[9px] font-black text-purple-600 dark:text-purple-400">
+                                <Repeat className="w-3 h-3" />
+                                <span>Shared Post</span>
+                              </div>
+                            )}
+                            <p className="text-[10px] sm:text-[11px] font-semibold text-slate-800 dark:text-slate-200 line-clamp-4 leading-normal select-none">
+                              {displayText}
+                            </p>
+                            <div className="flex items-center justify-between text-[8px] font-bold text-slate-400 dark:text-slate-500 uppercase mt-1">
+                              <span>{isShared ? 'Shared' : 'Post'}</span>
+                              <span>{formatRelativeTime(post.createdAt)}</span>
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Likes/Comments Hover Overlay */}
+                        <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-4 text-white text-xs font-black z-10 select-none">
+                          <span className="flex items-center gap-1">
+                            <Heart className="w-4 h-4 fill-white text-white" />
+                            {formatCount(post.likesCount || (post.likes ? post.likes.length : 0))}
+                          </span>
+                          <span className="flex items-center gap-1">
+                            <MessageCircle className="w-4 h-4 fill-white text-white" />
+                            {formatCount(post.commentsCount || (post.comments ? post.comments.length : 0))}
+                          </span>
+                        </div>
                       </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               ) : (
                 <div className="text-center py-16 px-4 bg-white dark:bg-slate-900/40 border border-slate-150 dark:border-slate-800 rounded-3xl select-none flex flex-col items-center gap-3">
@@ -2499,14 +2551,14 @@ const PublicProfilePage = ({ userId, onBack, currentUser, isOwnProfile, setActiv
                 const spIsVerified = spAuthor?.verificationBadge === 'blue' || spAuthor?.verificationBadge === 'purple' || spAuthor?.verificationBadge === 'golden' || spAuthor?.isEmailVerified || sp.isVerified;
                 const spBadgeType = spAuthor?.verificationBadge === 'golden' ? 'golden' : 'purple';
                 const spTimeAgo = formatRelativeTime(sp.createdAt);
-                const spImage = sp.image ? (sp.image.startsWith('http') || sp.image.startsWith('/api') || sp.image.startsWith('data:') ? sp.image : `${API_BASE}/api/image?file=${encodeURIComponent(sp.image)}`) : null;
+                const spImage = sp.image ? getImageUrl(sp.image) : null;
 
                 return (
                   <div className="mt-2.5 rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50/60 dark:bg-slate-850/50 overflow-hidden text-left">
                     <div className="p-3 flex items-center gap-2.5">
                       <div className="w-8 h-8 rounded-full overflow-hidden shrink-0 bg-slate-200 dark:bg-slate-700">
                         {spAuthorPic ? (
-                          <img src={spAuthorPic.startsWith('http') || spAuthorPic.startsWith('/api') || spAuthorPic.startsWith('data:') ? spAuthorPic : `${API_BASE}/api/image?file=${encodeURIComponent(spAuthorPic)}`} alt="" className="w-full h-full object-cover" />
+                          <img src={getImageUrl(spAuthorPic)} alt="" className="w-full h-full object-cover" onError={(e) => { e.currentTarget.style.display = 'none'; }} />
                         ) : (
                           <div className="w-full h-full flex items-center justify-center font-bold text-xs text-slate-600 dark:text-slate-300">
                             {spAuthorName.charAt(0).toUpperCase()}
