@@ -25,8 +25,13 @@ const COUNTRY_CODES = [
   { code: '+966', flag: '🇸🇦', name: 'Saudi Arabia' },
 ];
 
-export default function VerifyIn2MinutesModal({ isOpen, onClose, onSuccess, initialUser }) {
-  const [step, setStep] = useState('overview'); // 'overview' | 'phone_input' | 'email_input' | 'email_otp' | 'success'
+export default function VerifyIn2MinutesModal({ isOpen, onClose, onSuccess, initialUser, isOwn = true }) {
+  const isAccountAlreadyVerified = Boolean(
+    initialUser?.isAccountVerified || 
+    (initialUser?.isPhoneVerified && initialUser?.isEmailVerified)
+  );
+
+  const [step, setStep] = useState(() => (isAccountAlreadyVerified ? 'success' : 'overview')); // 'overview' | 'phone_input' | 'email_input' | 'email_otp' | 'success'
   const [statusLoading, setStatusLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState(false);
   const [error, setError] = useState('');
@@ -52,6 +57,31 @@ export default function VerifyIn2MinutesModal({ isOpen, onClose, onSuccess, init
   const [emailCanResend, setEmailCanResend] = useState(false);
 
   const emailOtpRefs = useRef([]);
+
+  const isGolden = initialUser?.verificationBadge === 'golden';
+  const badgeColor = isGolden ? '#F59E0B' : '#7C3AED';
+
+  const displayPhone = isOwn 
+    ? (verifiedPhone || initialUser?.phone || '') 
+    : (verifiedPhone || initialUser?.phone ? (
+        (verifiedPhone || initialUser?.phone).length > 6 
+          ? (verifiedPhone || initialUser?.phone).slice(0, 4) + ' •••••• ' + (verifiedPhone || initialUser?.phone).slice(-3)
+          : 'Confirmed'
+      ) : '');
+
+  const displayEmail = isOwn 
+    ? (verifiedEmail || initialUser?.email || '') 
+    : (verifiedEmail || initialUser?.email ? (
+        (() => {
+          const em = verifiedEmail || initialUser?.email;
+          const parts = em.split('@');
+          if (parts.length === 2) {
+            const name = parts[0];
+            return (name.length > 2 ? name[0] + '•••' + name.slice(-1) : name[0] + '•••') + '@' + parts[1];
+          }
+          return 'Confirmed';
+        })()
+      ) : '');
 
   // Fetch current verification status
   const fetchStatus = async () => {
@@ -83,13 +113,25 @@ export default function VerifyIn2MinutesModal({ isOpen, onClose, onSuccess, init
   useEffect(() => {
     if (isOpen) {
       setError('');
-      fetchStatus();
+      if (isAccountAlreadyVerified) {
+        setStep('success');
+      }
+      if (!isOwn && initialUser) {
+        setIsPhoneVerified(Boolean(initialUser.isPhoneVerified || initialUser.phone));
+        setVerifiedPhone(initialUser.phone || '');
+        setIsEmailVerified(Boolean(initialUser.isEmailVerified || initialUser.email));
+        setVerifiedEmail(initialUser.email || '');
+        setStep('success');
+        setStatusLoading(false);
+      } else {
+        fetchStatus();
+      }
       document.body.style.overflow = 'hidden';
       return () => {
         document.body.style.overflow = '';
       };
     }
-  }, [isOpen]);
+  }, [isOpen, isOwn, initialUser, isAccountAlreadyVerified]);
 
   // Phone timer
   useEffect(() => {
@@ -312,123 +354,125 @@ export default function VerifyIn2MinutesModal({ isOpen, onClose, onSuccess, init
       onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
       className="fixed inset-0 z-[100000] flex items-center justify-center p-3 sm:p-6 bg-slate-950/75 backdrop-blur-md animate-in fade-in duration-200"
     >
-      <div className="relative w-full max-w-md md:max-w-4xl bg-white dark:bg-slate-900 rounded-3xl shadow-2xl border border-slate-100 dark:border-slate-800 overflow-hidden flex flex-col md:flex-row max-h-[94vh] md:h-[600px]">
+      <div className={`relative w-full ${step === 'success' ? 'max-w-md' : 'max-w-md md:max-w-4xl'} bg-white dark:bg-slate-900 rounded-3xl shadow-2xl border border-purple-100/80 dark:border-purple-900/30 overflow-hidden flex flex-col ${step === 'success' ? '' : 'md:flex-row'} max-h-[94vh] ${step === 'success' ? 'md:max-h-[92vh]' : 'md:h-[600px]'}`}>
         
-        {/* ── DESKTOP LEFT SIDEBAR (Visible on md and up) ── */}
-        <div className="hidden md:flex md:w-5/12 bg-gradient-to-br from-slate-950 via-indigo-950 to-purple-950 text-white p-8 flex-col justify-between border-r border-indigo-900/30 relative overflow-hidden select-none">
-          {/* Ambient Glow */}
-          <div className="absolute -top-12 -left-12 w-48 h-48 bg-indigo-600/20 rounded-full blur-3xl pointer-events-none" />
-          <div className="absolute -bottom-12 -right-12 w-48 h-48 bg-purple-600/20 rounded-full blur-3xl pointer-events-none" />
+        {/* ── DESKTOP LEFT SIDEBAR (Visible on md and up only during setup) ── */}
+        {step !== 'success' && (
+          <div className="hidden md:flex md:w-5/12 bg-gradient-to-br from-slate-950 via-indigo-950 to-purple-950 text-white p-8 flex-col justify-between border-r border-indigo-900/30 relative overflow-hidden select-none">
+            {/* Ambient Glow */}
+            <div className="absolute -top-12 -left-12 w-48 h-48 bg-indigo-600/20 rounded-full blur-3xl pointer-events-none" />
+            <div className="absolute -bottom-12 -right-12 w-48 h-48 bg-purple-600/20 rounded-full blur-3xl pointer-events-none" />
 
-          {/* Header */}
-          <div className="relative z-10">
-            <div className="flex items-center gap-3 mb-4">
-              <div className="w-11 h-11 rounded-2xl bg-indigo-600/30 border border-indigo-400/40 flex items-center justify-center text-indigo-300 shadow-md">
-                <ShieldCheck className="w-6 h-6" />
+            {/* Header */}
+            <div className="relative z-10">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-11 h-11 rounded-2xl bg-indigo-600/30 border border-indigo-400/40 flex items-center justify-center text-indigo-300 shadow-md">
+                  <ShieldCheck className="w-6 h-6" />
+                </div>
+                <div>
+                  <h3 className="text-base font-black tracking-tight text-white">Account Security</h3>
+                  <p className="text-[11px] text-indigo-200/70 font-medium">Zenivio Account Verification</p>
+                </div>
               </div>
-              <div>
-                <h3 className="text-base font-black tracking-tight text-white">Account Security</h3>
-                <p className="text-[11px] text-indigo-200/70 font-medium">Zenivio Account Verification</p>
-              </div>
+
+              <h2 className="text-xl font-black text-white leading-tight mt-3">
+                Verify in 2 minutes
+              </h2>
+              <p className="text-xs text-slate-300/80 mt-1.5 leading-relaxed">
+                Verify your contact details to protect your account and display "Verified Account" status above your bio.
+              </p>
             </div>
 
-            <h2 className="text-xl font-black text-white leading-tight mt-3">
-              Verify in 2 minutes
-            </h2>
-            <p className="text-xs text-slate-300/80 mt-1.5 leading-relaxed">
-              Verify your contact details to protect your account and display "Verified Account" status above your bio.
-            </p>
-          </div>
+            {/* Stepper Progress */}
+            <div className="relative z-10 space-y-4 my-auto py-2">
+              {/* Step 1: Overview */}
+              <div className="flex items-center gap-3">
+                <div className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold transition-all ${
+                  currentStepperIdx > 0 
+                    ? 'bg-emerald-500 text-white shadow-sm' 
+                    : currentStepperIdx === 0 
+                      ? 'bg-indigo-500 text-white ring-4 ring-indigo-500/20' 
+                      : 'bg-white/10 text-white/50'
+                }`}>
+                  {currentStepperIdx > 0 ? <Check className="w-3.5 h-3.5" /> : '1'}
+                </div>
+                <div>
+                  <div className={`text-xs font-bold ${currentStepperIdx === 0 ? 'text-white' : 'text-slate-300'}`}>
+                    Overview & Status
+                  </div>
+                  <div className="text-[10px] text-slate-400">Security checklist</div>
+                </div>
+              </div>
 
-          {/* Stepper Progress */}
-          <div className="relative z-10 space-y-4 my-auto py-2">
-            {/* Step 1: Overview */}
-            <div className="flex items-center gap-3">
-              <div className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold transition-all ${
-                currentStepperIdx > 0 
-                  ? 'bg-emerald-500 text-white shadow-sm' 
-                  : currentStepperIdx === 0 
-                    ? 'bg-indigo-500 text-white ring-4 ring-indigo-500/20' 
+              {/* Step 2: Phone */}
+              <div className="flex items-center gap-3">
+                <div className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold transition-all ${
+                  isPhoneVerified 
+                    ? 'bg-emerald-500 text-white shadow-sm' 
+                    : currentStepperIdx === 1 
+                      ? 'bg-indigo-500 text-white ring-4 ring-indigo-500/20' 
+                      : 'bg-white/10 text-white/50'
+                }`}>
+                  {isPhoneVerified ? <Check className="w-3.5 h-3.5" /> : '2'}
+                </div>
+                <div>
+                  <div className={`text-xs font-bold ${currentStepperIdx === 1 ? 'text-white' : 'text-slate-300'}`}>
+                    Phone Number
+                  </div>
+                  <div className="text-[10px] text-slate-400">
+                    {isPhoneVerified ? '✓ Connected' : 'Save mobile number'}
+                  </div>
+                </div>
+              </div>
+
+              {/* Step 3: Email */}
+              <div className="flex items-center gap-3">
+                <div className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold transition-all ${
+                  isEmailVerified 
+                    ? 'bg-emerald-500 text-white shadow-sm' 
+                    : currentStepperIdx === 2 
+                      ? 'bg-indigo-500 text-white ring-4 ring-indigo-500/20' 
+                      : 'bg-white/10 text-white/50'
+                }`}>
+                  {isEmailVerified ? <Check className="w-3.5 h-3.5" /> : '3'}
+                </div>
+                <div>
+                  <div className={`text-xs font-bold ${currentStepperIdx === 2 ? 'text-white' : 'text-slate-300'}`}>
+                    Email Address
+                  </div>
+                  <div className="text-[10px] text-slate-400">
+                    {isEmailVerified ? '✓ Verified' : 'Gmail OTP verification'}
+                  </div>
+                </div>
+              </div>
+
+              {/* Step 4: Complete */}
+              <div className="flex items-center gap-3">
+                <div className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold transition-all ${
+                  currentStepperIdx === 3 
+                    ? 'bg-emerald-500 text-white ring-4 ring-emerald-500/20' 
                     : 'bg-white/10 text-white/50'
-              }`}>
-                {currentStepperIdx > 0 ? <Check className="w-3.5 h-3.5" /> : '1'}
-              </div>
-              <div>
-                <div className={`text-xs font-bold ${currentStepperIdx === 0 ? 'text-white' : 'text-slate-300'}`}>
-                  Overview & Status
+                }`}>
+                  <Check className="w-3.5 h-3.5" />
                 </div>
-                <div className="text-[10px] text-slate-400">Security checklist</div>
-              </div>
-            </div>
-
-            {/* Step 2: Phone */}
-            <div className="flex items-center gap-3">
-              <div className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold transition-all ${
-                isPhoneVerified 
-                  ? 'bg-emerald-500 text-white shadow-sm' 
-                  : currentStepperIdx === 1 
-                    ? 'bg-indigo-500 text-white ring-4 ring-indigo-500/20' 
-                    : 'bg-white/10 text-white/50'
-              }`}>
-                {isPhoneVerified ? <Check className="w-3.5 h-3.5" /> : '2'}
-              </div>
-              <div>
-                <div className={`text-xs font-bold ${currentStepperIdx === 1 ? 'text-white' : 'text-slate-300'}`}>
-                  Phone Number
-                </div>
-                <div className="text-[10px] text-slate-400">
-                  {isPhoneVerified ? '✓ Connected' : 'Save mobile number'}
+                <div>
+                  <div className={`text-xs font-bold ${currentStepperIdx === 3 ? 'text-white' : 'text-slate-300'}`}>
+                    Account Verified
+                  </div>
+                  <div className="text-[10px] text-slate-400">Verified Account status shown above bio</div>
                 </div>
               </div>
             </div>
 
-            {/* Step 3: Email */}
-            <div className="flex items-center gap-3">
-              <div className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold transition-all ${
-                isEmailVerified 
-                  ? 'bg-emerald-500 text-white shadow-sm' 
-                  : currentStepperIdx === 2 
-                    ? 'bg-indigo-500 text-white ring-4 ring-indigo-500/20' 
-                    : 'bg-white/10 text-white/50'
-              }`}>
-                {isEmailVerified ? <Check className="w-3.5 h-3.5" /> : '3'}
-              </div>
-              <div>
-                <div className={`text-xs font-bold ${currentStepperIdx === 2 ? 'text-white' : 'text-slate-300'}`}>
-                  Email Address
-                </div>
-                <div className="text-[10px] text-slate-400">
-                  {isEmailVerified ? '✓ Verified' : 'Gmail OTP verification'}
-                </div>
-              </div>
-            </div>
-
-            {/* Step 4: Complete */}
-            <div className="flex items-center gap-3">
-              <div className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold transition-all ${
-                currentStepperIdx === 3 
-                  ? 'bg-emerald-500 text-white ring-4 ring-emerald-500/20' 
-                  : 'bg-white/10 text-white/50'
-              }`}>
-                <Check className="w-3.5 h-3.5" />
-              </div>
-              <div>
-                <div className={`text-xs font-bold ${currentStepperIdx === 3 ? 'text-white' : 'text-slate-300'}`}>
-                  Account Verified
-                </div>
-                <div className="text-[10px] text-slate-400">Verified Account status shown above bio</div>
+            {/* Desktop Reassurance Footer */}
+            <div className="relative z-10 pt-4 border-t border-white/10">
+              <div className="flex items-center gap-2 text-[11px] text-indigo-200/80 font-medium">
+                <Sparkles className="w-3.5 h-3.5 text-indigo-400 shrink-0" />
+                <span>Fast 2-minute setup • Verified details kept secure</span>
               </div>
             </div>
           </div>
-
-          {/* Desktop Reassurance Footer */}
-          <div className="relative z-10 pt-4 border-t border-white/10">
-            <div className="flex items-center gap-2 text-[11px] text-indigo-200/80 font-medium">
-              <Sparkles className="w-3.5 h-3.5 text-indigo-400 shrink-0" />
-              <span>Fast 2-minute setup • Verified details kept secure</span>
-            </div>
-          </div>
-        </div>
+        )}
 
         {/* ── MAIN CONTENT PANEL (Both Desktop & Mobile) ── */}
         <div className="flex-1 flex flex-col overflow-hidden bg-white dark:bg-slate-900">
@@ -458,7 +502,7 @@ export default function VerifyIn2MinutesModal({ isOpen, onClose, onSuccess, init
                   {step === 'phone_otp' && 'Verify Phone SMS'}
                   {step === 'email_input' && 'Email Verification'}
                   {step === 'email_otp' && 'Verify Your Email'}
-                  {step === 'success' && 'Verification Complete'}
+                  {step === 'success' && 'Verified Account'}
                   {step === 'overview' && 'Verify in 2 minutes'}
                 </span>
               </div>
@@ -475,7 +519,7 @@ export default function VerifyIn2MinutesModal({ isOpen, onClose, onSuccess, init
           </div>
 
           {/* Scrollable Modal Body */}
-          <div className="p-6 md:p-8 overflow-y-auto flex-1 flex flex-col justify-between">
+          <div className={`p-5 sm:p-7 overflow-y-auto flex-1 flex flex-col ${step === 'success' ? 'justify-start' : 'justify-between'}`}>
             <div>
               {error && (
                 <div className="mb-4 p-3.5 rounded-2xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900/50 text-rose-600 dark:text-rose-400 text-xs font-bold animate-in fade-in">
@@ -930,56 +974,168 @@ export default function VerifyIn2MinutesModal({ isOpen, onClose, onSuccess, init
                 </div>
               )}
 
-              {/* SCREEN 5: SUCCESS */}
+              {/* SCREEN 5: SUCCESS / VERIFIED ACCOUNT */}
               {step === 'success' && (
-                <div className="space-y-6 animate-in zoom-in-95 duration-200 text-center pt-2">
-                  <div className="relative inline-flex items-center justify-center">
-                    <div className="absolute inset-0 bg-emerald-500/20 dark:bg-emerald-500/30 rounded-full blur-2xl animate-pulse" />
-                    <div className="relative w-20 h-20 rounded-3xl bg-gradient-to-br from-emerald-400 to-teal-600 flex items-center justify-center shadow-xl shadow-emerald-500/30 text-white">
-                      <ShieldCheck className="w-10 h-10" />
+                <div className="space-y-4 animate-in zoom-in-95 duration-200 text-center py-1 flex flex-col items-center">
+                  {/* Glowing Shield Icon Header */}
+                  <div className="relative flex items-center justify-center my-2">
+                    <div 
+                      className="absolute w-24 h-24 rounded-full blur-xl opacity-60 animate-pulse pointer-events-none"
+                      style={{ backgroundColor: `${badgeColor}33` }}
+                    />
+                    <div 
+                      className="absolute w-20 h-20 rounded-full border border-dashed opacity-40 animate-spin pointer-events-none"
+                      style={{ borderColor: badgeColor, animationDuration: '16s' }}
+                    />
+                    <div 
+                      className="relative w-16 h-16 rounded-2xl flex items-center justify-center shadow-lg text-white"
+                      style={{ 
+                        background: isGolden 
+                          ? 'linear-gradient(135deg, #F59E0B, #D97706)' 
+                          : 'linear-gradient(135deg, #7C3AED, #A855F7)',
+                        boxShadow: isGolden 
+                          ? '0 8px 25px rgba(245,158,11,0.35)' 
+                          : '0 8px 25px rgba(124,58,237,0.35)'
+                      }}
+                    >
+                      <ShieldCheck className="w-9 h-9 stroke-[2.2]" />
                     </div>
                   </div>
 
-                  <div>
-                    <h2 className="text-xl md:text-2xl font-black text-slate-900 dark:text-white">
-                      Verification Complete! 🎉
-                    </h2>
-                    <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-1.5 max-w-sm mx-auto leading-relaxed">
-                      Your details are confirmed. The <strong>"Verified Account"</strong> status is now active above your profile bio.
-                    </p>
+                  {/* Title */}
+                  <h3 className="text-xl font-black text-slate-900 dark:text-white text-center mt-1 tracking-tight">
+                    {isGolden ? 'Verified Organization' : 'Verified Account'}
+                  </h3>
+                  
+                  {/* Decorative underline bar */}
+                  <div 
+                    className="w-10 h-1 rounded-full my-1.5 mx-auto" 
+                    style={{ background: isGolden ? 'linear-gradient(90deg, #F59E0B, #FBBF24)' : 'linear-gradient(90deg, #7C3AED, #A855F7)' }}
+                  />
+
+                  {/* Subtitle */}
+                  <p className="text-slate-500 dark:text-slate-400 text-xs text-center leading-relaxed px-1 mb-2 font-medium max-w-sm">
+                    Verification helps protect this account from unauthorized access and makes account recovery easier.
+                  </p>
+
+                  {/* 3 Feature Boxes */}
+                  <div className="w-full space-y-2.5 text-left">
+                    {/* Card 1 */}
+                    <div className="bg-slate-50 dark:bg-slate-800/70 border border-slate-100 dark:border-slate-800 rounded-2xl p-3 flex items-start gap-3">
+                      <div 
+                        className="w-8 h-8 rounded-xl flex items-center justify-center shrink-0 mt-0.5"
+                        style={{ 
+                          backgroundColor: isGolden ? 'rgba(245,158,11,0.12)' : 'rgba(124,58,237,0.12)',
+                          color: badgeColor
+                        }}
+                      >
+                        <CheckCircle2 className="w-4 h-4 stroke-[2.3]" />
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <h4 className="text-xs font-bold text-slate-900 dark:text-white">Verified & Authentic</h4>
+                        <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5 leading-snug">
+                          This account is verified by Zenivio's advanced system.
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Card 2 */}
+                    <div className="bg-slate-50 dark:bg-slate-800/70 border border-slate-100 dark:border-slate-800 rounded-2xl p-3 flex items-start gap-3">
+                      <div 
+                        className="w-8 h-8 rounded-xl flex items-center justify-center shrink-0 mt-0.5"
+                        style={{ 
+                          backgroundColor: isGolden ? 'rgba(245,158,11,0.12)' : 'rgba(124,58,237,0.12)',
+                          color: badgeColor
+                        }}
+                      >
+                        <Shield className="w-4 h-4 stroke-[2.3]" />
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <h4 className="text-xs font-bold text-slate-900 dark:text-white">Reliable & Safe</h4>
+                        <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5 leading-snug">
+                          We verify accounts to ensure a safe and trusted environment.
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Card 3 */}
+                    <div className="bg-slate-50 dark:bg-slate-800/70 border border-slate-100 dark:border-slate-800 rounded-2xl p-3 flex items-start gap-3">
+                      <div 
+                        className="w-8 h-8 rounded-xl flex items-center justify-center shrink-0 mt-0.5"
+                        style={{ 
+                          backgroundColor: isGolden ? 'rgba(245,158,11,0.12)' : 'rgba(124,58,237,0.12)',
+                          color: badgeColor
+                        }}
+                      >
+                        <Lock className="w-4 h-4 stroke-[2.3]" />
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <h4 className="text-xs font-bold text-slate-900 dark:text-white">Stronger Protection</h4>
+                        <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5 leading-snug">
+                          Verification helps keep the account secure and protected.
+                        </p>
+                      </div>
+                    </div>
                   </div>
 
-                  {/* Verified details checklist */}
-                  <div className="bg-slate-50 dark:bg-slate-800/60 rounded-2xl p-4 border border-slate-100 dark:border-slate-800 text-left space-y-3">
-                    {verifiedPhone && (
-                      <div className="flex items-center gap-3">
-                        <CheckCircle2 className="w-5 h-5 text-emerald-500 flex-shrink-0" />
-                        <div className="text-xs font-bold text-slate-800 dark:text-slate-200">
-                          Phone connected
-                          <div className="text-[11px] font-mono text-slate-400 font-normal">
-                            {verifiedPhone}
+                  {/* Verified Details Card (Phone & Email) */}
+                  {(displayPhone || displayEmail) && (
+                    <div className="w-full bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-800 rounded-2xl p-3 text-left space-y-2">
+                      {displayPhone && (
+                        <div className="flex items-center justify-between gap-3">
+                          <div className="flex items-center gap-2">
+                            <div className="w-6 h-6 rounded-lg bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0">
+                              <CheckCircle2 className="w-3.5 h-3.5" />
+                            </div>
+                            <span className="text-xs font-bold text-slate-800 dark:text-slate-200">
+                              Phone connected
+                            </span>
                           </div>
+                          <span className="text-xs font-mono font-semibold text-slate-500 dark:text-slate-400">
+                            {displayPhone}
+                          </span>
                         </div>
-                      </div>
-                    )}
+                      )}
 
-                    <div className={`flex items-center gap-3 ${verifiedPhone ? 'pt-2 border-t border-slate-200/50 dark:border-slate-700/50' : ''}`}>
-                      <CheckCircle2 className="w-5 h-5 text-emerald-500 flex-shrink-0" />
-                      <div className="text-xs font-bold text-slate-800 dark:text-slate-200">
-                        Email verified
-                        <div className="text-[11px] text-slate-400 font-normal truncate max-w-[240px]">
-                          {verifiedEmail || 'Connected'}
+                      {displayEmail && (
+                        <div className={`flex items-center justify-between gap-3 ${displayPhone ? 'pt-2 border-t border-slate-200/60 dark:border-slate-700/60' : ''}`}>
+                          <div className="flex items-center gap-2">
+                            <div className="w-6 h-6 rounded-lg bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0">
+                              <CheckCircle2 className="w-3.5 h-3.5" />
+                            </div>
+                            <span className="text-xs font-bold text-slate-800 dark:text-slate-200">
+                              Email verified
+                            </span>
+                          </div>
+                          <span className="text-xs font-medium text-slate-500 dark:text-slate-400 truncate max-w-[200px]">
+                            {displayEmail}
+                          </span>
                         </div>
-                      </div>
+                      )}
                     </div>
+                  )}
+
+                  {/* Bottom Branding */}
+                  <div className="flex items-center justify-center gap-1.5 pt-0.5 select-none">
+                    <img 
+                      src="/zenivio-logo.png" 
+                      alt="Zenivio" 
+                      className="w-4 h-4 object-contain rounded-md shadow-xs" 
+                      onError={(e) => { e.target.style.display = 'none'; }} 
+                    />
+                    <span className="text-xs font-extrabold bg-gradient-to-r from-purple-600 to-indigo-600 bg-clip-text text-transparent">
+                      Verified by Zenivio
+                    </span>
                   </div>
 
+                  {/* Done & Return to Profile Button */}
                   <button
+                    type="button"
                     onClick={() => {
                       if (onSuccess) onSuccess();
                       onClose();
                     }}
-                    className="w-full py-4 rounded-2xl font-black text-sm bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white shadow-lg shadow-indigo-600/25 active:scale-[0.98] transition-all"
+                    className="w-full py-3.5 rounded-2xl font-black text-sm bg-gradient-to-r from-purple-600 via-indigo-600 to-purple-600 hover:from-purple-700 hover:to-indigo-700 text-white shadow-lg shadow-purple-600/25 active:scale-[0.98] transition-all cursor-pointer mt-1"
                   >
                     Done & Return to Profile
                   </button>
