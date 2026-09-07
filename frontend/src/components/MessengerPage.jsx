@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { 
   Search, Send, ArrowLeft, Loader2, User as UserIcon, WifiOff, Phone, 
   Video, PhoneOff, Image, Mic, Smile, ThumbsUp, ChevronRight, UserPlus, 
