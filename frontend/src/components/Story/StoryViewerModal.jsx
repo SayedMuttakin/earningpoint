@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { 
   X, Volume2, VolumeX, Trash2, Download, Send, Heart, Flame, Laugh, 
-  ChevronLeft, ChevronRight, Music 
+  ChevronLeft, ChevronRight, Music, Eye, ChevronUp
 } from 'lucide-react';
 import { API_BASE, getImageUrl } from '../../config';
 import { saveImageToPhone } from '../../utils/downloadHelper';
@@ -21,6 +21,7 @@ const formatRelativeTime = (timeStr) => {
 
 const StoryViewerModal = ({
   storyUser,
+  storyUsers = [],
   initialIndex = 0,
   currentUser = null,
   onClose,
@@ -36,8 +37,15 @@ const StoryViewerModal = ({
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [toastMsg, setToastMsg] = useState('');
 
+  // Story Viewers State
+  const [showViewersSheet, setShowViewersSheet] = useState(false);
+  const [viewersList, setViewersList] = useState([]);
+  const [loadingViewers, setLoadingViewers] = useState(false);
+  const recordedViewsRef = useRef(new Set());
+
   const audioRef = useRef(null);
   const progressTimerRef = useRef(null);
+  const touchStartPos = useRef({ x: 0, y: 0, time: 0 });
   const currentStory = storyUser?.stories?.[currentIndex];
   const isOwnStory = storyUser?._id?.toString() === currentUser?._id?.toString();
 
@@ -45,7 +53,32 @@ const StoryViewerModal = ({
   useEffect(() => {
     setCurrentIndex(initialIndex);
     setProgress(0);
+    setShowViewersSheet(false);
   }, [storyUser, initialIndex]);
+
+  // Record Story View for non-owners
+  useEffect(() => {
+    if (!currentStory?._id || isOwnStory || !currentUser?._id) return;
+    if (recordedViewsRef.current.has(currentStory._id)) return;
+    recordedViewsRef.current.add(currentStory._id);
+
+    const record = async () => {
+      try {
+        const token = localStorage.getItem('token');
+        if (!token) return;
+        await fetch(`${API_BASE}/api/messages/story/${currentStory._id}/view`, {
+          method: 'POST',
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        });
+      } catch (err) {
+        console.error('Failed to record story view:', err);
+      }
+    };
+    record();
+  }, [currentStory?._id, isOwnStory, currentUser?._id]);
 
   // Audio Playback & Progress Timer
   useEffect(() => {
@@ -179,6 +212,75 @@ const StoryViewerModal = ({
     setTimeout(() => setToastMsg(''), 2000);
   };
 
+  const openViewersSheet = async () => {
+    setShowViewersSheet(true);
+    setIsPaused(true);
+    if (currentStory?.viewers && Array.isArray(currentStory.viewers)) {
+      setViewersList(currentStory.viewers);
+    }
+    setLoadingViewers(true);
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) return;
+      const res = await fetch(`${API_BASE}/api/messages/story/${currentStory._id}/viewers`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setViewersList(data.viewers || []);
+      }
+    } catch (err) {
+      console.error('Failed to fetch viewers:', err);
+    } finally {
+      setLoadingViewers(false);
+    }
+  };
+
+  const handleTouchStart = (e) => {
+    if (!e.touches || !e.touches[0]) return;
+    const t = e.touches[0];
+    touchStartPos.current = { x: t.clientX, y: t.clientY, time: Date.now() };
+    setIsPaused(true);
+  };
+
+  const handleTouchEnd = (e) => {
+    if (!e.changedTouches || !e.changedTouches[0]) {
+      setIsPaused(false);
+      return;
+    }
+    const t = e.changedTouches[0];
+    const diffX = t.clientX - touchStartPos.current.x;
+    const diffY = t.clientY - touchStartPos.current.y;
+    const elapsed = Date.now() - touchStartPos.current.time;
+    setIsPaused(false);
+
+    if (elapsed < 600) {
+      // Horizontal swipe between stories / users
+      if (Math.abs(diffX) > 55 && Math.abs(diffX) > Math.abs(diffY)) {
+        if (diffX < 0) {
+          // Swipe left -> Next user / next story
+          handleNextStory();
+        } else {
+          // Swipe right -> Prev user / prev story
+          handlePrevStory();
+        }
+        return;
+      }
+
+      // Vertical swipe down to close modal
+      if (diffY > 80 && Math.abs(diffY) > Math.abs(diffX)) {
+        onClose();
+        return;
+      }
+
+      // Vertical swipe up to see viewers (if own story)
+      if (diffY < -60 && Math.abs(diffY) > Math.abs(diffX) && isOwnStory) {
+        openViewersSheet();
+        return;
+      }
+    }
+  };
+
   // Lock body scroll when viewer is open
   useEffect(() => {
     document.body.style.overflow = 'hidden';
@@ -209,6 +311,8 @@ const StoryViewerModal = ({
 
       {/* ── 9:16 PHONE WRAPPER ── */}
       <div
+        onTouchStart={handleTouchStart}
+        onTouchEnd={handleTouchEnd}
         className="relative w-full max-w-md h-full sm:max-h-[92vh] sm:rounded-[2.5rem] overflow-hidden flex flex-col justify-between shadow-2xl border-0 sm:border border-white/10"
         style={
           hasImage
@@ -378,43 +482,179 @@ const StoryViewerModal = ({
           )}
         </div>
 
-        {/* ── BOTTOM REPLY / REACTION BAR ── */}
+        {/* ── BOTTOM REPLY / REACTION BAR OR OWNER VIEWS BAR ── */}
         <div
           className="relative z-20 px-4 pb-[max(16px,env(safe-area-inset-bottom,16px))] pt-2 bg-gradient-to-t from-black/90 to-transparent flex flex-col gap-2 shrink-0"
           onClick={(e) => e.stopPropagation()}
         >
-          {/* Quick emoji reactions */}
-          <div className="flex items-center justify-center gap-3 py-1">
-            {['❤️', '🔥', '😂', '👏', '😍', '🎉'].map((em) => (
-              <button
-                key={em}
-                onClick={() => handleSendReaction(em)}
-                className="text-2xl hover:scale-125 active:scale-95 transition-transform"
-              >
-                {em}
-              </button>
-            ))}
-          </div>
-
-          {/* Reply input */}
-          <form onSubmit={handleSendReply} className="flex items-center gap-2">
-            <input
-              type="text"
-              value={replyText}
-              onChange={(e) => setReplyText(e.target.value)}
-              placeholder={`Reply to ${storyUser.name?.split(' ')[0]}...`}
-              className="flex-1 bg-white/20 backdrop-blur-md rounded-full px-4 py-2 text-xs font-semibold text-white placeholder-white/60 outline-none border border-white/25 focus:border-white/60 shadow-inner"
-            />
-            <button
-              type="submit"
-              disabled={!replyText.trim()}
-              className="w-8 h-8 rounded-full bg-[#7C3AED] hover:bg-[#6D28D9] disabled:opacity-40 text-white flex items-center justify-center active:scale-90 transition-transform shadow shrink-0"
+          {isOwnStory ? (
+            <div
+              onClick={openViewersSheet}
+              className="flex items-center justify-between px-4 py-2.5 rounded-2xl bg-black/55 backdrop-blur-md border border-white/20 cursor-pointer hover:bg-black/70 active:scale-[0.99] transition-all group shadow-lg"
             >
-              <Send className="w-3.5 h-3.5" />
-            </button>
-          </form>
+              <div className="flex items-center gap-2.5">
+                <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-[#7C3AED] to-indigo-600 flex items-center justify-center text-white shadow">
+                  <Eye className="w-4 h-4 text-white" />
+                </div>
+                <div className="text-left">
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-white text-xs font-black">
+                      {(currentStory.viewsCount ?? currentStory.viewers?.length ?? 0)} {((currentStory.viewsCount ?? currentStory.viewers?.length ?? 0) === 1) ? 'View' : 'Views'}
+                    </span>
+                    <span className="text-[10px] text-white/60">• Tap to see viewers</span>
+                  </div>
+                  {currentStory.viewers && currentStory.viewers.length > 0 ? (
+                    <p className="text-[10px] text-purple-200 truncate max-w-[210px] font-medium">
+                      Seen by {currentStory.viewers.slice(0, 2).map(v => v.name).join(', ')}{currentStory.viewers.length > 2 ? ` and ${currentStory.viewers.length - 2} others` : ''}
+                    </p>
+                  ) : (
+                    <p className="text-[10px] text-white/50">No views yet</p>
+                  )}
+                </div>
+              </div>
+              <div className="flex items-center gap-1 text-white/80 group-hover:text-white transition-colors">
+                <span className="text-xs font-bold">Activity</span>
+                <ChevronUp className="w-4 h-4 animate-bounce" />
+              </div>
+            </div>
+          ) : (
+            <>
+              {/* Quick emoji reactions */}
+              <div className="flex items-center justify-center gap-3 py-1">
+                {['❤️', '🔥', '😂', '👏', '😍', '🎉'].map((em) => (
+                  <button
+                    key={em}
+                    onClick={() => handleSendReaction(em)}
+                    className="text-2xl hover:scale-125 active:scale-95 transition-transform"
+                  >
+                    {em}
+                  </button>
+                ))}
+              </div>
+
+              {/* Reply input */}
+              <form onSubmit={handleSendReply} className="flex items-center gap-2">
+                <input
+                  type="text"
+                  value={replyText}
+                  onChange={(e) => setReplyText(e.target.value)}
+                  placeholder={`Reply to ${storyUser.name?.split(' ')[0]}...`}
+                  className="flex-1 bg-white/20 backdrop-blur-md rounded-full px-4 py-2 text-xs font-semibold text-white placeholder-white/60 outline-none border border-white/25 focus:border-white/60 shadow-inner"
+                />
+                <button
+                  type="submit"
+                  disabled={!replyText.trim()}
+                  className="w-8 h-8 rounded-full bg-[#7C3AED] hover:bg-[#6D28D9] disabled:opacity-40 text-white flex items-center justify-center active:scale-90 transition-transform shadow shrink-0"
+                >
+                  <Send className="w-3.5 h-3.5" />
+                </button>
+              </form>
+            </>
+          )}
         </div>
       </div>
+
+      {/* ── STORY VIEWERS BOTTOM SHEET MODAL (OWN STORY) ── */}
+      {showViewersSheet && (
+        <div
+          className="fixed inset-0 z-[100020] bg-black/80 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-4 animate-fade-in"
+          onClick={(e) => {
+            e.stopPropagation();
+            setShowViewersSheet(false);
+            setIsPaused(false);
+          }}
+        >
+          <div
+            className="w-full max-w-md bg-slate-900 border border-slate-800 rounded-t-[2.5rem] sm:rounded-3xl max-h-[75vh] sm:max-h-[70vh] flex flex-col overflow-hidden shadow-2xl animate-slide-up text-white"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Modal Drag Handle & Header */}
+            <div className="pt-3 pb-1 flex justify-center sm:hidden">
+              <div className="w-12 h-1 rounded-full bg-slate-700" />
+            </div>
+            <div className="px-6 pt-3 pb-3 border-b border-slate-800 flex items-center justify-between">
+              <div className="flex items-center gap-2.5">
+                <div className="w-7 h-7 rounded-full bg-[#7C3AED]/20 flex items-center justify-center">
+                  <Eye className="w-4 h-4 text-[#7C3AED]" />
+                </div>
+                <div>
+                  <h3 className="font-black text-sm sm:text-base leading-tight">
+                    Seen by {viewersList.length}
+                  </h3>
+                  <p className="text-[10px] text-slate-400">People who viewed your day</p>
+                </div>
+              </div>
+              <button
+                onClick={() => {
+                  setShowViewersSheet(false);
+                  setIsPaused(false);
+                }}
+                className="w-8 h-8 rounded-full bg-slate-800 hover:bg-slate-700 flex items-center justify-center text-slate-300 active:scale-95"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            {/* Viewers List Content */}
+            <div className="flex-1 overflow-y-auto p-4 space-y-3 divide-y divide-slate-800/40 max-h-[55vh]">
+              {loadingViewers && viewersList.length === 0 ? (
+                <div className="py-12 flex flex-col items-center justify-center text-slate-400 gap-2">
+                  <div className="w-6 h-6 border-2 border-[#7C3AED] border-t-transparent rounded-full animate-spin" />
+                  <span className="text-xs font-bold">Checking viewers...</span>
+                </div>
+              ) : viewersList.length === 0 ? (
+                <div className="py-12 flex flex-col items-center justify-center text-slate-400 gap-2 text-center px-4">
+                  <div className="w-12 h-12 rounded-full bg-slate-800/80 flex items-center justify-center text-2xl">
+                    👀
+                  </div>
+                  <p className="font-black text-sm text-white">No views yet</p>
+                  <p className="text-xs text-slate-400 max-w-xs leading-relaxed">
+                    When someone views your story, their name and profile will show up here.
+                  </p>
+                </div>
+              ) : (
+                viewersList.map((viewer) => (
+                  <div key={viewer._id} className="pt-2.5 first:pt-0 flex items-center justify-between gap-3">
+                    <div className="flex items-center gap-3 min-w-0">
+                      <div className="w-10 h-10 rounded-full overflow-hidden shrink-0 bg-gradient-to-tr from-purple-600 to-indigo-600 flex items-center justify-center font-black text-sm text-white shadow">
+                        {viewer.profilePic ? (
+                          <img
+                            src={getImageUrl(viewer.profilePic)}
+                            alt={viewer.name}
+                            className="w-full h-full object-cover"
+                          />
+                        ) : (
+                          <span>{viewer.name?.charAt(0).toUpperCase() || 'U'}</span>
+                        )}
+                      </div>
+                      <div className="min-w-0 text-left">
+                        <div className="flex items-center gap-1.5">
+                          <p className="font-bold text-xs sm:text-sm text-white truncate">
+                            {viewer.name}
+                          </p>
+                          {viewer.isPremium && (
+                            <span className="px-1.5 py-0.2 rounded bg-amber-500/20 text-amber-300 text-[9px] font-black">
+                              PRO
+                            </span>
+                          )}
+                        </div>
+                        {viewer.username && (
+                          <p className="text-[11px] text-slate-400 truncate font-mono">
+                            @{viewer.username}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                    <span className="text-[10px] text-slate-400 font-medium shrink-0">
+                      {formatRelativeTime(viewer.viewedAt)}
+                    </span>
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* ── DELETE STORY CONFIRMATION MODAL ── */}
       {showDeleteConfirm && (

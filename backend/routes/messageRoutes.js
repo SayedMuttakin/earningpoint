@@ -13,6 +13,8 @@ const {
   addStory,
   deleteStory,
   getStories,
+  recordStoryView,
+  getStoryViewers,
   deleteChatHistory,
   reportMessage,
   sendMessage,
@@ -43,5 +45,7 @@ router.post('/report/:messageId', protect, reportMessage);
 router.get('/stories', protect, getStories);
 router.post('/story', protect, upload.single('image'), addStory);
 router.delete('/story/:storyId', protect, deleteStory);
+router.post('/story/:storyId/view', protect, recordStoryView);
+router.get('/story/:storyId/viewers', protect, getStoryViewers);
 
 module.exports = router;

@@ -24,12 +24,15 @@ const Settings = ({ ADMIN_API, authHeaders, onLogout }) => {
       { imageUrl: '', linkUrl: '', isActive: false }
     ],
     admobConfig: {
+      appId: '',
       bannerAdUnitId: '',
       interstitialAdUnitId: '',
       rewardedAdUnitId: '',
+      rewardedInterstitialAdUnitId: '',
       appOpenAdUnitId: '',
+      nativeAdUnitId: '',
       showAds: true,
-      useTestAds: true
+      useTestAds: false
     }
   });
   const [settingsLoading, setSettingsLoading] = useState(false);
@@ -324,6 +327,16 @@ const Settings = ({ ADMIN_API, authHeaders, onLogout }) => {
               />
             </div>
             <div>
+              <label className="text-slate-400 text-xs font-bold uppercase tracking-wider block mb-2">Rewarded Interstitial Ad Unit ID</label>
+              <input 
+                type="text" 
+                value={globalSettings.admobConfig?.rewardedInterstitialAdUnitId || ''} 
+                onChange={(e) => setGlobalSettings({...globalSettings, admobConfig: {...globalSettings.admobConfig, rewardedInterstitialAdUnitId: e.target.value}})}
+                placeholder="ca-app-pub-xxxxx/xxxxx"
+                className="w-full bg-slate-800 border border-slate-700 focus:border-indigo-500 rounded-xl px-4 py-3 text-white text-sm outline-none font-mono" 
+              />
+            </div>
+            <div>
               <label className="text-slate-400 text-xs font-bold uppercase tracking-wider block mb-2">App Open Ad Unit ID</label>
               <input 
                 type="text" 
@@ -333,7 +346,7 @@ const Settings = ({ ADMIN_API, authHeaders, onLogout }) => {
                 className="w-full bg-slate-800 border border-slate-700 focus:border-indigo-500 rounded-xl px-4 py-3 text-white text-sm outline-none font-mono" 
               />
             </div>
-            <div className="md:col-span-2">
+            <div>
               <label className="text-slate-400 text-xs font-bold uppercase tracking-wider block mb-2">Native Ad Unit ID</label>
               <input 
                 type="text" 

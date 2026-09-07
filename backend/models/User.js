@@ -85,6 +85,10 @@ const UserSchema = new mongoose.Schema({
       url: { type: String, default: '' },
       coverUrl: { type: String, default: '' }
     },
+    viewers: [{
+      user: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+      viewedAt: { type: Date, default: Date.now }
+    }],
     createdAt: { type: Date, default: Date.now }
   }],
   highlights: [{

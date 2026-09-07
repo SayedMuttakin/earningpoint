@@ -94,13 +94,14 @@ const GlobalSettingSchema = new mongoose.Schema({
   },
   admobConfig: {
     appId: { type: String, default: 'ca-app-pub-2974645883080760~7728677397' },
-    bannerAdUnitId: { type: String, default: '' },
-    interstitialAdUnitId: { type: String, default: '' },
-    rewardedAdUnitId: { type: String, default: '' },
-    appOpenAdUnitId: { type: String, default: '' },
-    nativeAdUnitId: { type: String, default: '' },
+    bannerAdUnitId: { type: String, default: 'ca-app-pub-2974645883080760/1360864845' },
+    interstitialAdUnitId: { type: String, default: 'ca-app-pub-2974645883080760/8840004811' },
+    rewardedAdUnitId: { type: String, default: 'ca-app-pub-2974645883080760/8856211482' },
+    rewardedInterstitialAdUnitId: { type: String, default: 'ca-app-pub-2974645883080760/3517013065' },
+    appOpenAdUnitId: { type: String, default: 'ca-app-pub-2974645883080760/7526923147' },
+    nativeAdUnitId: { type: String, default: 'ca-app-pub-2974645883080760/4061004201' },
     showAds: { type: Boolean, default: true },
-    useTestAds: { type: Boolean, default: true }
+    useTestAds: { type: Boolean, default: false }
   },
   // App Version & Force Update Configuration
   appUpdateConfig: {

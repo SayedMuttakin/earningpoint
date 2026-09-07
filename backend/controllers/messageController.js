@@ -338,6 +338,103 @@ exports.deleteStory = async (req, res) => {
   }
 };
 
+// Record a view on a story
+exports.recordStoryView = async (req, res) => {
+  try {
+    const currentUserId = req.user._id;
+    const storyId = req.params.storyId;
+
+    if (!storyId) {
+      return res.status(400).json({ message: 'Story ID required' });
+    }
+
+    // Find the user who owns the story
+    const storyOwner = await User.findOne({ 'stories._id': storyId });
+    if (!storyOwner) {
+      return res.status(404).json({ message: 'Story not found' });
+    }
+
+    // Don't record own views as a separate viewer
+    if (storyOwner._id.toString() === currentUserId.toString()) {
+      const selfStory = storyOwner.stories.id(storyId);
+      return res.json({ 
+        message: 'Own story view not counted', 
+        viewsCount: selfStory?.viewers?.length || 0 
+      });
+    }
+
+    const story = storyOwner.stories.id(storyId);
+    if (!story) {
+      return res.status(404).json({ message: 'Story item not found' });
+    }
+
+    const alreadyViewed = story.viewers && story.viewers.some(v => v.user?.toString() === currentUserId.toString());
+    if (!alreadyViewed) {
+      await User.updateOne(
+        { 'stories._id': storyId },
+        {
+          $push: {
+            'stories.$.viewers': {
+              user: currentUserId,
+              viewedAt: new Date()
+            }
+          }
+        }
+      );
+    }
+
+    const updatedOwner = await User.findOne({ 'stories._id': storyId }, { 'stories.$': 1 });
+    const viewsCount = updatedOwner?.stories?.[0]?.viewers?.length || (story.viewers?.length || 0) + (alreadyViewed ? 0 : 1);
+
+    res.json({ message: 'Story view recorded', viewsCount });
+  } catch (error) {
+    console.error('Error recording story view:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+};
+
+// Get list of viewers for a story (Only the story author can view)
+exports.getStoryViewers = async (req, res) => {
+  try {
+    const currentUserId = req.user._id;
+    const storyId = req.params.storyId;
+
+    const user = await User.findOne(
+      { _id: currentUserId, 'stories._id': storyId },
+      { 'stories.$': 1 }
+    ).populate('stories.viewers.user', 'name username profilePic isPremium');
+
+    if (!user || !user.stories || user.stories.length === 0) {
+      return res.status(404).json({ message: 'Story not found or unauthorized' });
+    }
+
+    const targetStory = user.stories[0];
+    const rawViewers = targetStory.viewers || [];
+
+    // Format viewers list (newest first)
+    const formattedViewers = rawViewers
+      .filter(v => v.user)
+      .map(v => ({
+        _id: v.user._id,
+        name: v.user.name,
+        username: v.user.username,
+        profilePic: v.user.profilePic,
+        isPremium: !!v.user.isPremium,
+        viewedAt: v.viewedAt
+      }))
+      .reverse();
+
+    res.json({
+      storyId,
+      viewsCount: formattedViewers.length,
+      viewers: formattedViewers
+    });
+  } catch (error) {
+    console.error('Error fetching story viewers:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+};
+
 // Get all active (24h) stories from following/chat users + yourself + active community users
 exports.getStories = async (req, res) => {
   try {
@@ -359,7 +456,7 @@ exports.getStories = async (req, res) => {
     const relatedUsers = await User.find({
       _id: { $in: relatedUserIds },
       'stories.0': { $exists: true }
-    }).select('name profilePic stories');
+    }).select('name profilePic stories').populate('stories.viewers.user', 'name username profilePic isPremium');
 
     const otherUsers = await User.find({
       _id: { $nin: relatedUserIds },
@@ -370,7 +467,31 @@ exports.getStories = async (req, res) => {
 
     // Filter expired stories and users with no active stories
     const result = allUsers.map(u => {
-      const activeStories = (u.stories || []).filter(s => new Date(s.createdAt) >= twentyFourHoursAgo);
+      const isSelf = u._id.toString() === currentUserId.toString();
+      const activeStories = (u.stories || []).filter(s => new Date(s.createdAt) >= twentyFourHoursAgo).map(s => {
+        const viewers = s.viewers || [];
+        return {
+          _id: s._id,
+          text: s.text,
+          emoji: s.emoji,
+          image: s.image,
+          bgGradient: s.bgGradient,
+          textColor: s.textColor,
+          fontStyle: s.fontStyle,
+          music: s.music,
+          createdAt: s.createdAt,
+          viewsCount: viewers.length,
+          viewers: isSelf ? viewers.filter(v => v.user).map(v => ({
+            _id: v.user._id || v.user,
+            name: v.user.name || 'User',
+            username: v.user.username || '',
+            profilePic: v.user.profilePic || '',
+            isPremium: !!v.user.isPremium,
+            viewedAt: v.viewedAt
+          })).reverse() : []
+        };
+      });
+
       return {
         _id: u._id,
         name: u.name,

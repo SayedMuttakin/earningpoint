@@ -1459,8 +1459,20 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
     const resetLoading = () => setIsLoading(false);
 
     try {
-      if (adType === 'Rewarded Video' || adType === 'Rewarded Interstitial') {
+      if (adType === 'Rewarded Video') {
         await AdMobService.showRewarded(
+          () => {
+            handleCustomAdReward(coins, adName);
+            resetLoading();
+          },
+          (errMsg) => {
+            handleCustomAdReward(coins, adName);
+            resetLoading();
+          },
+          () => resetLoading()
+        );
+      } else if (adType === 'Rewarded Interstitial') {
+        await AdMobService.showRewardedInterstitial(
           () => {
             handleCustomAdReward(coins, adName);
             resetLoading();

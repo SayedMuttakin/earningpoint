@@ -1,11 +1,14 @@
 import { AdMob, BannerAdSize, BannerAdPosition } from '@capacitor-community/admob';
-import { Capacitor } from '@capacitor/core';
+import { Capacitor, registerPlugin } from '@capacitor/core';
+
+const NativeAppOpenAd = registerPlugin('AppOpenAd');
 
 // Standard Google Test Ad Unit IDs for Android (100% Fill Rate Guaranteed)
 const TEST_ADMOB_IDS = {
   banner: 'ca-app-pub-3940256099942544/6300978111',
   interstitial: 'ca-app-pub-3940256099942544/1033173712',
   rewarded: 'ca-app-pub-3940256099942544/5224354917',
+  rewardedInterstitial: 'ca-app-pub-3940256099942544/5354046379',
   rewarded_daily: 'ca-app-pub-3940256099942544/5224354917',
   rewarded_videos: 'ca-app-pub-3940256099942544/5224354917',
   rewarded_view_ads: 'ca-app-pub-3940256099942544/5224354917',
@@ -13,16 +16,17 @@ const TEST_ADMOB_IDS = {
   appOpen: 'ca-app-pub-3940256099942544/3419835294'
 };
 
-// Real Production Ad Unit IDs
+// Real Production Ad Unit IDs provided by User
 const REAL_ADMOB_IDS = {
-  banner: 'ca-app-pub-2974645883080760/3706818395',
-  interstitial: 'ca-app-pub-2974645883080760/1057357952',
-  rewardedInterstitial: 'ca-app-pub-2974645883080760/1057357952',
-  rewarded: 'ca-app-pub-2974645883080760/6932632014',
-  rewarded_daily: 'ca-app-pub-2974645883080760/6932632014',
-  rewarded_videos: 'ca-app-pub-2974645883080760/6932632014',
-  rewarded_view_ads: 'ca-app-pub-2974645883080760/6932632014',
-  appOpen: 'ca-app-pub-2974645883080760/5445501972'
+  banner: 'ca-app-pub-2974645883080760/1360864845',
+  interstitial: 'ca-app-pub-2974645883080760/8840004811',
+  rewarded: 'ca-app-pub-2974645883080760/8856211482',
+  rewardedInterstitial: 'ca-app-pub-2974645883080760/3517013065',
+  rewarded_daily: 'ca-app-pub-2974645883080760/8856211482',
+  rewarded_videos: 'ca-app-pub-2974645883080760/8856211482',
+  rewarded_view_ads: 'ca-app-pub-2974645883080760/8856211482',
+  native: 'ca-app-pub-2974645883080760/4061004201',
+  appOpen: 'ca-app-pub-2974645883080760/7526923147'
 };
 
 const USE_TEST_ADS = false;
@@ -62,6 +66,7 @@ const getAdId = (type) => {
       banner: 'bannerAdUnitId',
       interstitial: 'interstitialAdUnitId',
       rewarded: 'rewardedAdUnitId',
+      rewardedInterstitial: 'rewardedInterstitialAdUnitId',
       rewarded_daily: 'rewardedAdUnitId',
       rewarded_videos: 'rewardedAdUnitId',
       rewarded_view_ads: 'rewardedAdUnitId',
@@ -103,7 +108,6 @@ export const AdMobService = {
         adId: adId,
         adSize: adSize,
         position: BannerAdPosition.BOTTOM_CENTER,
-        margin: 76,
         isTesting: testing
       });
       console.log('[AdMob] Banner shown successfully');
@@ -115,7 +119,6 @@ export const AdMobService = {
             adId: TEST_ADMOB_IDS.banner,
             adSize: size === 'big' ? BannerAdSize.MEDIUM_RECTANGLE : BannerAdSize.BANNER,
             position: BannerAdPosition.BOTTOM_CENTER,
-            margin: 76,
             isTesting: true
           });
         } catch (testErr) {
@@ -406,6 +409,141 @@ export const AdMobService = {
     }
   },
 
+  // Rewarded Interstitial Ad with Full Multi-tier Failover
+  isShowingRewardedInterstitial: false,
+  async showRewardedInterstitial(onReward, onError = null, onDismiss = null) {
+    if (dynamicConfig && dynamicConfig.showAds === false) {
+      if (onError) onError({ isFallback: true, message: "Ads disabled" });
+      if (onDismiss) onDismiss();
+      return;
+    }
+
+    if (this.isShowingRewardedInterstitial) {
+      if (onDismiss) onDismiss();
+      return;
+    }
+
+    if (!Capacitor.isNativePlatform()) {
+      console.log('[AdMob] Not on native platform, invoking fallback for rewarded interstitial.');
+      if (onReward) onReward({ type: 'simulated', amount: 1 });
+      if (onDismiss) onDismiss();
+      return;
+    }
+
+    this.isShowingRewardedInterstitial = true;
+    await ensureInitialized();
+    const testing = isTestingMode();
+    const primaryAdId = getAdId('rewardedInterstitial');
+    const testAdId = TEST_ADMOB_IDS.rewardedInterstitial;
+
+    const tryShowRewardedInterstitialUnit = async (adUnitId, isTesting) => {
+      return new Promise(async (resolve, reject) => {
+        let isDone = false;
+        let rewardGranted = false;
+        const listeners = [];
+        const cleanup = () => {
+          listeners.forEach(l => l && l.remove && l.remove());
+        };
+
+        try {
+          listeners.push(await AdMob.addListener('onRewardedInterstitialAdReward', (rewardItem) => {
+            console.log('[AdMob] Rewarded interstitial completed! Granting reward.', rewardItem);
+            rewardGranted = true;
+            if (!isDone) {
+              isDone = true;
+              cleanup();
+              if (onReward) onReward(rewardItem);
+              resolve(true);
+            }
+          }));
+
+          listeners.push(await AdMob.addListener('onRewardedInterstitialAdDismissed', () => {
+            console.log('[AdMob] Rewarded interstitial dismissed.');
+            if (!isDone) {
+              isDone = true;
+              cleanup();
+              if (onDismiss && !rewardGranted) onDismiss();
+              resolve(false);
+            }
+          }));
+
+          listeners.push(await AdMob.addListener('onRewardedInterstitialAdFailedToLoad', (info) => {
+            console.warn('[AdMob] Rewarded interstitial failed to load for ID:', adUnitId, info);
+            if (!isDone) {
+              isDone = true;
+              cleanup();
+              reject(info);
+            }
+          }));
+
+          listeners.push(await AdMob.addListener('onRewardedInterstitialAdFailedToShow', (info) => {
+            console.warn('[AdMob] Rewarded interstitial failed to show:', info);
+            if (!isDone) {
+              isDone = true;
+              cleanup();
+              reject(info);
+            }
+          }));
+
+          await AdMob.prepareRewardInterstitialAd({
+            adId: adUnitId,
+            isTesting: isTesting
+          });
+
+          await AdMob.showRewardInterstitialAd();
+
+          setTimeout(() => {
+            if (!isDone) {
+              isDone = true;
+              cleanup();
+              if (onDismiss && !rewardGranted) onDismiss();
+              resolve(true);
+            }
+          }, 35000);
+
+        } catch (err) {
+          cleanup();
+          reject(err);
+        }
+      });
+    };
+
+    try {
+      try {
+        console.log(`[AdMob] Requesting real rewarded interstitial ad unit: ${primaryAdId}, isTesting: ${testing}`);
+        await tryShowRewardedInterstitialUnit(primaryAdId, testing);
+        this.isShowingRewardedInterstitial = false;
+        return;
+      } catch (err1) {
+        console.warn('[AdMob] Primary rewarded interstitial unit returned No-Fill/Failed to load:', err1);
+      }
+
+      if (testing && primaryAdId !== testAdId) {
+        try {
+          console.log(`[AdMob] Requesting Google test rewarded interstitial ad: ${testAdId}`);
+          await tryShowRewardedInterstitialUnit(testAdId, true);
+          this.isShowingRewardedInterstitial = false;
+          return;
+        } catch (err2) {
+          console.warn('[AdMob] Test rewarded interstitial failed:', err2);
+        }
+      }
+
+      this.isShowingRewardedInterstitial = false;
+      if (onError) {
+        onError({ isFallback: true, message: "Rewarded interstitial failed" });
+      } else if (onDismiss) {
+        onDismiss();
+      }
+
+    } catch (finalErr) {
+      console.error('[AdMob] All rewarded interstitial attempts failed:', finalErr);
+      this.isShowingRewardedInterstitial = false;
+      if (onError) onError({ isFallback: true, message: "All attempts failed" });
+      if (onDismiss) onDismiss();
+    }
+  },
+
   async showNativeSimulatedAd() {},
   async hideNativeSimulatedAd() {},
 
@@ -423,30 +561,33 @@ export const AdMobService = {
     }
     
     await ensureInitialized();
-    const testing = isTestingMode();
     const primaryAdId = getAdId('appOpen');
-    const testAdId = TEST_ADMOB_IDS.appOpen;
 
     try {
-      await AdMob.prepareInterstitial({
-        adId: primaryAdId,
-        isTesting: testing
-      });
-      await AdMob.showInterstitial();
+      if (NativeAppOpenAd && typeof NativeAppOpenAd.loadAndShow === 'function') {
+        console.log('[AdMob] Requesting Native Android AppOpenAd:', primaryAdId);
+        await NativeAppOpenAd.loadAndShow({ adId: primaryAdId });
+        console.log('[AdMob] Native AppOpenAd completed successfully');
+      } else {
+        await AdMob.prepareInterstitial({
+          adId: getAdId('interstitial'),
+          isTesting: isTestingMode()
+        });
+        await AdMob.showInterstitial();
+      }
       if (onSuccess) onSuccess();
       if (onDismiss) onDismiss();
     } catch (err) {
-      console.warn('[AdMob] App open ad primary failed:', err);
-      if (testing) {
-        try {
-          await AdMob.prepareInterstitial({
-            adId: testAdId,
-            isTesting: true
-          });
-          await AdMob.showInterstitial();
-        } catch (e) {
-          console.error('[AdMob] App open ad failed:', e);
-        }
+      console.warn('[AdMob] Native App Open Ad failed:', err);
+      // Fallback to interstitial or graceful finish
+      try {
+        await AdMob.prepareInterstitial({
+          adId: getAdId('interstitial'),
+          isTesting: isTestingMode()
+        });
+        await AdMob.showInterstitial();
+      } catch (fallbackErr) {
+        console.warn('[AdMob] App open fallback interstitial also failed:', fallbackErr);
       }
       if (onSuccess) onSuccess();
       if (onDismiss) onDismiss();

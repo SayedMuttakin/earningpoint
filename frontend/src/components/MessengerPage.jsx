@@ -256,8 +256,32 @@ const MessengerPage = ({
   // Story Viewer
   const [viewingStoryUser, setViewingStoryUser] = useState(null); // { _id, name, profilePic, stories[] }
   const [viewingStoryIndex, setViewingStoryIndex] = useState(0);
-  const storyProgressTimer = useRef(null);
-  const [storyProgress, setStoryProgress] = useState(0);
+
+  // Ordered story sequence (Facebook/Instagram style)
+  const orderedStoryUsers = useMemo(() => {
+    const myStory = (stories || []).find(s => s._id?.toString() === currentUser?._id?.toString());
+    const otherStories = (stories || []).filter(s => s._id?.toString() !== currentUser?._id?.toString());
+    return [ ...(myStory ? [myStory] : []), ...otherStories ];
+  }, [stories, currentUser?._id]);
+
+  const handleNextStoryUser = () => {
+    const currentIndex = orderedStoryUsers.findIndex(u => u._id?.toString() === viewingStoryUser?._id?.toString());
+    if (currentIndex !== -1 && currentIndex + 1 < orderedStoryUsers.length) {
+      setViewingStoryUser(orderedStoryUsers[currentIndex + 1]);
+      setViewingStoryIndex(0);
+    } else {
+      setViewingStoryUser(null);
+    }
+  };
+
+  const handlePrevStoryUser = () => {
+    const currentIndex = orderedStoryUsers.findIndex(u => u._id?.toString() === viewingStoryUser?._id?.toString());
+    if (currentIndex > 0) {
+      const prevUser = orderedStoryUsers[currentIndex - 1];
+      setViewingStoryUser(prevUser);
+      setViewingStoryIndex((prevUser.stories?.length || 1) - 1);
+    }
+  };
 
   const socketConnected = !!socket;
   const connectionError = !socket;
@@ -2840,9 +2864,12 @@ const MessengerPage = ({
         {viewingStoryUser && (
           <StoryViewerModal
             storyUser={viewingStoryUser}
+            storyUsers={orderedStoryUsers}
             initialIndex={viewingStoryIndex}
             currentUser={currentUser}
             onClose={() => setViewingStoryUser(null)}
+            onNextUser={handleNextStoryUser}
+            onPrevUser={handlePrevStoryUser}
             onDeleteStory={() => fetchStories()}
           />
         )}
