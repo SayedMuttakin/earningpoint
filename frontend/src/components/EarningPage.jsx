@@ -740,6 +740,7 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
     fetchWithdrawHistory();
     fetchGlobalWithdrawals();
     fetchWeeklyMissions();
+    AdMobService.preloadAll();
 
     // Check if returned from ZiniPay gateway redirect
     const urlParams = new URLSearchParams(window.location.search);
@@ -1063,7 +1064,7 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
 
     const onError = (err) => {
       setIsLoading(false);
-      claimReward(activeType);
+      showToast(err?.message || 'Ad was not completed or failed to load. No coins awarded.', 'error');
     };
 
     const onDismiss = () => {
@@ -1073,7 +1074,8 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
     AdMobService.showRewarded((rewardItem) => {
       claimReward(activeType);
     }, placement, onError, onDismiss).catch(err => {
-      claimReward(activeType);
+      setIsLoading(false);
+      showToast('Ad was closed early or failed to play.', 'error');
     });
   };
 
@@ -1454,6 +1456,11 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
   const handleAdOptionClick = async (adName, adType, coins) => {
     if (isLoading) return;
     setCurrentAdInfo({ name: adName, type: adType, coins, time: 0 });
+
+    if (!Capacitor.isNativePlatform() && (adType === 'Rewarded Video' || adType === 'Rewarded Interstitial' || adType === 'App Open Ad' || adType === 'Interstitial')) {
+      showToast('Ads are only available on our Android App. Please open the app to watch ads and earn coins!', 'info');
+      return;
+    }
     
     setIsLoading(true);
     const resetLoading = () => setIsLoading(false);
@@ -1465,9 +1472,10 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
             handleCustomAdReward(coins, adName);
             resetLoading();
           },
-          (errMsg) => {
-            handleCustomAdReward(coins, adName);
+          'rewarded',
+          (err) => {
             resetLoading();
+            showToast(err?.message || 'Ad was not completed or failed to load. No coins awarded.', 'error');
           },
           () => resetLoading()
         );
@@ -1477,22 +1485,36 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
             handleCustomAdReward(coins, adName);
             resetLoading();
           },
-          (errMsg) => {
-            handleCustomAdReward(coins, adName);
+          (err) => {
             resetLoading();
+            showToast(err?.message || 'Ad was not completed or failed to load. No coins awarded.', 'error');
           },
           () => resetLoading()
         );
       } else if (adType === 'App Open Ad') {
-        await AdMobService.showAppOpenAd(() => {
-          handleCustomAdReward(coins, adName);
-          resetLoading();
-        });
+        await AdMobService.showAppOpenAd(
+          () => {
+            handleCustomAdReward(coins, adName);
+            resetLoading();
+          },
+          (err) => {
+            resetLoading();
+            showToast(err?.message || 'Ad was not completed or failed to load. No coins awarded.', 'error');
+          },
+          () => resetLoading()
+        );
       } else if (adType === 'Interstitial') {
-        await AdMobService.showInterstitial(() => {
-          handleCustomAdReward(coins, adName);
-          resetLoading();
-        });
+        await AdMobService.showInterstitial(
+          () => {
+            handleCustomAdReward(coins, adName);
+            resetLoading();
+          },
+          (err) => {
+            resetLoading();
+            showToast(err?.message || 'Ad was not completed or failed to load. No coins awarded.', 'error');
+          },
+          () => resetLoading()
+        );
       } else if (adType === 'Native Ad') {
         resetLoading();
         setShowNativeAd(true);
@@ -1504,6 +1526,7 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
     } catch (e) {
       console.error('Ad option click error:', e);
       resetLoading();
+      showToast('Ad failed to play. Please try again.', 'error');
     }
   };
 

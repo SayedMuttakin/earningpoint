@@ -42,6 +42,7 @@ const isTestingMode = () => {
 
 const ensureInitialized = async () => {
   if (!Capacitor.isNativePlatform()) return;
+  if (isInitialized) return;
   const testing = isTestingMode();
   try {
     await AdMob.initialize({
@@ -84,13 +85,166 @@ const getAdId = (type) => {
 };
 
 export const AdMobService = {
+  // Preload state flags & in-flight promises
+  isRewardedReady: false,
+  rewardedPreloadPromise: null,
+
+  isRewardedInterstitialReady: false,
+  rewardedInterstitialPreloadPromise: null,
+
+  isInterstitialReady: false,
+  interstitialPreloadPromise: null,
+
   setConfig(config) {
     dynamicConfig = config;
     isInitialized = false; // re-init with new config mode
     console.log('[AdMob] Dynamic config updated in AdMobService:', config);
     if (Capacitor.isNativePlatform()) {
-      ensureInitialized();
+      ensureInitialized().then(() => {
+        this.preloadAll();
+      });
     }
+  },
+
+  preloadAll() {
+    if (!Capacitor.isNativePlatform()) return;
+    if (dynamicConfig && dynamicConfig.showAds === false) return;
+    console.log('[AdMob] Preloading all ads in background for instant playback...');
+    this.preloadRewarded();
+    this.preloadRewardedInterstitial();
+    this.preloadInterstitial();
+  },
+
+  async preloadRewarded() {
+    if (!Capacitor.isNativePlatform()) return false;
+    if (dynamicConfig && dynamicConfig.showAds === false) return false;
+    if (this.isRewardedReady) return true;
+    if (this.rewardedPreloadPromise) return this.rewardedPreloadPromise;
+
+    this.rewardedPreloadPromise = (async () => {
+      try {
+        await ensureInitialized();
+        const testing = isTestingMode();
+        const primaryAdId = getAdId('rewarded');
+        try {
+          console.log('[AdMob] Preloading Rewarded Video Ad:', primaryAdId);
+          await AdMob.prepareRewardVideoAd({
+            adId: primaryAdId,
+            isTesting: testing
+          });
+          this.isRewardedReady = true;
+          console.log('[AdMob] Rewarded Video Ad preloaded and ready!');
+          return true;
+        } catch (err) {
+          console.warn('[AdMob] Preload primary rewarded video failed:', err);
+          if (testing && primaryAdId !== TEST_ADMOB_IDS.rewarded) {
+            await AdMob.prepareRewardVideoAd({
+              adId: TEST_ADMOB_IDS.rewarded,
+              isTesting: true
+            });
+            this.isRewardedReady = true;
+            console.log('[AdMob] Test Rewarded Video Ad preloaded and ready!');
+            return true;
+          }
+          throw err;
+        }
+      } catch (err) {
+        this.isRewardedReady = false;
+        return false;
+      } finally {
+        this.rewardedPreloadPromise = null;
+      }
+    })();
+
+    return this.rewardedPreloadPromise;
+  },
+
+  async preloadRewardedInterstitial() {
+    if (!Capacitor.isNativePlatform()) return false;
+    if (dynamicConfig && dynamicConfig.showAds === false) return false;
+    if (this.isRewardedInterstitialReady) return true;
+    if (this.rewardedInterstitialPreloadPromise) return this.rewardedInterstitialPreloadPromise;
+
+    this.rewardedInterstitialPreloadPromise = (async () => {
+      try {
+        await ensureInitialized();
+        const testing = isTestingMode();
+        const primaryAdId = getAdId('rewardedInterstitial');
+        try {
+          console.log('[AdMob] Preloading Rewarded Interstitial Ad:', primaryAdId);
+          await AdMob.prepareRewardInterstitialAd({
+            adId: primaryAdId,
+            isTesting: testing
+          });
+          this.isRewardedInterstitialReady = true;
+          console.log('[AdMob] Rewarded Interstitial Ad preloaded and ready!');
+          return true;
+        } catch (err) {
+          console.warn('[AdMob] Preload primary rewarded interstitial failed:', err);
+          if (testing && primaryAdId !== TEST_ADMOB_IDS.rewardedInterstitial) {
+            await AdMob.prepareRewardInterstitialAd({
+              adId: TEST_ADMOB_IDS.rewardedInterstitial,
+              isTesting: true
+            });
+            this.isRewardedInterstitialReady = true;
+            console.log('[AdMob] Test Rewarded Interstitial Ad preloaded and ready!');
+            return true;
+          }
+          throw err;
+        }
+      } catch (err) {
+        this.isRewardedInterstitialReady = false;
+        return false;
+      } finally {
+        this.rewardedInterstitialPreloadPromise = null;
+      }
+    })();
+
+    return this.rewardedInterstitialPreloadPromise;
+  },
+
+  async preloadInterstitial() {
+    if (!Capacitor.isNativePlatform()) return false;
+    if (dynamicConfig && dynamicConfig.showAds === false) return false;
+    if (this.isInterstitialReady) return true;
+    if (this.interstitialPreloadPromise) return this.interstitialPreloadPromise;
+
+    this.interstitialPreloadPromise = (async () => {
+      try {
+        await ensureInitialized();
+        const testing = isTestingMode();
+        const primaryAdId = getAdId('interstitial');
+        try {
+          console.log('[AdMob] Preloading Interstitial Ad:', primaryAdId);
+          await AdMob.prepareInterstitial({
+            adId: primaryAdId,
+            isTesting: testing
+          });
+          this.isInterstitialReady = true;
+          console.log('[AdMob] Interstitial Ad preloaded and ready!');
+          return true;
+        } catch (err) {
+          console.warn('[AdMob] Preload primary interstitial failed:', err);
+          if (testing && primaryAdId !== TEST_ADMOB_IDS.interstitial) {
+            await AdMob.prepareInterstitial({
+              adId: TEST_ADMOB_IDS.interstitial,
+              isTesting: true
+            });
+            this.isInterstitialReady = true;
+            console.log('[AdMob] Test Interstitial Ad preloaded and ready!');
+            return true;
+          }
+          throw err;
+        }
+      } catch (err) {
+        this.isInterstitialReady = false;
+        return false;
+      } finally {
+        this.interstitialPreloadPromise = null;
+      }
+    })();
+
+    return this.interstitialPreloadPromise;
   },
 
   async showBanner(size = 'banner') {
@@ -163,7 +317,7 @@ export const AdMobService = {
     const primaryAdId = getAdId('interstitial');
     const testAdId = TEST_ADMOB_IDS.interstitial;
 
-    const tryShowInterstitialUnit = async (adUnitId, isTesting) => {
+    const executeShowInterstitial = async (needsPrepare, adUnitId, isTesting) => {
       return new Promise(async (resolve, reject) => {
         let isDone = false;
         const listeners = [];
@@ -199,11 +353,14 @@ export const AdMobService = {
             }
           }));
 
-          await AdMob.prepareInterstitial({
-            adId: adUnitId,
-            isTesting: isTesting
-          });
+          if (needsPrepare) {
+            await AdMob.prepareInterstitial({
+              adId: adUnitId,
+              isTesting: isTesting
+            });
+          }
 
+          console.log('[AdMob] Showing interstitial ad immediately');
           await AdMob.showInterstitial();
 
           setTimeout(() => {
@@ -224,39 +381,72 @@ export const AdMobService = {
     };
 
     try {
-      // 1. Try Configured Unit
-      try {
-        await tryShowInterstitialUnit(primaryAdId, testing);
-        this.isShowingInterstitial = false;
-        return;
-      } catch (err1) {
-        console.warn('[AdMob] Primary interstitial failed to load:', err1);
-      }
-
-      // 2. Only use Google Test fallback if test mode is explicitly ON
-      if (testing && primaryAdId !== testAdId) {
+      // 1. If preloaded and ready, show instantly!
+      if (this.isInterstitialReady) {
+        this.isInterstitialReady = false;
         try {
-          await tryShowInterstitialUnit(testAdId, true);
+          await executeShowInterstitial(false, primaryAdId, testing);
           this.isShowingInterstitial = false;
+          this.preloadInterstitial();
           return;
-        } catch (err2) {
-          console.warn('[AdMob] Test interstitial also failed:', err2);
+        } catch (errReady) {
+          console.warn('[AdMob] Showing preloaded interstitial failed:', errReady);
         }
       }
 
-      // 3. Complete gracefully so user flow is never blocked
+      // 2. If in-flight preload promise exists, wait on it
+      if (this.interstitialPreloadPromise) {
+        const ok = await this.interstitialPreloadPromise;
+        if (ok && this.isInterstitialReady) {
+          this.isInterstitialReady = false;
+          try {
+            await executeShowInterstitial(false, primaryAdId, testing);
+            this.isShowingInterstitial = false;
+            this.preloadInterstitial();
+            return;
+          } catch (errInFlight) {
+            console.warn('[AdMob] In-flight preloaded interstitial show failed:', errInFlight);
+          }
+        }
+      }
+
+      // 3. Prepare and show on-demand
+      try {
+        await executeShowInterstitial(true, primaryAdId, testing);
+        this.isShowingInterstitial = false;
+        this.preloadInterstitial();
+        return;
+      } catch (err1) {
+        console.warn('[AdMob] Primary interstitial on demand failed:', err1);
+      }
+
+      // 4. Test fallback if testing mode is active
+      if (testing && primaryAdId !== testAdId) {
+        try {
+          await executeShowInterstitial(true, testAdId, true);
+          this.isShowingInterstitial = false;
+          this.preloadInterstitial();
+          return;
+        } catch (err2) {
+          console.warn('[AdMob] Test interstitial failed:', err2);
+        }
+      }
+
+      // 5. Strictly fail - NEVER call onSuccess on error!
       this.isShowingInterstitial = false;
-      if (onSuccess) onSuccess();
+      this.preloadInterstitial();
+      if (onError) onError({ message: 'Interstitial ad failed to load' });
       if (onDismiss) onDismiss();
 
     } catch (finalErr) {
       this.isShowingInterstitial = false;
-      if (onSuccess) onSuccess();
+      this.preloadInterstitial();
+      if (onError) onError(finalErr);
       if (onDismiss) onDismiss();
     }
   },
 
-  // Rewarded Video Ad with Multi-tier Failover
+  // Rewarded Video Ad with Preloaded Instant Playback & Strict Reward Verification
   isShowingRewarded: false,
   async showRewarded(onReward, placementOrOnError = 'rewarded', onErrorOrDismiss = null, onDismissArg = null) {
     let placement = 'rewarded';
@@ -274,7 +464,7 @@ export const AdMobService = {
     }
 
     if (dynamicConfig && dynamicConfig.showAds === false) {
-      if (onError) onError({ isFallback: true, message: "Ads disabled" });
+      if (onError) onError({ message: "Ads disabled" });
       if (onDismiss) onDismiss();
       return;
     }
@@ -285,8 +475,8 @@ export const AdMobService = {
     }
 
     if (!Capacitor.isNativePlatform()) {
-      console.log('[AdMob] Not on native platform, invoking in-app video fallback.');
-      if (onError) onError({ isFallback: true, message: "Non-native platform" });
+      console.log('[AdMob] Not on native platform');
+      if (onError) onError({ isFallback: true, message: "Ads are only available in the Android app." });
       if (onDismiss) onDismiss();
       return;
     }
@@ -294,18 +484,15 @@ export const AdMobService = {
     this.isShowingRewarded = true;
     await ensureInitialized();
     const testing = isTestingMode();
-
     const primaryAdId = getAdId(placement);
     const testAdId = TEST_ADMOB_IDS.rewarded;
 
-    const tryShowRewardedUnit = async (adUnitId, isTesting) => {
+    const executeShowRewarded = async (needsPrepare, adUnitId, isTesting) => {
       return new Promise(async (resolve, reject) => {
         let isDone = false;
         let rewardGranted = false;
         const listeners = [];
-        const cleanup = () => {
-          listeners.forEach(l => l && l.remove && l.remove());
-        };
+        const cleanup = () => listeners.forEach(l => l && l.remove && l.remove());
 
         try {
           listeners.push(await AdMob.addListener('onRewardedVideoAdReward', (rewardItem) => {
@@ -320,12 +507,15 @@ export const AdMobService = {
           }));
 
           listeners.push(await AdMob.addListener('onRewardedVideoAdDismissed', () => {
-            console.log('[AdMob] Rewarded video dismissed.');
+            console.log('[AdMob] Rewarded video dismissed. rewardGranted:', rewardGranted);
             if (!isDone) {
               isDone = true;
               cleanup();
-              if (onDismiss && !rewardGranted) onDismiss();
-              resolve(false);
+              if (onDismiss) onDismiss();
+              if (!rewardGranted && onError) {
+                onError({ message: 'Ad was closed before completion. No reward earned.' });
+              }
+              resolve(rewardGranted);
             }
           }));
 
@@ -347,21 +537,28 @@ export const AdMobService = {
             }
           }));
 
-          await AdMob.prepareRewardVideoAd({
-            adId: adUnitId,
-            isTesting: isTesting
-          });
+          if (needsPrepare) {
+            console.log('[AdMob] Preparing rewarded video on demand:', adUnitId);
+            await AdMob.prepareRewardVideoAd({
+              adId: adUnitId,
+              isTesting: isTesting
+            });
+          }
 
+          console.log('[AdMob] Showing rewarded video ad instantly!');
           await AdMob.showRewardVideoAd();
 
           setTimeout(() => {
             if (!isDone) {
               isDone = true;
               cleanup();
-              if (onDismiss && !rewardGranted) onDismiss();
-              resolve(true);
+              if (onDismiss) onDismiss();
+              if (!rewardGranted && onError) {
+                onError({ message: 'Ad timed out before completion.' });
+              }
+              resolve(rewardGranted);
             }
-          }, 35000);
+          }, 45000);
 
         } catch (err) {
           cleanup();
@@ -371,49 +568,76 @@ export const AdMobService = {
     };
 
     try {
-      // Attempt 1: Configured Primary Ad Unit
-      try {
-        console.log(`[AdMob] Requesting real rewarded ad unit: ${primaryAdId}, isTesting: ${testing}`);
-        await tryShowRewardedUnit(primaryAdId, testing);
-        this.isShowingRewarded = false;
-        return;
-      } catch (err1) {
-        console.warn('[AdMob] Primary ad unit returned No-Fill/Failed to load:', err1);
-      }
-
-      // Attempt 2: Only use Google Test fallback if test mode is explicitly ON
-      if (testing && primaryAdId !== testAdId) {
+      // 1. If preloaded and ready, show instantly with 0ms delay!
+      if (this.isRewardedReady) {
+        this.isRewardedReady = false;
         try {
-          console.log(`[AdMob] Requesting Google verified test rewarded ad: ${testAdId}`);
-          await tryShowRewardedUnit(testAdId, true);
+          await executeShowRewarded(false, primaryAdId, testing);
           this.isShowingRewarded = false;
+          this.preloadRewarded();
           return;
-        } catch (err2) {
-          console.warn('[AdMob] Test ad unit failed:', err2);
+        } catch (errReady) {
+          console.warn('[AdMob] Preloaded rewarded ad show failed, falling back:', errReady);
         }
       }
 
-      // Attempt 3: In-App Interactive Fallback (never crash or show raw error alert)
-      this.isShowingRewarded = false;
-      if (onError) {
-        onError({ isFallback: true, message: "Fallback to in-app sponsored video" });
-      } else if (onDismiss) {
-        onDismiss();
+      // 2. If in-flight preload promise exists, await it
+      if (this.rewardedPreloadPromise) {
+        const ok = await this.rewardedPreloadPromise;
+        if (ok && this.isRewardedReady) {
+          this.isRewardedReady = false;
+          try {
+            await executeShowRewarded(false, primaryAdId, testing);
+            this.isShowingRewarded = false;
+            this.preloadRewarded();
+            return;
+          } catch (errInFlight) {
+            console.warn('[AdMob] In-flight preloaded rewarded ad show failed:', errInFlight);
+          }
+        }
       }
 
-    } catch (finalErr) {
-      console.error('[AdMob] All rewarded ad attempts failed:', finalErr);
+      // 3. Prepare and show on demand
+      try {
+        await executeShowRewarded(true, primaryAdId, testing);
+        this.isShowingRewarded = false;
+        this.preloadRewarded();
+        return;
+      } catch (err1) {
+        console.warn('[AdMob] Primary rewarded ad on demand failed:', err1);
+      }
+
+      // 4. Test ad unit fallback if testing mode
+      if (testing && primaryAdId !== testAdId) {
+        try {
+          await executeShowRewarded(true, testAdId, true);
+          this.isShowingRewarded = false;
+          this.preloadRewarded();
+          return;
+        } catch (err2) {
+          console.warn('[AdMob] Test rewarded ad failed:', err2);
+        }
+      }
+
+      // 5. Strictly fail - NEVER reward on error!
       this.isShowingRewarded = false;
-      if (onError) onError({ isFallback: true, message: "All attempts failed" });
+      this.preloadRewarded();
+      if (onError) onError({ message: 'Rewarded video ad failed to load. Please try again.' });
+      if (onDismiss) onDismiss();
+
+    } catch (finalErr) {
+      this.isShowingRewarded = false;
+      this.preloadRewarded();
+      if (onError) onError({ message: 'Rewarded video ad failed to play.' });
       if (onDismiss) onDismiss();
     }
   },
 
-  // Rewarded Interstitial Ad with Full Multi-tier Failover
+  // Rewarded Interstitial Ad with Preloaded Instant Playback & Strict Reward Verification
   isShowingRewardedInterstitial: false,
   async showRewardedInterstitial(onReward, onError = null, onDismiss = null) {
     if (dynamicConfig && dynamicConfig.showAds === false) {
-      if (onError) onError({ isFallback: true, message: "Ads disabled" });
+      if (onError) onError({ message: "Ads disabled" });
       if (onDismiss) onDismiss();
       return;
     }
@@ -424,8 +648,8 @@ export const AdMobService = {
     }
 
     if (!Capacitor.isNativePlatform()) {
-      console.log('[AdMob] Not on native platform, invoking fallback for rewarded interstitial.');
-      if (onReward) onReward({ type: 'simulated', amount: 1 });
+      console.log('[AdMob] Not on native platform for rewarded interstitial.');
+      if (onError) onError({ isFallback: true, message: "Ads are only available in the Android app." });
       if (onDismiss) onDismiss();
       return;
     }
@@ -436,14 +660,12 @@ export const AdMobService = {
     const primaryAdId = getAdId('rewardedInterstitial');
     const testAdId = TEST_ADMOB_IDS.rewardedInterstitial;
 
-    const tryShowRewardedInterstitialUnit = async (adUnitId, isTesting) => {
+    const executeShowRewardedInterstitial = async (needsPrepare, adUnitId, isTesting) => {
       return new Promise(async (resolve, reject) => {
         let isDone = false;
         let rewardGranted = false;
         const listeners = [];
-        const cleanup = () => {
-          listeners.forEach(l => l && l.remove && l.remove());
-        };
+        const cleanup = () => listeners.forEach(l => l && l.remove && l.remove());
 
         try {
           listeners.push(await AdMob.addListener('onRewardedInterstitialAdReward', (rewardItem) => {
@@ -458,12 +680,15 @@ export const AdMobService = {
           }));
 
           listeners.push(await AdMob.addListener('onRewardedInterstitialAdDismissed', () => {
-            console.log('[AdMob] Rewarded interstitial dismissed.');
+            console.log('[AdMob] Rewarded interstitial dismissed. rewardGranted:', rewardGranted);
             if (!isDone) {
               isDone = true;
               cleanup();
-              if (onDismiss && !rewardGranted) onDismiss();
-              resolve(false);
+              if (onDismiss) onDismiss();
+              if (!rewardGranted && onError) {
+                onError({ message: 'Ad was closed before completion. No reward earned.' });
+              }
+              resolve(rewardGranted);
             }
           }));
 
@@ -485,21 +710,28 @@ export const AdMobService = {
             }
           }));
 
-          await AdMob.prepareRewardInterstitialAd({
-            adId: adUnitId,
-            isTesting: isTesting
-          });
+          if (needsPrepare) {
+            console.log('[AdMob] Preparing rewarded interstitial on demand:', adUnitId);
+            await AdMob.prepareRewardInterstitialAd({
+              adId: adUnitId,
+              isTesting: isTesting
+            });
+          }
 
+          console.log('[AdMob] Showing rewarded interstitial ad instantly!');
           await AdMob.showRewardInterstitialAd();
 
           setTimeout(() => {
             if (!isDone) {
               isDone = true;
               cleanup();
-              if (onDismiss && !rewardGranted) onDismiss();
-              resolve(true);
+              if (onDismiss) onDismiss();
+              if (!rewardGranted && onError) {
+                onError({ message: 'Ad timed out before completion.' });
+              }
+              resolve(rewardGranted);
             }
-          }, 35000);
+          }, 45000);
 
         } catch (err) {
           cleanup();
@@ -509,37 +741,67 @@ export const AdMobService = {
     };
 
     try {
-      try {
-        console.log(`[AdMob] Requesting real rewarded interstitial ad unit: ${primaryAdId}, isTesting: ${testing}`);
-        await tryShowRewardedInterstitialUnit(primaryAdId, testing);
-        this.isShowingRewardedInterstitial = false;
-        return;
-      } catch (err1) {
-        console.warn('[AdMob] Primary rewarded interstitial unit returned No-Fill/Failed to load:', err1);
+      // 1. If preloaded and ready, show instantly!
+      if (this.isRewardedInterstitialReady) {
+        this.isRewardedInterstitialReady = false;
+        try {
+          await executeShowRewardedInterstitial(false, primaryAdId, testing);
+          this.isShowingRewardedInterstitial = false;
+          this.preloadRewardedInterstitial();
+          return;
+        } catch (errReady) {
+          console.warn('[AdMob] Preloaded rewarded interstitial show failed, falling back:', errReady);
+        }
       }
 
+      // 2. If in-flight preload promise exists, await it
+      if (this.rewardedInterstitialPreloadPromise) {
+        const ok = await this.rewardedInterstitialPreloadPromise;
+        if (ok && this.isRewardedInterstitialReady) {
+          this.isRewardedInterstitialReady = false;
+          try {
+            await executeShowRewardedInterstitial(false, primaryAdId, testing);
+            this.isShowingRewardedInterstitial = false;
+            this.preloadRewardedInterstitial();
+            return;
+          } catch (errInFlight) {
+            console.warn('[AdMob] In-flight preloaded rewarded interstitial show failed:', errInFlight);
+          }
+        }
+      }
+
+      // 3. Prepare and show on demand
+      try {
+        await executeShowRewardedInterstitial(true, primaryAdId, testing);
+        this.isShowingRewardedInterstitial = false;
+        this.preloadRewardedInterstitial();
+        return;
+      } catch (err1) {
+        console.warn('[AdMob] Primary rewarded interstitial on demand failed:', err1);
+      }
+
+      // 4. Test ad unit fallback if testing mode
       if (testing && primaryAdId !== testAdId) {
         try {
-          console.log(`[AdMob] Requesting Google test rewarded interstitial ad: ${testAdId}`);
-          await tryShowRewardedInterstitialUnit(testAdId, true);
+          await executeShowRewardedInterstitial(true, testAdId, true);
           this.isShowingRewardedInterstitial = false;
+          this.preloadRewardedInterstitial();
           return;
         } catch (err2) {
           console.warn('[AdMob] Test rewarded interstitial failed:', err2);
         }
       }
 
+      // 5. Strictly fail - NEVER reward on error!
       this.isShowingRewardedInterstitial = false;
-      if (onError) {
-        onError({ isFallback: true, message: "Rewarded interstitial failed" });
-      } else if (onDismiss) {
-        onDismiss();
-      }
+      this.preloadRewardedInterstitial();
+      if (onError) onError({ message: 'Rewarded interstitial ad failed to load. Please try again.' });
+      if (onDismiss) onDismiss();
 
     } catch (finalErr) {
-      console.error('[AdMob] All rewarded interstitial attempts failed:', finalErr);
       this.isShowingRewardedInterstitial = false;
-      if (onError) onError({ isFallback: true, message: "All attempts failed" });
+      this.preloadRewardedInterstitial();
+      if (onError) onError({ message: 'Rewarded interstitial ad failed to play.' });
       if (onDismiss) onDismiss();
     }
   },
@@ -555,7 +817,7 @@ export const AdMobService = {
     }
 
     if (!Capacitor.isNativePlatform()) {
-      if (onSuccess) onSuccess();
+      if (onError) onError({ message: 'Ads are only available in the Android app.' });
       if (onDismiss) onDismiss();
       return;
     }
@@ -568,30 +830,20 @@ export const AdMobService = {
         console.log('[AdMob] Requesting Native Android AppOpenAd:', primaryAdId);
         await NativeAppOpenAd.loadAndShow({ adId: primaryAdId });
         console.log('[AdMob] Native AppOpenAd completed successfully');
+        if (onSuccess) onSuccess();
+        if (onDismiss) onDismiss();
       } else {
-        await AdMob.prepareInterstitial({
-          adId: getAdId('interstitial'),
-          isTesting: isTestingMode()
-        });
-        await AdMob.showInterstitial();
+        await this.showInterstitial(onSuccess, onError, onDismiss);
       }
-      if (onSuccess) onSuccess();
-      if (onDismiss) onDismiss();
     } catch (err) {
       console.warn('[AdMob] Native App Open Ad failed:', err);
-      // Fallback to interstitial or graceful finish
       try {
-        await AdMob.prepareInterstitial({
-          adId: getAdId('interstitial'),
-          isTesting: isTestingMode()
-        });
-        await AdMob.showInterstitial();
+        await this.showInterstitial(onSuccess, onError, onDismiss);
       } catch (fallbackErr) {
         console.warn('[AdMob] App open fallback interstitial also failed:', fallbackErr);
+        if (onError) onError(fallbackErr);
+        if (onDismiss) onDismiss();
       }
-      if (onSuccess) onSuccess();
-      if (onDismiss) onDismiss();
     }
   }
 };
-
