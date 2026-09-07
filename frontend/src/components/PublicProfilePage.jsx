@@ -1566,19 +1566,32 @@ const PublicProfilePage = ({ userId, onBack, currentUser, isOwnProfile, setActiv
             )}
           </h2>
 
-          {/* Simple "Verified" text above bio (NOT blue/golden badge) */}
+          {/* Simple "Verified Account" text above bio (Account Security / Phone & Email verification) */}
           {Boolean(profile.isAccountVerified || (profile.isPhoneVerified && profile.isEmailVerified)) ? (
             <div className="flex items-center justify-center pt-1 pb-0.5 select-none">
-              <span className="inline-flex items-center gap-1.5 text-xs font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-50/80 dark:bg-emerald-950/40 px-2.5 py-0.5 rounded-full border border-emerald-200/60 dark:border-emerald-800/60">
-                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />
-                <span>Verified</span>
-              </span>
+              {isOwn ? (
+                <button
+                  type="button"
+                  onClick={() => setShowVerify2MinModal(true)}
+                  className="inline-flex items-center gap-1.5 text-xs font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-50/80 dark:bg-emerald-950/40 hover:bg-emerald-100/80 dark:hover:bg-emerald-900/50 px-3 py-0.5 rounded-full border border-emerald-200/60 dark:border-emerald-800/60 transition-all cursor-pointer active:scale-95 shadow-2xs"
+                  title="View Account Verification Details"
+                >
+                  <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />
+                  <span>Verified Account</span>
+                </button>
+              ) : (
+                <span className="inline-flex items-center gap-1.5 text-xs font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-50/80 dark:bg-emerald-950/40 px-2.5 py-0.5 rounded-full border border-emerald-200/60 dark:border-emerald-800/60">
+                  <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />
+                  <span>Verified Account</span>
+                </span>
+              )}
             </div>
           ) : isOwn ? (
             <div className="flex items-center justify-center pt-1.5 pb-0.5 select-none">
               <button
+                type="button"
                 onClick={() => setShowVerify2MinModal(true)}
-                className="group inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-gradient-to-r from-indigo-600 via-purple-600 to-indigo-600 hover:from-indigo-700 hover:to-purple-700 text-white text-[11px] font-black shadow-md shadow-indigo-600/20 hover:shadow-indigo-600/35 active:scale-95 transition-all"
+                className="group inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-gradient-to-r from-indigo-600 via-purple-600 to-indigo-600 hover:from-indigo-700 hover:to-purple-700 text-white text-[11px] font-black shadow-md shadow-indigo-600/20 hover:shadow-indigo-600/35 active:scale-95 transition-all cursor-pointer"
               >
                 <Shield className="w-3.5 h-3.5 text-indigo-200 group-hover:scale-110 transition-transform" />
                 <span>Verify in 2 minutes</span>

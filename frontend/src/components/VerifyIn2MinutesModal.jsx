@@ -336,7 +336,7 @@ export default function VerifyIn2MinutesModal({ isOpen, onClose, onSuccess, init
               Verify in 2 minutes
             </h2>
             <p className="text-xs text-slate-300/80 mt-1.5 leading-relaxed">
-              Verify your contact details to protect your account and display "Verified" status above your bio.
+              Verify your contact details to protect your account and display "Verified Account" status above your bio.
             </p>
           </div>
 
@@ -416,7 +416,7 @@ export default function VerifyIn2MinutesModal({ isOpen, onClose, onSuccess, init
                 <div className={`text-xs font-bold ${currentStepperIdx === 3 ? 'text-white' : 'text-slate-300'}`}>
                   Account Verified
                 </div>
-                <div className="text-[10px] text-slate-400">Verified status shown above bio</div>
+                <div className="text-[10px] text-slate-400">Verified Account status shown above bio</div>
               </div>
             </div>
           </div>
@@ -497,7 +497,7 @@ export default function VerifyIn2MinutesModal({ isOpen, onClose, onSuccess, init
                       Secure Your Account
                     </h2>
                     <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-1 max-w-sm mx-auto leading-relaxed font-medium">
-                      Verify your details to protect your account and activate the "Verified" status above your bio.
+                      Verify your details to protect your account and activate the "Verified Account" status above your bio.
                     </p>
                   </div>
 
@@ -633,7 +633,7 @@ export default function VerifyIn2MinutesModal({ isOpen, onClose, onSuccess, init
                         <CheckCircle2 className="w-3.5 h-3.5 text-indigo-500 flex-shrink-0 mt-0.5" />
                         <div>
                           <strong className="text-slate-800 dark:text-slate-200">Peace of mind:</strong>{' '}
-                          <span className="text-slate-500 dark:text-slate-400">'Verified' status displays above your profile bio.</span>
+                          <span className="text-slate-500 dark:text-slate-400">'Verified Account' status displays above your profile bio.</span>
                         </div>
                       </div>
                     </div>
@@ -945,7 +945,7 @@ export default function VerifyIn2MinutesModal({ isOpen, onClose, onSuccess, init
                       Verification Complete! 🎉
                     </h2>
                     <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-1.5 max-w-sm mx-auto leading-relaxed">
-                      Your details are confirmed. The <strong>"Verified"</strong> status is now active above your profile bio.
+                      Your details are confirmed. The <strong>"Verified Account"</strong> status is now active above your profile bio.
                     </p>
                   </div>
 
