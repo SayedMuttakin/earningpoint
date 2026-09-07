@@ -84,8 +84,8 @@ const TransactionHistoryPage = ({ onBack }) => {
     <PullToRefresh onRefresh={handleRefresh} refreshing={refreshing}>
       <div className="w-full min-h-screen bg-white dark:bg-slate-900 flex flex-col pb-24 font-sans">
         {/* Header */}
-        <div className="bg-[#087b7a] dark:bg-[#065f5e] px-4 pt-10 pb-6">
-          <div className="flex items-center gap-3 mb-1">
+        <div className="bg-[#087b7a] dark:bg-[#065f5e] px-2 sm:px-4 pt-10 pb-6">
+          <div className="max-w-2xl md:max-w-3xl lg:max-w-xl xl:max-w-2xl mx-auto flex items-center gap-3 mb-1">
             <button
               onClick={onBack}
               className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center active:scale-95 transition-transform"
@@ -98,7 +98,7 @@ const TransactionHistoryPage = ({ onBack }) => {
 
         {/* Tabs */}
         <div className="bg-white dark:bg-slate-900 border-b border-slate-100 dark:border-slate-800">
-          <div className="flex">
+          <div className="max-w-2xl md:max-w-3xl lg:max-w-xl xl:max-w-2xl mx-auto flex">
             <button
               onClick={() => setActiveTab('history')}
               className={`flex-1 py-4 text-sm font-bold transition-colors relative ${
@@ -129,7 +129,7 @@ const TransactionHistoryPage = ({ onBack }) => {
         </div>
 
         {/* List */}
-        <div className="flex-1 px-4 pt-4">
+        <div className="flex-1 max-w-2xl md:max-w-3xl lg:max-w-xl xl:max-w-2xl mx-auto w-full px-2 sm:px-4 pt-4">
           {loading && transactions.length === 0 ? (
             <div className="flex justify-center py-16">
               <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-[#087b7a]" />

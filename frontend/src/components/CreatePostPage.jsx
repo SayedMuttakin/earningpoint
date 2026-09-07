@@ -328,7 +328,7 @@ const CreatePostPage = ({ currentUser, onBack, setActiveTab, postToEdit = null, 
       </header>
 
       {/* Main Body */}
-      <main className="flex-1 p-4 max-w-xl mx-auto w-full flex flex-col space-y-4">
+      <main className="flex-1 p-2 sm:p-4 max-w-2xl md:max-w-3xl lg:max-w-xl xl:max-w-2xl mx-auto w-full flex flex-col space-y-4">
         {/* User Card info */}
         <div className="flex items-center gap-3">
           <div className="w-12 h-12 rounded-full p-0.5 bg-gradient-to-tr from-brand-500 to-indigo-500 flex-shrink-0">

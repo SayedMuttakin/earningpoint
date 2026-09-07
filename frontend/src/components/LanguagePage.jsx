@@ -76,7 +76,7 @@ const LanguagePage = ({ onBack }) => {
           </div>
         </div>
 
-        <div className="max-w-7xl mx-auto w-full px-4 sm:px-8 py-6 flex justify-center">
+        <div className="max-w-7xl mx-auto w-full px-2 sm:px-8 py-6 flex justify-center">
           <div className="w-full max-w-xl">
             {/* Search Bar */}
             <div className="mb-6 relative">

@@ -703,7 +703,7 @@ const Navbar = ({
 
       {/* Sticky Flat Bottom Navigation (Pinned strictly to Mobile & Tablet Viewport Window, Hidden on Desktop) */}
       {activeTab !== 'Video' && activeTab !== 'Messenger' && activeTab !== 'Support' && (
-        <div className="fixed bottom-0 left-0 right-0 mx-auto w-full max-w-xl md:max-w-2xl lg:hidden bg-gradient-to-r from-indigo-50/95 via-purple-50/95 to-pink-50/95 dark:from-slate-900/95 dark:via-slate-950/95 dark:to-slate-900/95 backdrop-blur-md rounded-t-[24px] z-[9999] shadow-[0_-8px_30px_rgba(99,102,241,0.15)] min-h-[68px] pt-1.5 pb-[max(12px,env(safe-area-inset-bottom,12px))] px-3 flex items-center">
+        <div className="fixed bottom-0 left-0 right-0 mx-auto w-full max-w-2xl md:max-w-3xl lg:hidden bg-gradient-to-r from-indigo-50/95 via-purple-50/95 to-pink-50/95 dark:from-slate-900/95 dark:via-slate-950/95 dark:to-slate-900/95 backdrop-blur-md rounded-t-[24px] z-[9999] shadow-[0_-8px_30px_rgba(99,102,241,0.15)] min-h-[68px] pt-1.5 pb-[max(12px,env(safe-area-inset-bottom,12px))] px-3 flex items-center">
         <div className="flex justify-around items-center w-full relative h-full">
           
           {/* Home Tab */}

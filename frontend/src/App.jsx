@@ -678,7 +678,7 @@ function App() {
 
           {/* Main Responsive Body Container (3-Column on Desktop, 1-Column on Mobile & Tablet) */}
           <div className="flex-1 w-full overflow-y-auto overflow-x-hidden pt-[calc(3.5rem+max(4px,env(safe-area-inset-top,4px)))] lg:pt-[calc(4.5rem+max(4px,env(safe-area-inset-top,4px)))] pb-[calc(76px+max(14px,env(safe-area-inset-bottom,14px)))] lg:pb-8 relative no-scrollbar">
-            <div className="w-full max-w-7xl xl:max-w-[1360px] 2xl:max-w-[1440px] mx-auto px-4 lg:px-6 flex justify-between gap-6">
+            <div className="w-full max-w-7xl xl:max-w-[1360px] 2xl:max-w-[1440px] mx-auto px-1.5 sm:px-4 lg:px-6 flex justify-center lg:justify-between gap-6">
               
               {/* Desktop Left Sidebar (Facebook Style) */}
               <DesktopSidebarLeft 
@@ -692,7 +692,7 @@ function App() {
               />
 
               {/* Center Feed / Active Page Column */}
-              <main className="w-full max-w-xl md:max-w-2xl min-h-[calc(100vh-120px)] flex-shrink-0">
+              <main className="w-full max-w-2xl md:max-w-3xl lg:max-w-xl xl:max-w-2xl min-h-[calc(100vh-120px)] flex-shrink-0 mx-auto lg:mx-0">
                 <Suspense fallback={<PageLoader />}>
                   {/* HomePage is always mounted but hidden when not active — prevents re-fetching on every tab switch */}
                   <div style={{ display: activeTab === 'Home' ? 'block' : 'none' }}>

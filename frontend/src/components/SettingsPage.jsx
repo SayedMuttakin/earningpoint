@@ -666,7 +666,7 @@ const SettingsPage = ({
             <div className="w-10 h-10" />
           </div>
 
-          <div className="max-w-md mx-auto px-4 pt-6">
+          <div className="max-w-2xl md:max-w-3xl lg:max-w-xl xl:max-w-2xl mx-auto px-2 sm:px-4 pt-6">
             {/* Main Title Section with Search button */}
             <div className="flex items-start justify-between mb-6">
               <div>

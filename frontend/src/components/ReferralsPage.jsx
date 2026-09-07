@@ -224,7 +224,7 @@ const ReferralsPage = ({ onBack }) => {
       <div className="w-full min-h-screen bg-slate-50 dark:bg-slate-950 flex flex-col pb-6 select-none animate-fade-in">
         {/* Header */}
         <div className="sticky top-0 z-10 bg-white dark:bg-slate-900 border-b border-slate-100 dark:border-slate-800 shadow-3xs pt-[env(safe-area-inset-top,0px)]">
-          <div className="max-w-md mx-auto px-4 py-2.5 flex items-center gap-3">
+          <div className="max-w-2xl md:max-w-3xl lg:max-w-xl xl:max-w-2xl mx-auto px-2 sm:px-4 py-2.5 flex items-center gap-3">
             <button 
               onClick={() => setShowRulesPage(false)} 
               className="w-9 h-9 rounded-full bg-slate-50 dark:bg-slate-800 flex items-center justify-center hover:bg-slate-100 dark:hover:bg-slate-700 active:scale-90 transition-transform flex-shrink-0"
@@ -243,7 +243,7 @@ const ReferralsPage = ({ onBack }) => {
           </div>
         </div>
 
-        <div className="max-w-md mx-auto w-full px-4 pt-4 space-y-4">
+        <div className="max-w-2xl md:max-w-3xl lg:max-w-xl xl:max-w-2xl mx-auto w-full px-2 sm:px-4 pt-4 space-y-4">
           {/* Rules Card */}
           <div className="bg-white dark:bg-slate-900 border border-slate-150/40 dark:border-slate-800 rounded-3xl p-4 shadow-sm flex flex-col gap-4">
             <div className="flex gap-4 items-center">
@@ -433,7 +433,7 @@ const ReferralsPage = ({ onBack }) => {
       <div className="w-full min-h-screen bg-slate-50 dark:bg-slate-950 flex flex-col pb-24 animate-fade-in">
         {/* Header */}
         <div className="sticky top-0 z-10 bg-white dark:bg-slate-900 border-b border-slate-100 dark:border-slate-800 shadow-3xs pt-[env(safe-area-inset-top,0px)]">
-          <div className="max-w-md mx-auto px-4 py-2.5 flex items-center justify-between">
+          <div className="max-w-2xl md:max-w-3xl lg:max-w-xl xl:max-w-2xl mx-auto px-2 sm:px-4 py-2.5 flex items-center justify-between">
             <button onClick={onBack} className="w-9 h-9 rounded-full bg-slate-50 dark:bg-slate-800 flex items-center justify-center hover:bg-slate-100 dark:hover:bg-slate-700 active:scale-90 transition-transform">
               <ChevronLeft className="w-5 h-5 text-slate-700 dark:text-slate-350" />
             </button>
@@ -447,7 +447,7 @@ const ReferralsPage = ({ onBack }) => {
           </div>
         </div>
 
-        <div className="max-w-md mx-auto w-full px-4 pt-6 space-y-5">
+        <div className="max-w-2xl md:max-w-3xl lg:max-w-xl xl:max-w-2xl mx-auto w-full px-2 sm:px-4 pt-6 space-y-5">
           {/* Main Card: Your Referral Code */}
           <div className="bg-gradient-to-r from-violet-600 to-indigo-700 text-white rounded-3xl p-6 shadow-md relative overflow-hidden flex flex-col justify-between min-h-[160px]">
             {/* Background design elements */}

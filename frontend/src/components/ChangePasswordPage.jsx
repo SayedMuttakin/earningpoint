@@ -79,8 +79,8 @@ const ChangePasswordPage = ({ onBack }) => {
           </div>
         </div>
 
-        <div className="max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-8 flex justify-center">
-          <div className="w-full max-w-xl bg-white dark:bg-slate-800 rounded-3xl p-6 sm:p-8 shadow-sm border border-slate-200 dark:border-slate-700">
+        <div className="max-w-7xl mx-auto w-full px-2 sm:px-6 lg:px-8 py-8 flex justify-center">
+          <div className="w-full max-w-xl bg-white dark:bg-slate-800 rounded-3xl p-4 sm:p-8 shadow-sm border border-slate-200 dark:border-slate-700">
             <div className="w-16 h-16 bg-brand-50 dark:bg-brand-900/30 rounded-2xl flex items-center justify-center text-brand-600 mb-6 shadow-sm">
               <KeyRound className="w-8 h-8" />
             </div>

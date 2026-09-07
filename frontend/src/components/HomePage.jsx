@@ -641,7 +641,7 @@ const CommunityPostCard = ({ post, onFollowToggle, onLikeToggle, onCommentClick,
   })();
 
   return (
-    <article id={`post-${post._id}`} className="bg-white dark:bg-slate-900 rounded-[2rem] p-4.5 space-y-3.5 shadow-sm hover:shadow-md transition-shadow">
+    <article id={`post-${post._id}`} className="bg-white dark:bg-slate-900 rounded-2xl sm:rounded-[2rem] p-3 sm:p-4.5 space-y-3 sm:space-y-3.5 shadow-sm hover:shadow-md transition-shadow">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
@@ -1843,7 +1843,7 @@ const HomePage = ({ setActiveTab, setSelectedNewsId, setActiveChatPartner, setSe
       <PullToRefresh onRefresh={handleRefresh} refreshing={refreshing}>
         <div className="min-h-screen bg-slate-50 dark:bg-slate-950 pb-24 flex flex-col relative">
         {/* Content Body */}
-        <div className="w-full max-w-xl lg:max-w-2xl mx-auto px-2 sm:px-4 pt-2 lg:pt-0 pb-8 flex-1 space-y-6">
+        <div className="w-full max-w-2xl md:max-w-3xl lg:max-w-2xl mx-auto px-1 sm:px-3 lg:px-0 pt-2 lg:pt-0 pb-8 flex-1 space-y-5 sm:space-y-6">
           {/* SEO H1 Heading (Screen Reader & Search Engine Optimized) */}
           <h1 className="sr-only">Zenivio – More Than a Social Network</h1>
 

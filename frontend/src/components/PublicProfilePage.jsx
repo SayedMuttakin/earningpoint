@@ -1446,7 +1446,7 @@ const PublicProfilePage = ({ userId, onBack, currentUser, isOwnProfile, setActiv
         {/* Cover Skeleton */}
         <div className="w-full h-44 sm:h-52 bg-slate-200 dark:bg-slate-800" />
         
-        <div className="max-w-xl mx-auto px-4 relative -mt-16 space-y-5">
+        <div className="max-w-2xl md:max-w-3xl lg:max-w-xl xl:max-w-2xl mx-auto px-2 sm:px-4 relative -mt-16 space-y-5">
           {/* Avatar Skeleton */}
           <div className="flex items-end justify-between">
             <div className="w-24 h-24 sm:w-28 sm:h-28 rounded-full border-4 border-white dark:border-slate-950 bg-slate-300 dark:bg-slate-800 shadow-md" />
@@ -1558,7 +1558,7 @@ const PublicProfilePage = ({ userId, onBack, currentUser, isOwnProfile, setActiv
         </div>
 
         {/* User Details */}
-        <div className="text-center mt-3.5 space-y-1 w-full max-w-md">
+        <div className="text-center mt-3.5 space-y-1 w-full max-w-xl">
           <h2 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white flex items-center justify-center gap-1.5">
             {profile.name}
             {(profile.verificationBadge === 'blue' || profile.verificationBadge === 'golden') && (
@@ -1649,7 +1649,7 @@ const PublicProfilePage = ({ userId, onBack, currentUser, isOwnProfile, setActiv
       </div>
 
       {/* Profile Statistics counts card */}
-      <div className="max-w-md mx-auto w-full px-4 mt-5">
+      <div className="max-w-xl mx-auto w-full px-2 sm:px-4 mt-5">
         <div className="bg-white dark:bg-slate-900/60 backdrop-blur-md rounded-3xl p-4 flex justify-around text-center shadow-xs border border-slate-100 dark:border-slate-800/50">
           <div 
             onClick={() => setFollowListModal('following')}
@@ -1675,9 +1675,9 @@ const PublicProfilePage = ({ userId, onBack, currentUser, isOwnProfile, setActiv
       </div>
 
       {/* Action Buttons */}
-      <div className="w-full max-w-md mx-auto">
+      <div className="w-full max-w-xl mx-auto">
         {isOwn ? (
-          <div className="flex items-center gap-3 select-none justify-center px-4 mt-4 w-full">
+          <div className="flex items-center gap-3 select-none justify-center px-2 sm:px-4 mt-4 w-full">
             <button 
               onClick={() => setShowEditProfileModal(true)}
               className="flex-1 py-2.5 rounded-full font-black text-sm bg-indigo-600 hover:bg-indigo-700 text-white transition-all active:scale-95 shadow-md shadow-indigo-600/15"
@@ -1761,7 +1761,7 @@ const PublicProfilePage = ({ userId, onBack, currentUser, isOwnProfile, setActiv
 
       {/* Instagram-Style Story Highlights */}
       {(profile.highlights?.length > 0 || isOwn) && (
-        <div className="w-full max-w-md mx-auto px-4 mt-5 select-none">
+        <div className="w-full max-w-xl mx-auto px-2 sm:px-4 mt-5 select-none">
           <div className="flex items-center gap-4 overflow-x-auto py-2 no-scrollbar">
             {/* + New Highlight button */}
             {isOwn && (
@@ -1867,7 +1867,7 @@ const PublicProfilePage = ({ userId, onBack, currentUser, isOwnProfile, setActiv
       )}
 
       {/* 4-Icon Tabs Bar */}
-      <div className="w-full max-w-md mx-auto">
+      <div className="w-full max-w-xl mx-auto">
         <div className="border-t border-slate-200/60 dark:border-slate-800/80 flex items-center justify-around py-3 select-none mt-5">
           <button 
             onClick={() => setActiveSubTab('grid')}

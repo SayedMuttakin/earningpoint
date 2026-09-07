@@ -602,7 +602,7 @@ const RelatedNewsSlider = ({ posts, onSelect }) => {
             <div className="w-10" /> {/* Spacer */}
           </div>
 
-          <div className="max-w-xl mx-auto px-4 w-full pt-1 space-y-3">
+          <div className="max-w-2xl md:max-w-3xl lg:max-w-xl xl:max-w-2xl mx-auto px-2 sm:px-4 w-full pt-1 space-y-3">
             {/* Top Billboard Display Ad (Matching BD-Pratidin newspaper top banner format) */}
             <div className="w-full">
               <BannerAd size="leaderboard" />
@@ -731,7 +731,7 @@ const RelatedNewsSlider = ({ posts, onSelect }) => {
         </div>
 
         {/* 2-Column Grid layout for All News (10 items per page) */}
-        <div className="max-w-xl mx-auto px-4 w-full pt-4 space-y-4">
+        <div className="max-w-2xl md:max-w-3xl lg:max-w-xl xl:max-w-2xl mx-auto px-2 sm:px-4 w-full pt-4 space-y-4">
           <div className="grid grid-cols-2 gap-3 sm:gap-4">
             {paginatedSeeAllPosts.map(post => (
               <RecentGridNewsCard 
@@ -774,7 +774,7 @@ const RelatedNewsSlider = ({ posts, onSelect }) => {
 
         {/* Horizontal News Cards Slider */}
         {posts && posts.length > 0 && (
-          <div className="max-w-xl mx-auto px-4 w-full pt-3 pb-1">
+          <div className="max-w-2xl md:max-w-3xl lg:max-w-xl xl:max-w-2xl mx-auto px-2 sm:px-4 w-full pt-3 pb-1">
             <NewsSlider 
               posts={posts} 
               onSeeAll={() => {
@@ -787,7 +787,7 @@ const RelatedNewsSlider = ({ posts, onSelect }) => {
         )}
 
         {/* Latest News Section */}
-        <div className="max-w-xl mx-auto px-4 w-full pt-4">
+        <div className="max-w-2xl md:max-w-3xl lg:max-w-xl xl:max-w-2xl mx-auto px-2 sm:px-4 w-full pt-4">
           <div className="flex items-center justify-between pb-3 mb-3 border-b border-slate-100 dark:border-slate-800">
             <div className="flex items-center gap-2">
               <Newspaper className="w-5 h-5 text-[#7C3AED] dark:text-indigo-400" />
@@ -839,7 +839,7 @@ const RelatedNewsSlider = ({ posts, onSelect }) => {
 
         {/* Recent News Section (2 Columns Grid at bottom with 10-per-page Pagination) */}
         {allRecentPosts.length > 0 && (
-          <div id="recent-news-section" className="max-w-xl mx-auto px-4 w-full pt-6 pb-4 scroll-mt-6">
+          <div id="recent-news-section" className="max-w-2xl md:max-w-3xl lg:max-w-xl xl:max-w-2xl mx-auto px-2 sm:px-4 w-full pt-6 pb-4 scroll-mt-6">
             <div className="flex items-center justify-between pb-3 mb-3 border-b border-slate-100 dark:border-slate-800">
               <div className="flex items-center gap-2">
                 <Clock className="w-5 h-5 text-[#7C3AED] dark:text-indigo-400" />

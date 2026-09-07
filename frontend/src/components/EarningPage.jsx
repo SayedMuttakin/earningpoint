@@ -3203,9 +3203,9 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
       <div className="w-full max-w-4xl mx-auto bg-white dark:bg-slate-900 md:rounded-3xl shadow-xl overflow-hidden border border-slate-200 dark:border-slate-800 mt-2">
 
         {/* Top Header - Total Points & MY WALLET buttons */}
-        <div className="bg-[#f5f3ff] dark:bg-slate-900 text-slate-800 dark:text-white px-4 py-4 sm:px-6 flex flex-col items-center gap-4 border-b border-purple-100 dark:border-slate-800">
+        <div className="bg-[#f5f3ff] dark:bg-slate-900 text-slate-800 dark:text-white px-2 sm:px-6 py-3.5 sm:py-4 flex flex-col items-center gap-4 border-b border-purple-100 dark:border-slate-800">
             {/* Buttons Row */}
-            <div className="flex justify-center items-center gap-4 w-full max-w-md">
+            <div className="flex justify-center items-center gap-3 sm:gap-4 w-full max-w-md">
               {/* Total Points Card - static info badge, does not navigate */}
               <div
                 className="flex-1 py-3 px-3 rounded-2xl flex items-center justify-center gap-1.5 border-2 shadow-sm bg-gradient-to-r from-amber-400 to-orange-400 border-amber-400/40 text-white whitespace-nowrap min-w-0 select-none cursor-default"
@@ -3229,7 +3229,7 @@ const EarningPage = ({ onReferralsClick, setActiveTab }) => {
 
 
         {/* Content */}
-        <div className="p-4 sm:p-6 md:p-10 space-y-8 md:space-y-10 bg-white dark:bg-slate-900">
+        <div className="p-2 sm:p-5 md:p-10 space-y-8 md:space-y-10 bg-white dark:bg-slate-900">
 
         {/* ─── WALLET TAB ─── */}
         {activeEarningTab === 'wallet' && (

@@ -60,12 +60,12 @@ const DeleteAccountPage = ({ onBack, onLogout }) => {
           </div>
         </div>
 
-        <div className="max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-8 flex justify-center">
+        <div className="max-w-7xl mx-auto w-full px-2 sm:px-6 lg:px-8 py-8 flex justify-center">
           <div className="w-full max-w-xl">
             {step === 'warning' && (
               <div
                 key="warning"
-                className="bg-white dark:bg-slate-800 rounded-3xl p-6 sm:p-10 shadow-sm border border-slate-200 dark:border-slate-700 text-center animate-fade-in-up"
+                className="bg-white dark:bg-slate-800 rounded-3xl p-4 sm:p-10 shadow-sm border border-slate-200 dark:border-slate-700 text-center animate-fade-in-up"
               >
                 <div className="w-20 h-20 bg-red-50 dark:bg-red-900/30 rounded-full flex items-center justify-center mx-auto mb-6">
                   <AlertTriangle className="w-10 h-10 text-red-500" />

@@ -198,7 +198,7 @@ const SupportPage = ({ onBack }) => {
   return (
     <div className="fixed inset-0 z-[100] bg-slate-50 dark:bg-slate-950 flex flex-col overflow-hidden">
       {/* Header */}
-      <div className="bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800/80 px-4 pt-[max(12px,env(safe-area-inset-top))] pb-2.5 flex items-center justify-between shrink-0 shadow-xs z-10 relative">
+      <div className="bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800/80 px-2 sm:px-4 pt-[max(12px,env(safe-area-inset-top))] pb-2.5 flex items-center justify-between shrink-0 shadow-xs z-10 relative">
         <div className="flex items-center gap-2 sm:gap-3">
           <button 
             onClick={onBack} 
@@ -229,7 +229,7 @@ const SupportPage = ({ onBack }) => {
       </div>
 
       {/* Main Chat Scrollable Content Area */}
-      <div className="flex-1 overflow-y-auto w-full max-w-4xl mx-auto p-4 space-y-4">
+      <div className="flex-1 overflow-y-auto w-full max-w-4xl mx-auto p-2 sm:p-4 space-y-4">
         {/* Chat Session Welcome Info */}
         <div className="flex flex-col items-center justify-center text-center py-6 mb-2">
           <div className="w-16 h-16 rounded-2xl shadow-md overflow-hidden flex-shrink-0 bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 p-2 flex items-center justify-center mb-2">

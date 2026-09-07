@@ -590,7 +590,7 @@ const VerificationPage = ({ onBack }) => {
 
         {/* Header */}
         <div className="sticky top-0 z-10 bg-white dark:bg-slate-955 border-b border-slate-100 dark:border-slate-900 shadow-3xs pt-[env(safe-area-inset-top,0px)]">
-          <div className="max-w-md mx-auto px-4 py-2.5 flex items-center justify-between relative">
+          <div className="max-w-2xl md:max-w-3xl lg:max-w-xl xl:max-w-2xl mx-auto px-2 sm:px-4 py-2.5 flex items-center justify-between relative">
             <button 
               onClick={() => {
                 if (step === 1) {
@@ -624,7 +624,7 @@ const VerificationPage = ({ onBack }) => {
         )}
 
         {/* Main Content Area */}
-        <div className="max-w-md mx-auto w-full px-4 pt-6 flex-1 flex flex-col justify-start">
+        <div className="max-w-2xl md:max-w-3xl lg:max-w-xl xl:max-w-2xl mx-auto w-full px-2 sm:px-4 pt-6 flex-1 flex flex-col justify-start">
           {renderStepContent()}
         </div>
 
