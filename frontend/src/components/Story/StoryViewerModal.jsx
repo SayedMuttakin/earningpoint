@@ -41,6 +41,7 @@ const StoryViewerModal = ({
   const [showViewersSheet, setShowViewersSheet] = useState(false);
   const [viewersList, setViewersList] = useState([]);
   const [loadingViewers, setLoadingViewers] = useState(false);
+  const [liveViewsCount, setLiveViewsCount] = useState(null);
   const recordedViewsRef = useRef(new Set());
 
   const audioRef = useRef(null);
@@ -54,7 +55,33 @@ const StoryViewerModal = ({
     setCurrentIndex(initialIndex);
     setProgress(0);
     setShowViewersSheet(false);
+    setLiveViewsCount(null);
   }, [storyUser, initialIndex]);
+
+  // Auto-fetch fresh viewers count & list for own story as soon as it opens
+  useEffect(() => {
+    if (!currentStory?._id || !isOwnStory) return;
+    const token = localStorage.getItem('token');
+    if (!token) return;
+
+    fetch(`${API_BASE}/api/messages/story/${currentStory._id}/viewers`, {
+      headers: { Authorization: `Bearer ${token}` }
+    })
+      .then((res) => res.json())
+      .then((data) => {
+        if (data && typeof data.viewsCount === 'number') {
+          setLiveViewsCount(data.viewsCount);
+          if (Array.isArray(data.viewers)) {
+            setViewersList(data.viewers);
+          }
+        }
+      })
+      .catch((err) => console.error('Failed to auto-fetch story viewers:', err));
+  }, [currentStory?._id, isOwnStory]);
+
+  const displayViewsCount = liveViewsCount !== null
+    ? liveViewsCount
+    : (currentStory?.viewsCount ?? currentStory?.viewers?.length ?? 0);
 
   // Record Story View for non-owners
   useEffect(() => {
@@ -405,25 +432,14 @@ const StoryViewerModal = ({
               </button>
             )}
 
-            {/* Direct Phone Download Button */}
-            {hasImage && (
+            {/* Direct Phone Download Button (for others' stories) */}
+            {hasImage && !isOwnStory && (
               <button
                 onClick={handleDownloadImage}
                 className="w-8 h-8 rounded-full bg-black/40 backdrop-blur-md text-white flex items-center justify-center active:scale-90 border border-white/20"
                 title="Download image to phone"
               >
                 <Download className="w-4 h-4 text-cyan-300" />
-              </button>
-            )}
-
-            {/* Delete button (for own stories) */}
-            {isOwnStory && (
-              <button
-                onClick={() => setShowDeleteConfirm(true)}
-                className="w-8 h-8 rounded-full bg-rose-500/80 backdrop-blur-md text-white flex items-center justify-center active:scale-90 shadow"
-                title="Delete story"
-              >
-                <Trash2 className="w-4 h-4" />
               </button>
             )}
 
@@ -482,39 +498,72 @@ const StoryViewerModal = ({
           )}
         </div>
 
-        {/* ── BOTTOM REPLY / REACTION BAR OR OWNER VIEWS BAR ── */}
+        {/* ── BOTTOM BAR (Facebook Style) ── */}
         <div
-          className="relative z-20 px-4 pb-[max(16px,env(safe-area-inset-bottom,16px))] pt-2 bg-gradient-to-t from-black/90 to-transparent flex flex-col gap-2 shrink-0"
+          className="relative z-20 px-4 pb-[max(16px,env(safe-area-inset-bottom,16px))] pt-2 bg-gradient-to-t from-black/85 via-black/40 to-transparent flex flex-col gap-2 shrink-0"
           onClick={(e) => e.stopPropagation()}
         >
           {isOwnStory ? (
-            <div
-              onClick={openViewersSheet}
-              className="flex items-center justify-between px-4 py-2.5 rounded-2xl bg-black/55 backdrop-blur-md border border-white/20 cursor-pointer hover:bg-black/70 active:scale-[0.99] transition-all group shadow-lg"
-            >
-              <div className="flex items-center gap-2.5">
-                <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-[#7C3AED] to-indigo-600 flex items-center justify-center text-white shadow">
-                  <Eye className="w-4 h-4 text-white" />
-                </div>
-                <div className="text-left">
-                  <div className="flex items-center gap-1.5">
-                    <span className="text-white text-xs font-black">
-                      {(currentStory.viewsCount ?? currentStory.viewers?.length ?? 0)} {((currentStory.viewsCount ?? currentStory.viewers?.length ?? 0) === 1) ? 'View' : 'Views'}
-                    </span>
-                    <span className="text-[10px] text-white/60">• Tap to see viewers</span>
+            <div className="flex items-center justify-between w-full">
+              {/* Facebook-style Viewers Pill Button (Bottom Left) */}
+              <button
+                type="button"
+                onClick={openViewersSheet}
+                className="flex items-center gap-2 px-3.5 py-2 rounded-full bg-black/45 hover:bg-black/65 active:scale-95 backdrop-blur-md border border-white/20 text-white shadow-xl transition-all group pointer-events-auto"
+              >
+                {viewersList && viewersList.length > 0 ? (
+                  <div className="flex items-center -space-x-1.5 mr-0.5">
+                    {viewersList.slice(0, 3).map((v, idx) => (
+                      <div
+                        key={v._id || idx}
+                        className="w-5 h-5 rounded-full ring-1 ring-black overflow-hidden bg-slate-700 shrink-0"
+                      >
+                        {v.profilePic ? (
+                          <img
+                            src={getImageUrl(v.profilePic)}
+                            alt=""
+                            className="w-full h-full object-cover"
+                          />
+                        ) : (
+                          <span className="text-[9px] font-bold flex items-center justify-center h-full text-white bg-indigo-600">
+                            {v.name?.charAt(0) || 'U'}
+                          </span>
+                        )}
+                      </div>
+                    ))}
                   </div>
-                  {currentStory.viewers && currentStory.viewers.length > 0 ? (
-                    <p className="text-[10px] text-purple-200 truncate max-w-[210px] font-medium">
-                      Seen by {currentStory.viewers.slice(0, 2).map(v => v.name).join(', ')}{currentStory.viewers.length > 2 ? ` and ${currentStory.viewers.length - 2} others` : ''}
-                    </p>
-                  ) : (
-                    <p className="text-[10px] text-white/50">No views yet</p>
-                  )}
-                </div>
-              </div>
-              <div className="flex items-center gap-1 text-white/80 group-hover:text-white transition-colors">
-                <span className="text-xs font-bold">Activity</span>
-                <ChevronUp className="w-4 h-4 animate-bounce" />
+                ) : (
+                  <Eye className="w-4 h-4 text-white/90 group-hover:text-white" />
+                )}
+                <span className="text-xs font-semibold text-white tracking-wide">
+                  {displayViewsCount} {displayViewsCount === 1 ? 'viewer' : 'viewers'}
+                </span>
+                <ChevronUp className="w-3.5 h-3.5 text-white/70 group-hover:text-white transition-transform group-hover:-translate-y-0.5" />
+              </button>
+
+              {/* Bottom Right: Quick Save & Delete Story Options */}
+              <div className="flex items-center gap-2">
+                {hasImage && (
+                  <button
+                    type="button"
+                    onClick={handleDownloadImage}
+                    className="w-9 h-9 rounded-full bg-black/45 hover:bg-black/65 active:scale-95 backdrop-blur-md border border-white/20 text-white flex items-center justify-center transition-all shadow-lg"
+                    title="Save image"
+                  >
+                    <Download className="w-4 h-4 text-white" />
+                  </button>
+                )}
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsPaused(true);
+                    setShowDeleteConfirm(true);
+                  }}
+                  className="w-9 h-9 rounded-full bg-black/45 hover:bg-rose-600 active:scale-95 backdrop-blur-md border border-white/20 text-white flex items-center justify-center transition-all shadow-lg"
+                  title="Delete story"
+                >
+                  <Trash2 className="w-4 h-4 text-white" />
+                </button>
               </div>
             </div>
           ) : (
@@ -574,14 +623,14 @@ const StoryViewerModal = ({
             </div>
             <div className="px-6 pt-3 pb-3 border-b border-slate-800 flex items-center justify-between">
               <div className="flex items-center gap-2.5">
-                <div className="w-7 h-7 rounded-full bg-[#7C3AED]/20 flex items-center justify-center">
-                  <Eye className="w-4 h-4 text-[#7C3AED]" />
+                <div className="w-7 h-7 rounded-full bg-indigo-500/20 flex items-center justify-center">
+                  <Eye className="w-4 h-4 text-indigo-400" />
                 </div>
                 <div>
-                  <h3 className="font-black text-sm sm:text-base leading-tight">
-                    Seen by {viewersList.length}
+                  <h3 className="font-bold text-sm sm:text-base leading-tight">
+                    Story viewers ({viewersList.length})
                   </h3>
-                  <p className="text-[10px] text-slate-400">People who viewed your day</p>
+                  <p className="text-[10px] text-slate-400">Only you can see who viewed your story</p>
                 </div>
               </div>
               <button
@@ -607,7 +656,7 @@ const StoryViewerModal = ({
                   <div className="w-12 h-12 rounded-full bg-slate-800/80 flex items-center justify-center text-2xl">
                     👀
                   </div>
-                  <p className="font-black text-sm text-white">No views yet</p>
+                  <p className="font-bold text-sm text-white">No viewers yet</p>
                   <p className="text-xs text-slate-400 max-w-xs leading-relaxed">
                     When someone views your story, their name and profile will show up here.
                   </p>
