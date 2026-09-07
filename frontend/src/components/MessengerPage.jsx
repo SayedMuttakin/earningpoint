@@ -2870,6 +2870,10 @@ const MessengerPage = ({
             onClose={() => setViewingStoryUser(null)}
             onNextUser={handleNextStoryUser}
             onPrevUser={handlePrevStoryUser}
+            onUserClick={(uid) => {
+              if (setActivePublicProfileUserId) setActivePublicProfileUserId(uid);
+              if (setActiveTab) setActiveTab('PublicProfile');
+            }}
             onDeleteStory={() => fetchStories()}
           />
         )}

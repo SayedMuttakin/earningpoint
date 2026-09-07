@@ -402,7 +402,7 @@ exports.getStoryViewers = async (req, res) => {
     const user = await User.findOne(
       { _id: currentUserId, 'stories._id': storyId },
       { 'stories.$': 1 }
-    ).populate('stories.viewers.user', 'name username profilePic isPremium');
+    ).populate('stories.viewers.user', 'name username profilePic googleAvatar facebookAvatar isPremium');
 
     if (!user || !user.stories || user.stories.length === 0) {
       return res.status(404).json({ message: 'Story not found or unauthorized' });
@@ -414,14 +414,17 @@ exports.getStoryViewers = async (req, res) => {
     // Format viewers list (newest first)
     const formattedViewers = rawViewers
       .filter(v => v.user)
-      .map(v => ({
-        _id: v.user._id,
-        name: v.user.name,
-        username: v.user.username,
-        profilePic: v.user.profilePic,
-        isPremium: !!v.user.isPremium,
-        viewedAt: v.viewedAt
-      }))
+      .map(v => {
+        const u = v.user;
+        const pic = u.profilePic || u.googleAvatar || u.facebookAvatar || '';
+        return {
+          _id: u._id,
+          name: u.name,
+          profilePic: pic,
+          isPremium: !!u.isPremium,
+          viewedAt: v.viewedAt
+        };
+      })
       .reverse();
 
     res.json({
@@ -456,18 +459,19 @@ exports.getStories = async (req, res) => {
     const relatedUsers = await User.find({
       _id: { $in: relatedUserIds },
       'stories.0': { $exists: true }
-    }).select('name profilePic stories').populate('stories.viewers.user', 'name username profilePic isPremium');
+    }).select('name profilePic googleAvatar facebookAvatar stories').populate('stories.viewers.user', 'name username profilePic googleAvatar facebookAvatar isPremium');
 
     const otherUsers = await User.find({
       _id: { $nin: relatedUserIds },
       'stories.0': { $exists: true }
-    }).select('name profilePic stories').limit(20);
+    }).select('name profilePic googleAvatar facebookAvatar stories').limit(20);
 
     const allUsers = [...relatedUsers, ...otherUsers];
 
     // Filter expired stories and users with no active stories
     const result = allUsers.map(u => {
       const isSelf = u._id.toString() === currentUserId.toString();
+      const userPic = u.profilePic || u.googleAvatar || u.facebookAvatar || '';
       const activeStories = (u.stories || []).filter(s => new Date(s.createdAt) >= twentyFourHoursAgo).map(s => {
         const viewers = s.viewers || [];
         return {
@@ -481,21 +485,24 @@ exports.getStories = async (req, res) => {
           music: s.music,
           createdAt: s.createdAt,
           viewsCount: viewers.length,
-          viewers: isSelf ? viewers.filter(v => v.user).map(v => ({
-            _id: v.user._id || v.user,
-            name: v.user.name || 'User',
-            username: v.user.username || '',
-            profilePic: v.user.profilePic || '',
-            isPremium: !!v.user.isPremium,
-            viewedAt: v.viewedAt
-          })).reverse() : []
+          viewers: isSelf ? viewers.filter(v => v.user).map(v => {
+            const vu = v.user;
+            const vPic = vu.profilePic || vu.googleAvatar || vu.facebookAvatar || '';
+            return {
+              _id: vu._id || vu,
+              name: vu.name || 'User',
+              profilePic: vPic,
+              isPremium: !!vu.isPremium,
+              viewedAt: v.viewedAt
+            };
+          }).reverse() : []
         };
       });
 
       return {
         _id: u._id,
         name: u.name,
-        profilePic: u.profilePic,
+        profilePic: userPic,
         stories: activeStories
       };
     }).filter(u => u.stories.length > 0);

@@ -2266,6 +2266,7 @@ const HomePage = ({ setActiveTab, setSelectedNewsId, setActiveChatPartner, setSe
             onClose={() => setViewingStoryUser(null)}
             onNextUser={handleNextStoryUser}
             onPrevUser={handlePrevStoryUser}
+            onUserClick={onUserClick}
             onDeleteStory={(deletedId) => {
               fetchStories();
               showToastNotification('Story deleted 🗑️');

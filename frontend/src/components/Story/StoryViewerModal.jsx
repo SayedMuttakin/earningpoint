@@ -28,6 +28,7 @@ const StoryViewerModal = ({
   onDeleteStory,
   onNextUser,
   onPrevUser,
+  onUserClick,
 }) => {
   const [currentIndex, setCurrentIndex] = useState(initialIndex);
   const [progress, setProgress] = useState(0);
@@ -380,12 +381,22 @@ const StoryViewerModal = ({
           className="relative z-20 flex items-center justify-between px-4 py-2 shrink-0"
           onClick={(e) => e.stopPropagation()}
         >
-          {/* User info */}
-          <div className="flex items-center gap-2.5">
-            <div className="p-0.5 rounded-full bg-gradient-to-tr from-amber-500 via-rose-500 to-purple-600 shadow">
-              {storyUser.profilePic ? (
+          {/* User info (Clickable to view author profile) */}
+          <div
+            className="flex items-center gap-2.5 cursor-pointer group pointer-events-auto"
+            onClick={(e) => {
+              e.stopPropagation();
+              if (storyUser?._id && onUserClick) {
+                onClose();
+                onUserClick(storyUser._id);
+              }
+            }}
+            title={`View ${storyUser.name}'s profile`}
+          >
+            <div className="p-0.5 rounded-full bg-gradient-to-tr from-amber-500 via-rose-500 to-purple-600 shadow group-hover:scale-105 transition-transform">
+              {(storyUser.profilePic || storyUser.googleAvatar || storyUser.facebookAvatar) ? (
                 <img
-                  src={getImageUrl(storyUser.profilePic)}
+                  src={getImageUrl(storyUser.profilePic || storyUser.googleAvatar || storyUser.facebookAvatar)}
                   alt={storyUser.name}
                   className="w-8 h-8 rounded-full object-cover"
                 />
@@ -397,7 +408,7 @@ const StoryViewerModal = ({
             </div>
 
             <div>
-              <p className="text-white font-black text-xs sm:text-sm drop-shadow leading-tight">
+              <p className="text-white font-black text-xs sm:text-sm drop-shadow leading-tight group-hover:underline">
                 {storyUser.name}
               </p>
               <div className="flex items-center gap-1.5 text-[10px] text-white/80 font-bold drop-shadow">
@@ -606,7 +617,7 @@ const StoryViewerModal = ({
       {/* ── STORY VIEWERS BOTTOM SHEET MODAL (OWN STORY) ── */}
       {showViewersSheet && (
         <div
-          className="fixed inset-0 z-[100020] bg-black/80 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-4 animate-fade-in"
+          className="fixed inset-0 z-[100020] bg-black/60 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-4 animate-fade-in"
           onClick={(e) => {
             e.stopPropagation();
             setShowViewersSheet(false);
@@ -614,23 +625,23 @@ const StoryViewerModal = ({
           }}
         >
           <div
-            className="w-full max-w-md bg-slate-900 border border-slate-800 rounded-t-[2.5rem] sm:rounded-3xl max-h-[75vh] sm:max-h-[70vh] flex flex-col overflow-hidden shadow-2xl animate-slide-up text-white"
+            className="w-full max-w-md bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-t-[2.5rem] sm:rounded-3xl max-h-[75vh] sm:max-h-[70vh] flex flex-col overflow-hidden shadow-2xl animate-slide-up text-slate-900 dark:text-white"
             onClick={(e) => e.stopPropagation()}
           >
             {/* Modal Drag Handle & Header */}
             <div className="pt-3 pb-1 flex justify-center sm:hidden">
-              <div className="w-12 h-1 rounded-full bg-slate-700" />
+              <div className="w-12 h-1 rounded-full bg-slate-300 dark:bg-slate-700" />
             </div>
-            <div className="px-6 pt-3 pb-3 border-b border-slate-800 flex items-center justify-between">
+            <div className="px-6 pt-3 pb-3 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
               <div className="flex items-center gap-2.5">
-                <div className="w-7 h-7 rounded-full bg-indigo-500/20 flex items-center justify-center">
-                  <Eye className="w-4 h-4 text-indigo-400" />
+                <div className="w-8 h-8 rounded-full bg-indigo-50 dark:bg-indigo-500/20 flex items-center justify-center">
+                  <Eye className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
                 </div>
                 <div>
-                  <h3 className="font-bold text-sm sm:text-base leading-tight">
+                  <h3 className="font-bold text-sm sm:text-base leading-tight text-slate-900 dark:text-white">
                     Story viewers ({viewersList.length})
                   </h3>
-                  <p className="text-[10px] text-slate-400">Only you can see who viewed your story</p>
+                  <p className="text-[11px] text-slate-500 dark:text-slate-400">Only you can see who viewed your story</p>
                 </div>
               </div>
               <button
@@ -638,67 +649,79 @@ const StoryViewerModal = ({
                   setShowViewersSheet(false);
                   setIsPaused(false);
                 }}
-                className="w-8 h-8 rounded-full bg-slate-800 hover:bg-slate-700 flex items-center justify-center text-slate-300 active:scale-95"
+                className="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 flex items-center justify-center text-slate-600 dark:text-slate-300 active:scale-95 transition-colors"
               >
                 <X className="w-4 h-4" />
               </button>
             </div>
 
             {/* Viewers List Content */}
-            <div className="flex-1 overflow-y-auto p-4 space-y-3 divide-y divide-slate-800/40 max-h-[55vh]">
+            <div className="flex-1 overflow-y-auto p-4 space-y-1 divide-y divide-slate-100 dark:divide-slate-800/40 max-h-[55vh]">
               {loadingViewers && viewersList.length === 0 ? (
                 <div className="py-12 flex flex-col items-center justify-center text-slate-400 gap-2">
-                  <div className="w-6 h-6 border-2 border-[#7C3AED] border-t-transparent rounded-full animate-spin" />
-                  <span className="text-xs font-bold">Checking viewers...</span>
+                  <div className="w-6 h-6 border-2 border-indigo-600 dark:border-indigo-400 border-t-transparent rounded-full animate-spin" />
+                  <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">Checking viewers...</span>
                 </div>
               ) : viewersList.length === 0 ? (
                 <div className="py-12 flex flex-col items-center justify-center text-slate-400 gap-2 text-center px-4">
-                  <div className="w-12 h-12 rounded-full bg-slate-800/80 flex items-center justify-center text-2xl">
+                  <div className="w-12 h-12 rounded-full bg-slate-100 dark:bg-slate-800/80 flex items-center justify-center text-2xl">
                     👀
                   </div>
-                  <p className="font-bold text-sm text-white">No viewers yet</p>
-                  <p className="text-xs text-slate-400 max-w-xs leading-relaxed">
-                    When someone views your story, their name and profile will show up here.
+                  <p className="font-bold text-sm text-slate-800 dark:text-white">No viewers yet</p>
+                  <p className="text-xs text-slate-500 dark:text-slate-400 max-w-xs leading-relaxed">
+                    When someone views your story, their profile and viewed time will appear here.
                   </p>
                 </div>
               ) : (
-                viewersList.map((viewer) => (
-                  <div key={viewer._id} className="pt-2.5 first:pt-0 flex items-center justify-between gap-3">
-                    <div className="flex items-center gap-3 min-w-0">
-                      <div className="w-10 h-10 rounded-full overflow-hidden shrink-0 bg-gradient-to-tr from-purple-600 to-indigo-600 flex items-center justify-center font-black text-sm text-white shadow">
-                        {viewer.profilePic ? (
-                          <img
-                            src={getImageUrl(viewer.profilePic)}
-                            alt={viewer.name}
-                            className="w-full h-full object-cover"
-                          />
-                        ) : (
-                          <span>{viewer.name?.charAt(0).toUpperCase() || 'U'}</span>
-                        )}
-                      </div>
-                      <div className="min-w-0 text-left">
-                        <div className="flex items-center gap-1.5">
-                          <p className="font-bold text-xs sm:text-sm text-white truncate">
-                            {viewer.name}
-                          </p>
-                          {viewer.isPremium && (
-                            <span className="px-1.5 py-0.2 rounded bg-amber-500/20 text-amber-300 text-[9px] font-black">
-                              PRO
-                            </span>
+                viewersList.map((viewer) => {
+                  const viewerAvatar = viewer.profilePic || viewer.googleAvatar || viewer.facebookAvatar;
+                  return (
+                    <div
+                      key={viewer._id}
+                      onClick={() => {
+                        if (viewer._id && onUserClick) {
+                          setShowViewersSheet(false);
+                          onClose();
+                          onUserClick(viewer._id);
+                        }
+                      }}
+                      className="pt-2.5 pb-2 px-2.5 first:pt-1 flex items-center justify-between gap-3 hover:bg-slate-50 dark:hover:bg-slate-800/50 rounded-2xl cursor-pointer active:scale-[0.99] transition-all group"
+                      title={`View ${viewer.name}'s profile`}
+                    >
+                      <div className="flex items-center gap-3 min-w-0">
+                        <div className="w-10 h-10 rounded-full overflow-hidden shrink-0 bg-gradient-to-tr from-indigo-500 to-purple-600 flex items-center justify-center font-bold text-sm text-white shadow-sm ring-1 ring-slate-200 dark:ring-slate-700">
+                          {viewerAvatar ? (
+                            <img
+                              src={getImageUrl(viewerAvatar)}
+                              alt={viewer.name}
+                              className="w-full h-full object-cover"
+                              onError={(e) => {
+                                e.target.style.display = 'none';
+                              }}
+                            />
+                          ) : (
+                            <span>{viewer.name?.charAt(0).toUpperCase() || 'U'}</span>
                           )}
                         </div>
-                        {viewer.username && (
-                          <p className="text-[11px] text-slate-400 truncate font-mono">
-                            @{viewer.username}
-                          </p>
-                        )}
+                        <div className="min-w-0 text-left">
+                          <div className="flex items-center gap-1.5">
+                            <p className="font-bold text-xs sm:text-sm text-slate-900 dark:text-white group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors truncate">
+                              {viewer.name}
+                            </p>
+                            {viewer.isPremium && (
+                              <span className="px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-600 dark:text-amber-300 text-[9px] font-black">
+                                PRO
+                              </span>
+                            )}
+                          </div>
+                        </div>
                       </div>
+                      <span className="text-[11px] text-slate-400 dark:text-slate-500 font-medium shrink-0">
+                        {formatRelativeTime(viewer.viewedAt)}
+                      </span>
                     </div>
-                    <span className="text-[10px] text-slate-400 font-medium shrink-0">
-                      {formatRelativeTime(viewer.viewedAt)}
-                    </span>
-                  </div>
-                ))
+                  );
+                })
               )}
             </div>
           </div>
