@@ -92,18 +92,23 @@ export const playNotificationSound = () => {
   }
 };
 
+const NOTIFICATION_CHANNEL_ID = 'zenivio_chat_v3';
 let channelInitialized = false;
 
 const ensureNotificationChannel = async () => {
   if (channelInitialized || !Capacitor.isNativePlatform()) return;
   try {
+    try {
+      await LocalNotifications.deleteChannel({ id: 'zenivio_messages' });
+    } catch (e) {}
+
     await LocalNotifications.createChannel({
-      id: 'zenivio_messages',
-      name: 'Direct Messages & Notifications',
+      id: NOTIFICATION_CHANNEL_ID,
+      name: 'Zenivio Messages & Alerts',
       description: 'Incoming Zenivio chat messages and notifications',
-      importance: 5, // High importance -> shows heads-up banner & plays sound
+      importance: 5, // High importance -> shows heads-up popup banner & plays sound
       visibility: 1, // Visible on lock screen
-      sound: 'default',
+      sound: 'notification.wav',
       vibration: true,
       lights: true,
       lightColor: '#7C3AED'
@@ -160,8 +165,8 @@ export const triggerMessageNotification = async (senderName, messageText, extraD
             title,
             body: cleanSnippet,
             id: Math.floor(Math.random() * 1000000),
-            channelId: 'zenivio_messages',
-            sound: 'default',
+            channelId: NOTIFICATION_CHANNEL_ID,
+            sound: 'notification.wav',
             smallIcon: 'ic_launcher',
             schedule: { at: new Date(Date.now() + 50) },
             extra: extraData
@@ -197,8 +202,8 @@ export const triggerSystemNotification = async (title, body, extraData = {}) => 
               title: title || 'Zenivio Notification 🔔',
               body: body || 'You have a new update',
               id: Math.floor(Math.random() * 1000000),
-              channelId: 'zenivio_messages',
-              sound: 'default',
+              channelId: NOTIFICATION_CHANNEL_ID,
+              sound: 'notification.wav',
               smallIcon: 'ic_launcher',
               schedule: { at: new Date(Date.now() + 50) },
               extra: extraData
