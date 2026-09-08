@@ -36,7 +36,7 @@ import {
   Repeat
 } from 'lucide-react';
 import { API_BASE, getImageUrl } from '../config';
-import VerifiedBadge from './VerifiedBadge';
+import VerifiedBadge, { isUserVerified, getUserBadgeType } from './VerifiedBadge';
 import ShareModal from './ShareModal';
 import ImagePreviewModal from './ImagePreviewModal';
 import ImageCropModal from './ImageCropModal';
@@ -199,8 +199,8 @@ const ProfileCommentsDrawer = ({ post, onClose, onCommentSubmit, currentUserId, 
                         className="font-black text-xs text-slate-750 dark:text-slate-350 hover:underline text-left flex items-center gap-1"
                       >
                         <span>{comment.userName || 'User'}</span>
-                        {((comment.verificationBadge === 'blue' || comment.verificationBadge === 'golden' || comment.user?.verificationBadge === 'blue' || comment.user?.verificationBadge === 'golden') || ((comment.isEmailVerified || comment.user?.isEmailVerified) && (comment.verificationBadge !== 'none' || comment.user?.verificationBadge !== 'none'))) && (
-                          <VerifiedBadge type={(comment.verificationBadge === 'golden' || comment.user?.verificationBadge === 'golden') ? 'golden' : 'blue'} iconClassName="w-3.5 h-3.5 flex-shrink-0" />
+                        {(isUserVerified(comment) || isUserVerified(comment.user)) && (
+                          <VerifiedBadge type={getUserBadgeType(comment.user || comment)} iconClassName="w-3.5 h-3.5 flex-shrink-0" />
                         )}
                       </button>
                       <button
@@ -237,8 +237,8 @@ const ProfileCommentsDrawer = ({ post, onClose, onCommentSubmit, currentUserId, 
                               className="font-black text-[11px] text-slate-800 dark:text-slate-200 hover:underline flex items-center gap-1"
                             >
                               <span>{reply.userName}</span>
-                              {((reply.verificationBadge === 'blue' || reply.verificationBadge === 'golden' || reply.user?.verificationBadge === 'blue' || reply.user?.verificationBadge === 'golden') || ((reply.isEmailVerified || reply.user?.isEmailVerified) && (reply.verificationBadge !== 'none' || reply.user?.verificationBadge !== 'none'))) && (
-                                <VerifiedBadge type={(reply.verificationBadge === 'golden' || reply.user?.verificationBadge === 'golden') ? 'golden' : 'blue'} iconClassName="w-3 h-3 flex-shrink-0" />
+                              {(isUserVerified(reply) || isUserVerified(reply.user)) && (
+                                <VerifiedBadge type={getUserBadgeType(reply.user || reply)} iconClassName="w-3 h-3 flex-shrink-0" />
                               )}
                             </button>
                             <button
@@ -1561,8 +1561,8 @@ const PublicProfilePage = ({ userId, onBack, currentUser, isOwnProfile, setActiv
         <div className="text-center mt-3.5 space-y-1 w-full max-w-xl">
           <h2 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white flex items-center justify-center gap-1.5">
             {profile.name}
-            {(profile.verificationBadge === 'blue' || profile.verificationBadge === 'golden') && (
-              <VerifiedBadge type={profile.verificationBadge === 'golden' ? 'golden' : 'blue'} iconClassName="w-5 h-5 flex-shrink-0" />
+            {isUserVerified(profile) && (
+              <VerifiedBadge type={getUserBadgeType(profile)} iconClassName="w-5 h-5 flex-shrink-0" />
             )}
           </h2>
 
@@ -2306,8 +2306,8 @@ const PublicProfilePage = ({ userId, onBack, currentUser, isOwnProfile, setActiv
               <div className="text-left">
                 <h4 className="font-extrabold text-xs flex items-center gap-1.5">
                   {profile.name}
-                  {((profile.verificationBadge === 'blue' || profile.verificationBadge === 'golden') || (profile.isEmailVerified && profile.verificationBadge !== 'none')) && (
-                    <VerifiedBadge type={profile.verificationBadge === 'golden' ? 'golden' : 'blue'} iconClassName="w-3.5 h-3.5" />
+                  {isUserVerified(profile) && (
+                    <VerifiedBadge type={getUserBadgeType(profile)} iconClassName="w-3.5 h-3.5" />
                   )}
                 </h4>
                 <p className="text-[9px] text-white/60 font-semibold">{activeHighlight.title}</p>
@@ -2422,8 +2422,8 @@ const PublicProfilePage = ({ userId, onBack, currentUser, isOwnProfile, setActiv
                     <div>
                       <h4 className="font-extrabold text-xs text-slate-850 dark:text-white flex items-center gap-1">
                         {profile.name}
-                        {((profile.verificationBadge === 'blue' || profile.verificationBadge === 'golden') || (profile.isEmailVerified && profile.verificationBadge !== 'none')) && (
-                          <VerifiedBadge type={profile.verificationBadge === 'golden' ? 'golden' : 'blue'} iconClassName="w-3.5 h-3.5" />
+                        {isUserVerified(profile) && (
+                          <VerifiedBadge type={getUserBadgeType(profile)} iconClassName="w-3.5 h-3.5" />
                         )}
                       </h4>
                       <p className="text-[9px] text-slate-400 font-bold uppercase mt-0.5">

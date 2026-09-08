@@ -5,7 +5,7 @@ import {
   ChevronUp, Check, UserPlus, Trash2 
 } from 'lucide-react';
 import { getImageUrl } from '../config';
-import VerifiedBadge from './VerifiedBadge';
+import VerifiedBadge, { isUserVerified, getUserBadgeType } from './VerifiedBadge';
 
 const DesktopSidebarLeft = ({ 
   currentUser, 
@@ -121,8 +121,8 @@ const DesktopSidebarLeft = ({
               <span className="font-bold text-sm text-slate-800 dark:text-white truncate block group-hover:text-brand-600 transition-colors">
                 {currentUser?.name || 'User'}
               </span>
-              {((currentUser?.verificationBadge === 'blue' || currentUser?.verificationBadge === 'golden') || (currentUser?.isEmailVerified && currentUser?.verificationBadge !== 'none')) && (
-                <VerifiedBadge type={currentUser?.verificationBadge === 'golden' ? 'golden' : 'blue'} iconClassName="w-3.5 h-3.5 flex-shrink-0" />
+              {isUserVerified(currentUser) && (
+                <VerifiedBadge type={getUserBadgeType(currentUser)} iconClassName="w-3.5 h-3.5 flex-shrink-0" />
               )}
             </div>
             <span className="text-[11px] text-slate-400 dark:text-slate-500 font-medium truncate block">

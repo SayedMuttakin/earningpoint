@@ -25,6 +25,11 @@ app.use((req, res, next) => {
   next();
 });
 
+// Lightweight Health Check Endpoint for Connectivity Verification
+app.get('/api/health', (req, res) => {
+  res.status(200).json({ status: 'ok', time: Date.now() });
+});
+
 // Request Logger — disabled in production to reduce CPU/IO overhead
 // Only enable for debugging — comment this out in production
 if (process.env.NODE_ENV !== 'production') {

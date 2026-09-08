@@ -13,6 +13,21 @@ const resolveBadgeSize = (sz) => {
   return sz;
 };
 
+// Standardized Verification Check Across Entire Application
+export const isUserVerified = (user) => {
+  if (!user) return false;
+  const badge = user.verificationBadge;
+  if (badge && badge !== 'none') return true;
+  if (user.isEmailVerified || user.isAccountVerified || user.isVerified) return true;
+  return false;
+};
+
+export const getUserBadgeType = (user) => {
+  if (!user) return 'purple';
+  if (user.verificationBadge === 'golden') return 'golden';
+  return user.verificationBadge || 'purple';
+};
+
 const VerifiedBadge = ({ className = "", size, iconClassName, type = "purple" }) => {
   const [showPopup, setShowPopup] = useState(false);
 

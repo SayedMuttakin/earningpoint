@@ -6,7 +6,7 @@ import {
   CheckCircle2, Search, Rocket, Coins, Palette, Headphones, MessageCircle, Plus, Check, Users, UserPlus 
 } from 'lucide-react';
 import { API_BASE, getImageUrl } from '../config';
-import VerifiedBadge from './VerifiedBadge';
+import VerifiedBadge, { isUserVerified, getUserBadgeType } from './VerifiedBadge';
 
 const Navbar = ({ 
   onLogout, 
@@ -388,8 +388,8 @@ const Navbar = ({
                       <span className="font-bold text-[15px] text-slate-800 dark:text-white block truncate leading-tight group-hover:text-brand-600 transition-colors">
                         {currentUser?.name || 'User'}
                       </span>
-                      {((currentUser?.verificationBadge === 'blue' || currentUser?.verificationBadge === 'golden') || (currentUser?.isEmailVerified && currentUser?.verificationBadge !== 'none')) && (
-                        <VerifiedBadge type={currentUser?.verificationBadge === 'golden' ? 'golden' : 'blue'} iconClassName="w-4 h-4 flex-shrink-0" />
+                      {isUserVerified(currentUser) && (
+                        <VerifiedBadge type={getUserBadgeType(currentUser)} iconClassName="w-4 h-4 flex-shrink-0" />
                       )}
                     </div>
                     <span className="text-[12px] text-slate-500 dark:text-slate-400 font-medium block truncate mt-0.5">
@@ -464,8 +464,8 @@ const Navbar = ({
                               <span className={`font-semibold text-[14px] truncate block ${isActive ? 'text-brand-700 dark:text-brand-300' : 'text-slate-800 dark:text-white'}`}>
                                 {acc.name || 'User'}
                               </span>
-                              {((acc.verificationBadge === 'blue' || acc.verificationBadge === 'golden') || (acc.isEmailVerified && acc.verificationBadge !== 'none')) && (
-                                <VerifiedBadge type={acc.verificationBadge === 'golden' ? 'golden' : 'blue'} iconClassName="w-3.5 h-3.5 flex-shrink-0" />
+                              {isUserVerified(acc) && (
+                                <VerifiedBadge type={getUserBadgeType(acc)} iconClassName="w-3.5 h-3.5 flex-shrink-0" />
                               )}
                             </div>
                             <span className="text-[11px] font-medium text-slate-400 dark:text-slate-500 block truncate">

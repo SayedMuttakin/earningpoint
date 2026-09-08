@@ -16,7 +16,7 @@ import {
   UserPlus
 } from 'lucide-react';
 import { API_BASE, getImageUrl } from '../config';
-import VerifiedBadge from './VerifiedBadge';
+import VerifiedBadge, { isUserVerified, getUserBadgeType } from './VerifiedBadge';
 import PullToRefresh from './PullToRefresh';
 import { playNotificationSound } from '../utils/sound';
 
@@ -272,7 +272,7 @@ const NotificationPage = ({ onBack, setActiveTab, setSelectedNotificationPostId,
                   {notifications.map((n, idx) => {
                     const sender = n.sender;
                     const senderId = sender?._id || n.senderId;
-                    const hasVerifiedBadge = sender && ((sender.verificationBadge === 'golden' || sender.verificationBadge === 'blue' || sender.verificationBadge === 'purple') || (sender.isEmailVerified && sender.verificationBadge !== 'none'));
+                    const hasVerifiedBadge = isUserVerified(sender);
                     const isFollowNotif = n.type === 'follow' || (n.title && n.title.toLowerCase().includes('follow'));
 
                     return (
@@ -399,7 +399,7 @@ const NotificationPage = ({ onBack, setActiveTab, setSelectedNotificationPostId,
                             }`}>
                               <span>{n.title}</span>
                               {hasVerifiedBadge && (
-                                <VerifiedBadge type={sender.verificationBadge === 'golden' ? 'golden' : 'blue'} iconClassName="w-3.5 h-3.5 flex-shrink-0" />
+                                <VerifiedBadge type={getUserBadgeType(sender)} iconClassName="w-3.5 h-3.5 flex-shrink-0" />
                               )}
                             </h4>
                             <span className="text-[9px] sm:text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest flex items-center gap-1 bg-slate-50 dark:bg-slate-900 px-2 py-0.5 rounded-full self-start">
@@ -412,7 +412,7 @@ const NotificationPage = ({ onBack, setActiveTab, setSelectedNotificationPostId,
                           }`}>
                             <span>{n.message}</span>
                             {hasVerifiedBadge && (
-                              <VerifiedBadge type={sender.verificationBadge === 'golden' ? 'golden' : 'blue'} iconClassName="w-3.5 h-3.5 flex-shrink-0" />
+                              <VerifiedBadge type={getUserBadgeType(sender)} iconClassName="w-3.5 h-3.5 flex-shrink-0" />
                             )}
                           </p>
                         </div>

@@ -19,6 +19,7 @@ import AppUpdateModal from './components/AppUpdateModal';
 import DesktopSidebarLeft from './components/DesktopSidebarLeft';
 import DesktopSidebarRight from './components/DesktopSidebarRight';
 import { playNotificationSound, triggerSystemNotification, triggerMessageNotification, requestNotificationPermissions } from './utils/sound';
+import OfflineScreen from './components/OfflineScreen';
 
 // Lazy load other sub-pages/components to split bundle size and make initial load super fast
 const CartPage = lazy(() => import('./components/CartPage'));
@@ -74,6 +75,27 @@ function App() {
   });
 
   const [showSplash, setShowSplash] = useState(true);
+  const [isOffline, setIsOffline] = useState(() => !navigator.onLine);
+
+  useEffect(() => {
+    const handleOnline = () => setIsOffline(false);
+    const handleOffline = () => setIsOffline(true);
+
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+
+    const checkNetwork = () => {
+      if (!navigator.onLine) setIsOffline(true);
+    };
+    window.addEventListener('focus', checkNetwork);
+
+    return () => {
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
+      window.removeEventListener('focus', checkNetwork);
+    };
+  }, []);
+
   const [showOnboarding, setShowOnboarding] = useState(false);
   const [isLogin, setIsLogin] = useState(true);
   const [isAuthenticated, setIsAuthenticated] = useState(() => !!localStorage.getItem('token'));
@@ -538,6 +560,10 @@ function App() {
 
   if (showSplash) {
     return <SplashScreen onFinish={() => setShowSplash(false)} />;
+  }
+
+  if (isOffline) {
+    return <OfflineScreen onRetrySuccess={() => setIsOffline(false)} />;
   }
 
   const path = window.location.pathname.toLowerCase();

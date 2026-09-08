@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { Loader2, Plus, Image as ImageIcon, X, Globe, MoreVertical, Search, MessageCircle, Users, Smile, Heart, Send, Bookmark, Download, Trash2, AlertTriangle, UserX, Edit } from 'lucide-react';
 import { API_BASE, getImageUrl } from '../config';
-import VerifiedBadge from './VerifiedBadge';
+import VerifiedBadge, { isUserVerified, getUserBadgeType } from './VerifiedBadge';
 import PullToRefresh from './PullToRefresh';
 import BannerAd from './BannerAd';
 import NewsSlider from './NewsSlider';
@@ -210,8 +210,8 @@ const CommentsDrawer = ({ post, onClose, onCommentSubmit, currentUserId, onUserC
                         className="font-black text-xs text-slate-750 dark:text-slate-350 hover:underline text-left flex items-center gap-1"
                       >
                         <span>{comment.userName || 'User'}</span>
-                        {((comment.verificationBadge === 'blue' || comment.verificationBadge === 'golden' || comment.user?.verificationBadge === 'blue' || comment.user?.verificationBadge === 'golden') || ((comment.isEmailVerified || comment.user?.isEmailVerified) && (comment.verificationBadge !== 'none' || comment.user?.verificationBadge !== 'none'))) && (
-                          <VerifiedBadge type={(comment.verificationBadge === 'golden' || comment.user?.verificationBadge === 'golden') ? 'golden' : 'blue'} iconClassName="w-3.5 h-3.5 flex-shrink-0" />
+                        {(isUserVerified(comment) || isUserVerified(comment.user)) && (
+                          <VerifiedBadge type={getUserBadgeType(comment.user || comment)} iconClassName="w-3.5 h-3.5 flex-shrink-0" />
                         )}
                       </button>
                       <button
@@ -330,8 +330,8 @@ const CommentsDrawer = ({ post, onClose, onCommentSubmit, currentUserId, onUserC
                               className="font-black text-[11px] text-slate-800 dark:text-slate-200 hover:underline flex items-center gap-1"
                             >
                               <span>{reply.userName}</span>
-                              {((reply.verificationBadge === 'blue' || reply.verificationBadge === 'golden' || reply.user?.verificationBadge === 'blue' || reply.user?.verificationBadge === 'golden') || ((reply.isEmailVerified || reply.user?.isEmailVerified) && (reply.verificationBadge !== 'none' || reply.user?.verificationBadge !== 'none'))) && (
-                                <VerifiedBadge type={(reply.verificationBadge === 'golden' || reply.user?.verificationBadge === 'golden') ? 'golden' : 'blue'} iconClassName="w-3 h-3 flex-shrink-0" />
+                              {(isUserVerified(reply) || isUserVerified(reply.user)) && (
+                                <VerifiedBadge type={getUserBadgeType(reply.user || reply)} iconClassName="w-3 h-3 flex-shrink-0" />
                               )}
                             </button>
                             <button
@@ -689,8 +689,8 @@ const CommunityPostCard = ({ post, onFollowToggle, onLikeToggle, onCommentClick,
               >
                 {post.authorDetails?.name || post.authorName || 'User'}
               </button>
-              {((post.authorDetails && (post.authorDetails.verificationBadge === 'blue' || post.authorDetails.verificationBadge === 'purple' || post.authorDetails.verificationBadge === 'golden' || (post.authorDetails.isEmailVerified && post.authorDetails.verificationBadge !== 'none'))) || (!post.authorDetails && post.isVerified)) && (
-                <VerifiedBadge type={post.authorDetails?.verificationBadge === 'golden' ? 'golden' : 'purple'} iconClassName="w-[14px] h-[14px] inline-block flex-shrink-0" />
+              {(isUserVerified(post.authorDetails) || post.isVerified) && (
+                <VerifiedBadge type={getUserBadgeType(post.authorDetails)} iconClassName="w-[14px] h-[14px] inline-block flex-shrink-0" />
               )}
               {isProfilePictureUpdate && (
                 <span className="text-xs font-normal text-slate-500 dark:text-slate-400">
@@ -1128,8 +1128,8 @@ const CommunityPostCard = ({ post, onFollowToggle, onLikeToggle, onCommentClick,
                 <div className="truncate pr-4">
                   <span className="font-black mr-2 text-slate-900 dark:text-white inline-flex items-center gap-1">
                     <span>{comment.userName}</span>
-                    {((comment.verificationBadge === 'blue' || comment.verificationBadge === 'golden' || comment.user?.verificationBadge === 'blue' || comment.user?.verificationBadge === 'golden') || ((comment.isEmailVerified || comment.user?.isEmailVerified) && (comment.verificationBadge !== 'none' || comment.user?.verificationBadge !== 'none'))) && (
-                      <VerifiedBadge type={(comment.verificationBadge === 'golden' || comment.user?.verificationBadge === 'golden') ? 'golden' : 'blue'} iconClassName="w-3 h-3 flex-shrink-0 inline" />
+                    {(isUserVerified(comment) || isUserVerified(comment.user)) && (
+                      <VerifiedBadge type={getUserBadgeType(comment.user || comment)} iconClassName="w-3 h-3 flex-shrink-0 inline" />
                     )}
                   </span>
                   <span>{comment.text}</span>
@@ -2047,18 +2047,13 @@ const HomePage = ({ setActiveTab, setSelectedNewsId, setActiveChatPartner, setSe
                                     <div className="w-12 h-12 rounded-full bg-gradient-to-tr from-[#7C3AED] to-pink-500 text-white font-black text-sm flex items-center justify-center shadow-sm">
                                       {sUser.name ? sUser.name.charAt(0).toUpperCase() : 'U'}
                                     </div>
-                                  )}
-                                  {((sUser.verificationBadge && sUser.verificationBadge !== 'none') || sUser.isEmailVerified) && (
-                                    <div className="absolute -bottom-1 -right-1">
-                                      <VerifiedBadge type={sUser.verificationBadge === 'golden' ? 'golden' : 'blue'} iconClassName="w-3.5 h-3.5" />
-                                    </div>
-                                  )}
+                                   )}
                                 </div>
 
                                 <h4 className="text-xs font-black text-slate-900 dark:text-white truncate w-full flex items-center justify-center gap-1 mb-2">
                                   <span className="truncate">{sUser.name}</span>
-                                  {((sUser.verificationBadge && sUser.verificationBadge !== 'none') || sUser.isEmailVerified) && (
-                                    <VerifiedBadge size="sm" type={sUser.verificationBadge || 'blue'} />
+                                  {isUserVerified(sUser) && (
+                                    <VerifiedBadge size="sm" type={getUserBadgeType(sUser)} />
                                   )}
                                 </h4>
                               </div>
