@@ -6,7 +6,8 @@
     "url": "https://zenivio.it.com",
     "androidScheme": "https",
     "cleartext": true,
-    "allowNavigation": ["zenivio.it.com"]
+    "allowNavigation": ["zenivio.it.com"],
+    "errorPath": "offline.html"
   },
   "plugins": {
     "AdMob": {

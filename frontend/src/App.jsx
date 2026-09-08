@@ -446,11 +446,6 @@ function App() {
         const settings = await res.json();
         if (settings && settings.admobConfig) {
           AdMobService.setConfig(settings.admobConfig);
-          if (Capacitor.isNativePlatform() && settings.admobConfig.showAds !== false) {
-            setTimeout(() => {
-              AdMobService.showAppOpenAd().catch(e => console.log('[AdMob] App open on launch notice:', e));
-            }, 1200);
-          }
         } else if (Capacitor.isNativePlatform()) {
           try {
             await AdMob.initialize({
