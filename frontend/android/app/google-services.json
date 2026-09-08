@@ -1,41 +1,33 @@
 {
   "project_info": {
-    "project_number": "1028494965258",
-    "project_id": "zenivio-bd",
-    "storage_bucket": "zenivio-bd.appspot.com"
+    "project_number": "69669050668",
+    "project_id": "zenivio-60135",
+    "storage_bucket": "zenivio-60135.firebasestorage.app"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:1028494965258:android:com.zenivio.app",
+        "mobilesdk_app_id": "1:69669050668:android:864f24bb6fd1e9604b7489",
         "android_client_info": {
           "package_name": "com.zenivio.app"
         }
       },
       "oauth_client": [
         {
-          "client_id": "1028494965258-9ql287u3is47brl9sj5icnf4l104ke7r.apps.googleusercontent.com",
-          "client_type": 1,
-          "android_info": {
-            "package_name": "com.zenivio.app",
-            "certificate_hash": "09f4114a5711a3a67a2f5e011af8fef487f8c44b"
-          }
-        },
-        {
-          "client_id": "1028494965258-90o444tljgmd5r6c5si8d8oc2oudnhnl.apps.googleusercontent.com",
+          "client_id": "69669050668-6sk4ga1t8uui25gpji0ckid2css8okua.apps.googleusercontent.com",
           "client_type": 3
         }
       ],
       "api_key": [
         {
-          "current_key": "AIzaSy_Placeholder_Key"
+          "current_key": "AIzaSyC2b9h-FKetbNExIUEH4mgOjP82CudqtLk"
         }
       ],
       "services": {
         "appinvite_service": {
           "other_platform_oauth_client": [
             {
-              "client_id": "1028494965258-90o444tljgmd5r6c5si8d8oc2oudnhnl.apps.googleusercontent.com",
+              "client_id": "69669050668-6sk4ga1t8uui25gpji0ckid2css8okua.apps.googleusercontent.com",
               "client_type": 3
             }
           ]
