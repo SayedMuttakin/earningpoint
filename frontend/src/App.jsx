@@ -19,6 +19,7 @@ import AppUpdateModal from './components/AppUpdateModal';
 import DesktopSidebarLeft from './components/DesktopSidebarLeft';
 import DesktopSidebarRight from './components/DesktopSidebarRight';
 import { playNotificationSound, triggerSystemNotification, triggerMessageNotification, requestNotificationPermissions } from './utils/sound';
+import { initPushNotifications, sendTokenToBackend, unregisterPushToken } from './utils/pushNotifications';
 import OfflineScreen from './components/OfflineScreen';
 
 // Lazy load other sub-pages/components to split bundle size and make initial load super fast
@@ -227,6 +228,33 @@ function App() {
   useEffect(() => {
     requestNotificationPermissions();
 
+    // Initialize Native Remote Push Notifications (Firebase FCM)
+    initPushNotifications({
+      onNotificationAction: (data) => {
+        if (data?.senderId) {
+          const partner = {
+            _id: data.senderId,
+            name: data.senderName || 'Chat',
+            isGroup: false,
+            profilePic: ''
+          };
+          setActiveChatPartner(partner);
+          setActiveTab('Messenger');
+        } else if (data?.groupId) {
+          const partner = {
+            _id: data.groupId,
+            name: data.groupName || 'Group Chat',
+            isGroup: true,
+            profilePic: ''
+          };
+          setActiveChatPartner(partner);
+          setActiveTab('Messenger');
+        } else {
+          setActiveTab('Notification');
+        }
+      }
+    });
+
     let actionSub = null;
     if (Capacitor.isNativePlatform()) {
       LocalNotifications.addListener('localNotificationActionPerformed', (notification) => {
@@ -257,6 +285,17 @@ function App() {
       if (actionSub && actionSub.remove) actionSub.remove();
     };
   }, []);
+
+  // Proactively send FCM device token to backend when authenticated
+  useEffect(() => {
+    if (isAuthenticated && currentUser?._id) {
+      const token = localStorage.getItem('token');
+      const fcmToken = localStorage.getItem('zenivio_fcm_token');
+      if (token && fcmToken) {
+        sendTokenToBackend(fcmToken, token);
+      }
+    }
+  }, [isAuthenticated, currentUser]);
 
   useEffect(() => {
     // Clean up URL query parameters so they don't persist on page reload/navigation
@@ -528,6 +567,10 @@ function App() {
   };
 
   const handleLogout = () => {
+    const token = localStorage.getItem('token');
+    if (token) {
+      unregisterPushToken(token);
+    }
     localStorage.removeItem('token');
     localStorage.removeItem('darkMode');
     setDarkMode(false);

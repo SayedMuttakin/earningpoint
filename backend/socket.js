@@ -3,6 +3,8 @@ const ChatSession = require('./models/ChatSession');
 const Message = require('./models/Message');
 const AdminNotification = require('./models/AdminNotification');
 const User = require('./models/User');
+const Group = require('./models/Group');
+const pushService = require('./utils/pushService');
 
 let io;
 const activeUsers = new Set();
@@ -259,6 +261,22 @@ module.exports = {
           io.to(receiverId.toString()).emit('receive_direct_message', populatedMessage);
           // Emit back to sender
           socket.emit('receive_direct_message', populatedMessage);
+
+          // Native Android Background Push Notification with custom chime sound
+          const senderDisplayName = sender?.name || 'Someone';
+          const snippet = messageType === 'image' 
+            ? '📷 Sent a photo' 
+            : (content.length > 90 ? `${content.substring(0, 90)}...` : content);
+
+          pushService.sendPushToUser(receiverId, {
+            title: `${senderDisplayName} 💬`,
+            body: snippet,
+            data: {
+              type: 'direct_message',
+              senderId: senderId.toString(),
+              messageId: savedMessage._id.toString()
+            }
+          }).catch(e => console.error('[Socket Push] Direct message push error:', e.message));
         } catch (err) {
           console.error('Socket send_direct_message error:', err);
         }
@@ -398,6 +416,30 @@ module.exports = {
 
           // Broadcast to all group members in the room
           io.to(groupId.toString()).emit('receive_group_message', populatedMessage);
+
+          // Native Android Background Push Notification to other members
+          const groupDoc = await Group.findById(groupId).select('name members');
+          if (groupDoc && groupDoc.members && groupDoc.members.length > 0) {
+            const senderUser = await User.findById(senderId).select('name');
+            const targetMemberIds = groupDoc.members
+              .map(m => m.toString())
+              .filter(mId => mId !== senderId.toString());
+            
+            const groupTitle = `${groupDoc.name || 'Group'}: ${senderUser?.name || 'Member'} 💬`;
+            const snippet = messageType === 'image' 
+              ? '📷 Sent a photo' 
+              : (content.length > 90 ? `${content.substring(0, 90)}...` : content);
+
+            pushService.sendPushToUsers(targetMemberIds, {
+              title: groupTitle,
+              body: snippet,
+              data: {
+                type: 'group_message',
+                groupId: groupId.toString(),
+                messageId: savedMessage._id.toString()
+              }
+            }).catch(e => console.error('[Socket Push] Group message push error:', e.message));
+          }
         } catch (err) {
           console.error('Socket send_group_message error:', err);
         }

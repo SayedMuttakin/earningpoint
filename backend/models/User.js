@@ -253,6 +253,12 @@ const UserSchema = new mongoose.Schema({
     type: Boolean,
     default: false,
   },
+  // Push Notification Device Tokens (FCM)
+  fcmTokens: [{
+    token: { type: String, required: true },
+    platform: { type: String, default: 'android' },
+    lastUpdated: { type: Date, default: Date.now }
+  }],
   // Password Reset
   passwordResetToken: {
     type: String,

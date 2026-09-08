@@ -118,6 +118,8 @@ exports.deleteNotification = async (req, res) => {
   }
 };
 
+const pushService = require('../utils/pushService');
+
 // Helper for other controllers to create notifications
 exports.createNotification = async (userId, title, message, type = 'system', postId = null, senderId = null) => {
   try {
@@ -143,8 +145,71 @@ exports.createNotification = async (userId, title, message, type = 'system', pos
       });
     }
 
+    // Trigger native background push notification with sound
+    pushService.sendPushToUser(userId, {
+      title: title || 'Zenivio Notification 🔔',
+      body: message || 'You have a new update',
+      data: {
+        type: type || 'system',
+        postId: postId ? postId.toString() : '',
+        senderId: senderId ? senderId.toString() : ''
+      }
+    }).catch(err => console.error('[Notification Push] Error:', err.message));
+
     return notification;
   } catch (error) {
     console.error('Error creating notification:', error);
+  }
+};
+
+// POST /api/notifications/fcm-token — Save device FCM token
+exports.registerFcmToken = async (req, res) => {
+  try {
+    const { token, platform } = req.body;
+    if (!token) {
+      return res.status(400).json({ message: 'FCM token is required' });
+    }
+
+    const currentUserId = req.user._id;
+    // Remove token from other accounts if re-used
+    await User.updateMany(
+      { _id: { $ne: currentUserId }, 'fcmTokens.token': token },
+      { $pull: { fcmTokens: { token } } }
+    );
+
+    // Update for current user
+    await User.findByIdAndUpdate(currentUserId, {
+      $pull: { fcmTokens: { token } }
+    });
+    await User.findByIdAndUpdate(currentUserId, {
+      $push: {
+        fcmTokens: {
+          token,
+          platform: platform || 'android',
+          lastUpdated: new Date()
+        }
+      }
+    });
+
+    res.json({ success: true, message: 'FCM token registered successfully' });
+  } catch (error) {
+    console.error('Error registering FCM token:', error);
+    res.status(500).json({ message: error.message || 'Server error' });
+  }
+};
+
+// POST /api/notifications/fcm-token/remove — Remove device token on logout
+exports.removeFcmToken = async (req, res) => {
+  try {
+    const { token } = req.body;
+    if (token) {
+      await User.findByIdAndUpdate(req.user._id, {
+        $pull: { fcmTokens: { token } }
+      });
+    }
+    res.json({ success: true, message: 'FCM token removed' });
+  } catch (error) {
+    console.error('Error removing FCM token:', error);
+    res.status(500).json({ message: error.message || 'Server error' });
   }
 };
