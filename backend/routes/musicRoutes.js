@@ -44,14 +44,91 @@ const searchItunes = (term, limit = 30) => {
   });
 };
 
-// GET /api/music/search?term=arijit+singh&limit=30
+// Cache for trending songs
+let cachedTrendingTracks = [];
+let lastTrendingFetch = 0;
+const TRENDING_CACHE_TTL = 1000 * 60 * 60 * 2; // 2 hours
+
+const TRENDING_ARTISTS = [
+  'arijit singh',
+  'coke studio bangla',
+  'atif aslam',
+  'anupam roy',
+  'shreya ghoshal',
+  'taylor swift',
+  'habib wahid',
+  'ed sheeran',
+  'pritam'
+];
+
+const fetchTrendingHits = async () => {
+  const now = Date.now();
+  if (cachedTrendingTracks.length > 0 && now - lastTrendingFetch < TRENDING_CACHE_TTL) {
+    return cachedTrendingTracks;
+  }
+
+  try {
+    const promises = TRENDING_ARTISTS.map((artist) =>
+      searchItunes(artist, 10).catch(() => [])
+    );
+    const resultsArray = await Promise.all(promises);
+    const combined = [];
+    const seenIds = new Set();
+
+    // Interleave results from each artist for maximum variety
+    const maxLen = Math.max(...resultsArray.map((arr) => arr.length));
+    for (let i = 0; i < maxLen; i++) {
+      for (const list of resultsArray) {
+        if (list[i] && list[i].trackId && !seenIds.has(list[i].trackId)) {
+          seenIds.add(list[i].trackId);
+          combined.push(list[i]);
+        }
+      }
+    }
+
+    const formattedTracks = combined
+      .filter((item) => item.previewUrl && item.trackName)
+      .slice(0, 60)
+      .map((item) => ({
+        id: `itunes_${item.trackId}`,
+        title: item.trackName,
+        artist: item.artistName || 'Unknown Artist',
+        album: item.collectionName || '',
+        url: item.previewUrl,
+        coverUrl: item.artworkUrl100
+          ? item.artworkUrl100.replace(/100x100bb\./, '300x300bb.')
+          : '',
+        genre: item.primaryGenreName || 'Music',
+        duration: Math.round((item.trackTimeMillis || 30000) / 1000),
+        isApplePreview: true,
+      }));
+
+    if (formattedTracks.length > 0) {
+      cachedTrendingTracks = formattedTracks;
+      lastTrendingFetch = now;
+    }
+
+    return cachedTrendingTracks;
+  } catch (err) {
+    console.error('Failed to fetch trending hits:', err);
+    return cachedTrendingTracks;
+  }
+};
+
+// GET /api/music/search?term=arijit+singh&limit=50
 router.get('/search', async (req, res) => {
   try {
     const term = (req.query.term || '').trim();
-    const limit = Math.min(parseInt(req.query.limit, 10) || 30, 50);
+    const limit = Math.min(parseInt(req.query.limit, 10) || 50, 50);
 
-    if (!term) {
-      return res.json({ success: true, count: 0, tracks: [] });
+    // If no search term or "trending", return rich trending hits catalog!
+    if (!term || term.toLowerCase() === 'trending') {
+      const trendingTracks = await fetchTrendingHits();
+      return res.json({
+        success: true,
+        count: trendingTracks.length,
+        tracks: trendingTracks,
+      });
     }
 
     const rawResults = await searchItunes(term, limit);

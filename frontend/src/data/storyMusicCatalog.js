@@ -101,33 +101,28 @@ const musicSearchCache = new Map();
 
 /**
  * Searches global music catalog (Apple Music / iTunes API via backend proxy with direct fallback)
- * @param {string} query - Custom search text (artist or track name)
- * @param {string} category - Selected category ('all' | 'bangla' | 'bollywood' | 'pop' | 'lofi')
+ * @param {string} query - Custom search text (song title, artist, or movie name)
+ * @param {string} apiBase - API base URL
  * @returns {Promise<Array>} Array of track objects
  */
-export async function searchGlobalMusic(query = '', category = 'all', apiBase = '') {
-  let searchTerm = query.trim();
+export async function searchGlobalMusic(query = '', categoryOrApiBase = '', maybeApiBase = '') {
+  const searchTerm = (typeof query === 'string' ? query : '').trim();
+  const apiBase = (typeof categoryOrApiBase === 'string' && categoryOrApiBase.startsWith('http') 
+    ? categoryOrApiBase 
+    : (typeof maybeApiBase === 'string' ? maybeApiBase : '')).replace(/\/$/, '');
 
-  // If no custom search text, use category default queries
-  if (!searchTerm) {
-    const categoryDefaults = {
-      all: 'trending songs',
-      bangla: 'bangla romantic songs',
-      bollywood: 'arijit singh hits',
-      pop: 'top pop hits',
-      lofi: 'lo-fi beats chill',
-    };
-    searchTerm = categoryDefaults[category] || 'top hits';
-  }
-
-  const cacheKey = searchTerm.toLowerCase();
+  const cacheKey = (searchTerm || '__trending__').toLowerCase();
   if (musicSearchCache.has(cacheKey)) {
     return musicSearchCache.get(cacheKey);
   }
 
   // 1. Try Backend Proxy
   try {
-    const res = await fetch(`${apiBase}/api/music/search?term=${encodeURIComponent(searchTerm)}&limit=35`);
+    const endpoint = searchTerm 
+      ? `${apiBase}/api/music/search?term=${encodeURIComponent(searchTerm)}&limit=50`
+      : `${apiBase}/api/music/search?term=trending&limit=50`;
+
+    const res = await fetch(endpoint);
     if (res.ok) {
       const data = await res.json();
       if (data.success && Array.isArray(data.tracks) && data.tracks.length > 0) {
@@ -141,9 +136,11 @@ export async function searchGlobalMusic(query = '', category = 'all', apiBase = 
 
   // 2. Direct Fallback to Apple iTunes API
   try {
-    const directRes = await fetch(
-      `https://itunes.apple.com/search?term=${encodeURIComponent(searchTerm)}&entity=song&limit=30`
-    );
+    const directUrl = searchTerm
+      ? `https://itunes.apple.com/search?term=${encodeURIComponent(searchTerm)}&entity=song&limit=50`
+      : `https://itunes.apple.com/search?term=arijit+singh&entity=song&limit=50`;
+
+    const directRes = await fetch(directUrl);
     if (directRes.ok) {
       const data = await directRes.json();
       if (Array.isArray(data.results) && data.results.length > 0) {
@@ -161,8 +158,11 @@ export async function searchGlobalMusic(query = '', category = 'all', apiBase = 
             genre: item.primaryGenreName || 'Music',
             duration: Math.round((item.trackTimeMillis || 30000) / 1000),
           }));
-        musicSearchCache.set(cacheKey, tracks);
-        return tracks;
+
+        if (tracks.length > 0) {
+          musicSearchCache.set(cacheKey, tracks);
+          return tracks;
+        }
       }
     }
   } catch (directErr) {
@@ -171,12 +171,12 @@ export async function searchGlobalMusic(query = '', category = 'all', apiBase = 
 
   // 3. Fallback to local curated tracks
   const localFiltered = STORY_MUSIC_CATALOG.filter((item) => {
-    const matchesCategory = category === 'all' || item.category === category;
-    const matchesQuery =
-      !query ||
-      item.title.toLowerCase().includes(query.toLowerCase()) ||
-      item.artist.toLowerCase().includes(query.toLowerCase());
-    return matchesCategory && matchesQuery;
+    if (!searchTerm) return true;
+    return (
+      item.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      item.artist.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      item.genre.toLowerCase().includes(searchTerm.toLowerCase())
+    );
   });
 
   return localFiltered.length > 0 ? localFiltered : STORY_MUSIC_CATALOG;

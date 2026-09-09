@@ -4,7 +4,7 @@ import {
   Play, Pause, Upload, ZoomIn, ZoomOut, RotateCcw, Move, Loader2, Check 
 } from 'lucide-react';
 import { API_BASE } from '../../config';
-import { STORY_MUSIC_CATALOG, STORY_MUSIC_CATEGORIES, searchGlobalMusic } from '../../data/storyMusicCatalog';
+import { STORY_MUSIC_CATALOG, searchGlobalMusic } from '../../data/storyMusicCatalog';
 
 const STORY_BG_PRESETS = [
   { bg: 'linear-gradient(135deg, #7C3AED 0%, #2563EB 100%)', label: 'Purple' },
@@ -55,7 +55,6 @@ const StoryCreatorModal = ({ isOpen, onClose, onStoryCreated }) => {
   // Music states
   const [storyMusic, setStoryMusic] = useState(null); // { id, title, artist, url, coverUrl }
   const [showMusicPicker, setShowMusicPicker] = useState(false);
-  const [selectedMusicCategory, setSelectedMusicCategory] = useState('all');
   const [musicSearchQuery, setMusicSearchQuery] = useState('');
   const [musicSearchResults, setMusicSearchResults] = useState([]);
   const [isLoadingMusic, setIsLoadingMusic] = useState(false);
@@ -198,7 +197,7 @@ const StoryCreatorModal = ({ isOpen, onClose, onStoryCreated }) => {
 
     const timer = setTimeout(async () => {
       try {
-        const tracks = await searchGlobalMusic(musicSearchQuery, selectedMusicCategory, API_BASE);
+        const tracks = await searchGlobalMusic(musicSearchQuery, API_BASE);
         if (isCurrent) {
           setMusicSearchResults(tracks);
         }
@@ -213,7 +212,7 @@ const StoryCreatorModal = ({ isOpen, onClose, onStoryCreated }) => {
       isCurrent = false;
       clearTimeout(timer);
     };
-  }, [musicSearchQuery, selectedMusicCategory, showMusicPicker]);
+  }, [musicSearchQuery, showMusicPicker]);
 
   // ────────────────── MUSIC PREVIEW & PICKER ──────────────────
   const togglePreviewAudio = (audioUrl) => {
@@ -434,13 +433,11 @@ const StoryCreatorModal = ({ isOpen, onClose, onStoryCreated }) => {
   };
 
   const filteredMusicCatalog = STORY_MUSIC_CATALOG.filter((item) => {
-    const matchesCategory =
-      selectedMusicCategory === 'all' || item.category === selectedMusicCategory;
-    const matchesQuery =
+    return (
       !musicSearchQuery ||
       item.title.toLowerCase().includes(musicSearchQuery.toLowerCase()) ||
-      item.artist.toLowerCase().includes(musicSearchQuery.toLowerCase());
-    return matchesCategory && matchesQuery;
+      item.artist.toLowerCase().includes(musicSearchQuery.toLowerCase())
+    );
   });
 
   // Lock body scroll when modal is open
@@ -1017,28 +1014,11 @@ const StoryCreatorModal = ({ isOpen, onClose, onStoryCreated }) => {
             <div className="p-3 border-b border-slate-800">
               <input
                 type="text"
-                placeholder="Search song title or artist..."
+                placeholder="Search any song, artist, movie or album..."
                 value={musicSearchQuery}
                 onChange={(e) => setMusicSearchQuery(e.target.value)}
-                className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white placeholder-slate-500 outline-none focus:border-purple-500"
+                className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-white placeholder-slate-500 outline-none focus:border-purple-500"
               />
-            </div>
-
-            {/* Category Pills */}
-            <div className="flex gap-1.5 overflow-x-auto scrollbar-none px-3 py-2 border-b border-slate-800">
-              {STORY_MUSIC_CATEGORIES.map((cat) => (
-                <button
-                  key={cat.id}
-                  onClick={() => setSelectedMusicCategory(cat.id)}
-                  className={`px-3 py-1 rounded-full text-[11px] font-black whitespace-nowrap transition-all ${
-                    selectedMusicCategory === cat.id
-                      ? 'bg-purple-600 text-white shadow-md'
-                      : 'bg-slate-800 text-slate-400 hover:text-white'
-                  }`}
-                >
-                  {cat.label}
-                </button>
-              ))}
             </div>
 
             {/* Song List */}
