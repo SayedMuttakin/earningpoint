@@ -260,6 +260,14 @@ const UserSchema = new mongoose.Schema({
     lastUpdated: { type: Date, default: Date.now }
   }],
   // Password Reset
+  passwordResetCode: {
+    type: String,
+    default: null,
+  },
+  passwordResetCodeExpiry: {
+    type: Date,
+    default: null,
+  },
   passwordResetToken: {
     type: String,
     default: null,

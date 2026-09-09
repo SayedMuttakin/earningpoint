@@ -18,7 +18,9 @@ export const isUserVerified = (user) => {
   if (!user) return false;
   const badge = user.verificationBadge;
   if (badge && badge !== 'none') return true;
-  if (user.isEmailVerified || user.isAccountVerified || user.isVerified) return true;
+  if (user.isVerified) return true;
+  // Both Email and Phone are strictly required for 2-minute verification
+  if (user.isEmailVerified && user.isPhoneVerified) return true;
   return false;
 };
 

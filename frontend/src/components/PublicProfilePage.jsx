@@ -1567,7 +1567,7 @@ const PublicProfilePage = ({ userId, onBack, currentUser, isOwnProfile, setActiv
           </h2>
 
           {/* Simple "Verified Account" text above bio (Account Security / Phone & Email verification) */}
-          {Boolean(profile.isAccountVerified || (profile.isPhoneVerified && profile.isEmailVerified)) ? (
+          {Boolean(profile.isPhoneVerified && profile.isEmailVerified) ? (
             <div className="flex items-center justify-center pt-1 pb-0.5 select-none">
               {isOwn ? (
                 <button

@@ -27,8 +27,7 @@ const COUNTRY_CODES = [
 
 export default function VerifyIn2MinutesModal({ isOpen, onClose, onSuccess, initialUser, isOwn = true }) {
   const isAccountAlreadyVerified = Boolean(
-    initialUser?.isAccountVerified || 
-    (initialUser?.isPhoneVerified && initialUser?.isEmailVerified)
+    initialUser?.isPhoneVerified && initialUser?.isEmailVerified
   );
 
   const [step, setStep] = useState(() => (isAccountAlreadyVerified ? 'success' : 'overview')); // 'overview' | 'phone_input' | 'email_input' | 'email_otp' | 'success'
@@ -99,7 +98,7 @@ export default function VerifyIn2MinutesModal({ isOpen, onClose, onSuccess, init
         setVerifiedEmail(data.verifiedEmail || '');
         if (data.verifiedEmail) setEmailInput(data.verifiedEmail);
         
-        if (data.isAccountVerified) {
+        if (data.isAccountVerified && data.isPhoneVerified && data.isEmailVerified) {
           setStep('success');
         }
       }
@@ -230,6 +229,7 @@ export default function VerifyIn2MinutesModal({ isOpen, onClose, onSuccess, init
         setStep('email_input');
       } else {
         setStep('success');
+        if (onSuccess) onSuccess();
       }
     } catch (err) {
       setError(err.message);
@@ -296,7 +296,12 @@ export default function VerifyIn2MinutesModal({ isOpen, onClose, onSuccess, init
       setIsEmailVerified(true);
       setVerifiedEmail(data.verifiedEmail || emailInput);
 
-      setStep('success');
+      if (!isPhoneVerified) {
+        setStep('phone_input');
+      } else {
+        setStep('success');
+        if (onSuccess) onSuccess();
+      }
     } catch (err) {
       setError(err.message);
     } finally {
@@ -640,7 +645,7 @@ export default function VerifyIn2MinutesModal({ isOpen, onClose, onSuccess, init
                       className="w-full py-4 rounded-2xl font-black text-sm bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white shadow-lg shadow-indigo-600/25 active:scale-[0.98] transition-all flex items-center justify-center gap-2 cursor-pointer"
                     >
                       <Sparkles className="w-4 h-4" />
-                      {isEmailVerified ? 'View Verification Status' : 'Start Verification'}
+                      {(isEmailVerified && isPhoneVerified) ? 'View Verification Status' : 'Start Verification'}
                     </button>
                     <button
                       type="button"

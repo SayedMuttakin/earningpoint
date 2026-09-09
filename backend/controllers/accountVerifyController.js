@@ -17,7 +17,8 @@ exports.getVerificationStatus = async (req, res) => {
     const defaultEmail = user.verifiedEmail || (user.phoneOrEmail && user.phoneOrEmail.includes('@') ? user.phoneOrEmail : '');
     const defaultPhone = user.verifiedPhone || (user.phoneOrEmail && !user.phoneOrEmail.includes('@') ? user.phoneOrEmail : '');
 
-    const isAccountVerified = Boolean(user.isAccountVerified || user.isEmailVerified);
+    // Account is strictly verified when BOTH Email and Phone are verified
+    const isAccountVerified = Boolean(user.isEmailVerified && user.isPhoneVerified);
     if (user.isAccountVerified !== isAccountVerified) {
       user.isAccountVerified = isAccountVerified;
       await user.save();
@@ -70,9 +71,7 @@ exports.savePhone = async (req, res) => {
 
     user.verifiedPhone = fullPhone;
     user.isPhoneVerified = true;
-    if (user.isEmailVerified) {
-      user.isAccountVerified = true;
-    }
+    user.isAccountVerified = Boolean(user.isEmailVerified && user.isPhoneVerified);
     await user.save();
 
     res.json({
@@ -178,11 +177,7 @@ exports.verifyPhoneOTP = async (req, res) => {
     user.isPhoneVerified = true;
     user.phoneVerificationCode = null;
     user.phoneVerificationExpiry = null;
-
-    if (user.isEmailVerified) {
-      user.isAccountVerified = true;
-    }
-
+    user.isAccountVerified = Boolean(user.isEmailVerified && user.isPhoneVerified);
     await user.save();
 
     res.json({
@@ -279,8 +274,7 @@ exports.verifyEmailOTP = async (req, res) => {
     user.isEmailVerified = true;
     user.emailVerificationCode = null;
     user.emailVerificationExpiry = null;
-    user.isAccountVerified = true; // Email verified accounts receive Verified status!
-
+    user.isAccountVerified = Boolean(user.isEmailVerified && user.isPhoneVerified);
     await user.save();
 
     res.json({

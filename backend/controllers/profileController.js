@@ -373,7 +373,7 @@ exports.getPublicProfile = async (req, res) => {
         facebookAvatar: user.facebookAvatar,
         isEmailVerified: user.isEmailVerified,
         isPhoneVerified: Boolean(user.isPhoneVerified),
-        isAccountVerified: Boolean(user.isAccountVerified || (user.isEmailVerified && user.isPhoneVerified)),
+        isAccountVerified: Boolean(user.isEmailVerified && user.isPhoneVerified),
         verifiedPhone: user.verifiedPhone || '',
         verifiedEmail: user.verifiedEmail || '',
         verificationBadge: user.verificationBadge || 'none',

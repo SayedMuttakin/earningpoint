@@ -271,6 +271,130 @@ const sendPasswordResetEmail = async (toEmail, resetLink) => {
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
+// 2.1 PASSWORD RESET 6-DIGIT OTP EMAIL
+// ─────────────────────────────────────────────────────────────────────────────
+const sendPasswordResetOTPEmail = async (toEmail, code) => {
+  const transporter = createTransporter();
+
+  const senderEmail = process.env.EMAIL_USER || 'no-reply@zenivio.it.com';
+  const replyToEmail = process.env.REPLY_TO || 'no-reply@zenivio.it.com';
+
+  const mailOptions = {
+    from: `"Zenivio" <${senderEmail}>`,
+    replyTo: replyToEmail,
+    to: toEmail,
+    subject: `${code} is your Zenivio password reset code`,
+    text: `Your Zenivio password reset code is: ${code}\n\nUse this 6-digit code to reset your account password. This code expires in 10 minutes.\n\nSecurity Notice: Never share this code with anyone. Zenivio support will never ask for your verification code.\n\nIf you did not request this, you can safely ignore this email.\n\nZenivio Technologies - https://zenivio.it.com`,
+    html: `
+<!DOCTYPE html>
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="color-scheme" content="light">
+  <meta name="supported-color-schemes" content="light">
+  <title>Reset Password Code - Zenivio</title>
+  <style>
+    :root { color-scheme: light; supported-color-schemes: light; }
+    body, table, td, p, a, li, blockquote { -webkit-text-size-adjust: 100%; -ms-text-size-adjust: 100%; }
+    table, td { mso-table-lspace: 0pt; mso-table-rspace: 0pt; }
+    img { -ms-interpolation-mode: bicubic; border: 0; outline: none; text-decoration: none; }
+  </style>
+</head>
+<body style="margin: 0; padding: 0; background-color: #f8fafc; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; -webkit-font-smoothing: antialiased; color: #0f172a;">
+  <table role="presentation" width="100%" border="0" cellspacing="0" cellpadding="0" style="background-color: #f8fafc; padding: 40px 15px;">
+    <tr>
+      <td align="center">
+        <!-- Main Card Container -->
+        <table role="presentation" width="100%" border="0" cellspacing="0" cellpadding="0" style="max-width: 520px; background-color: #ffffff; border-radius: 24px; overflow: hidden; box-shadow: 0 4px 25px rgba(0, 0, 0, 0.05); border: 1px solid #e2e8f0; margin: 0 auto;">
+          
+          <!-- Top Accent Line -->
+          <tr>
+            <td style="background: linear-gradient(90deg, #4f46e5 0%, #7c3aed 50%, #6366f1 100%); height: 5px; line-height: 5px; font-size: 0;">&nbsp;</td>
+          </tr>
+
+          <!-- Header with Logo -->
+          <tr>
+            <td style="padding: 36px 40px 20px; text-align: center; background-color: #ffffff;">
+              <table role="presentation" border="0" cellspacing="0" cellpadding="0" style="margin: 0 auto;">
+                <tr>
+                  <td align="center">
+                    <div style="display: inline-block; background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%); width: 48px; height: 48px; line-height: 48px; border-radius: 14px; text-align: center; color: #ffffff; font-weight: 900; font-size: 22px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; box-shadow: 0 4px 12px rgba(79, 70, 229, 0.25);">Z</div>
+                  </td>
+                </tr>
+                <tr>
+                  <td align="center" style="padding-top: 12px;">
+                    <h1 style="margin: 0; font-size: 22px; font-weight: 800; letter-spacing: -0.5px; color: #0f172a;">Zenivio</h1>
+                    <span style="display: inline-block; margin-top: 4px; font-size: 11px; font-weight: 700; color: #6366f1; text-transform: uppercase; letter-spacing: 1.5px;">Password Reset Code</span>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+
+          <!-- Main Content -->
+          <tr>
+            <td style="padding: 10px 40px 32px;">
+              <h2 style="margin: 0 0 10px; font-size: 20px; font-weight: 700; color: #0f172a; text-align: center;">Reset Your Password</h2>
+              <p style="margin: 0 0 22px; font-size: 14px; line-height: 1.6; color: #475569; text-align: center;">
+                We received a request to reset your Zenivio password. Enter this 6-digit verification code in the app to continue:
+              </p>
+
+              <!-- Modern OTP Code Box -->
+              <table role="presentation" width="100%" border="0" cellspacing="0" cellpadding="0" style="background-color: #f8fafc; border: 1.5px solid #e2e8f0; border-radius: 18px; margin: 20px 0;">
+                <tr>
+                  <td align="center" style="padding: 24px 16px;">
+                    <div style="font-size: 10px; font-weight: 800; color: #64748b; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 8px;">6-Digit Security Code</div>
+                    <div style="font-family: 'SF Mono', Consolas, Monaco, 'Courier New', monospace; font-size: 42px; font-weight: 900; letter-spacing: 12px; color: #4338ca; padding: 2px 0; margin-left: 12px; line-height: 1.1;">${code}</div>
+                    <div style="margin-top: 14px;">
+                      <span style="display: inline-block; background-color: #eef2ff; color: #4f46e5; font-size: 11px; font-weight: 700; padding: 4px 14px; border-radius: 20px; border: 1px solid #e0e7ff;">⏰ Valid for 10 minutes</span>
+                    </div>
+                  </td>
+                </tr>
+              </table>
+
+              <!-- Security Card -->
+              <table role="presentation" width="100%" border="0" cellspacing="0" cellpadding="0" style="background-color: #faf5ff; border-radius: 14px; border: 1px solid #f3e8ff; margin: 20px 0 12px;">
+                <tr>
+                  <td style="padding: 14px 18px;">
+                    <p style="margin: 0; font-size: 12px; line-height: 1.5; color: #6b21a8;">
+                      <strong>Security Notice:</strong> Never share this code with anyone. Zenivio staff will never call or ask for your password reset code.
+                    </p>
+                  </td>
+                </tr>
+              </table>
+
+              <p style="margin: 16px 0 0; font-size: 12px; line-height: 1.5; color: #94a3b8; text-align: center;">
+                If you did not request a password reset, you can safely ignore this email. Your password will remain unchanged.
+              </p>
+            </td>
+          </tr>
+
+          <!-- Footer -->
+          <tr>
+            <td style="background-color: #f8fafc; padding: 24px 40px; text-align: center; border-top: 1px solid #f1f5f9;">
+              <p style="margin: 0 0 4px; font-size: 12px; font-weight: 700; color: #475569;">Zenivio Technologies</p>
+              <p style="margin: 0; font-size: 11px; color: #cbd5e1;">
+                &copy; 2026 Zenivio. All rights reserved. &bull; <a href="https://zenivio.it.com" style="color: #6366f1; text-decoration: none; font-weight: 600;">zenivio.it.com</a>
+              </p>
+            </td>
+          </tr>
+
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>
+    `,
+  };
+
+  const info = await transporter.sendMail(mailOptions);
+  return info;
+};
+
+// ─────────────────────────────────────────────────────────────────────────────
 // 3. ADMIN APPOINTMENT & INVITATION EMAIL
 // ─────────────────────────────────────────────────────────────────────────────
 const PERMISSION_LABELS = {
@@ -439,4 +563,9 @@ const sendAdminInvitationEmail = async ({ toEmail, email, name, temporaryPasswor
   }
 };
 
-module.exports = { sendVerificationEmail, sendPasswordResetEmail, sendAdminInvitationEmail };
+module.exports = { 
+  sendVerificationEmail, 
+  sendPasswordResetEmail, 
+  sendPasswordResetOTPEmail, 
+  sendAdminInvitationEmail 
+};
