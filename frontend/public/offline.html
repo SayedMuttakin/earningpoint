@@ -155,69 +155,32 @@
       window.location.href = TARGET_URL;
     }
 
-    async function checkOnline() {
-      if (!navigator.onLine) return false;
-      try {
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 3500);
-        await fetch(TARGET_URL + '/api/health?t=' + Date.now(), {
-          method: 'GET',
-          cache: 'no-store',
-          mode: 'no-cors',
-          signal: controller.signal
-        });
-        clearTimeout(timeoutId);
-        return true;
-      } catch (err) {
-        return navigator.onLine;
-      }
-    }
-
-    async function retryConnection() {
+    function retryConnection() {
       if (isRetrying) return;
       isRetrying = true;
 
       const btn = document.getElementById('retry-btn');
       const btnText = document.getElementById('btn-text');
       const spinner = document.getElementById('spinner');
-      const toast = document.getElementById('error-toast');
 
       btn.disabled = true;
-      spinner.classList.add('spin');
-      btnText.textContent = 'Checking...';
-      toast.style.display = 'none';
+      if (spinner) spinner.classList.add('spin');
+      btnText.textContent = 'Connecting...';
 
-      try {
-        const ok = await checkOnline();
-        if (ok) {
-          btnText.textContent = 'Connecting...';
-          navigateHome();
-          return;
-        }
-      } catch (e) {}
+      // Directly attempt to load live app
+      window.location.href = TARGET_URL;
 
-      btn.disabled = false;
-      spinner.classList.remove('spin');
-      btnText.textContent = 'Try Again';
-      toast.style.display = 'block';
       setTimeout(() => {
-        toast.style.display = 'none';
+        btn.disabled = false;
+        if (spinner) spinner.classList.remove('spin');
+        btnText.textContent = 'Try Again';
+        isRetrying = false;
       }, 3500);
-      isRetrying = false;
     }
 
     window.addEventListener('online', () => {
       navigateHome();
     });
-
-    setInterval(async () => {
-      if (navigator.onLine) {
-        const ok = await checkOnline();
-        if (ok) {
-          navigateHome();
-        }
-      }
-    }, 4000);
   </script>
 </body>
 </html>
