@@ -1,10 +1,32 @@
 const express = require('express');
 const router = express.Router();
 const https = require('https');
+const fs = require('fs');
+const path = require('path');
+
+// Master in-memory catalog
+let masterCatalog = [];
+const CATALOG_PATH = path.join(__dirname, '..', 'data', 'master_music_catalog.json');
+
+const loadCatalogFromFile = () => {
+  try {
+    if (fs.existsSync(CATALOG_PATH)) {
+      const data = fs.readFileSync(CATALOG_PATH, 'utf-8');
+      masterCatalog = JSON.parse(data);
+      console.log(`[Music Service] Loaded ${masterCatalog.length} songs from master_music_catalog.json`);
+    } else {
+      console.warn('[Music Service] master_music_catalog.json not found at:', CATALOG_PATH);
+    }
+  } catch (err) {
+    console.error('[Music Service] Error reading master_music_catalog.json:', err);
+  }
+};
+
+loadCatalogFromFile();
 
 // Helper to fetch from iTunes Search API with timeout
-const searchItunes = (term, limit = 30) => {
-  return new Promise((resolve, reject) => {
+const searchItunes = (term, limit = 200) => {
+  return new Promise((resolve) => {
     const encodedTerm = encodeURIComponent(term);
     const url = `https://itunes.apple.com/search?term=${encodedTerm}&entity=song&limit=${limit}`;
 
@@ -12,10 +34,10 @@ const searchItunes = (term, limit = 30) => {
       url,
       {
         headers: {
-          'User-Agent': 'ZenivioMusic/1.0',
+          'User-Agent': 'ZenivioMusic/2.0',
           'Accept': 'application/json',
         },
-        timeout: 6000,
+        timeout: 8000,
       },
       (res) => {
         let data = '';
@@ -27,7 +49,7 @@ const searchItunes = (term, limit = 30) => {
             const parsed = JSON.parse(data);
             resolve(parsed.results || []);
           } catch (e) {
-            reject(new Error('Invalid response from music service'));
+            resolve([]);
           }
         });
       }
@@ -35,136 +57,137 @@ const searchItunes = (term, limit = 30) => {
 
     req.on('timeout', () => {
       req.destroy();
-      reject(new Error('Music service timeout'));
+      resolve([]);
     });
 
-    req.on('error', (err) => {
-      reject(err);
+    req.on('error', () => {
+      resolve([]);
     });
   });
 };
 
-// Cache for trending songs
-let cachedTrendingTracks = [];
-let lastTrendingFetch = 0;
-const TRENDING_CACHE_TTL = 1000 * 60 * 60 * 2; // 2 hours
+// Search cache for fast pagination
+const searchResultsCache = new Map();
+const SEARCH_CACHE_MAX = 200;
+const SEARCH_CACHE_TTL = 1000 * 60 * 30; // 30 mins
 
-const TRENDING_ARTISTS = [
-  'arijit singh',
-  'coke studio bangla',
-  'atif aslam',
-  'anupam roy',
-  'shreya ghoshal',
-  'taylor swift',
-  'habib wahid',
-  'ed sheeran',
-  'pritam'
-];
-
-const fetchTrendingHits = async () => {
-  const now = Date.now();
-  if (cachedTrendingTracks.length > 0 && now - lastTrendingFetch < TRENDING_CACHE_TTL) {
-    return cachedTrendingTracks;
-  }
-
-  try {
-    const promises = TRENDING_ARTISTS.map((artist) =>
-      searchItunes(artist, 10).catch(() => [])
-    );
-    const resultsArray = await Promise.all(promises);
-    const combined = [];
-    const seenIds = new Set();
-
-    // Interleave results from each artist for maximum variety
-    const maxLen = Math.max(...resultsArray.map((arr) => arr.length));
-    for (let i = 0; i < maxLen; i++) {
-      for (const list of resultsArray) {
-        if (list[i] && list[i].trackId && !seenIds.has(list[i].trackId)) {
-          seenIds.add(list[i].trackId);
-          combined.push(list[i]);
-        }
-      }
-    }
-
-    const formattedTracks = combined
-      .filter((item) => item.previewUrl && item.trackName)
-      .slice(0, 60)
-      .map((item) => ({
-        id: `itunes_${item.trackId}`,
-        title: item.trackName,
-        artist: item.artistName || 'Unknown Artist',
-        album: item.collectionName || '',
-        url: item.previewUrl,
-        coverUrl: item.artworkUrl100
-          ? item.artworkUrl100.replace(/100x100bb\./, '300x300bb.')
-          : '',
-        genre: item.primaryGenreName || 'Music',
-        duration: Math.round((item.trackTimeMillis || 30000) / 1000),
-        isApplePreview: true,
-      }));
-
-    if (formattedTracks.length > 0) {
-      cachedTrendingTracks = formattedTracks;
-      lastTrendingFetch = now;
-    }
-
-    return cachedTrendingTracks;
-  } catch (err) {
-    console.error('Failed to fetch trending hits:', err);
-    return cachedTrendingTracks;
-  }
-};
-
-// GET /api/music/search?term=arijit+singh&limit=50
+// GET /api/music/search?term=&page=1&limit=50
 router.get('/search', async (req, res) => {
   try {
     const term = (req.query.term || '').trim();
-    const limit = Math.min(parseInt(req.query.limit, 10) || 50, 50);
+    const page = Math.max(parseInt(req.query.page, 10) || 1, 1);
+    const limit = Math.min(Math.max(parseInt(req.query.limit, 10) || 50, 10), 100);
 
-    // If no search term or "trending", return rich trending hits catalog!
+    // 1. Browsing default catalog (no term or term='trending')
     if (!term || term.toLowerCase() === 'trending') {
-      const trendingTracks = await fetchTrendingHits();
+      const sourceList = masterCatalog.length > 0 ? masterCatalog : [];
+      const total = sourceList.length;
+      const start = (page - 1) * limit;
+      const end = start + limit;
+      const pagedTracks = sourceList.slice(start, end);
+      const hasMore = end < total;
+
       return res.json({
         success: true,
-        count: trendingTracks.length,
-        tracks: trendingTracks,
+        count: total,
+        page,
+        limit,
+        hasMore,
+        tracks: pagedTracks,
       });
     }
 
-    const rawResults = await searchItunes(term, limit);
+    // 2. Search query handling
+    const cacheKey = term.toLowerCase();
+    let allMatches = [];
 
-    const tracks = rawResults
-      .filter((item) => item.previewUrl && item.trackName)
-      .map((item) => {
-        // Upgrade 100x100 thumbnail to crisp 300x300
-        const coverUrl = item.artworkUrl100
-          ? item.artworkUrl100.replace(/100x100bb\./, '300x300bb.')
-          : '';
-
-        return {
-          id: `itunes_${item.trackId}`,
-          title: item.trackName,
-          artist: item.artistName || 'Unknown Artist',
-          album: item.collectionName || '',
-          url: item.previewUrl,
-          coverUrl,
-          genre: item.primaryGenreName || 'Music',
-          duration: Math.round((item.trackTimeMillis || 30000) / 1000),
-          isApplePreview: true,
-        };
+    const now = Date.now();
+    const cached = searchResultsCache.get(cacheKey);
+    if (cached && (now - cached.timestamp < SEARCH_CACHE_TTL)) {
+      allMatches = cached.results;
+    } else {
+      // Step A: Search local master catalog (ultra-fast)
+      const qTokens = term.toLowerCase().split(/\s+/).filter(Boolean);
+      const localMatches = masterCatalog.filter((track) => {
+        const searchBlob = `${track.title} ${track.artist} ${track.album || ''} ${track.genre || ''}`.toLowerCase();
+        return qTokens.every((token) => searchBlob.includes(token));
       });
+
+      // Step B: Live iTunes Search to discover tracks outside master catalog
+      let liveMatches = [];
+      try {
+        const rawResults = await searchItunes(term, 200);
+        liveMatches = rawResults
+          .filter((item) => item.previewUrl && item.trackName)
+          .map((item) => ({
+            id: `itunes_${item.trackId}`,
+            title: item.trackName,
+            artist: item.artistName || 'Unknown Artist',
+            album: item.collectionName || '',
+            url: item.previewUrl,
+            coverUrl: item.artworkUrl100
+              ? item.artworkUrl100.replace(/100x100bb\./, '300x300bb.')
+              : '',
+            genre: item.primaryGenreName || 'Music',
+            duration: Math.round((item.trackTimeMillis || 30000) / 1000),
+            isApplePreview: true,
+          }));
+      } catch (err) {
+        console.warn('[Music Service] Live search error:', err.message);
+      }
+
+      // Step C: Deduplicate and merge (prioritize live high-relevance matches then local)
+      const seenIds = new Set();
+      const merged = [];
+
+      for (const track of liveMatches) {
+        if (!seenIds.has(track.id)) {
+          seenIds.add(track.id);
+          merged.push(track);
+        }
+      }
+
+      for (const track of localMatches) {
+        if (!seenIds.has(track.id)) {
+          seenIds.add(track.id);
+          merged.push(track);
+        }
+      }
+
+      allMatches = merged;
+
+      // Cache search results
+      if (searchResultsCache.size > SEARCH_CACHE_MAX) {
+        const oldestKey = searchResultsCache.keys().next().value;
+        searchResultsCache.delete(oldestKey);
+      }
+      searchResultsCache.set(cacheKey, {
+        timestamp: now,
+        results: allMatches,
+      });
+    }
+
+    // Paginate results
+    const total = allMatches.length;
+    const start = (page - 1) * limit;
+    const end = start + limit;
+    const pagedTracks = allMatches.slice(start, end);
+    const hasMore = end < total;
 
     res.json({
       success: true,
-      count: tracks.length,
-      tracks,
+      count: total,
+      page,
+      limit,
+      hasMore,
+      tracks: pagedTracks,
     });
-  } catch (error) {
-    console.error('Music search error:', error.message);
+  } catch (err) {
+    console.error('[Music Route Error]', err);
     res.status(500).json({
       success: false,
       message: 'Failed to search music catalog',
-      error: error.message,
+      tracks: [],
     });
   }
 });

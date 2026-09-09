@@ -100,34 +100,61 @@ export const STORY_MUSIC_CATALOG = [
 const musicSearchCache = new Map();
 
 /**
- * Searches global music catalog (Apple Music / iTunes API via backend proxy with direct fallback)
- * @param {string} query - Custom search text (song title, artist, or movie name)
- * @param {string} apiBase - API base URL
- * @returns {Promise<Array>} Array of track objects
+ * Searches global music catalog with multi-page pagination & infinite scrolling
+ * Supports both options object or positional arguments.
+ * Returns an Array with .hasMore and .count properties attached for seamless compatibility.
  */
-export async function searchGlobalMusic(query = '', categoryOrApiBase = '', maybeApiBase = '') {
-  const searchTerm = (typeof query === 'string' ? query : '').trim();
-  const apiBase = (typeof categoryOrApiBase === 'string' && categoryOrApiBase.startsWith('http') 
-    ? categoryOrApiBase 
-    : (typeof maybeApiBase === 'string' ? maybeApiBase : '')).replace(/\/$/, '');
+export async function searchGlobalMusic(queryOrOptions = '', pageOrApi = 1, maybeLimitOrApi = 50, maybeApi = '') {
+  let query = '';
+  let page = 1;
+  let limit = 50;
+  let apiBase = '';
 
-  const cacheKey = (searchTerm || '__trending__').toLowerCase();
+  if (typeof queryOrOptions === 'object' && queryOrOptions !== null) {
+    query = queryOrOptions.query || '';
+    page = queryOrOptions.page || 1;
+    limit = queryOrOptions.limit || 50;
+    apiBase = queryOrOptions.apiBase || '';
+  } else {
+    query = queryOrOptions || '';
+    if (typeof pageOrApi === 'string' && pageOrApi.startsWith('http')) {
+      apiBase = pageOrApi;
+    } else {
+      page = typeof pageOrApi === 'number' ? pageOrApi : 1;
+      if (typeof maybeLimitOrApi === 'string' && maybeLimitOrApi.startsWith('http')) {
+        apiBase = maybeLimitOrApi;
+      } else {
+        limit = typeof maybeLimitOrApi === 'number' ? maybeLimitOrApi : 50;
+        apiBase = maybeApi || '';
+      }
+    }
+  }
+
+  const searchTerm = (typeof query === 'string' ? query : '').trim();
+  const cleanApiBase = (apiBase || '').replace(/\/$/, '');
+  const cacheKey = `${(searchTerm || '__trending__').toLowerCase()}_p${page}_l${limit}`;
+
   if (musicSearchCache.has(cacheKey)) {
     return musicSearchCache.get(cacheKey);
   }
 
-  // 1. Try Backend Proxy
+  // 1. Try Backend Proxy with Master 6,500+ Catalog and Live Search
   try {
-    const endpoint = searchTerm 
-      ? `${apiBase}/api/music/search?term=${encodeURIComponent(searchTerm)}&limit=50`
-      : `${apiBase}/api/music/search?term=trending&limit=50`;
+    const endpoint = searchTerm
+      ? `${cleanApiBase}/api/music/search?term=${encodeURIComponent(searchTerm)}&page=${page}&limit=${limit}`
+      : `${cleanApiBase}/api/music/search?term=trending&page=${page}&limit=${limit}`;
 
     const res = await fetch(endpoint);
     if (res.ok) {
       const data = await res.json();
-      if (data.success && Array.isArray(data.tracks) && data.tracks.length > 0) {
-        musicSearchCache.set(cacheKey, data.tracks);
-        return data.tracks;
+      if (data.success && Array.isArray(data.tracks)) {
+        const resultList = [...data.tracks];
+        resultList.hasMore = Boolean(data.hasMore);
+        resultList.total = data.count || data.tracks.length;
+        resultList.page = page;
+
+        musicSearchCache.set(cacheKey, resultList);
+        return resultList;
       }
     }
   } catch (err) {
@@ -136,15 +163,14 @@ export async function searchGlobalMusic(query = '', categoryOrApiBase = '', mayb
 
   // 2. Direct Fallback to Apple iTunes API
   try {
-    const directUrl = searchTerm
-      ? `https://itunes.apple.com/search?term=${encodeURIComponent(searchTerm)}&entity=song&limit=50`
-      : `https://itunes.apple.com/search?term=arijit+singh&entity=song&limit=50`;
+    const directQuery = searchTerm || 'arijit singh coke studio bangla';
+    const directUrl = `https://itunes.apple.com/search?term=${encodeURIComponent(directQuery)}&entity=song&limit=200`;
 
     const directRes = await fetch(directUrl);
     if (directRes.ok) {
       const data = await directRes.json();
       if (Array.isArray(data.results) && data.results.length > 0) {
-        const tracks = data.results
+        const allDirectTracks = data.results
           .filter((item) => item.previewUrl && item.trackName)
           .map((item) => ({
             id: `itunes_${item.trackId}`,
@@ -159,9 +185,16 @@ export async function searchGlobalMusic(query = '', categoryOrApiBase = '', mayb
             duration: Math.round((item.trackTimeMillis || 30000) / 1000),
           }));
 
-        if (tracks.length > 0) {
-          musicSearchCache.set(cacheKey, tracks);
-          return tracks;
+        const start = (page - 1) * limit;
+        const pagedDirect = allDirectTracks.slice(start, start + limit);
+        const resultList = [...pagedDirect];
+        resultList.hasMore = start + limit < allDirectTracks.length;
+        resultList.total = allDirectTracks.length;
+        resultList.page = page;
+
+        if (resultList.length > 0) {
+          musicSearchCache.set(cacheKey, resultList);
+          return resultList;
         }
       }
     }
@@ -179,5 +212,9 @@ export async function searchGlobalMusic(query = '', categoryOrApiBase = '', mayb
     );
   });
 
-  return localFiltered.length > 0 ? localFiltered : STORY_MUSIC_CATALOG;
+  const localRes = [...localFiltered];
+  localRes.hasMore = false;
+  localRes.total = localFiltered.length;
+  localRes.page = 1;
+  return localRes;
 }

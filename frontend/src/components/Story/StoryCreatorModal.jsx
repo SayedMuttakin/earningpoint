@@ -58,6 +58,9 @@ const StoryCreatorModal = ({ isOpen, onClose, onStoryCreated }) => {
   const [musicSearchQuery, setMusicSearchQuery] = useState('');
   const [musicSearchResults, setMusicSearchResults] = useState([]);
   const [isLoadingMusic, setIsLoadingMusic] = useState(false);
+  const [musicPage, setMusicPage] = useState(1);
+  const [hasMoreMusic, setHasMoreMusic] = useState(true);
+  const [isLoadingMoreMusic, setIsLoadingMoreMusic] = useState(false);
   const [previewingAudioUrl, setPreviewingAudioUrl] = useState(null);
   const [isUploadingAudio, setIsUploadingAudio] = useState(false);
 
@@ -189,30 +192,74 @@ const StoryCreatorModal = ({ isOpen, onClose, onStoryCreated }) => {
     }
   };
 
-  // ────────────────── LIVE GLOBAL MUSIC SEARCH ──────────────────
+  // ────────────────── LIVE GLOBAL MUSIC SEARCH & PAGINATION ──────────────────
   useEffect(() => {
     if (!showMusicPicker) return;
     let isCurrent = true;
     setIsLoadingMusic(true);
+    setMusicPage(1);
 
     const timer = setTimeout(async () => {
       try {
-        const tracks = await searchGlobalMusic(musicSearchQuery, API_BASE);
+        const tracks = await searchGlobalMusic({
+          query: musicSearchQuery,
+          page: 1,
+          limit: 50,
+          apiBase: API_BASE,
+        });
         if (isCurrent) {
           setMusicSearchResults(tracks);
+          setHasMoreMusic(Boolean(tracks.hasMore));
         }
       } catch (err) {
         console.error('Music search error:', err);
       } finally {
         if (isCurrent) setIsLoadingMusic(false);
       }
-    }, musicSearchQuery ? 350 : 0);
+    }, musicSearchQuery ? 300 : 0);
 
     return () => {
       isCurrent = false;
       clearTimeout(timer);
     };
   }, [musicSearchQuery, showMusicPicker]);
+
+  const handleLoadMoreMusic = async () => {
+    if (isLoadingMusic || isLoadingMoreMusic || !hasMoreMusic) return;
+    setIsLoadingMoreMusic(true);
+    const nextPage = musicPage + 1;
+    try {
+      const moreTracks = await searchGlobalMusic({
+        query: musicSearchQuery,
+        page: nextPage,
+        limit: 50,
+        apiBase: API_BASE,
+      });
+      if (Array.isArray(moreTracks) && moreTracks.length > 0) {
+        setMusicSearchResults((prev) => {
+          const existingIds = new Set(prev.map((t) => t.id));
+          const uniqueNew = moreTracks.filter((t) => !existingIds.has(t.id));
+          return [...prev, ...uniqueNew];
+        });
+        setMusicPage(nextPage);
+        setHasMoreMusic(Boolean(moreTracks.hasMore));
+      } else {
+        setHasMoreMusic(false);
+      }
+    } catch (err) {
+      console.error('Error loading more songs:', err);
+      setHasMoreMusic(false);
+    } finally {
+      setIsLoadingMoreMusic(false);
+    }
+  };
+
+  const handleMusicScroll = (e) => {
+    const { scrollTop, scrollHeight, clientHeight } = e.currentTarget;
+    if (scrollHeight - scrollTop - clientHeight < 300) {
+      handleLoadMoreMusic();
+    }
+  };
 
   // ────────────────── MUSIC PREVIEW & PICKER ──────────────────
   const togglePreviewAudio = (audioUrl) => {
@@ -1022,87 +1069,105 @@ const StoryCreatorModal = ({ isOpen, onClose, onStoryCreated }) => {
             </div>
 
             {/* Song List */}
-            <div className="flex-1 overflow-y-auto p-3 space-y-2">
+            <div 
+              onScroll={handleMusicScroll}
+              className="flex-1 overflow-y-auto p-3 space-y-2 overscroll-contain"
+            >
               {isLoadingMusic ? (
                 <div className="py-12 flex flex-col items-center justify-center gap-2 text-slate-400 text-xs">
                   <Loader2 className="w-6 h-6 animate-spin text-purple-400" />
-                  <span>Searching music catalog...</span>
+                  <span>Loading music catalog...</span>
                 </div>
               ) : (musicSearchResults.length > 0 ? musicSearchResults : filteredMusicCatalog).length === 0 ? (
                 <div className="py-8 text-center text-slate-500 text-xs">
                   No music tracks found. Try typing another song or artist name.
                 </div>
               ) : (
-                (musicSearchResults.length > 0 ? musicSearchResults : filteredMusicCatalog).map((track) => {
-                  const isSelected = storyMusic?.id === track.id;
-                  const isPreviewing = previewingAudioUrl === track.url;
+                <>
+                  {(musicSearchResults.length > 0 ? musicSearchResults : filteredMusicCatalog).map((track) => {
+                    const isSelected = storyMusic?.id === track.id;
+                    const isPreviewing = previewingAudioUrl === track.url;
 
-                  return (
-                    <div
-                      key={track.id}
-                      className={`p-2.5 rounded-2xl border flex items-center justify-between gap-3 transition-all ${
-                        isSelected
-                          ? 'border-purple-500 bg-purple-500/10'
-                          : 'border-slate-800 bg-slate-950/40 hover:bg-slate-800/40'
-                      }`}
-                    >
-                      {/* Left: Play button / Album Art + Info */}
-                      <div className="flex items-center gap-2.5 min-w-0 flex-1">
-                        <button
-                          onClick={() => togglePreviewAudio(track.url)}
-                          className="w-10 h-10 rounded-xl bg-gradient-to-tr from-purple-600 to-indigo-600 text-white flex items-center justify-center shrink-0 shadow active:scale-90 transition-transform relative overflow-hidden"
-                          title={isPreviewing ? 'Pause' : 'Play preview'}
-                        >
-                          {track.coverUrl ? (
-                            <>
-                              <img
-                                src={track.coverUrl}
-                                alt={track.title}
-                                className="w-full h-full object-cover"
-                              />
-                              <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
+                    return (
+                      <div
+                        key={track.id}
+                        className={`p-2.5 rounded-2xl border flex items-center justify-between gap-3 transition-all ${
+                          isSelected
+                            ? 'border-purple-500 bg-purple-500/10'
+                            : 'border-slate-800 bg-slate-950/40 hover:bg-slate-800/40'
+                        }`}
+                      >
+                        {/* Left: Play button / Album Art + Info */}
+                        <div className="flex items-center gap-2.5 min-w-0 flex-1">
+                          <button
+                            onClick={() => togglePreviewAudio(track.url)}
+                            className="w-10 h-10 rounded-xl bg-gradient-to-tr from-purple-600 to-indigo-600 text-white flex items-center justify-center shrink-0 shadow active:scale-90 transition-transform relative overflow-hidden"
+                            title={isPreviewing ? 'Pause' : 'Play preview'}
+                          >
+                            {track.coverUrl ? (
+                              <>
+                                <img
+                                  src={track.coverUrl}
+                                  alt={track.title}
+                                  className="w-full h-full object-cover"
+                                />
+                                <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
+                                  {isPreviewing ? (
+                                    <Pause className="w-4 h-4 fill-white" />
+                                  ) : (
+                                    <Play className="w-4 h-4 fill-white ml-0.5" />
+                                  )}
+                                </div>
+                              </>
+                            ) : (
+                              <>
                                 {isPreviewing ? (
                                   <Pause className="w-4 h-4 fill-white" />
                                 ) : (
                                   <Play className="w-4 h-4 fill-white ml-0.5" />
                                 )}
-                              </div>
-                            </>
-                          ) : (
-                            <>
-                              {isPreviewing ? (
-                                <Pause className="w-4 h-4 fill-white" />
-                              ) : (
-                                <Play className="w-4 h-4 fill-white ml-0.5" />
-                              )}
-                            </>
-                          )}
-                        </button>
+                              </>
+                            )}
+                          </button>
 
-                        <div className="min-w-0 flex-1">
-                          <p className="text-xs font-black text-white truncate leading-tight">
-                            {track.title}
-                          </p>
-                          <p className="text-[10px] text-slate-400 truncate mt-0.5">
-                            {track.artist} {track.genre ? <>• <span className="text-purple-400">{track.genre}</span></> : null}
-                          </p>
+                          <div className="min-w-0 flex-1">
+                            <p className="text-xs font-black text-white truncate leading-tight">
+                              {track.title}
+                            </p>
+                            <p className="text-[10px] text-slate-400 truncate mt-0.5">
+                              {track.artist} {track.genre ? <>• <span className="text-purple-400">{track.genre}</span></> : null}
+                            </p>
+                          </div>
                         </div>
-                      </div>
 
-                      {/* Right: Select Button */}
-                      <button
-                        onClick={() => selectMusicTrack(track)}
-                        className={`px-3 py-1.5 rounded-xl text-xs font-black transition-all active:scale-95 shrink-0 ${
-                          isSelected
-                            ? 'bg-purple-600 text-white'
-                            : 'bg-slate-800 hover:bg-slate-700 text-slate-200'
-                        }`}
-                      >
-                        {isSelected ? 'Selected ✓' : 'Use'}
-                      </button>
+                        {/* Right: Select Button */}
+                        <button
+                          onClick={() => selectMusicTrack(track)}
+                          className={`px-3 py-1.5 rounded-xl text-xs font-black transition-all active:scale-95 shrink-0 ${
+                            isSelected
+                              ? 'bg-purple-600 text-white'
+                              : 'bg-slate-800 hover:bg-slate-700 text-slate-200'
+                          }`}
+                        >
+                          {isSelected ? 'Selected ✓' : 'Use'}
+                        </button>
+                      </div>
+                    );
+                  })}
+
+                  {/* Infinite Scroll Indicator */}
+                  {isLoadingMoreMusic && (
+                    <div className="py-3 flex items-center justify-center gap-2 text-slate-400 text-xs">
+                      <Loader2 className="w-4 h-4 animate-spin text-purple-400" />
+                      <span>Loading more songs...</span>
                     </div>
-                  );
-                })
+                  )}
+                  {!hasMoreMusic && (musicSearchResults.length >= 50) && (
+                    <div className="py-3 text-center text-slate-500 text-[11px]">
+                      End of songs • Search any other song or artist above
+                    </div>
+                  )}
+                </>
               )}
             </div>
           </div>
